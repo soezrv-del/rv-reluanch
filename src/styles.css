@@ -3327,6 +3327,14 @@ html[data-theme="light"] {
   --shadow-glass: var(--light-lift);
   --shadow-glow-gold: none;
   --shadow-glow-sapphire: none;
+  /* Recessed control fill. Cooler than the white card. Not sapphire. */
+  --light-shade: rgba(228, 234, 242, 0.96);
+  --light-hairline: rgba(15, 23, 42, 0.14);
+  /* Buttons and tabs sit above the card stack. */
+  --light-raise:
+    0 14px 30px rgba(15, 23, 42, 0.16),
+    0 4px 10px rgba(15, 23, 42, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.96);
 }
 
 html[data-theme="light"] .showroom-stage,
@@ -3463,10 +3471,10 @@ html[data-theme="light"] .sapphire-header-line {
   text-shadow: none;
 }
 html[data-theme="light"] .premium-menu-btn {
-  background: #ffffff !important;
+  background: var(--light-shade) !important;
   color: #0b1730 !important;
-  border: 1px solid rgba(0, 0, 0, 0.12) !important;
-  box-shadow: var(--light-lift) !important;
+  border: 1px solid var(--light-hairline) !important;
+  box-shadow: var(--light-raise) !important;
   backdrop-filter: none !important;
 }
 
@@ -3493,20 +3501,17 @@ html[data-theme="light"] :is(
   color: #0b1730;
 }
 
-/* Inner fields sit on the tile. No second filled box. */
-html[data-theme="light"] :is(
-  .glass-prestige,
-  .glass-prestige-deep,
-  .glass-prestige-gold,
-  .glass-panel,
-  .tow-hero-panel,
-  .grok-composer-pill,
-  .showroom-ask
-) :is(input, select, textarea, .glass-field:not(button)) {
-  background: transparent !important;
+/* Recessed fields: soft cool gray, hairline, not a second white card. */
+html[data-theme="light"] .app-shell :is(
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="button"], [type="submit"], [type="hidden"]),
+  select,
+  textarea,
+  .glass-field:not(button)
+) {
+  background: var(--light-shade) !important;
   background-image: none !important;
-  border: 0 !important;
-  box-shadow: none !important;
+  border: 1px solid var(--light-hairline) !important;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.06) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   color: #0b1730 !important;
@@ -3515,18 +3520,20 @@ html[data-theme="light"] :is(
 html[data-theme="light"] .lot-search,
 html[data-theme="light"] .showroom-ask,
 html[data-theme="light"] .grok-composer-pill {
-  background: #ffffff !important;
+  background: var(--light-shade) !important;
   background-image: none !important;
-  border: 1px solid rgba(0, 0, 0, 0.12) !important;
-  box-shadow: var(--light-lift) !important;
+  border: 1px solid var(--light-hairline) !important;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.06) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   color: #0b1730;
 }
-html[data-theme="light"] .showroom-ask input,
-html[data-theme="light"] .grok-composer-pill textarea,
-html[data-theme="light"] .grok-composer-pill input {
+/* The pill is the field. The text node stays clear so it does not double-box. */
+html[data-theme="light"] .app-shell .showroom-ask input,
+html[data-theme="light"] .app-shell .grok-composer-pill textarea,
+html[data-theme="light"] .app-shell .grok-composer-pill input {
   background: transparent !important;
+  background-image: none !important;
   border: 0 !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
@@ -3567,10 +3574,11 @@ html[data-theme="light"] [aria-label="Price input mode"] {
 }
 
 html[data-theme="light"] .app-shell button:not(.showroom-brand):not(.bottom-tab-btn):not(.showroom-hero):not(.showroom-placard):not(.showroom-arrival):not(.lot-card):not(.grok-mic-btn):not(.showroom-mic):not(.showroom-hero-primary) {
-  background-color: #ffffff;
+  background: var(--light-shade);
+  background-color: var(--light-shade);
   color: #0b1730;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  box-shadow: var(--light-lift);
+  border: 1px solid var(--light-hairline);
+  box-shadow: var(--light-raise);
 }
 html[data-theme="light"] .lot-chip.is-on,
 html[data-theme="light"] .showroom-mic,
@@ -3585,7 +3593,7 @@ html[data-theme="light"] [data-tow-kind-toggle] button[aria-pressed="true"] {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   border-color: #1648c8 !important;
-  box-shadow: var(--light-lift) !important;
+  box-shadow: var(--light-raise) !important;
 }
 html[data-theme="light"] .showroom-mic,
 html[data-theme="light"] .grok-mic-btn,
@@ -3596,31 +3604,31 @@ html[data-theme="light"] :is(.showroom-mic, .grok-mic-btn, .grok-send-btn.is-rea
   color: #ffffff;
 }
 html[data-theme="light"] [data-tow-kind-toggle] button[aria-pressed="false"] {
-  background: #ffffff !important;
+  background: var(--light-shade) !important;
   color: #0b1730 !important;
-  border: 1px solid rgba(0, 0, 0, 0.12) !important;
-  box-shadow: var(--light-lift) !important;
+  border: 1px solid var(--light-hairline) !important;
+  box-shadow: var(--light-raise) !important;
 }
 html[data-theme="light"] .showroom-hero-secondary {
-  background: #ffffff !important;
+  background: var(--light-shade) !important;
   color: #0b1730 !important;
-  border: 1px solid rgba(0, 0, 0, 0.14) !important;
-  box-shadow: var(--light-lift) !important;
+  border: 1px solid var(--light-hairline) !important;
+  box-shadow: var(--light-raise) !important;
 }
-html[data-theme="light"] [data-facts-search]:not(:disabled) {
-  background: #1648c8 !important;
+html[data-theme="light"] [data-facts-search] {
+  background: var(--light-shade) !important;
   background-image: none !important;
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-  border-color: #1648c8 !important;
-  box-shadow: var(--light-lift) !important;
+  color: #0b1730 !important;
+  -webkit-text-fill-color: #0b1730 !important;
+  border: 1px solid var(--light-hairline) !important;
+  box-shadow: var(--light-raise) !important;
 }
 html[data-theme="light"] [data-facts-search]:disabled {
-  background: #ffffff !important;
+  background: var(--light-shade) !important;
   color: #8e9199 !important;
   -webkit-text-fill-color: #8e9199 !important;
-  border: 1px solid rgba(0, 0, 0, 0.12) !important;
-  box-shadow: var(--light-lift) !important;
+  border: 1px solid var(--light-hairline) !important;
+  box-shadow: var(--light-raise) !important;
 }
 
 /* Home hero: full-bleed photo, white type on the bottom fade, actions under it. */
@@ -3796,10 +3804,10 @@ html[data-theme="light"] .showroom-arrival-price {
   color: #1648c8 !important;
 }
 html[data-theme="light"] .showroom-tab {
-  background: #ffffff !important;
+  background: var(--light-shade) !important;
   color: #0b1730 !important;
-  border: 1px solid rgba(0, 0, 0, 0.12) !important;
-  box-shadow: var(--light-lift) !important;
+  border: 1px solid var(--light-hairline) !important;
+  box-shadow: var(--light-raise) !important;
   font-weight: 600;
 }
 /* Ask bar and the chip row are separate controls. Dark mode stays at 0.55rem. */
@@ -3917,7 +3925,7 @@ html[data-theme="light"] .lot-well img {
   filter: none;
 }
 
-/* Structural rows inside a tile are not a second card. */
+/* Premium rows that are buttons sit above the card. */
 html[data-theme="light"] :is(
   .glass-prestige,
   .glass-prestige-gold,
@@ -3925,20 +3933,27 @@ html[data-theme="light"] :is(
   .tow-hero-panel,
   .exclusive-card,
   .grok-landing-card
-) button:not(.rounded-full):not([aria-pressed="true"]):not([data-catalog-field]):not(.grok-chip):not(.grok-starter):not(.grok-lot-chip):not(.lot-chip) {
-  background: transparent !important;
-  background-color: transparent !important;
-  border-color: transparent !important;
-  box-shadow: none !important;
+) button:not(.rounded-full):not([aria-pressed="true"]):not([data-catalog-field]):not(.grok-chip):not(.grok-starter):not(.grok-lot-chip):not(.lot-chip):not(.underline):not([data-tow-details]) {
+  background: var(--light-shade) !important;
+  background-color: var(--light-shade) !important;
+  color: #0b1730 !important;
+  border: 1px solid var(--light-hairline) !important;
+  box-shadow: var(--light-raise) !important;
 }
 html[data-theme="light"] [data-tools-menu] button > span:first-child,
-html[data-theme="light"] [data-tow-truck] .bg-black\/30,
-html[data-theme="light"] [data-tow-truck] .bg-black\/40,
-html[data-theme="light"] .tow-hero-panel .bg-black\/30,
-html[data-theme="light"] .tow-hero-panel .bg-black\/40 {
+html[data-theme="light"] [data-tow-truck] :is(.bg-black\/30, .bg-black\/40):not(button),
+html[data-theme="light"] .tow-hero-panel :is(.bg-black\/30, .bg-black\/40):not(button) {
   background: transparent !important;
   background-color: transparent !important;
   box-shadow: none !important;
+}
+html[data-theme="light"] [aria-label="Clear vehicle selection"],
+html[data-theme="light"] [aria-label="Reset to defaults"] {
+  background: var(--light-shade) !important;
+  background-color: var(--light-shade) !important;
+  color: #0b1730 !important;
+  border: 1px solid var(--light-hairline) !important;
+  box-shadow: var(--light-raise) !important;
 }
 html[data-theme="light"] .exclusive-card-shine,
 html[data-theme="light"] .exclusive-card-shine-glow,
@@ -3949,9 +3964,9 @@ html[data-theme="light"] .grok-chip,
 html[data-theme="light"] .grok-starter,
 html[data-theme="light"] .grok-lot-chip,
 html[data-theme="light"] .lot-chip:not(.is-on) {
-  background: #ffffff !important;
-  border: 1px solid rgba(0, 0, 0, 0.12) !important;
-  box-shadow: var(--light-lift) !important;
+  background: var(--light-shade) !important;
+  border: 1px solid var(--light-hairline) !important;
+  box-shadow: var(--light-raise) !important;
   color: #0b1730 !important;
 }
 html[data-theme="light"] .text-blue {
@@ -3972,11 +3987,14 @@ html[data-theme="light"] .text-ruby {
   -webkit-text-fill-color: #c01f2e !important;
 }
 html[data-theme="light"] .glass-prestige button[data-catalog-field]:not(.rounded-full),
-html[data-theme="light"] [data-tow-truck] button:not(.rounded-full):not([data-tow-kind]) {
-  background: transparent !important;
-  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+html[data-theme="light"] [data-tow-truck] button:not(.rounded-full):not([data-tow-kind]),
+html[data-theme="light"] [data-tow-details] {
+  background: var(--light-shade) !important;
+  background-color: var(--light-shade) !important;
+  color: #0b1730 !important;
+  border: 1px solid var(--light-hairline) !important;
   border-radius: 8px !important;
-  box-shadow: var(--light-lift) !important;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.06) !important;
 }
 html[data-theme="light"] [data-tools-menu] button {
   background: transparent !important;
