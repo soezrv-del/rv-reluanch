@@ -432,6 +432,17 @@ export function AppShell({
           overscrollBehavior: "none",
         }}
       >
+        <div className="showroom-stage" aria-hidden>
+          <div className="showroom-ambient" />
+          {homeOpen ? (
+            <>
+              <div className="showroom-spot" />
+              <div className="showroom-spot-src" />
+              <div className="showroom-spot-pool" />
+            </>
+          ) : null}
+          <div className="showroom-grain" />
+        </div>
         <SuiteBrand onHome={() => setHomeOpen(true)} showMenu={homeOpen} />
         <main
           ref={mainRef}

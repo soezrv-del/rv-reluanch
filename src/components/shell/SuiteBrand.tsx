@@ -24,7 +24,14 @@ export function SuiteBrand({
           alt=""
           width={15}
           height={30}
-          className="showroom-mark"
+          className="showroom-mark home-theme-white"
+        />
+        <img
+          src="/assets/brand/raidho-shell-mark.png"
+          alt=""
+          width={19}
+          height={32}
+          className="showroom-mark home-theme-blue"
         />
         <span className="showroom-word">RvFOX</span>
       </button>

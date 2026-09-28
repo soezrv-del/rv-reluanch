@@ -23,11 +23,12 @@ import {
 
 export function HomeScreen({
   onOpenLot,
-  onAsk,
+  onAsk: _onAsk,
 }: {
   onOpenLot: () => void;
   onAsk: (prompt: string) => void;
 }) {
+  void _onAsk;
   const [units, setUnits] = useState<LotUnit[] | null>(null);
 
   useEffect(() => {
@@ -49,43 +50,6 @@ export function HomeScreen({
   const spotUnit = useMemo(() => spotlightLotUnit(listed), [listed]);
   const specs = spotUnit ? spotlightSpecs(spotUnit) : null;
   const model = specs?.model || SHOWROOM_SPOTLIGHT.series;
-  const slides = useMemo(() => heroSlides(listed, spotUnit), [listed, spotUnit]);
-  const [slide, setSlide] = useState(0);
-  const [reducedMotion, setReducedMotion] = useState(false);
-  const active = slides[slide] ?? slides[0] ?? null;
-  const activeIsSpot =
-    !!active && !!spotUnit && active.stock_number === spotUnit.stock_number;
-
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const apply = () => setReducedMotion(mq.matches);
-    apply();
-    mq.addEventListener("change", apply);
-    return () => mq.removeEventListener("change", apply);
-  }, []);
-
-  useEffect(() => {
-    if (reducedMotion || slides.length < 2) return;
-    let id = 0;
-    const arm = () => {
-      window.clearInterval(id);
-      id = 0;
-      if (document.documentElement.getAttribute("data-theme") !== "blue") return;
-      id = window.setInterval(() => {
-        setSlide((n) => (n + 1) % slides.length);
-      }, 5000);
-    };
-    arm();
-    const obs = new MutationObserver(arm);
-    obs.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["data-theme"],
-    });
-    return () => {
-      window.clearInterval(id);
-      obs.disconnect();
-    };
-  }, [reducedMotion, slides.length]);
 
   const openUnit = (unit: LotUnit) => {
     if (spotUnit && unit.stock_number === spotUnit.stock_number) {
@@ -123,24 +87,12 @@ export function HomeScreen({
       </div>
 
       <div className="home-theme-blue">
-        {active ? (
-          <HomeHero
-            unit={active}
-            index={slide}
-            count={slides.length}
-            spotModel={activeIsSpot ? model : ""}
-            spotPrice={activeIsSpot ? (specs?.price ?? "") : ""}
-            spotStock={activeIsSpot ? (specs?.stock ?? "") : ""}
-            onView={() => openUnit(active)}
-            onAsk={() =>
-              onAsk(
-                `Tell me about the ${showroomUnitLabel(active)}, stock ${active.stock_number}.`,
-              )
-            }
-            onDot={(i) => setSlide(i)}
-          />
-        ) : null}
-
+        <BlueSpotlight
+          model={model}
+          price={specs?.price ?? ""}
+          spotStock={specs?.stock ?? ""}
+          onOpen={spotUnit ? () => openUnit(spotUnit) : undefined}
+        />
         {arrivals.length > 0 ? (
           <NewestArrivals
             arrivals={arrivals}
@@ -152,6 +104,62 @@ export function HomeScreen({
         ) : null}
       </div>
     </div>
+  );
+}
+
+function BlueSpotlight({
+  model,
+  price,
+  spotStock,
+  onOpen,
+}: {
+  model: string;
+  price: string;
+  spotStock: string;
+  onOpen?: () => void;
+}) {
+  const hero = (
+    <>
+      <div className="showroom-hero-beam" aria-hidden />
+      <img
+        src={SHOWROOM_SPOTLIGHT.image}
+        alt={SHOWROOM_SPOTLIGHT.alt}
+        className="showroom-coach"
+      />
+      <div className="showroom-hero-pool" aria-hidden />
+    </>
+  );
+  const placard = (
+    <>
+      <p className="showroom-spotmodel">{model}</p>
+      {price ? <p className="showroom-spotprice">{price}</p> : null}
+      {spotStock ? <p className="showroom-spotstock">Stock {spotStock}</p> : null}
+    </>
+  );
+  return (
+    <>
+      {onOpen ? (
+        <button type="button" className="showroom-hero" onClick={onOpen}>
+          {hero}
+        </button>
+      ) : (
+        <div className="showroom-hero">{hero}</div>
+      )}
+      {onOpen ? (
+        <button
+          type="button"
+          className="showroom-placard showroom-card"
+          data-home-placard
+          onClick={onOpen}
+        >
+          {placard}
+        </button>
+      ) : (
+        <section className="showroom-placard showroom-card" data-home-placard>
+          {placard}
+        </section>
+      )}
+    </>
   );
 }
 
@@ -236,13 +244,6 @@ function StaticArrivals({
       </div>
     </section>
   );
-}
-
-function heroSlides(units: LotUnit[], spot: LotUnit | null): LotUnit[] {
-  const withPhoto = units.filter((unit) => lotUnitPhoto(unit));
-  if (!spot || !lotUnitPhoto(spot)) return withPhoto.slice(0, 8);
-  const rest = withPhoto.filter((unit) => unit.stock_number !== spot.stock_number);
-  return [spot, ...rest].slice(0, 8);
 }
 
 function HomeHero({
