@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import type { AppTab } from "./BottomTabs";
 import { PremiumMenuButton } from "./PremiumMenuButton";
+import { ThemeSwitch } from "./ThemeSwitch";
 import { MetalVerifiedTrue } from "./Launchpad";
 import { PAGE_ACCENT, PAGE_COPY } from "./shellConstants";
 
@@ -104,7 +105,8 @@ export function SapphireHeader({ tab }: { tab: AppTab }) {
         />
         <div className="pointer-events-none absolute inset-[1px] rounded-[1.3rem] border border-white/10" />
 
-        <div className="absolute right-2.5 top-2.5 z-[4] sm:right-3 sm:top-3">
+        <div className="sapphire-header-tools absolute right-2.5 top-2.5 z-[4] sm:right-3 sm:top-3">
+          <ThemeSwitch />
           <PremiumMenuButton size="sm" />
         </div>
 

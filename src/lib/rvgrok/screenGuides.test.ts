@@ -63,12 +63,11 @@ test("guides match the current showroom, pills, and labels", () => {
   assert.match(home, /45282/);
   assert.match(home, /45D/);
   assert.match(home, /Newest arrivals/);
-  assert.match(home, /auto-loops/);
+  assert.match(home, /does not auto-loop/);
   assert.match(home, /Lot Inventory/);
   assert.doesNotMatch(home, /last looked-up|newest lot unit|isn't a button/);
-  assert.match(shared, /What's up\?/);
-  assert.match(shared, /Rv Facts, Lot Inventory, Calculator, RV Grok, and Tow Guide/);
-  assert.match(shared, /does not auto-scroll/);
+  assert.match(shared, /Ask RV Grok/);
+  assert.match(shared, /does not slide and does not auto-scroll/);
   assert.match(shared, /Rv Facts, Calculator, RV Grok, Tow Guide, RV GPS, Lot Inventory/);
   assert.match(screenGuideFor("Facts") || "", /Power to weight/);
   assert.match(screenGuideFor("Facts") || "", /smallest in series/);

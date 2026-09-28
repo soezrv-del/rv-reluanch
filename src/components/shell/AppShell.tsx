@@ -450,7 +450,7 @@ export function AppShell({
           aria-hidden={launchOpen}
         >
           {homeOpen ? (
-            <HomeScreen onOpenLot={() => onTabChange("rvlot")} />
+            <HomeScreen onOpen={onTabChange} />
           ) : null}
           {dockOrder.map((id, i) => {
             if (!show(id)) return null;

@@ -146,21 +146,24 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   assert.match(shell, /initialTab = "rvgrok"/);
   assert.match(home, /SHOWROOM_SPOTLIGHT/);
   assert.match(home, /SHOWROOM_SPOTLIGHT\.series/);
-  assert.match(home, /arrivalsForHome\(listed\)/);
   assert.doesNotMatch(home, /resolveHomeCoach|pickShowroomStage|newestLotUnit/);
-  assert.match(home, /CoveredCoach/);
-  assert.match(home, /coverVariant/);
+  assert.match(home, /MetalVerifiedTrue/);
+  assert.match(home, /New arrivals/);
+  assert.match(home, /onOpen\("rvlot"\)/);
+  const arrivals = readFileSync(join(root, "../../components/lot/LotArrivals.tsx"), "utf8");
+  assert.match(arrivals, /CoveredCoach/);
+  assert.match(arrivals, /coverVariant/);
   const cover = readFileSync(join(root, "../../components/shell/CoveredCoach.tsx"), "utf8");
   assert.match(cover, /aria-label="Photo coming soon"/);
   assert.match(cover, /data-covered-coach/);
-  assert.match(home, /data-home-arrivals/);
-  assert.match(home, /overflow-x-auto/);
+  assert.match(arrivals, /data-lot-arrivals/);
+  assert.match(arrivals, /overflow-x-auto/);
   assert.match(home, /overflow-y-auto/);
   assert.match(home, /requestLotUnit/);
   assert.match(home, /fetchLotSnapshot/);
   const lot = readFileSync(join(root, "../../components/lot/LotStockApp.tsx"), "utf8");
   assert.match(lot, /takePendingLotQuery/);
-  assert.match(home, /prefers-reduced-motion/);
+  assert.match(lot, /LotArrivals/);
   assert.match(brand, /\/assets\/brand\/raidho-shell-mark\.png/);
   assert.match(brand, /RvFOX/);
   assert.doesNotMatch(home, /unsplash|placeholder|allegro/i);
@@ -172,13 +175,10 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   assert.doesNotMatch(suite, /RAIDHO_R_MARK/);
   assert.doesNotMatch(suite, /suite-raidho-bleed/);
   assert.doesNotMatch(suite, /raidho-r-mark/);
-  assert.match(bar, /What's up\?/);
+  assert.match(bar, /Ask RV Grok/);
   assert.match(bar, /roomAskMic\(\)/);
-  const chips = bar.match(/const ROOM_CHIPS[\s\S]*?\];/)?.[0] ?? "";
-  assert.match(
-    chips,
-    /Rv Facts[\s\S]*Lot Inventory[\s\S]*Calculator[\s\S]*RV Grok[\s\S]*Tow Guide/,
-  );
+  assert.match(bar, /<BottomTabs/);
+  assert.doesNotMatch(bar, /ROOM_CHIPS|Rv Facts|Lot Inventory|Learn more/);
 });
 
 test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-first", () => {
@@ -333,18 +333,24 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
   assert.match(home, /showroom-spotmodel/);
   assert.match(home, /Stock \{specs\.stock\}/);
   assert.doesNotMatch(home, /Stock #|showroom-count|showroom-onlot|showroom-coachline|showroom-spotfacts|showroom-spotmeta|useCountUp|spotlightLabel|data-home-count|data-home-spotlight-specs/);
-  assert.match(home, /Newest arrivals/);
-  assert.match(home, /showroom-arrival-name/);
+  const arrivalRail = readFileSync(join(root, "../../components/lot/LotArrivals.tsx"), "utf8");
+  assert.match(arrivalRail, /Newest arrivals/);
+  assert.match(arrivalRail, /showroom-arrival-name/);
   assert.doesNotMatch(home, /requestSpotlightFacts|onOpenFacts|729995|54000|44\.92/);
   assert.doesNotMatch(home, /horsepower|engine/i);
   assert.doesNotMatch(fax, /takePendingSpotlightFacts|SPOTLIGHT_FACTS/);
   assert.doesNotMatch(shell, /openSpotlightFacts|onOpenFacts/);
   assert.doesNotMatch(coach, /spotlightFactsTarget|requestSpotlightFacts/);
-  assert.match(css, /\.showroom-hero \{[^}]*margin:\s*0\.75rem auto 0;/);
+  assert.match(css, /\.showroom-hero \{[^}]*margin:\s*0;/);
   assert.match(
     css,
     /\.showroom-header \{[^}]*env\(safe-area-inset-top, 0px\)/,
   );
-  const heroPhoto = home.slice(home.indexOf("function SpotlightPhoto"), home.indexOf("export function HomeScreen"));
-  assert.doesNotMatch(heroPhoto, /lotUnitPhoto|unit\.photo/);
+  assert.match(home, /readTheme/);
+  assert.match(home, /const heroSrc = SHOWROOM_SPOTLIGHT\.image/);
+  assert.doesNotMatch(home, /spotlight-lot\.jpg/);
+  assert.match(home, /Open coach/);
+  assert.match(home, /data-lot-whisper/);
+  assert.doesNotMatch(home, /Learn more|showroom-coach-lot|data-arrival-set="duplicate"/);
+  assert.doesNotMatch(css, /showroom-coach-lot/);
 });

@@ -22,8 +22,15 @@ export function setTheme(next: SuiteTheme) {
   document.querySelectorAll<HTMLImageElement>("[data-mark-light]").forEach((img) => {
     const light = img.dataset.markLight;
     const dark = img.dataset.markDark;
+    const light3 = img.dataset.markLight3x;
     if (!light || !dark) return;
-    img.src = next === "light" ? light : dark;
+    if (next === "light") {
+      img.src = light;
+      img.srcset = light3 ? `${light} 2x, ${light3} 3x` : "";
+    } else {
+      img.src = dark;
+      img.srcset = "";
+    }
   });
   const color = next === "light" ? "#ffffff" : "#050505";
   document

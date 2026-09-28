@@ -1,10 +1,11 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { hapticLight } from "@/lib/haptics";
 import {
   isAndroidNativeWebView,
   isStationaryDockTap,
 } from "@/lib/hooks/nativeWebView";
+import "./dock.css";
 
 export type AppTab =
   | "rvgrok"
@@ -17,59 +18,102 @@ export type AppTab =
   | "rvlot"
   | "more";
 
-/** Dock tabs only — Share is inline on Facts; Sold and Premium live in ⋯ */
+/** Six independent rooms. Platinum on each chip. The row slides. */
 const TABS: {
   id: Exclude<AppTab, "more" | "rvshare" | "rvsold">;
   label: string;
   short: string;
 }[] = [
   { id: "rvfax", label: "RvFACTS", short: "Facts" },
-  { id: "rvcal", label: "RvCAL", short: "Cal" },
+  { id: "rvlot", label: "Lot", short: "Lot" },
   { id: "rvgrok", label: "RvGROK", short: "Grok" },
   { id: "rvtow", label: "RvTOW", short: "Tow" },
+  { id: "rvcal", label: "RvCAL", short: "Cal" },
   { id: "rvtrips", label: "RV GPS", short: "RV GPS" },
-  { id: "rvlot", label: "Lot", short: "Lot" },
 ];
 
-function DockLabel({
-  text,
-  className,
-}: {
-  text: string;
-  className?: string;
-}) {
+function DockGlyph({ id }: { id: (typeof TABS)[number]["id"] }) {
+  const stroke = {
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.6,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+  };
+  if (id === "rvfax") {
+    return (
+      <svg viewBox="0 0 24 24" className="bottom-tab-glyph" aria-hidden>
+        <path d="M7 3.5h7.1L19 8.3V20.5H7z" {...stroke} />
+        <path d="M14 3.6V8.4h5" {...stroke} />
+        <path d="M9.5 12.2h5.2M9.5 15.4h5.2" {...stroke} />
+      </svg>
+    );
+  }
+  if (id === "rvcal") {
+    return (
+      <svg viewBox="0 0 24 24" className="bottom-tab-glyph" aria-hidden>
+        <rect x="4" y="5.5" width="16" height="14" rx="2" {...stroke} />
+        <path d="M4 9.5h16M8 3.5v3.5M16 3.5v3.5" {...stroke} />
+      </svg>
+    );
+  }
+  if (id === "rvgrok") {
+    return (
+      <span className="bottom-tab-grok" aria-hidden>
+        <svg viewBox="0 0 24 24" className="bottom-tab-glyph" aria-hidden>
+          <circle cx="12" cy="12" r="2.1" {...stroke} />
+          <path
+            d="M12 3.5v2.4M12 18.1v2.4M3.5 12h2.4M18.1 12h2.4M6 6l1.7 1.7M16.3 16.3 18 18M18 6l-1.7 1.7M7.7 16.3 6 18"
+            {...stroke}
+          />
+        </svg>
+      </span>
+    );
+  }
+  if (id === "rvtow") {
+    return (
+      <svg viewBox="0 0 24 24" className="bottom-tab-glyph" aria-hidden>
+        <path d="M5 20.5V5.5h2.2M7.2 6.2H17l-1.2 2.6H7.2" {...stroke} />
+        <path d="M15.2 8.8v4.4" {...stroke} />
+        <path d="M13.4 14.6h3.6" {...stroke} />
+        <circle cx="15.2" cy="17.6" r="1.35" {...stroke} />
+      </svg>
+    );
+  }
+  if (id === "rvtrips") {
+    return (
+      <svg viewBox="0 0 24 24" className="bottom-tab-glyph" aria-hidden>
+        <path
+          d="M12 21s6.2-5.4 6.2-10a6.2 6.2 0 1 0-12.4 0C5.8 15.6 12 21 12 21z"
+          {...stroke}
+        />
+        <circle cx="12" cy="11" r="2" {...stroke} />
+      </svg>
+    );
+  }
   return (
-    <span
-      className={cn(
-        "bottom-tab-label pointer-events-none max-w-full text-center uppercase leading-none whitespace-nowrap",
-        className,
-      )}
-      data-label={text}
-    >
-      {text}
-    </span>
+    <svg viewBox="0 0 24 24" className="bottom-tab-glyph" aria-hidden>
+      <path d="M3.5 20.5V10L8 7.6V20.5M8 20.5V6.2L16 3.5v17M16 20.5V8.2l4.5 2.1v10.2M3.5 20.5h17" {...stroke} />
+    </svg>
   );
 }
 
 /**
- * Dock blends into the Raidho mark ground (#000000) so the tab
- * square disappears. One highlight: 2px --color-sapphire top rule
- * on the active tab.
- *
- * Android WebView: do NOT put pointer-events-none on this nav. Parent
- * none + child auto + backdrop-filter fails hit-testing on Chromium
- * WebView, so Facts/Cal/Tow/Trips/Grok/Lot never fire. iOS still uses
- * onClick only (no extra pointer path).
+ * Independent platinum chips. The row slides; page swipe stays on the suite.
+ * Android WebView: do NOT put pointer-events-none on this nav.
  */
 export function BottomTabs({
   tab,
   onChange,
+  homeOpen = false,
 }: {
   tab: AppTab;
   onChange: (t: AppTab) => void;
+  homeOpen?: boolean;
 }) {
   const lastFire = useRef({ id: "" as AppTab | "", at: 0 });
   const press = useRef<{ id: AppTab; x: number; y: number } | null>(null);
+  const dockRef = useRef<HTMLDivElement>(null);
 
   const fire = (id: AppTab) => {
     const now = performance.now();
@@ -79,25 +123,31 @@ export function BottomTabs({
     onChange(id);
   };
 
+  useEffect(() => {
+    const dock = dockRef.current;
+    if (!dock || homeOpen) return;
+    const active = dock.querySelector<HTMLElement>(".is-active");
+    if (!active) return;
+    const left = active.offsetLeft - (dock.clientWidth - active.clientWidth) / 2;
+    dock.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
+  }, [tab, homeOpen]);
+
   return (
     <nav
-      className="bottom-tabs-nav pointer-events-auto relative z-[80] w-full px-3 pt-1 sm:px-4"
+      className="bottom-tabs-nav pointer-events-auto relative z-[80] w-full px-3 pt-1"
       data-bottom-dock
+      data-dock-icons="platinum"
       data-no-swipe
-      data-active-tab={tab}
-      style={{
-        // Bottom inset lives in CSS (.bottom-tabs-nav) so env() + the
-        // phone fallback floor win. html.android-native uses --dock-safe-bottom.
-        touchAction: "manipulation",
-      }}
+      data-active-tab={homeOpen ? "home" : tab}
+      style={{ touchAction: "pan-x" }}
     >
       <div
-        className="bottom-tabs-dock pointer-events-auto relative isolate mx-auto grid w-full max-w-lg grid-cols-6 items-stretch gap-0 overflow-hidden rounded-[16px] p-1"
-        style={{ touchAction: "manipulation" }}
+        ref={dockRef}
+        className="bottom-tabs-dock pointer-events-auto relative isolate mx-auto flex w-full items-stretch overflow-x-auto overflow-y-hidden"
+        style={{ touchAction: "pan-x" }}
       >
         {TABS.map(({ id, label, short }) => {
-          const active = tab === id;
-          const isLive = id === "rvgrok";
+          const active = !homeOpen && tab === id;
           return (
             <button
               key={id}
@@ -127,23 +177,14 @@ export function BottomTabs({
               aria-label={label}
               title={label}
               className={cn(
-                "bottom-tab-btn group relative z-[3] flex min-h-[48px] w-full min-w-0 items-center justify-center rounded-none px-0.5 py-2 sm:min-h-[52px]",
+                "bottom-tab-btn group relative z-[3] flex flex-col items-center justify-center px-3 py-2",
                 "transition-[transform,opacity] duration-200 ease-out",
                 "pointer-events-auto active:scale-[0.94] touch-manipulation select-none",
-                isLive && "bottom-tab-live",
                 active && "is-active",
               )}
             >
-              {isLive ? (
-                /* Live slot: Einstein icon only — no Grok / Live / RvGROK text. */
-                <img
-                  src="/assets/brand/icon-rvgrok.png"
-                  alt=""
-                  className="bottom-tab-einstein"
-                />
-              ) : (
-                <DockLabel text={short} />
-              )}
+              <DockGlyph id={id} />
+              <span className="bottom-tab-caption">{short}</span>
             </button>
           );
         })}

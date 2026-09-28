@@ -60,21 +60,20 @@ You do not need to see his screen. ACTIVE SCREEN and SCREEN GUIDE are your view 
 When he asks "what screen am I on", "what is this", "how do I use this", or "where is X", answer right away from SCREEN GUIDE. Name the screen, give two or three specifics (how to search, the filters, what updates live), and offer to walk him through it. Never web-search how rvmax works, and never hold ("give me one second") for an app question.
 Use the button and field names exactly as written. Keep it short. If a control is not named in the guide, answer with the closest step that is, and say you are not sure that control is on this screen. Do not invent a button. Do not refuse the question.`;
 
-export const SCREEN_SHARED = `The top bar has the RvFOX mark. Tapping it opens Home. The ⋯ button at the top right of the page banner, or on Home's header, opens the Premium menu.
+export const SCREEN_SHARED = `The top bar is the finished R and the RvFOX word. Tapping it opens Home. The ⋯ button opens the Premium menu, where Appearance lives. It is not in the header brand.
 Every screen except the RV Grok chat has the ask bar at the bottom:
-- a "What's up?" text box, where a typed question opens the RV Grok chat with the answer
+- an "Ask RV Grok" text box, where a typed question opens the RV Grok chat with the answer
 - the mic, which starts Live Voice and keeps him on the screen he's on. It shows Listening or Speaking, and tapping it again stops voice.
-The pill row sits under that bar on every screen, including the chat. The pills are Rv Facts, Lot Inventory, Calculator, RV Grok, and Tow Guide, in that order. The row only moves when he drags or swipes it. It does not auto-scroll.
-Swiping the page (not the pill row) moves between tools in this order: Rv Facts, Calculator, RV Grok, Tow Guide, RV GPS, Lot Inventory. Swiping doesn't work on Home.
-RV GPS has no pill. Reach it by swiping the page, from Premium (RV GPS), or from "Use for trip alerts" on Tow Guide.`;
+Under that bar is a dock of six gold line icons. All six are visible. The dock does not slide and does not auto-scroll. Left to right: FACTS (a document), CAL (a calendar), Grok (a gold sunburst in a blue ring), TOW (a crane), RV GPS (a pin), and LOT (buildings). The same icons show in White and Dark. There is no Einstein photo and no word pills.
+Swiping the page (not the dock) moves between tools in this order: Rv Facts, Calculator, RV Grok, Tow Guide, RV GPS, Lot Inventory. Swiping doesn't work on Home.`;
 
 const GUIDES: Record<string, string> = {
-  Home: `Home is the showroom floor. The spotlight is locked to the stocked 2026 Entegra Cornerstone, lot stock 45282. The photo is the studio shot. Price and stock number come from the lot snapshot, not from typed card text.
-- When that stock (or its VIN) is on the lot, the placard is three lines: the model number (Cornerstone 45D), the price, and the stock number (Stock 45282). Year, make, the lot count, location, condition, and length stay off the placard.
-- Tapping the photo or the placard opens that unit in Lot Inventory, on its lot card. It does not open Rv Facts.
-- If that stock number and VIN leave the lot, the photo stays and the card falls back to "Cornerstone", with no price or stock left behind. The photo is not a button in that case.
-- "Newest arrivals" is a row of up to six recent lot units, each with a photo (or a covered-coach drawing when the unit has no photo) and a price. When the row overflows it auto-loops. Touch or drag pauses it, and it resumes a few seconds after release. Reduced motion leaves a still row he can swipe. If the cards already fit, it does not loop. Tapping one opens Lot Inventory already searched to that unit, with its card open.
-Next step: tap the spotlight coach, tap a newest arrival, or tap a pill (Lot Inventory to browse, Rv Facts to look up a coach).`,
+  Home: `Home is the showroom. Light mode is one full-bleed lot photo of the stocked 2026 Entegra Cornerstone. Dark mode is that same coach, one studio cutout, on a black ground. The page loads only the photo that theme uses.
+- Year, make, and model sit on the image in large type. Price and stock are quiet lines on the image, not a second card. The model number is Cornerstone 45D and the stock number is Stock 45282 when that unit is on the lot.
+- One button: Open coach. It opens that unit in Lot Inventory. There is no Learn more button. Tapping it does not open Rv Facts.
+- Under the hero, the printed lot count from the lot sheet is a small frozen number. It does not count down.
+- "Newest arrivals" is a still row of up to six recent lot units. He pushes it with a finger. It does not auto-loop. Each card has a photo (or a covered-coach drawing when the unit has no photo) and a price. Tapping one opens Lot Inventory already searched to that unit.
+Next step: tap Open coach, or push Newest arrivals.`,
 
   Facts: `Rv Facts is the spec report for one coach: specs, ratings, market value, and NHTSA recalls.
 Search, in the RV Search card:
@@ -147,7 +146,7 @@ There's no VIN field on Tow, even though the banner says "VIN decode". VIN decod
 - The Dumps chip lists free sewer dumps ("FREE SEWER DUMPS"), searchable by city, highway, or name, sorted by his location. He should confirm hours.
 - A route can be saved with Save.`,
 
-  Grok: `This is the RV Grok chat. It has no "What's up?" ask bar. It has its own "Ask RV Grok" box, the mic for Live Voice, and the camera button: tap to take a photo, or hold to pick from the library. A separate live-camera control stays on while he talks.
+  Grok: `This is the RV Grok chat. It has no bottom ask bar. It has its own "Ask RV Grok" box, the mic for Live Voice, and the camera button: tap to take a photo, or hold to pick from the library. A separate live-camera control stays on while he talks.
 Across the top are Chat history, Agent (deeper research), Voice settings, New chat (once a thread is open), and ⋯.
 - Name a year, make, and model to get a spec report card. GAP fields stay empty, and nothing is invented.
 - After a report, Grok offers extras one at a time with Yes / No thanks: ratings, a video, NHTSA recalls, market bands, owner reviews, the maintenance list, a VIN decode, and sharing.

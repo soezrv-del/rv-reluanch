@@ -1,7 +1,8 @@
 import { cn } from "@/lib/utils";
+import "./home-truth.css";
 
 /**
- * Forged steel wordmark — hammered / embossed into the plate.
+ * Forged platinum wordmark — stamped into a metal plate.
  * Dual-layer: deep strike shadow + hard metal face.
  */
 export function MetalVerifiedTrue({
