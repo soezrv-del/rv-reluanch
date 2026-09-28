@@ -5,29 +5,20 @@ import { getSpec } from "@/lib/rv/catalog";
 import { ensureCatalogLoaded } from "@/lib/rv/catalogLoad";
 import {
   buildFactsShareReport,
+  factsReportSearch,
+  type FactsReportSearch,
   type ShareReport,
 } from "@/lib/rv/shareReport";
 
-type FactsSearch = {
-  make: string;
-  series: string;
-  year: string;
-  floorplan: string;
-};
-
-function searchText(value: unknown): string {
-  if (typeof value === "string") return value;
-  if (typeof value === "number" && Number.isFinite(value)) return String(value);
-  return "";
-}
-
 export const Route = createFileRoute("/report/facts")({
-  validateSearch: (search: Record<string, unknown>): FactsSearch => ({
-    make: searchText(search.make),
-    series: searchText(search.series),
-    year: searchText(search.year),
-    floorplan: searchText(search.floorplan),
-  }),
+  validateSearch: (search: Record<string, unknown>): FactsReportSearch =>
+    factsReportSearch(search),
+  head: ({ match }) => {
+    const title = [match.search.year, match.search.make, match.search.series, match.search.floorplan]
+      .filter((part) => part != null && String(part).trim())
+      .join(" ");
+    return { meta: [{ title: title || "RvFAX vehicle report" }] };
+  },
   component: FactsReportRoute,
 });
 

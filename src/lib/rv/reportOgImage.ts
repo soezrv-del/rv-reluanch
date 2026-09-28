@@ -1,7 +1,5 @@
 import { createRequire } from "node:module";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { readFile } from "node:fs/promises";
 import { initWasm, Resvg } from "@resvg/resvg-wasm";
 import { loadReportForUrl } from "./reportRequestMeta.ts";
 import type { ShareReport } from "./shareReport.ts";
@@ -14,11 +12,11 @@ const WIDTH = 1200;
 const HEIGHT = 630;
 const cache = new Map<string, Uint8Array>();
 let wasmReady: Promise<void> | null = null;
-let fontReady: Promise<string[]> | null = null;
+let fontBytes: Uint8Array[] | null = null;
 
-function decodeInline(value: string): Buffer {
+function decodeInline(value: string): Uint8Array {
   const payload = value.startsWith("data:") ? (value.split(",")[1] ?? "") : value;
-  return Buffer.from(payload, "base64");
+  return new Uint8Array(Buffer.from(payload, "base64"));
 }
 
 function ensureWasm(): Promise<void> {
@@ -30,17 +28,14 @@ function ensureWasm(): Promise<void> {
   return wasmReady;
 }
 
-function ensureFonts(): Promise<string[]> {
-  fontReady ??= (async () => {
-    const dir = join(tmpdir(), "rvfax-og-fonts");
-    await mkdir(dir, { recursive: true });
-    const regular = join(dir, "Geist-Regular.ttf");
-    const semibold = join(dir, "Geist-SemiBold.ttf");
-    await writeFile(regular, decodeInline(regularFont));
-    await writeFile(semibold, decodeInline(semiboldFont));
-    return [regular, semibold];
-  })();
-  return fontReady;
+/**
+ * resvg-wasm only paints text from `fontBuffers`. `fontFiles` is copied into
+ * the options JSON and never opened, so the card stays cream and blue.
+ * Geist SemiBold's typographic family is "Geist" (weight 600).
+ */
+function ogFonts(): Uint8Array[] {
+  fontBytes ??= [decodeInline(regularFont), decodeInline(semiboldFont)];
+  return fontBytes;
 }
 
 async function dataUrl(url: string): Promise<string | null> {
@@ -129,7 +124,6 @@ export async function renderReportOg(request: Request): Promise<Response> {
   const report = await loadReportForUrl(url);
   if (!report) return new Response("Report not found", { status: 404 });
   await ensureWasm();
-  const fonts = await ensureFonts();
   const logo = await dataUrl(new URL("/assets/brand/icon-rvfax.png", url.origin).href);
   const photo = report.photoUrl
     ? await dataUrl(
@@ -141,8 +135,7 @@ export async function renderReportOg(request: Request): Promise<Response> {
   const png = new Resvg(cardSvg(report, logo, photo), {
     fitTo: { mode: "width", value: WIDTH },
     font: {
-      fontFiles: fonts,
-      loadSystemFonts: false,
+      fontBuffers: ogFonts(),
       defaultFontFamily: "Geist",
     },
   })

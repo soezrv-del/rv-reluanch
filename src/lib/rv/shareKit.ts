@@ -55,7 +55,6 @@ export {
 export type { ShareInclude, ShareMarketLines } from "./shareCardPolicy";
 
 export const SAVED_UNITS_KEY = "rvfax_saved_v1";
-export const SAVED_UNITS_EVENT = "rvfax-saved-changed";
 
 export type SharePayment = {
   price: number;

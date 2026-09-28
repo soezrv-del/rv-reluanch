@@ -14,6 +14,7 @@ import {
   buildFactsShareReport,
   buildUnitShareReport,
   findLotUnit,
+  plainQueryText,
   reportDescription,
   type ShareReport,
 } from "./shareReport.ts";
@@ -52,10 +53,10 @@ async function loadLot(origin: string): Promise<LotSnapshotView> {
 export async function loadReportForUrl(url: URL): Promise<ShareReport | null> {
   const kind = url.searchParams.get("kind");
   if (url.pathname === "/report/facts" || kind === "facts") {
-    const year = url.searchParams.get("year") ?? "";
-    const make = url.searchParams.get("make") ?? "";
-    const series = url.searchParams.get("series") ?? "";
-    const floorplan = url.searchParams.get("floorplan") ?? "";
+    const year = plainQueryText(url.searchParams.get("year"));
+    const make = plainQueryText(url.searchParams.get("make"));
+    const series = plainQueryText(url.searchParams.get("series"));
+    const floorplan = plainQueryText(url.searchParams.get("floorplan"));
     if (!year || !make || !series) return null;
     await ensureCatalogLoaded();
     const spec = getSpec(make, series);

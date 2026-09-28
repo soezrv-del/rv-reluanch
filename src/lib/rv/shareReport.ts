@@ -129,17 +129,72 @@ export function formatReportDate(now: Date = new Date()): string {
   }).format(now);
 }
 
+/**
+ * TanStack Router JSON-encodes a numeric string, so year "2026" becomes
+ * the quoted query value `"2026"`. Unwrap that, and accept a real number.
+ */
+export function plainQueryText(value: unknown): string {
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  if (typeof value !== "string") return "";
+  let text = value.trim();
+  for (let i = 0; i < 2; i += 1) {
+    if (!(text.length >= 2 && text.startsWith('"') && text.endsWith('"'))) break;
+    try {
+      const parsed: unknown = JSON.parse(text);
+      if (typeof parsed === "number" && Number.isFinite(parsed)) {
+        text = String(parsed);
+        continue;
+      }
+      if (typeof parsed === "string") {
+        text = parsed.trim();
+        continue;
+      }
+    } catch {
+      text = text.slice(1, -1).trim();
+      continue;
+    }
+    break;
+  }
+  return text;
+}
+
+/** Four-digit model year, or null when the link did not include one. */
+export function reportYear(value: unknown): number | null {
+  const text = plainQueryText(value);
+  if (!/^\d{4}$/.test(text)) return null;
+  return Number(text);
+}
+
+export type FactsReportSearch = {
+  make: string;
+  series: string;
+  year?: number;
+  floorplan: string;
+};
+
+/** Route search for /report/facts. Year is a number so the URL stays year=2026. */
+export function factsReportSearch(search: Record<string, unknown>): FactsReportSearch {
+  const year = reportYear(search.year);
+  const next: FactsReportSearch = {
+    make: plainQueryText(search.make),
+    series: plainQueryText(search.series),
+    floorplan: plainQueryText(search.floorplan),
+  };
+  if (year != null) next.year = year;
+  return next;
+}
+
 export function factsReportPath(q: {
-  year: string;
+  year: string | number;
   make: string;
   series: string;
   floorplan?: string;
 }): string {
   const params = new URLSearchParams();
-  params.set("make", q.make.trim());
-  params.set("series", q.series.trim());
-  params.set("year", q.year.trim());
-  const floorplan = q.floorplan?.trim();
+  params.set("make", plainQueryText(q.make));
+  params.set("series", plainQueryText(q.series));
+  params.set("year", plainQueryText(q.year));
+  const floorplan = plainQueryText(q.floorplan);
   if (floorplan) params.set("floorplan", floorplan);
   return `/report/facts?${params.toString()}`;
 }
@@ -230,17 +285,17 @@ function factsSources(specs: BrochureSpecs): string | null {
 }
 
 export function buildFactsShareReport(input: {
-  year: string;
+  year: string | number;
   make: string;
   series: string;
   floorplan?: string;
   spec: RVSpec;
   now?: Date;
 }): ShareReport {
-  const year = input.year.trim();
-  const make = input.make.trim();
-  const series = input.series.trim();
-  const floorplan = (input.floorplan ?? "").trim();
+  const year = plainQueryText(input.year);
+  const make = plainQueryText(input.make);
+  const series = plainQueryText(input.series);
+  const floorplan = plainQueryText(input.floorplan);
   const specs = buildFactsBrochureSpecs(
     input.spec,
     year,

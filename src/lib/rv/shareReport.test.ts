@@ -4,12 +4,16 @@ import { PDFDocument } from "pdf-lib";
 import type { RVSpec } from "./rvTypes.ts";
 import type { LotUnit } from "../lot/ownLotPage.ts";
 import { buildShareReportPdf } from "./shareReportPdf.ts";
+import { defaultParseSearch, defaultStringifySearch } from "@tanstack/router-core";
 import {
   buildFactsShareReport,
   buildUnitShareReport,
   factsReportPath,
+  factsReportSearch,
   findLotUnit,
   isOmittedReportValue,
+  plainQueryText,
+  reportYear,
   unitReportPath,
 } from "./shareReport.ts";
 
@@ -241,6 +245,43 @@ test("lot unit with missing price and gvwr omits those lines", () => {
   assert.equal(findLotUnit([lotUnit()], "47516")?.stock_number, "47516");
   assert.equal(findLotUnit([lotUnit()], "1FDRU8PG5TKA51981")?.vin, "1FDRU8PG5TKA51981");
   assert.equal(findLotUnit([lotUnit()], "missing"), null);
+});
+
+test("facts year is a number so share URLs and titles are not JSON-quoted", () => {
+  assert.equal(plainQueryText('"2026"'), "2026");
+  assert.equal(plainQueryText('"\\"2026\\""'), "2026");
+  assert.equal(reportYear('"2026"'), 2026);
+  assert.equal(reportYear(2026), 2026);
+
+  const legacy = defaultParseSearch(
+    "?year=%222026%22&make=Entegra%20Coach&series=Cornerstone&floorplan=45B",
+  );
+  const search = factsReportSearch(legacy);
+  assert.equal(search.year, 2026);
+  const rewritten = defaultStringifySearch(search);
+  assert.match(rewritten, /(?:^|\?|&)year=2026(?:&|$)/);
+  assert.doesNotMatch(rewritten, /year=%22/);
+  assert.doesNotMatch(rewritten, /year="/);
+
+  const report = buildFactsShareReport({
+    year: '"2026"',
+    make: "Entegra Coach",
+    series: "Cornerstone",
+    floorplan: "45B",
+    spec: sampleSpec(),
+    now: NOW,
+  });
+  assert.equal(report.title.startsWith("2026 "), true);
+  assert.doesNotMatch(report.title, /"/);
+  assert.equal(report.path, factsReportPath({
+    year: 2026,
+    make: "Entegra Coach",
+    series: "Cornerstone",
+    floorplan: "45B",
+  }));
+  assert.match(report.path, /year=2026/);
+  assert.doesNotMatch(report.path, /%22/);
+  assert.equal(report.shareTitle, report.title);
 });
 
 test("a long share report still prints as one PDF page", async () => {
