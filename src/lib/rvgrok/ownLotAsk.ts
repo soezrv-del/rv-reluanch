@@ -295,17 +295,6 @@ export function looksLikeLotFloorplanFollowUp(text: string): boolean {
   return /\b(?:missing|where(?:'s| is)|that(?:'s| is) there|on the show)\b/i.test(t);
 }
 
-const LOT_THEM_RE = /\b(?:them|those|these|'em|’em)\b/i;
-
-function isThemLotFollow(text: string): boolean {
-  const t = normalizeAskText(text);
-  return LOT_THEM_RE.test(t) && /\bhow many\b/i.test(t);
-}
-
-function isLotClarification(text: string): boolean {
-  return /\b(?:i meant|meant to say)\b/i.test(normalizeAskText(text));
-}
-
 /** "30-foot Class As at the Carson RV show" is the lot even without "in stock". */
 export function looksLikeSizedLotAsk(text: string): boolean {
   if (!looksLikeLengthMeasureAsk(text)) return false;
@@ -317,92 +306,98 @@ export function looksLikeSizedLotAsk(text: string): boolean {
   );
 }
 
-function stitchPriorLot(spoken: string, priorUserTurns: readonly string[]): string | null {
-  const bits = priorUserTurns.filter(
-    (prev) =>
-      looksLikeOwnLotStockQuestion(prev) ||
-      looksLikeSizedLotAsk(prev) ||
-      looksLikeLengthMeasureAsk(prev),
+export type OwnLotSortBy = "price" | "length" | "year";
+export type OwnLotSortDir = "asc" | "desc";
+
+export type OwnLotSort = {
+  by: OwnLotSortBy;
+  dir: OwnLotSortDir;
+};
+
+/**
+ * Rank words on a lot follow-up. "top 10 cheapest" is price ascending,
+ * limit 10. Not a nationwide market ask.
+ */
+export function parseLotRank(text: string): { sort?: OwnLotSort; limit?: number } {
+  const t = normalizeAskText(text);
+  let sort: OwnLotSort | undefined;
+  if (/\b(?:cheapest|lowest|least\s+expensive)\b/i.test(t)) {
+    sort = { by: "price", dir: "asc" };
+  } else if (/\b(?:priciest|most\s+expensive|highest\s+priced?)\b/i.test(t)) {
+    sort = { by: "price", dir: "desc" };
+  } else if (/\bshortest\b/i.test(t)) {
+    sort = { by: "length", dir: "asc" };
+  } else if (/\blongest\b/i.test(t)) {
+    sort = { by: "length", dir: "desc" };
+  } else if (/\bnewest\b/i.test(t)) {
+    sort = { by: "year", dir: "desc" };
+  } else if (/\boldest\b/i.test(t)) {
+    sort = { by: "year", dir: "asc" };
+  } else if (/\border\b/i.test(t)) {
+    if (/\bprice\b/i.test(t)) {
+      sort = { by: "price", dir: /\bdesc|highest|expensive\b/i.test(t) ? "desc" : "asc" };
+    } else if (/\blength|foot|feet\b/i.test(t)) {
+      sort = { by: "length", dir: /\blongest|desc\b/i.test(t) ? "desc" : "asc" };
+    } else if (/\byear\b/i.test(t)) {
+      sort = { by: "year", dir: /\boldest|asc\b/i.test(t) ? "asc" : "desc" };
+    }
+  }
+  const top = t.match(/\b(?:top|first)\s+(\d{1,2})\b/i);
+  const limit = top ? Number(top[1]) : undefined;
+  return { sort, limit };
+}
+
+/** Cheapest / shortest / top N — our lot, not a web price search. */
+export function looksLikeOwnLotRankQuestion(text: string): boolean {
+  const t = normalizeAskText(text);
+  if (!t.trim()) return false;
+  if (/\b(?:recall|tsb|gvwr|horsepower|\bengine\b|nationwide|market\s+value)\b/i.test(t)) {
+    return false;
+  }
+  return Boolean(parseLotRank(t).sort) || /\b(?:top|first)\s+\d{1,2}\b/i.test(t);
+}
+
+/** "prices on those" is the lot list, not a nationwide asking-price search. */
+export function looksLikeOwnLotPriceOnThose(text: string): boolean {
+  return /\bprices?\s+on\s+(?:those|these|them|the ones|ours?)\b/i.test(
+    normalizeAskText(text),
   );
-  if (!bits.length) return null;
-  return `${bits.join(". ")}. ${spoken}`;
 }
 
-function priorShowPhrase(priorUserTurns: readonly string[]): string | null {
-  for (let i = priorUserTurns.length - 1; i >= 0; i--) {
-    const m = (priorUserTurns[i] || "").match(
-      /\bat\s+the\s+[A-Za-z0-9'’. -]{0,40}?\bshow\b/i,
-    );
-    if (m) return m[0];
-  }
-  return null;
-}
-
-const LOT_YES_RE =
-  /^(?:yeah|yes|yep|yup|sure|ok|okay|please|do that|go ahead|check(?: the full lot)?|full lot|the full lot)[.!\s]*$/i;
-
-const LOT_MODEL_FOLLOW_RE =
-  /\b(?:what are the models|which models|what models|models of those|floorplans of those)\b/i;
-
-function coachStockAsk(text: string): string | null {
-  const parsed = parseCoachFromText(text);
-  if (!((parsed.floorplan && (parsed.make || parsed.model)) || (parsed.make && parsed.model))) {
-    return null;
-  }
-  const coach = [parsed.year, parsed.make, parsed.model, parsed.floorplan]
-    .filter(Boolean)
-    .join(" ");
-  return coach ? `do we have ${coach} in stock` : null;
+/** Bare "yeah" — only a lot follow-up when a lot filter is already in the session. */
+export function looksLikeBareLotConfirm(text: string): boolean {
+  return /^(?:yeah|yes|yep|yup|sure|ok|okay|please|do that|go ahead|check(?: the full lot)?|full lot|the full lot)[.!\s]*$/i.test(
+    normalizeAskText(text).trim(),
+  );
 }
 
 /**
- * "Yeah" after "what about the 29S" searches that coach on the full lot.
- * "What are the models of those twelve?" repeats the last make/model stock ask.
- * A store from the earlier turn is not copied onto this query.
+ * A follow-up that does not restate the subject: "those", "the ones",
+ * "cheapest", "around 30 foot", "how many miles does it have".
+ * The session filter supplies the subject.
  */
-export function lotQueryForFollowUp(
-  spoken: string,
-  priorUserTurns: readonly string[],
-): string | null {
-  const t = normalizeAskText(spoken).trim();
-  if (isThemLotFollow(t) || isLotClarification(t)) {
-    return stitchPriorLot(spoken, priorUserTurns);
-  }
-  if (
-    looksLikeLotFloorplanFollowUp(t) &&
-    /\b(?:there|that show|the show)\b/i.test(t) &&
-    !/\bshow\b/i.test(t)
-  ) {
-    const show = priorShowPhrase(priorUserTurns);
-    if (show) return `${spoken} ${show}`;
-  }
-  if (LOT_MODEL_FOLLOW_RE.test(t)) {
-    for (let i = priorUserTurns.length - 1; i >= 0; i--) {
-      const prev = priorUserTurns[i] || "";
-      const parsed = parseCoachFromText(prev);
-      if (looksLikeOwnLotStockQuestion(prev) && (parsed.make || parsed.model)) {
-        return prev;
-      }
-    }
-    return null;
-  }
+export function looksLikeOwnLotFollowUp(text: string): boolean {
+  const t = normalizeAskText(text);
+  if (!t.trim()) return false;
+  if (looksLikeBareLotConfirm(t)) return true;
+  if (looksLikeOwnLotRankQuestion(t) || looksLikeOwnLotPriceOnThose(t)) return true;
+  if (/\b(?:i meant|meant to say)\b/i.test(t)) return true;
   if (
     (/\b(?:odometer|mileage)\b/i.test(t) ||
       (/\bhow many miles\b/i.test(t) &&
         !/\bmiles\s+(?:to|from|away|per)\b/i.test(t))) &&
     !parseOwnLotStockNumber(t)
   ) {
-    for (let i = priorUserTurns.length - 1; i >= 0; i--) {
-      const prev = priorUserTurns[i] || "";
-      if (parseOwnLotStockNumber(prev)) return `${prev}. ${spoken}`;
-    }
+    return true;
   }
-  if (!LOT_YES_RE.test(t)) return null;
-  for (let i = priorUserTurns.length - 1; i >= 0; i--) {
-    const rebuilt = coachStockAsk(priorUserTurns[i] || "");
-    if (rebuilt) return rebuilt;
+  if (
+    /\b(?:the ones|those|these|them|'em|’em|that's there|that show|the show)\b/i.test(
+      t,
+    )
+  ) {
+    return true;
   }
-  return null;
+  return false;
 }
 
 export function looksLikeOwnLotStockQuestion(text: string): boolean {
@@ -413,6 +408,9 @@ export function looksLikeOwnLotStockQuestion(text: string): boolean {
   // a named floorplan follow-up stays on the lot.
   if (looksLikeLotFloorplanFollowUp(text)) return true;
   if (looksLikeSizedLotAsk(text)) return true;
+  if (looksLikeOwnLotRankQuestion(text) || looksLikeOwnLotPriceOnThose(text)) {
+    return true;
+  }
   if (
     looksLikeInventoryOrCountQuestion(text) ||
     looksLikeOwnLotListingPriceQuestion(text) ||
@@ -626,7 +624,7 @@ export function ownLotVoiceCoachLock(notes: string): {
  * store lines below this still apply.
  */
 export const OWN_LOT_SCRAPE_IN_FRONT =
-  "SCRAPE ROW WINS. This line is in front of every other instruction this turn. Every printed field on a unit line is the RV Country lot scrape. You have total power to look up and speak any of those fields. Nothing after this line overrides a printed scrape field — not web research, a brochure pin, the catalog, or a shorter field list. A blank field stays blank. If mileage is printed, that is the odometer. If mileage is not on the line, the odometer is not on the row. Do not guess. Never say a stock that is printed here is not in any online listings, not on the lot, or not in the catalog. The lot total, a printed floorplan count, and the store lines still apply.";
+  "SCRAPE ROW WINS. This line is in front of every other instruction this turn. Every printed field on a unit line is the RV Country lot scrape. You have total power to look up and speak any of those fields. Nothing after this line overrides a printed scrape field — not web research, a brochure pin, the catalog, or a shorter field list. A blank field stays blank. If mileage is printed, that is the odometer. If mileage is not on the line, the odometer is not on the row. Do not guess. Never say a stock that is printed here is not in any online listings, not on the lot, or not in the catalog. The lot total, a printed floorplan count, and the store lines still apply. Name only a unit printed in this block or returned by query_lot. If the block says none, say none. Do not invent a coach, price, stock number, or store to fill a miss. The 85 to 90 percent rule is for GVWR and spec pins, not lot inventory.";
 
 /**
  * Voice must hear the lot total and the matched unit. Do not trim this

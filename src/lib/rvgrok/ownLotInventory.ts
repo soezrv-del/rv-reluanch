@@ -42,12 +42,16 @@ import {
 import {
   LOT_ASK_STOP,
   looksLikeOwnLotListingPriceQuestion,
+  looksLikeOwnLotPriceOnThose,
+  looksLikeOwnLotRankQuestion,
   looksLikeOwnLotSearchAsk,
   looksLikeOwnLotStockQuestion,
   looksLikeOwnLotUnitListQuestion,
   lotSearchQueryFromAsk,
   OWN_LOT_SCRAPE_IN_FRONT,
+  parseLotRank,
   parseOwnLotStockNumber,
+  type OwnLotSort,
 } from "./ownLotAsk.ts";
 import { searchLotUnits } from "../lot/lotSearch.ts";
 
@@ -141,7 +145,17 @@ export type OwnLotFilter = {
    * [N-2, N+2] feet, not the single foot [N, N+1).
    */
   aroundLengthFt?: number;
+  /** Inclusive length floor from query_lot. Printed length wins; else a reliable floorplan foot. */
+  lengthFtMin?: number;
+  /** Inclusive length cap from query_lot. */
+  lengthFtMax?: number;
+  /** Inclusive model-year floor. Exact `year` still wins when both are set. */
+  yearMin?: number;
+  /** Inclusive model-year cap. */
+  yearMax?: number;
 };
+
+export type { OwnLotSort };
 
 export type OwnLotPriceBand = {
   count: number;
@@ -205,8 +219,18 @@ export function shouldSkipWebForOwnLot(
   text: string,
   snapshot?: OwnLotSnapshot | null,
 ): boolean {
-  if (!looksLikeOwnLotStockQuestion(text)) return false;
-  if (looksLikeMarketValueQuestion(text) || looksLikeRepairQuestion(text)) {
+  const lotPrice =
+    looksLikeOwnLotRankQuestion(text) || looksLikeOwnLotPriceOnThose(text);
+  if (!looksLikeOwnLotStockQuestion(text) && !lotPrice) return false;
+  if (looksLikeRepairQuestion(text)) return false;
+  if (
+    looksLikeMarketValueQuestion(text) &&
+    !lotPrice &&
+    !looksLikeOwnLotPriceOnThose(text)
+  ) {
+    return false;
+  }
+  if (/\b(?:worth|market\s+value|comps?\b|book\s+value|trade[- ]?in)\b/i.test(text)) {
     return false;
   }
   return ownLotHasHit(snapshot);
@@ -383,11 +407,37 @@ export function parseOwnLotLength(
   return {};
 }
 
+export type ResolvedLength = {
+  ft: number | null;
+  source: "printed" | "floorplan" | "none";
+};
+
+/**
+ * Printed vehicle_body_length / length_ft wins.
+ * A blank sheet uses the floorplan foot only when the trim (or, if trim
+ * is blank, the model token) is a reliable 18–45 foot code. Anything else
+ * stays none — never a guessed foot.
+ */
+export function resolvedUnitLength(unit: Pick<OwnLotUnit, "lengthFt" | "trim" | "model">): ResolvedLength {
+  if (unit.lengthFt != null && unit.lengthFt > 0) {
+    return { ft: unit.lengthFt, source: "printed" };
+  }
+  const fromTrim = floorplanLengthFt(unit.trim);
+  if (fromTrim != null) return { ft: fromTrim, source: "floorplan" };
+  if ((unit.trim || "").trim()) return { ft: null, source: "none" };
+  const token = extractFloorplanToken(unit.model) || unit.model;
+  const fromModel = floorplanLengthFt(token);
+  if (fromModel != null) return { ft: fromModel, source: "floorplan" };
+  return { ft: null, source: "none" };
+}
+
 function hasLengthBound(filter: OwnLotFilter): boolean {
   return (
     filter.maxLengthFt != null ||
     filter.minLengthFt != null ||
-    filter.aroundLengthFt != null
+    filter.aroundLengthFt != null ||
+    filter.lengthFtMin != null ||
+    filter.lengthFtMax != null
   );
 }
 
@@ -397,7 +447,21 @@ function withoutLength(filter: OwnLotFilter): OwnLotFilter {
   delete next.maxLengthInclusive;
   delete next.minLengthFt;
   delete next.aroundLengthFt;
+  delete next.lengthFtMin;
+  delete next.lengthFtMax;
   return next;
+}
+
+/** Units that match every constraint except length, and have no reliable foot. */
+export function ownLotUnitsMissingLength(
+  units: OwnLotUnit[],
+  filter: OwnLotFilter,
+): OwnLotUnit[] {
+  const base = withoutLength(filter);
+  return units.filter(
+    (unit) =>
+      unitMatchesFilter(unit, base) && resolvedUnitLength(unit).source === "none",
+  );
 }
 
 function feetText(n: number): string {
@@ -1030,12 +1094,12 @@ export function parseOwnLotAsk(
   // Snapshot body_type is distinct: "Fifth Wheel" ≠ "Fifth Wheel Toy Hauler".
   if (toyHauler && !fifthWheel && !travelTrailer) filter.toyHauler = true;
 
-  if (/\bsuper\s*c\b/i.test(t)) filter.bodyType = "Class Super C";
-  else if (/\bclass\s*a\s*diesel\b/i.test(t)) filter.bodyType = "Class A Diesel";
+  if (/\bsuper\s*cs?\b/i.test(t)) filter.bodyType = "Class Super C";
+  else if (/\bclass\s*a\s*diesels?\b/i.test(t)) filter.bodyType = "Class A Diesel";
   else if (/\bclass\s*a\s*gas\b/i.test(t)) filter.bodyType = "Class A Gas";
   else if (/\bclass\s*as?\b/i.test(t)) filter.bodyType = "Class A";
-  else if (/\bclass\s*b\b/i.test(t)) filter.bodyType = "Class B";
-  else if (/\bclass\s*c\b/i.test(t) && !/\bsuper\s*c\b/i.test(t)) {
+  else if (/\bclass\s*bs?\b/i.test(t)) filter.bodyType = "Class B";
+  else if (/\bclass\s*cs?\b/i.test(t) && !/\bsuper\s*cs?\b/i.test(t)) {
     filter.bodyType = "Class C";
   } else if (fifthWheel && toyHauler) {
     filter.bodyType = "Fifth Wheel Toy Hauler";
@@ -1315,6 +1379,12 @@ export function unitMatchesFilter(
   }
   if (filter.year && unit.year && unit.year !== filter.year) return false;
   if (filter.year && !unit.year) return false;
+  if (filter.yearMin != null || filter.yearMax != null) {
+    const year = Number(unit.year);
+    if (!Number.isFinite(year) || year <= 0) return false;
+    if (filter.yearMin != null && year < filter.yearMin) return false;
+    if (filter.yearMax != null && year > filter.yearMax) return false;
+  }
   if (filter.make) {
     const um = norm(unit.make);
     const fm = norm(filter.make);
@@ -1350,12 +1420,7 @@ export function unitMatchesFilter(
     }
   }
   if (hasLengthBound(filter)) {
-    const printed = unit.lengthFt;
-    const fromPlan =
-      printed == null && filter.aroundLengthFt != null
-        ? floorplanLengthFt(unit.trim)
-        : null;
-    const lengthFt = printed != null ? printed : fromPlan;
+    const lengthFt = resolvedUnitLength(unit).ft;
     if (lengthFt == null) return false;
     if (filter.aroundLengthFt != null) {
       const band = nominalLengthBand(filter.aroundLengthFt);
@@ -1371,6 +1436,8 @@ export function unitMatchesFilter(
     if (filter.minLengthFt != null && !(lengthFt > filter.minLengthFt)) {
       return false;
     }
+    if (filter.lengthFtMin != null && lengthFt < filter.lengthFtMin) return false;
+    if (filter.lengthFtMax != null && lengthFt > filter.lengthFtMax) return false;
   }
   return true;
 }
@@ -1456,28 +1523,93 @@ export function aggregateOwnLot(
   };
 }
 
-/** Query-time retrieval — matching units, cheapest first (or closest to around $X). */
+function compareLotUnits(
+  a: OwnLotUnit,
+  b: OwnLotUnit,
+  sort: OwnLotSort | undefined,
+  around: number | undefined,
+): number {
+  if (!sort && around != null) {
+    const ap = a.price;
+    const bp = b.price;
+    const ad = ap == null ? Number.POSITIVE_INFINITY : Math.abs(ap - around);
+    const bd = bp == null ? Number.POSITIVE_INFINITY : Math.abs(bp - around);
+    return ad - bd;
+  }
+  const by = sort?.by ?? "price";
+  const sign = sort?.dir === "desc" ? -1 : 1;
+  if (by === "year") {
+    const ay = Number(a.year);
+    const byy = Number(b.year);
+    const aOk = Number.isFinite(ay) && ay > 0;
+    const bOk = Number.isFinite(byy) && byy > 0;
+    if (!aOk && !bOk) return 0;
+    if (!aOk) return 1;
+    if (!bOk) return -1;
+    return (ay - byy) * sign;
+  }
+  if (by === "length") {
+    const al = resolvedUnitLength(a).ft;
+    const bl = resolvedUnitLength(b).ft;
+    if (al == null && bl == null) return 0;
+    if (al == null) return 1;
+    if (bl == null) return -1;
+    return (al - bl) * sign;
+  }
+  const ap = a.price;
+  const bp = b.price;
+  if (ap == null && bp == null) return 0;
+  if (ap == null) return 1;
+  if (bp == null) return -1;
+  return (ap - bp) * sign;
+}
+
+/** Query-time retrieval. Default is cheapest first (or closest to around $X). */
 export function queryOwnLotUnits(
   units: OwnLotUnit[],
   filter: OwnLotFilter = {},
   limit = MATCH_LIST_MAX,
+  sort?: OwnLotSort,
 ): OwnLotUnit[] {
-  const matched = units.filter((u) => unitMatchesFilter(u, filter));
-  const around = filter.aroundPrice;
-  matched.sort((a, b) => {
-    const ap = a.price;
-    const bp = b.price;
-    if (around != null) {
-      const ad = ap == null ? Number.POSITIVE_INFINITY : Math.abs(ap - around);
-      const bd = bp == null ? Number.POSITIVE_INFINITY : Math.abs(bp - around);
-      return ad - bd;
-    }
-    if (ap == null && bp == null) return 0;
-    if (ap == null) return 1;
-    if (bp == null) return -1;
-    return ap - bp;
-  });
+  let matched = units.filter((u) => unitMatchesFilter(u, filter));
+  if (sort?.by === "length") {
+    matched = matched.filter((unit) => resolvedUnitLength(unit).ft != null);
+  }
+  matched.sort((a, b) => compareLotUnits(a, b, sort, filter.aroundPrice));
   return matched.slice(0, Math.max(0, limit));
+}
+
+export function ownLotFilterIsTyped(filter: OwnLotFilter): boolean {
+  return Boolean(
+    filter.stockNumber ||
+      filter.year ||
+      filter.yearMin != null ||
+      filter.yearMax != null ||
+      filter.make ||
+      filter.model ||
+      filter.trim ||
+      filter.bodyType ||
+      filter.toyHauler ||
+      filter.location ||
+      filter.dieselOnly ||
+      filter.gasOnly ||
+      filter.minPrice != null ||
+      filter.maxPrice != null ||
+      filter.aroundPrice != null ||
+      hasLengthBound(filter),
+  );
+}
+
+/** Whole-lot rows are never "matches" for a question that named a type. */
+export function ownLotRowsHeading(
+  filter: OwnLotFilter,
+  shown: number,
+  matched: number,
+): string {
+  if (!ownLotFilterIsTyped(filter)) {
+    return `Cheapest on the whole lot, all types (${shown} of ${matched}; not a typed match):`;
+  }
+  return `Matching units (from file only, ${shown} of ${matched}; every non-empty scrape field):`;
 }
 
 function formatCountMap(map: Record<string, number>, max = 12): string {
@@ -1486,7 +1618,7 @@ function formatCountMap(map: Record<string, number>, max = 12): string {
   return entries.map(([k, n]) => `${k}: ${n}`).join("; ");
 }
 
-function filterLabel(filter: OwnLotFilter): string {
+export function filterLabel(filter: OwnLotFilter): string {
   const bits = [
     filter.stockNumber ? `stk ${filter.stockNumber}` : "",
     filter.year,
@@ -1503,6 +1635,10 @@ function filterLabel(filter: OwnLotFilter): string {
       : "",
     filter.minPrice != null ? `over ${formatOwnLotUsd(filter.minPrice)}` : "",
     filter.maxPrice != null ? `under ${formatOwnLotUsd(filter.maxPrice)}` : "",
+    filter.yearMin != null ? `year ≥ ${filter.yearMin}` : "",
+    filter.yearMax != null ? `year ≤ ${filter.yearMax}` : "",
+    filter.lengthFtMin != null ? `length ≥ ${feetText(filter.lengthFtMin)} ft` : "",
+    filter.lengthFtMax != null ? `length ≤ ${feetText(filter.lengthFtMax)} ft` : "",
     lengthFilterClause(filter),
   ].filter(Boolean);
   return bits.length ? bits.join(" · ") : "all units";
@@ -1539,13 +1675,13 @@ function formatUnitListing(unit: OwnLotUnit): string {
     unit.price != null && unit.price > 0
       ? formatOwnLotUsd(unit.price)
       : "price not on row";
+  const resolved = resolvedUnitLength(unit);
   const length =
-    unit.lengthFt != null
-      ? `${feetText(Math.round(unit.lengthFt * 10) / 10)} ft`
-      : (() => {
-          const fromPlan = floorplanLengthFt(unit.trim);
-          return fromPlan != null ? `floorplan ${fromPlan} ft` : "";
-        })();
+    resolved.source === "printed" && resolved.ft != null
+      ? `${feetText(Math.round(resolved.ft * 10) / 10)} ft`
+      : resolved.source === "floorplan" && resolved.ft != null
+        ? `floorplan ${resolved.ft} ft`
+        : "";
   const shown = new Set([
     "year",
     "make",
@@ -1647,9 +1783,17 @@ function countsForMatchedUnits(
   return { ...inner, total: allUnits.length, matched: matched.length };
 }
 
+export type OwnLotAnswerOpts = {
+  /** Session or tool filter. When set, it replaces parsing the current sentence. */
+  filter?: OwnLotFilter;
+  sort?: OwnLotSort;
+  limit?: number;
+};
+
 export function formatOwnLotBlock(
   snapshot: OwnLotSnapshot,
   query: string,
+  opts?: OwnLotAnswerOpts | null,
 ): string {
   if (ownLotIsUnavailable(snapshot)) {
     return formatOwnLotUnavailable(snapshot);
@@ -1658,7 +1802,11 @@ export function formatOwnLotBlock(
   const locations = [
     ...new Set(snapshot.units.map((u) => u.location).filter(Boolean)),
   ];
-  const filter = parseOwnLotAsk(query, locations, snapshot.units);
+  const parsed = parseOwnLotAsk(query, locations, snapshot.units);
+  const spokenRank = parseLotRank(query);
+  const sort = opts?.sort ?? spokenRank.sort;
+  const askedLimit = opts?.limit ?? spokenRank.limit;
+  const filter = opts?.filter ?? parsed;
   let active = filter;
   let lengthCutoff = "";
   if (hasLengthBound(filter)) {
@@ -1746,46 +1894,48 @@ export function formatOwnLotBlock(
   );
   const lengthClassList =
     hasLengthBound(active) && (classFilter || Boolean(active.aroundLengthFt));
-  const listCap = lengthClassList ? 24 : MATCH_LIST_MAX;
+  const rankAsk = Boolean(sort) || askedLimit != null;
+  const listCap =
+    askedLimit != null
+      ? Math.min(24, Math.max(1, askedLimit))
+      : lengthClassList
+        ? 24
+        : MATCH_LIST_MAX;
   const wantListings =
     counts.matched > 0 &&
     (stockAsk ||
       listAsk ||
       useLotSearch ||
       lengthClassList ||
+      rankAsk ||
       ((listingAsk || budgetFilter) &&
         (narrowIdentity || classFilter || budgetFilter)) ||
       (narrowIdentity && counts.matched <= MATCH_LIST_MAX));
+
+  const pushRows = (rows: OwnLotUnit[], lead?: string) => {
+    if (!rows.length) return;
+    lines.push(
+      lead || ownLotRowsHeading(active, rows.length, counts.matched),
+      OWN_LOT_SCRAPE_IN_FRONT,
+      ...rows.map(formatUnitListing),
+      "Specific units ARE listed above. If a unit line is printed, that coach IS on this lot. Name only these units. Never invent a unit that is not printed here.",
+    );
+    appendSingleUnitLock(lines, rows, counts.matched);
+  };
 
   // Unit rows go next to the count. A later voice trim must still see the
   // stock number — policy paragraphs used to push them past the cut.
   if (wantListings) {
     const rows = useLotSearch
       ? lotHits.slice(0, listCap)
-      : queryOwnLotUnits(snapshot.units, active, listCap);
-    if (rows.length) {
-      lines.push(
-        `Matching units (from file only, ${rows.length} of ${counts.matched}; every non-empty scrape field):`,
-        OWN_LOT_SCRAPE_IN_FRONT,
-        ...rows.map(formatUnitListing),
-        "Specific units ARE listed above. If a unit line is printed, that coach IS on this lot. Never say it is missing, and never say you cannot pull specific units.",
-      );
-      appendSingleUnitLock(lines, rows, counts.matched);
-    }
+      : queryOwnLotUnits(snapshot.units, active, listCap, sort);
+    pushRows(rows);
   } else if (
-    (listingAsk || listAsk || budgetFilter) &&
+    (listingAsk || listAsk || budgetFilter || rankAsk) &&
     counts.matched > MATCH_LIST_MAX
   ) {
-    const rows = queryOwnLotUnits(snapshot.units, active, MATCH_LIST_MAX);
-    if (rows.length) {
-      lines.push(
-        `Matching units (from file only, first ${rows.length} of ${counts.matched}; every non-empty scrape field):`,
-        OWN_LOT_SCRAPE_IN_FRONT,
-        ...rows.map(formatUnitListing),
-        "Specific units ARE listed above. Never say you cannot pull specific units or that the snapshot does not break out a list.",
-      );
-      appendSingleUnitLock(lines, rows, counts.matched);
-    }
+    const rows = queryOwnLotUnits(snapshot.units, active, listCap, sort);
+    pushRows(rows);
   } else if (counts.matched === 0 && !lengthCutoff) {
     const sameAtStore =
       filter.location && filter.trim && (filter.make || filter.model)
@@ -1826,7 +1976,30 @@ export function formatOwnLotBlock(
       }
     } else {
       lines.push(
-        "No own-lot hit for this exact series. Say we do not have that coach on the lot snapshot this turn — briefly. Do not say it is missing from the catalog or not in listings. Do not mention catalog gap. Do not send them to check their own lot listing. Do not swap in a sibling series that shares the floorplan code.",
+        `None. No own-lot hit for this filter (${filterLabel(active)}). Say we do not have that coach on the lot snapshot this turn — briefly. Do not invent a unit, price, stock number, or store. Do not say it is missing from the catalog or not in listings. Do not mention catalog gap. Do not send them to check their own lot listing. Do not swap in a sibling series that shares the floorplan code.`,
+      );
+    }
+  }
+
+  if (hasLengthBound(active) || sort?.by === "length") {
+    const missingLength = ownLotUnitsMissingLength(snapshot.units, active);
+    if (missingLength.length) {
+      const names = missingLength
+        .slice(0, 12)
+        .map((unit) =>
+          [
+            unit.year,
+            unit.make,
+            unit.model,
+            unit.trim,
+            unit.stock_number ? `stk ${unit.stock_number}` : "",
+          ]
+            .filter(Boolean)
+            .join(" "),
+        )
+        .join("; ");
+      lines.push(
+        `No length on file (not guessed, ${missingLength.length} unit${missingLength.length === 1 ? "" : "s"}): ${names}. Do not invent a foot for these.`,
       );
     }
   }

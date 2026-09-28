@@ -35,15 +35,20 @@ test("session.update enables native web_search on the Realtime session", () => {
   const session = msg.session as {
     instructions: string;
     voice: string;
-    tools: Array<{ type: string }>;
+    tools: Array<{ type: string; name?: string }>;
     turn_detection: { type: string };
     audio: {
       input: { format: { type: string; rate: number } };
       output: { format: { type: string; rate: number }; speed: number };
     };
   };
-  assert.deepEqual(session.tools, [{ type: "web_search" }]);
-  assert.deepEqual([...REALTIME_SESSION_TOOLS], [{ type: "web_search" }]);
+  assert.deepEqual(session.tools, [...REALTIME_SESSION_TOOLS]);
+  assert.equal(session.tools[0]?.type, "web_search");
+  assert.equal(
+    (session.tools[1] as { name?: string } | undefined)?.name,
+    "query_lot",
+  );
+  assert.match(session.instructions, /query_lot/);
   assert.equal(session.voice, "ara");
   assert.equal(session.turn_detection.type, "server_vad");
   assert.equal(session.audio.input.format.type, "audio/pcm");
@@ -114,13 +119,17 @@ test("catalog lock session.update still ships voice, VAD, audio, and web_search"
   const session = msg.session as {
     instructions: string;
     voice: string;
-    tools: Array<{ type: string }>;
+    tools: Array<{ type: string; name?: string }>;
     turn_detection: { type: string; threshold: number };
     audio: { output: { speed: number } };
   };
   assert.equal(msg.type, "session.update");
   assert.equal(session.voice, "eve");
-  assert.deepEqual(session.tools, [{ type: "web_search" }]);
+  assert.deepEqual(session.tools, [...REALTIME_SESSION_TOOLS]);
+  assert.equal(
+    (session.tools[1] as { name?: string } | undefined)?.name,
+    "query_lot",
+  );
   assert.equal(session.turn_detection.type, "server_vad");
   assert.equal(session.turn_detection.threshold, 0.45);
   assert.equal(session.audio.output.speed, 1);
@@ -154,6 +163,9 @@ test("onopen / lock-refresh path still calls buildRealtimeSessionUpdate", () => 
   assert.match(realtime, /takeTokenStandingLessons/);
   assert.match(realtime, /visitorMemory/);
   assert.match(realtime, /standingLessons/);
+  assert.match(realtime, /response\.function_call_arguments\.done/);
+  assert.match(realtime, /\/api\/rvgrok\/query-lot/);
+  assert.match(realtime, /function_call_output/);
 });
 
 test("session.update injects the active screen guide and forbids a blind-screen excuse", () => {
