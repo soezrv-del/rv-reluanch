@@ -41,7 +41,8 @@ test("page heroes sit under the logo; the showroom header owns the top inset", (
   assert.doesNotMatch(css, /\[data-grok-thread-chrome\] \{[^}]*safe-area-inset-top/);
   assert.match(css, /\[data-grok-thread-chrome\] \{[^}]*padding-top:\s*0\.75rem/);
 
-  assert.match(header, /<PremiumMenuButton size="sm"/);
+  assert.match(header, /tesla-page-head/);
+  assert.doesNotMatch(header, /PremiumMenuButton/);
   assert.match(trips, /premium-menu-corner/);
   assert.match(trips, /data-trips-header/);
   assert.match(grok, /data-grok-thread-chrome/);

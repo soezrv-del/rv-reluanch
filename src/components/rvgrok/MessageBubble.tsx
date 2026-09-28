@@ -131,7 +131,7 @@ export function MessageBubble({
             "rounded-[var(--radius-lg)] px-3.5 py-3 text-[14px] leading-relaxed",
             isUser
               ? "rounded-br-sm bg-sapphire text-white shadow-[var(--shadow-glow-sapphire)]"
-              : "grok-frost rounded-bl-sm text-fg",
+              : "tesla-tile rounded-bl-sm text-fg",
           )}
         >
         {hasAgentSteps ? (

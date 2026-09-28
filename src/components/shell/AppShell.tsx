@@ -420,9 +420,6 @@ export function AppShell({
   );
 
   const show = (id: AppTab) => suiteReady && visited.has(id);
-  // White page + Grok-card frost on every screen, including home, so the
-  // three-color ink (black / sapphire / dark gray) never sits on a dark plate.
-  const frostPages = true;
 
   return (
     <ShellNavProvider value={nav}>
@@ -430,31 +427,25 @@ export function AppShell({
         ref={shellRef}
         className="app-shell showroom-app relative flex h-full min-h-0 w-full flex-col overflow-hidden overscroll-none text-fg"
         data-home-open={homeOpen ? "" : undefined}
-        data-frost-pages={frostPages ? "" : undefined}
         data-page-accent={PAGE_ACCENT[tab] ?? "sapphire"}
         style={{
           overscrollBehavior: "none",
         }}
       >
-        <div className="showroom-stage" aria-hidden>
-          <div className="showroom-ambient" />
-          {homeOpen ? (
-            <>
-              <div className="showroom-spot" />
-              <div className="showroom-spot-src" />
-              <div className="showroom-spot-pool" />
-            </>
-          ) : null}
-          <div className="showroom-grain" />
-        </div>
-        <SuiteBrand onHome={() => setHomeOpen(true)} showMenu={homeOpen} />
+        <SuiteBrand onHome={() => setHomeOpen(true)} showMenu />
         <main
           ref={mainRef}
           className="suite-swipe-viewport relative min-h-0 flex-1 overflow-hidden"
           aria-hidden={launchOpen}
         >
           {homeOpen ? (
-            <HomeScreen onOpenLot={() => onTabChange("rvlot")} />
+            <HomeScreen
+              onOpenLot={() => onTabChange("rvlot")}
+              onAsk={(prompt) => {
+                setHomeOpen(false);
+                openGrok(prompt);
+              }}
+            />
           ) : null}
           {dockOrder.map((id, i) => {
             if (!show(id)) return null;

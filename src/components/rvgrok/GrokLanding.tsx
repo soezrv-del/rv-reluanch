@@ -65,7 +65,7 @@ export function GrokLanding({
           <button
             type="button"
             onClick={() => onChip(lotChip.prompt)}
-            className="grok-frost grok-lot-chip mt-2 flex min-h-11 w-full items-center gap-2.5 rounded-[var(--radius-xl)] px-3.5 py-2.5 text-left"
+            className="tesla-tile grok-lot-chip mt-2 flex min-h-11 w-full items-center gap-2.5 rounded-[var(--radius-xl)] px-3.5 py-2.5 text-left"
           >
             <span className="grok-lot-dot size-2 shrink-0 rounded-full" />
             <span className="min-w-0">
@@ -80,7 +80,7 @@ export function GrokLanding({
         </aside>
       ) : null}
 
-      <section className="grok-frost grok-landing-card relative flex flex-col items-center px-5 pb-5 pt-8 text-center sm:px-10 sm:pb-7 sm:pt-10">
+      <section className="tesla-tile grok-landing-card relative flex flex-col items-center px-5 pb-5 pt-8 text-center sm:px-10 sm:pb-7 sm:pt-10">
         {toolbar ? (
           <div
             data-grok-top-chrome

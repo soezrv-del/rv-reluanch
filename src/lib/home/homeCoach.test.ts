@@ -138,9 +138,9 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   const shell = readFileSync(join(root, "../../components/shell/AppShell.tsx"), "utf8");
   const home = readFileSync(join(root, "../../components/shell/HomeScreen.tsx"), "utf8");
   const brand = readFileSync(join(root, "../../components/shell/SuiteBrand.tsx"), "utf8");
-  const mark = join(root, "../../../public/assets/brand/raidho-shell-mark.png");
+  const mark = join(root, "../../../public/assets/brand/raidho-r-chrome.webp");
   assert.ok(existsSync(mark), "owner mark asset");
-  assert.match(shell, /<SuiteBrand onHome=\{\(\) => setHomeOpen\(true\)\} showMenu=\{homeOpen\} \/>/);
+  assert.match(shell, /<SuiteBrand onHome=\{\(\) => setHomeOpen\(true\)\} showMenu \/>/);
   assert.match(brand, /aria-label="Home"/);
   assert.match(shell, /homeOpen/);
   assert.match(shell, /initialTab = "rvgrok"/);
@@ -161,7 +161,7 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   const lot = readFileSync(join(root, "../../components/lot/LotStockApp.tsx"), "utf8");
   assert.match(lot, /takePendingLotQuery/);
   assert.match(home, /prefers-reduced-motion/);
-  assert.match(brand, /\/assets\/brand\/raidho-shell-mark\.png/);
+  assert.match(brand, /\/assets\/brand\/raidho-r-chrome\.webp/);
   assert.match(brand, /RvFOX/);
   assert.doesNotMatch(home, /unsplash|placeholder|allegro/i);
   assert.doesNotMatch(shell, /RvFaxApp\.tsx|LotStockApp\.tsx|RvCalApp\.tsx|RvTowApp\.tsx/);
@@ -312,8 +312,9 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
   );
   assert.doesNotMatch(css, /showroom-coach-fallback|showroom-reflect|showroom-contact|showroom-hero picture|showroom-hero-wash|showroom-hero-glint/);
   assert.doesNotMatch(home, /showroom-hero-wash|showroom-hero-glint|showroom-roof-glint|feMorphology|feFlood|preserveAspectRatio/);
-  assert.match(css, /\.showroom-hero-beam \{/);
-  assert.match(css, /\.showroom-hero-pool \{/);
+  assert.doesNotMatch(css, /\.showroom-hero-beam \{/);
+  assert.doesNotMatch(css, /\.showroom-hero-pool \{/);
+  assert.doesNotMatch(home, /showroom-hero-beam|showroom-hero-pool/);
   assert.doesNotMatch(
     css,
     /\.showroom-count|\.showroom-onlot|\.showroom-coachline|\.showroom-spotfacts|\.showroom-spotmeta/,
@@ -321,17 +322,18 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
   assert.match(css, /\.showroom-spotmodel \{/);
   assert.match(css, /\.showroom-spotprice \{/);
   assert.match(css, /\.showroom-spotstock \{/);
-  assert.match(home, /SHOWROOM_SPOTLIGHT\.alt/);
-  assert.match(home, /SHOWROOM_SPOTLIGHT\.image/);
-  assert.match(home, /showroom-hero-beam/);
-  assert.match(home, /showroom-hero-pool/);
+  assert.match(css, /\.home-hero-frame \{[\s\S]*?aspect-ratio:\s*4\s*\/\s*3/);
+  assert.match(home, /data-home-hero/);
+  assert.match(home, /View Details/);
+  assert.match(home, /Ask About It/);
+  assert.match(home, /className="tesla-main"/);
   assert.doesNotMatch(home, /spotlightJpegPath|showroom-reflect|showroom-contact/);
   assert.doesNotMatch(coach, /spotlightJpegPath|2026-entegra-cornerstone\.jpg/);
   assert.match(home, /spotlightLotUnit\(listed\)/);
   assert.match(home, /spotlightSpecs\(spotUnit\)/);
   assert.match(home, /requestLotUnit\(lotArrivalQuery\(spotUnit\)\)/);
   assert.match(home, /showroom-spotmodel/);
-  assert.match(home, /Stock \{specs\.stock\}/);
+  assert.match(home, /Stock \{spotStock\}/);
   assert.doesNotMatch(home, /Stock #|showroom-count|showroom-onlot|showroom-coachline|showroom-spotfacts|showroom-spotmeta|useCountUp|spotlightLabel|data-home-count|data-home-spotlight-specs/);
   assert.match(home, /Newest arrivals/);
   assert.match(home, /showroom-arrival-name/);
@@ -340,11 +342,9 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
   assert.doesNotMatch(fax, /takePendingSpotlightFacts|SPOTLIGHT_FACTS/);
   assert.doesNotMatch(shell, /openSpotlightFacts|onOpenFacts/);
   assert.doesNotMatch(coach, /spotlightFactsTarget|requestSpotlightFacts/);
-  assert.match(css, /\.showroom-hero \{[^}]*margin:\s*0\.75rem auto 0;/);
   assert.match(
     css,
     /\.showroom-header \{[^}]*env\(safe-area-inset-top, 0px\)/,
   );
-  const heroPhoto = home.slice(home.indexOf("function SpotlightPhoto"), home.indexOf("export function HomeScreen"));
-  assert.doesNotMatch(heroPhoto, /lotUnitPhoto|unit\.photo/);
+  assert.match(home, /lotUnitPhoto\(unit\)/);
 });

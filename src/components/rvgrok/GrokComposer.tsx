@@ -65,7 +65,7 @@ export function GrokComposer({
   return (
     <div data-rvgrok-composer="" data-density={density} className="w-full">
       {pendingImage && !landing ? (
-        <div className="grok-frost mb-2 flex items-center gap-2 rounded-[var(--radius-lg)] px-2 py-2">
+        <div className="tesla-tile mb-2 flex items-center gap-2 rounded-[var(--radius-lg)] px-2 py-2">
           <img
             src={pendingImage}
             alt="Ready to send"

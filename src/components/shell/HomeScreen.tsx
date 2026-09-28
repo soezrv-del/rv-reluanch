@@ -21,22 +21,12 @@ import {
   spotlightSpecs,
 } from "@/lib/home/homeCoach";
 
-function SpotlightPhoto({
-  className,
-  alt,
-}: {
-  className: string;
-  alt: string;
-}) {
-  return (
-    <img src={SHOWROOM_SPOTLIGHT.image} alt={alt} className={className} />
-  );
-}
-
 export function HomeScreen({
   onOpenLot,
+  onAsk,
 }: {
   onOpenLot: () => void;
+  onAsk: (prompt: string) => void;
 }) {
   const [units, setUnits] = useState<LotUnit[] | null>(null);
 
@@ -59,29 +49,37 @@ export function HomeScreen({
   const spotUnit = useMemo(() => spotlightLotUnit(listed), [listed]);
   const specs = spotUnit ? spotlightSpecs(spotUnit) : null;
   const model = specs?.model || SHOWROOM_SPOTLIGHT.series;
-  const openSpot = () => {
-    if (!spotUnit) return;
-    requestLotUnit(lotArrivalQuery(spotUnit));
+  const slides = useMemo(() => heroSlides(listed, spotUnit), [listed, spotUnit]);
+  const [slide, setSlide] = useState(0);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const active = slides[slide] ?? slides[0] ?? null;
+  const activeIsSpot =
+    !!active && !!spotUnit && active.stock_number === spotUnit.stock_number;
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const apply = () => setReducedMotion(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
+  useEffect(() => {
+    if (reducedMotion || slides.length < 2) return;
+    const id = window.setInterval(() => {
+      setSlide((n) => (n + 1) % slides.length);
+    }, 5000);
+    return () => window.clearInterval(id);
+  }, [reducedMotion, slides.length]);
+
+  const openUnit = (unit: LotUnit) => {
+    if (spotUnit && unit.stock_number === spotUnit.stock_number) {
+      requestLotUnit(lotArrivalQuery(spotUnit));
+    } else {
+      requestLotUnit(lotArrivalQuery(unit));
+    }
     onOpenLot();
   };
-
-  const hero = (
-    <>
-      <div className="showroom-hero-beam" aria-hidden />
-      <SpotlightPhoto className="showroom-coach" alt={SHOWROOM_SPOTLIGHT.alt} />
-      <div className="showroom-hero-pool" aria-hidden />
-    </>
-  );
-
-  const placard = (
-    <>
-      <p className="showroom-spotmodel">{model}</p>
-      {specs?.price ? <p className="showroom-spotprice">{specs.price}</p> : null}
-      {specs?.stock ? (
-        <p className="showroom-spotstock">Stock {specs.stock}</p>
-      ) : null}
-    </>
-  );
 
   return (
     <div
@@ -90,28 +88,23 @@ export function HomeScreen({
       data-no-swipe
       className="showroom-home absolute inset-0 z-30 flex flex-col overflow-x-hidden overflow-y-auto"
     >
-      {spotUnit ? (
-        <button type="button" className="showroom-hero" onClick={openSpot}>
-          {hero}
-        </button>
-      ) : (
-        <div className="showroom-hero">{hero}</div>
-      )}
-
-      {spotUnit ? (
-        <button
-          type="button"
-          className="showroom-placard showroom-card"
-          data-home-placard
-          onClick={openSpot}
-        >
-          {placard}
-        </button>
-      ) : (
-        <section className="showroom-placard showroom-card" data-home-placard>
-          {placard}
-        </section>
-      )}
+      {active ? (
+        <HomeHero
+          unit={active}
+          index={slide}
+          count={slides.length}
+          spotModel={activeIsSpot ? model : ""}
+          spotPrice={activeIsSpot ? specs?.price ?? "" : ""}
+          spotStock={activeIsSpot ? specs?.stock ?? "" : ""}
+          onView={() => openUnit(active)}
+          onAsk={() =>
+            onAsk(
+              `Tell me about the ${showroomUnitLabel(active)}, stock ${active.stock_number}.`,
+            )
+          }
+          onDot={(i) => setSlide(i)}
+        />
+      ) : null}
 
       {arrivals.length > 0 ? (
         <NewestArrivals
@@ -123,6 +116,93 @@ export function HomeScreen({
         />
       ) : null}
     </div>
+  );
+}
+
+function heroSlides(units: LotUnit[], spot: LotUnit | null): LotUnit[] {
+  const withPhoto = units.filter((unit) => lotUnitPhoto(unit));
+  if (!spot || !lotUnitPhoto(spot)) return withPhoto.slice(0, 8);
+  const rest = withPhoto.filter((unit) => unit.stock_number !== spot.stock_number);
+  return [spot, ...rest].slice(0, 8);
+}
+
+function HomeHero({
+  unit,
+  index,
+  count,
+  spotModel,
+  spotPrice,
+  spotStock,
+  onView,
+  onAsk,
+  onDot,
+}: {
+  unit: LotUnit;
+  index: number;
+  count: number;
+  spotModel: string;
+  spotPrice: string;
+  spotStock: string;
+  onView: () => void;
+  onAsk: () => void;
+  onDot: (index: number) => void;
+}) {
+  const [ok, setOk] = useState(true);
+  const photo = ok ? lotUnitPhoto(unit) : null;
+  const name = spotModel || showroomUnitLabel(unit);
+  const amount =
+    spotPrice ||
+    (typeof unit.price === "number" && unit.price > 0
+      ? formatHomePrice(Math.round(unit.price))
+      : "");
+
+  return (
+    <section className="home-hero" data-home-hero>
+      <div className="home-hero-frame">
+        {photo ? (
+          <img
+            src={photo}
+            alt=""
+            className="home-hero-photo"
+            onError={() => setOk(false)}
+          />
+        ) : (
+          <span className="home-hero-photo home-hero-fallback">
+            <CoveredCoach variant={coverVariant(unit)} />
+          </span>
+        )}
+        <div className="home-hero-scrim">
+          <p className="showroom-spotmodel home-hero-name">{name}</p>
+          {amount ? (
+            <p className="showroom-spotprice home-hero-price">{amount}</p>
+          ) : null}
+          {spotStock ? (
+            <p className="showroom-spotstock">Stock {spotStock}</p>
+          ) : null}
+          <div className="home-hero-actions">
+            <button type="button" className="tesla-main" onClick={onView}>
+              View Details
+            </button>
+            <button type="button" className="tesla-secondary" onClick={onAsk}>
+              Ask About It
+            </button>
+          </div>
+        </div>
+      </div>
+      {count > 1 ? (
+        <div className="home-hero-dots" role="tablist" aria-label="Lot photos">
+          {Array.from({ length: count }, (_, i) => (
+            <button
+              key={i}
+              type="button"
+              aria-label={`Photo ${i + 1}`}
+              aria-current={i === index ? "true" : undefined}
+              onClick={() => onDot(i)}
+            />
+          ))}
+        </div>
+      ) : null}
+    </section>
   );
 }
 

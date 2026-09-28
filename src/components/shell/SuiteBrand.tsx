@@ -1,7 +1,7 @@
-/** Owner Raidho mark. Shared shell chrome — not a room header. */
+/** David's chrome-edged sapphire R. Shared shell chrome — not a room header. */
 import { PremiumMenuButton } from "./PremiumMenuButton";
 
-export const RAIDHO_SHELL_MARK = "/assets/brand/raidho-shell-mark.png";
+export const RAIDHO_SHELL_MARK = "/assets/brand/raidho-r-chrome.webp";
 
 export function SuiteBrand({
   onHome,
@@ -22,8 +22,8 @@ export function SuiteBrand({
         <img
           src={RAIDHO_SHELL_MARK}
           alt=""
-          width={19}
-          height={32}
+          width={15}
+          height={30}
           className="showroom-mark"
         />
         <span className="showroom-word">RvFOX</span>

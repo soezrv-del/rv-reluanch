@@ -51,7 +51,7 @@ test("Lot stock is the last dock tab and not RV Grok", () => {
   assert.match(lot, /raidhoOnly/);
   assert.match(lot, /lot-stock-screen/);
   assert.match(lot, /glass-prestige/);
-  assert.match(lot, /RAIDHO_R_MARK/);
+  assert.match(lot, /RAIDHO_SHELL_MARK/);
   assert.doesNotMatch(lot, /CoveredCoach/);
   assert.match(lot, /data-lot-stock/);
   assert.match(lot, /data-lot-search/);
@@ -82,7 +82,8 @@ test("Lot stock is the last dock tab and not RV Grok", () => {
   assert.doesNotMatch(lot, /brochure catalog bleed|catalog photo/i);
 
   const header = read("../../components/shell/SapphireHeader.tsx");
-  assert.match(header, /"rvlot"/);
+  assert.match(header, /tesla-page-head/);
+  assert.match(header, /PAGE_COPY\[tab\]/);
   const suite = read("../../components/shell/SuitePage.tsx");
   assert.match(suite, /SuiteRaidhoBackdrop/);
   assert.match(suite, /raidhoOnly/);
@@ -119,13 +120,17 @@ test("a lot unit with no photo shows the Raidho mark and a real photo stays", ()
   assert.match(lot, /data-lot-photo="unit"/);
   assert.match(lot, /onError=\{\(\) => setFailedSrc\(photo\)\}/);
   assert.match(lot, /data-lot-photo="raidho"/);
-  assert.match(lot, /src=\{RAIDHO_R_MARK\}/);
+  assert.match(lot, /src=\{RAIDHO_SHELL_MARK\}/);
   assert.match(lot, /className="lot-mark-art"/);
   assert.doesNotMatch(lot, /CoveredCoach|coverVariant/);
   assert.doesNotMatch(lot, /unit\.photo\s*=/);
   assert.match(css, /\.lot-mark-art[\s\S]*height:\s*45%/);
   assert.match(css, /\.lot-mark-art[\s\S]*object-fit:\s*contain/);
-  assert.match(css, /\.lot-mark-art[\s\S]*opacity:\s*0\.36/);
+  assert.match(css, /\.lot-mark-art[\s\S]*opacity:\s*1/);
+  assert.match(css, /\.lot-well\[data-lot-scene="empty"\][\s\S]*?background:\s*transparent/);
+  assert.match(lot, /RAIDHO_SHELL_MARK/);
+  const brand = read("../../components/shell/SuiteBrand.tsx");
+  assert.match(brand, /raidho-r-chrome\.webp/);
   assert.match(homeScreen, /<CoveredCoach variant=\{coverVariant\(unit\)\} \/>/);
   assert.match(cover, /className="h-20 w-full"/);
   assert.doesNotMatch(cover, /preserveAspectRatio|className\?:/);

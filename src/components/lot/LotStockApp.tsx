@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { RAIDHO_R_MARK } from "@/assets/prestige";
+import { RAIDHO_SHELL_MARK } from "@/components/shell/SuiteBrand";
 import { SuitePage } from "@/components/shell/SuitePage";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
 import {
@@ -397,7 +397,7 @@ function LotUnitCard({
           ) : (
             <span className="lot-mark" data-lot-photo="raidho">
               <img
-                src={RAIDHO_R_MARK}
+                src={RAIDHO_SHELL_MARK}
                 alt=""
                 className="lot-mark-art"
               />

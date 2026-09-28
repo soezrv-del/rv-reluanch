@@ -889,7 +889,7 @@ export function RvTowApp() {
                 {/* Toggle → year → make → model → trim; trim gates AnswerHero */}
                 <div
                   data-tow-kind-toggle
-                  className="flex gap-1 rounded-full border border-white/15 bg-black/30 p-1"
+                  className="tesla-segment"
                   role="group"
                   aria-label="Truck or SUV"
                 >
@@ -905,12 +905,8 @@ export function RvTowApp() {
                       data-tow-kind={id}
                       aria-pressed={kindFilter === id}
                       onClick={() => applyKindFilter(id)}
-                      className={cn(
-                        "flex min-h-11 flex-1 items-center justify-center gap-1 rounded-full px-2 text-[12px] font-bold transition",
-                        kindFilter === id
-                          ? "bg-blue text-white shadow-[0_0_14px_rgba(77,166,255,0.35)]"
-                          : "text-white hover:text-white",
-                      )}
+                      data-tone={kindFilter === id ? "main" : undefined}
+                      className="flex min-h-11 flex-1 items-center justify-center gap-1 rounded-full px-2 text-[12px] font-bold"
                     >
                       {id === "truck" ? (
                         <Truck className="size-3.5" />
@@ -1086,7 +1082,7 @@ export function RvTowApp() {
           {detailsOpen ? (
             <div className="space-y-3 px-1.5 pb-3">
               {toadMode ? null : (
-                <div className="flex gap-1 rounded-full border border-white/15 bg-black/30 p-1">
+                <div className="tesla-segment">
                   {(
                     [
                       ["match", "Match a truck"],
@@ -1096,16 +1092,12 @@ export function RvTowApp() {
                     <button
                       key={id}
                       type="button"
+                      data-tone={shopMode === id ? "main" : undefined}
                       onClick={() => {
                         if (id === "reverse") openReverse();
                         else setShopMode("match");
                       }}
-                      className={cn(
-                        "flex min-h-11 flex-1 items-center justify-center gap-1 rounded-full px-2 text-[12px] font-bold transition",
-                        shopMode === id
-                          ? "bg-blue text-white shadow-[0_0_14px_rgba(77,166,255,0.35)]"
-                          : "text-white hover:text-white",
-                      )}
+                      className="flex min-h-11 flex-1 items-center justify-center gap-1 rounded-full px-2 text-[12px] font-bold"
                     >
                       {id === "reverse" ? (
                         <Search className="size-3.5" />

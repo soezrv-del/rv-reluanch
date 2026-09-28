@@ -704,7 +704,7 @@ export function RvCalApp() {
               if (!Number.isFinite(n) || n <= 0) return;
               applyTargetPayment(n);
             }}
-            className="w-full bg-transparent py-1 pl-9 pr-2 text-center text-[44px] font-bold leading-none tabular-nums text-white outline-none sm:text-[48px]"
+            className="tesla-stat w-full bg-transparent py-1 pl-9 pr-2 text-center text-[44px] font-bold leading-none tabular-nums outline-none sm:text-[48px]"
             inputMode="numeric"
             enterKeyHint="done"
             aria-label="Target monthly payment"
@@ -727,7 +727,7 @@ export function RvCalApp() {
               {priceMode === "finance" ? "FINANCED" : "PRICE"}
             </span>
             <div
-              className="inline-flex rounded-full border border-white/25 bg-white/10 p-0.5"
+              className="tesla-segment"
               role="group"
               aria-label="Price input mode"
             >
@@ -740,12 +740,8 @@ export function RvCalApp() {
                   setPriceFocused(false);
                   setPriceDraft("");
                 }}
-                className={cn(
-                  "min-h-9 rounded-full px-3 text-[11px] font-bold tracking-wide transition",
-                  priceMode === "purchase"
-                    ? "bg-gold/25 text-gold-bright"
-                    : "text-white/70",
-                )}
+                data-tone={priceMode === "purchase" ? "main" : undefined}
+                className="min-h-9 rounded-full px-3 text-[11px] font-bold tracking-wide"
               >
                 Purchase
               </button>
@@ -762,12 +758,8 @@ export function RvCalApp() {
                     setFinanceDriven(true);
                   }
                 }}
-                className={cn(
-                  "min-h-9 rounded-full px-3 text-[11px] font-bold tracking-wide transition",
-                  priceMode === "finance"
-                    ? "bg-blue/30 text-white"
-                    : "text-white/70",
-                )}
+                data-tone={priceMode === "finance" ? "main" : undefined}
+                className="min-h-9 rounded-full px-3 text-[11px] font-bold tracking-wide"
               >
                 Financed
               </button>

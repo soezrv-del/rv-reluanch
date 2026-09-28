@@ -77,11 +77,11 @@ test("rvCAL shares the Facts search thick frost — not a solid black plate", ()
   assert.match(css, /\[data-readable-cards\]\[data-cal-screen\] \.glass-prestige/);
   assert.match(
     css,
-    /-webkit-backdrop-filter:\s*blur\(40px\) saturate\(1\.45\);\s*backdrop-filter:\s*blur\(40px\) saturate\(1\.45\)/,
+    /-webkit-backdrop-filter:\s*blur\(28px\) saturate\(1\.7\);\s*backdrop-filter:\s*blur\(28px\) saturate\(1\.7\)/,
   );
 });
 
-test("rvCAL header drops the ZIP/lender subtitle and keeps the verified mark", () => {
+test("rvCAL header drops the ZIP/lender subtitle and the glow banner", () => {
   const calCopy = constants.match(/rvcal:\s*\{[\s\S]*?\n  \},/);
   assert.ok(calCopy?.[0], "Cal PAGE_COPY block");
   assert.match(calCopy[0], /title:\s*"RvCAL"/);
@@ -89,6 +89,7 @@ test("rvCAL header drops the ZIP/lender subtitle and keeps the verified mark", (
   assert.doesNotMatch(calCopy[0], /ZIP-based calculator with lender comparisons/);
   assert.doesNotMatch(constants, /ZIP-based calculator/);
   assert.doesNotMatch(constants, /lender comparisons/);
-  assert.match(header, /\{copy\.line \? \(/);
-  assert.match(header, /<MetalVerifiedTrue/);
+  assert.match(header, /tesla-page-head/);
+  assert.match(header, /\{copy\.line \?/);
+  assert.doesNotMatch(header, /<MetalVerifiedTrue/);
 });

@@ -48,7 +48,7 @@ export function DeskSpecSheet({
       aria-label={`Spec sheet on the desk: ${sheet.title}`}
       className={cn("grok-report space-y-3", className)}
     >
-      <header className="grok-frost grok-report-hero rounded-[var(--radius-2xl)] px-5 py-5">
+      <header className="tesla-tile grok-report-hero rounded-[var(--radius-2xl)] px-5 py-5">
         <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
           Spec report
         </p>
@@ -97,17 +97,17 @@ export function DeskSpecSheet({
       </header>
 
       {sheet.presenceNote ? (
-        <p className="grok-frost grok-report-note rounded-[var(--radius-xl)] px-4 py-3 text-[12px] leading-snug text-amber">
+        <p className="tesla-tile grok-report-note rounded-[var(--radius-xl)] px-4 py-3 text-[12px] leading-snug text-amber">
           {sheet.presenceNote}
         </p>
       ) : sheet.gaps.length ? (
-        <p className="grok-frost grok-report-note rounded-[var(--radius-xl)] px-4 py-3 text-[12px] leading-snug text-muted">
+        <p className="tesla-tile grok-report-note rounded-[var(--radius-xl)] px-4 py-3 text-[12px] leading-snug text-muted">
           GAP fields stay empty — nothing invented.
         </p>
       ) : null}
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <dl className="grok-frost grok-report-card rounded-[var(--radius-2xl)] px-4 py-3.5">
+        <dl className="tesla-tile grok-report-card rounded-[var(--radius-2xl)] px-4 py-3.5">
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
             Identity
           </p>
@@ -133,7 +133,7 @@ export function DeskSpecSheet({
           ))}
         </dl>
 
-        <dl className="grok-frost grok-report-card rounded-[var(--radius-2xl)] px-4 py-3.5">
+        <dl className="tesla-tile grok-report-card rounded-[var(--radius-2xl)] px-4 py-3.5">
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
             Specs
           </p>

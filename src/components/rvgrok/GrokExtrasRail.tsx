@@ -35,7 +35,7 @@ function PromptCard({
   const copy = GROK_EXTRA_PROMPTS[kind];
   return (
     <section
-      className="grok-frost rounded-[var(--radius-xl)] px-3.5 py-3"
+      className="tesla-tile rounded-[var(--radius-xl)] px-3.5 py-3"
       data-grok-extra={kind}
       data-grok-extra-phase="prompt"
     >
@@ -70,7 +70,7 @@ function ExtraShell({
 }) {
   return (
     <section
-      className="grok-frost rounded-[var(--radius-xl)] px-3.5 py-3"
+      className="tesla-tile rounded-[var(--radius-xl)] px-3.5 py-3"
       data-grok-extra={kind}
       data-grok-extra-phase="ready"
     >

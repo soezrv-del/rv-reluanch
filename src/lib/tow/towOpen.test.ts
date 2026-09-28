@@ -101,7 +101,7 @@ test("Tow landing is full-bleed Raidho only — no beach photo", () => {
   assert.match(css, /\[data-readable-cards\]\[data-tow-landing\] \.glass-prestige/);
   assert.match(
     css,
-    /-webkit-backdrop-filter:\s*blur\(40px\) saturate\(1\.45\);\s*backdrop-filter:\s*blur\(40px\) saturate\(1\.45\)/,
+    /-webkit-backdrop-filter:\s*blur\(28px\) saturate\(1\.7\);\s*backdrop-filter:\s*blur\(28px\) saturate\(1\.7\)/,
   );
 });
 

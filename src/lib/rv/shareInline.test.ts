@@ -140,8 +140,8 @@ test("dock plate and safe-area fill match Raidho R black ground", () => {
   );
   assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?background:\s*var\(--dock-surface\)/);
   assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?backdrop-filter:\s*none/);
-  assert.match(css, /--dock-label-color:\s*#f3f5f8/);
-  assert.match(css, /--dock-label-color-active:\s*#ffffff/);
+  assert.match(css, /--dock-label-color:\s*#3d4d68/);
+  assert.match(css, /--dock-label-color-active:\s*#1648c8/);
   assert.match(css, /border-top-color:\s*var\(--color-sapphire\)/);
   assert.doesNotMatch(css, /background:\s*rgba\(15, 23, 42, 0\.55\)/);
   assert.doesNotMatch(tabs, /DialaBot/);
@@ -155,8 +155,8 @@ test("dock labels are bright solid type — no metal gradient", () => {
 
   assert.match(css, /--dock-label-size:\s*1\.125rem/);
   assert.match(css, /--dock-label-size-sm:\s*1\.1875rem/);
-  assert.match(css, /--dock-label-color:\s*#f3f5f8/);
-  assert.match(css, /--dock-label-color-active:\s*#ffffff/);
+  assert.match(css, /--dock-label-color:\s*#3d4d68/);
+  assert.match(css, /--dock-label-color-active:\s*#1648c8/);
   assert.match(css, /\.bottom-tab-label \{[\s\S]*?font-weight:\s*700/);
   assert.match(css, /\.bottom-tab-label \{[\s\S]*?color:\s*var\(--dock-label-color\)/);
   assert.match(

@@ -1031,10 +1031,10 @@ export function RvFaxApp({
                 onClick={runSearch}
                 disabled={!searchEnabled}
                 className={cn(
-                  "flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full border py-2.5 text-[15px] font-bold",
+                  "flex min-h-[52px] w-full items-center justify-center gap-2 rounded-[10px] py-2.5 text-[15px] font-bold",
                   searchEnabled
-                    ? "border-gold-border/50 bg-gold-dim/25 text-gold-bright active:scale-[0.99]"
-                    : "cursor-not-allowed border-white/15 bg-white/5 text-white/40",
+                    ? "tesla-main"
+                    : "tesla-secondary cursor-not-allowed",
                 )}
               >
                 <Search className="size-3.5" />

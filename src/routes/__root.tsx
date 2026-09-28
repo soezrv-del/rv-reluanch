@@ -26,8 +26,8 @@ export const Route = createRootRoute({
         content:
           "RvGrok — professional RV intelligence powered by xAI Grok. Specs, pricing, recalls, financing, and multi-step Agent research.",
       },
-      { name: "theme-color", content: "#050505" },
-      { name: "color-scheme", content: "dark" },
+      { name: "theme-color", content: "#f2f2f2" },
+      { name: "color-scheme", content: "light" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       {
@@ -56,11 +56,11 @@ function RootComponent() {
 
 function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
-      <body className="bg-bg text-white antialiased">
+      <body className="bg-bg text-fg antialiased">
         <PreviewHostBridge />
         <AuthProvider>{children}</AuthProvider>
         <Scripts />

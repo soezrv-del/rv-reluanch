@@ -18,7 +18,7 @@ test("theme tokens are sapphire / cobalt — not Tiimo lavender", () => {
   assert.match(css, /--color-sapphire:\s*#1648c8/);
   assert.match(css, /--color-sapphire-deep:\s*#0a2a8a/);
   assert.match(css, /--color-sapphire-glow:\s*#3d6ee0/);
-  assert.match(css, /--color-bg:\s*var\(--color-ink-black\)/);
+  assert.match(css, /--color-bg:\s*#f2f2f2/);
   assert.match(css, /--color-accent:\s*var\(--color-sapphire\)/);
   assert.match(css, /--color-tiimo-lavender:\s*var\(--color-sapphire\)/);
   assert.match(css, /--dock-surface:\s*#000000/);
@@ -88,8 +88,8 @@ test("Sold and Premium share sapphire accent + Raidho suite chrome — no dock S
   assert.match(constants, /more:\s*"sapphire"/);
   assert.doesNotMatch(constants, /rvsold:\s*"gold"/);
   assert.doesNotMatch(constants, /more:\s*"gold"/);
-  assert.match(header, /"rvsold"/);
-  assert.match(header, /"more"/);
+  assert.match(header, /tesla-page-head/);
+  assert.match(header, /tesla-facts-word/);
   assert.match(suite, /data-sold-book=\{tab === "rvsold"/);
   assert.match(suite, /data-premium-screen=\{tab === "more"/);
   assert.match(sold, /SuitePage/);
@@ -197,11 +197,11 @@ test("Facts RV Search, RV Cal, RV Tow, and coach detail share thick sapphire fro
   assert.match(css, /\[data-readable-cards\]\[data-coach-detail\] \.glass-prestige/);
   assert.match(
     css,
-    /Thick sapphire frost[\s\S]*?-webkit-backdrop-filter:\s*blur\(40px\) saturate\(1\.45\);\s*backdrop-filter:\s*blur\(40px\) saturate\(1\.45\)/,
+    /Grok card frost[\s\S]*?-webkit-backdrop-filter:\s*blur\(28px\) saturate\(1\.7\);\s*backdrop-filter:\s*blur\(28px\) saturate\(1\.7\)/,
   );
   assert.match(
     css,
-    /Thick sapphire frost[\s\S]*?rgba\(255,\s*255,\s*255,\s*0\.1\)[\s\S]*?rgba\(22,\s*72,\s*200,\s*0\.22\)[\s\S]*?rgba\(6,\s*14,\s*32,\s*0\.78\)[\s\S]*?rgba\(6,\s*14,\s*32,\s*0\.86\)/,
+    /Grok card frost[\s\S]*?rgba\(240,\s*215,\s*140,\s*0\.14\)[\s\S]*?rgba\(255,\s*255,\s*255,\s*0\.08\)[\s\S]*?rgba\(10,\s*8,\s*6,\s*0\.18\)/,
   );
   assert.doesNotMatch(
     css,

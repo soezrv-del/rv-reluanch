@@ -105,8 +105,8 @@ export function NdaGate({ children }: { children: ReactNode }) {
               onClick={confirm}
               className={
                 checked
-                  ? "min-h-14 w-full touch-manipulation rounded-xl bg-sapphire py-3.5 text-[16px] font-bold text-white shadow-[0_0_24px_rgba(74,134,240,0.35)]"
-                  : "min-h-14 w-full touch-manipulation rounded-xl bg-sapphire/40 py-3.5 text-[16px] font-bold text-white/70 disabled:cursor-not-allowed"
+                  ? "tesla-main min-h-14 w-full touch-manipulation rounded-[10px] py-3.5 text-[16px] font-bold"
+                  : "tesla-secondary min-h-14 w-full touch-manipulation rounded-[10px] py-3.5 text-[16px] font-bold disabled:cursor-not-allowed"
               }
             >
               {checked ? "Accept & Continue" : "Continue"}
