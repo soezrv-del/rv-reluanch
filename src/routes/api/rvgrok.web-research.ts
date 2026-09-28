@@ -6,6 +6,7 @@ import {
   executeWebResearch,
   webResearchJsonResponse,
 } from "@/lib/rvgrok/webResearchTelemetry";
+import type { LotMemory } from "@/lib/rvgrok/lotMemory";
 import { buildChatGrounding } from "@/lib/rvgrok/grounding";
 import {
   researchTimeoutMs,
@@ -25,6 +26,7 @@ type Body = {
   query?: string;
   catalogContext?: string;
   screen?: string;
+  lotMemory?: LotMemory | null;
 };
 
 async function handleResearch(request: Request): Promise<Response> {
@@ -69,6 +71,7 @@ async function handleResearch(request: Request): Promise<Response> {
     researchOrder: (await getResearchOrderOverride()) ?? undefined,
     identity: grounded.identity,
     screen: typeof body.screen === "string" ? body.screen : "",
+    lotMemory: body.lotMemory ?? null,
   });
 
   return webResearchJsonResponse(researched);

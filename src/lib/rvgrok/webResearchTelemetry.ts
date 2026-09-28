@@ -20,6 +20,8 @@ import {
   shouldSkipWebForOwnLot,
   type OwnLotSnapshot,
 } from "./ownLotInventory.ts";
+import { looksLikeOwnLotFollowUp } from "./ownLotAsk.ts";
+import { resolveLotTurn, type LotMemory } from "./lotMemory.ts";
 import {
   fetchWebSearchNotes,
   isTimeoutFailureReason,
@@ -61,6 +63,8 @@ export type WebResearchApiBody = WebSearchNotes & {
   kind: WebResearchKind;
   durationMs: number;
   cached?: boolean;
+  /** Applied lot filter after this turn, when the answer came from our lot. */
+  lotMemory?: LotMemory;
 };
 
 export type ExecuteWebResearchOpts = {
@@ -74,6 +78,8 @@ export type ExecuteWebResearchOpts = {
   skipGate?: boolean;
   /** Caller-provided own-lot snapshot. When omitted, load on stock asks. */
   ownLotSnapshot?: OwnLotSnapshot;
+  /** Last Live Voice lot filter. Follow-ups that name no new filter keep it. */
+  lotMemory?: LotMemory | null;
   /** Same-origin host for the deploy-bundled public snapshot. */
   requestOrigin?: string;
   /** Active screen name, or a catalog block that starts with ACTIVE SCREEN. */
@@ -296,19 +302,46 @@ export async function executeWebResearch(
   const factsSpec =
     isFactsScreen(screen) && factsSpecRequestsWebSearch(screen, query);
 
+  const lotFollow =
+    Boolean(opts.lotMemory) && looksLikeOwnLotFollowUp(query);
+  const lotish = looksLikeOwnLotStockQuestion(query) || lotFollow;
   let ownLotSnapshot = opts.ownLotSnapshot;
-  if (!factsSpec && !ownLotSnapshot && looksLikeOwnLotStockQuestion(query)) {
+  if (!factsSpec && !ownLotSnapshot && lotish) {
     ownLotSnapshot = await loadOwnLotSnapshot({
       requestOrigin: opts.requestOrigin,
     });
   }
-  if (!factsSpec && shouldSkipWebForOwnLot(query, ownLotSnapshot)) {
-    const notes = formatOwnLotBlock(ownLotSnapshot!, query);
+  if (
+    !factsSpec &&
+    ownLotSnapshot &&
+    lotish &&
+    (shouldSkipWebForOwnLot(query, ownLotSnapshot) || lotFollow)
+  ) {
+    const locations = [
+      ...new Set(ownLotSnapshot.units.map((unit) => unit.location).filter(Boolean)),
+    ];
+    const turn = resolveLotTurn(
+      query,
+      opts.lotMemory ?? null,
+      locations,
+      ownLotSnapshot.units,
+    );
+    const notes = formatOwnLotBlock(ownLotSnapshot, query, {
+      filter: turn.filter,
+      sort: turn.sort,
+      limit: turn.limit,
+    });
+    const lotMemory: LotMemory = {
+      filter: turn.filter,
+      sort: turn.sort,
+      limit: turn.limit,
+    };
     const durationMs = Date.now() - t0;
     const body = toApiBody(
       { ok: true, notes, model: OWN_LOT_MODEL },
       { kind: "success", durationMs },
     );
+    body.lotMemory = lotMemory;
     logWebResearchEvent({
       kind: "success",
       profile: opts.profile,
