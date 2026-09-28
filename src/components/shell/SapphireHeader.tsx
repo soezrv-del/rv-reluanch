@@ -1,6 +1,5 @@
 import { cn } from "@/lib/utils";
 import type { AppTab } from "./BottomTabs";
-import { PremiumMenuButton } from "./PremiumMenuButton";
 import { PAGE_COPY } from "./shellConstants";
 
 /** Suite tools that carry the sapphire “VERIFIED AND TRUE” line. */
@@ -34,7 +33,6 @@ export function SapphireHeader({ tab }: { tab: AppTab }) {
       )}
       data-suite-title={tab}
     >
-      <PremiumMenuButton size="sm" className="suite-hero-menu" />
       {copy.badge ? <p className="suite-hero-eyebrow">{copy.badge}</p> : null}
       <h1 className="tesla-page-title">{copy.title}</h1>
       {verified ? <p className="suite-verified">VERIFIED AND TRUE</p> : null}

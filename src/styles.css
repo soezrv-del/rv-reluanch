@@ -3730,11 +3730,15 @@ html[data-theme="white"] .showroom-arrival-photo {
   background: #fff;
 }
 html[data-theme="white"] .showroom-ask input,
-html[data-theme="white"] .showroom-tab,
-html[data-theme="white"] .showroom-tab-icon,
 html[data-theme="white"] .showroom-menu,
 html[data-theme="white"] .showroom-menu-icon {
-  color: #0b1d45;
+  color: #111111;
+}
+html[data-theme="white"] .showroom-tab,
+html[data-theme="white"] .showroom-tab-icon,
+html[data-theme="white"] .showroom-tab svg {
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111;
 }
 html[data-theme="white"] .showroom-ask input::placeholder,
 html[data-theme="white"] .glass-field::placeholder {
@@ -3925,7 +3929,7 @@ html[data-theme="white"] .lot-mark {
   background-image: none !important;
 }
 html[data-theme="white"] .lot-well[data-lot-scene="photo"] {
-  background: #101820 !important;
+  background: #e6e6e6 !important;
 }
 html[data-theme="white"] .lot-pill {
   background: rgba(255, 255, 255, 0.82) !important;

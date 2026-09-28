@@ -25,6 +25,7 @@ test("iOS top chrome adds safe-area + slack; bottom dock floor stays 2.125rem", 
 test("page heroes sit under the logo; the showroom header owns the top inset", () => {
   const css = read("../../styles.css");
   const header = read("../../components/shell/SapphireHeader.tsx");
+  const brand = read("../../components/shell/SuiteBrand.tsx");
   const trips = read("../../components/rvtrips/RvTripsApp.tsx");
   const grok = read("../../components/rvgrok/RvGrokApp.tsx");
   const landing = read("../../components/rvgrok/GrokLanding.tsx");
@@ -42,7 +43,7 @@ test("page heroes sit under the logo; the showroom header owns the top inset", (
   assert.match(css, /\[data-grok-thread-chrome\] \{[^}]*padding-top:\s*0\.75rem/);
 
   assert.match(header, /tesla-page-head/);
-  assert.match(header, /suite-hero-menu/);
+  assert.match(brand, /PremiumMenuButton/);
   assert.doesNotMatch(css, /\.suite-hero-menu \{[^}]*safe-area-inset-top/);
   assert.match(trips, /premium-menu-corner/);
   assert.match(trips, /data-trips-header/);
