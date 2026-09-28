@@ -14,13 +14,10 @@ import {
   POWER_TO_WEIGHT_LABEL,
 } from "./torqueToWeight.ts";
 import {
-  LOT_GAP,
-  lotLookupRows,
-  lotPriceOrGap,
-  lotTextOrGap,
   lotUnitPhoto,
   type LotUnit,
 } from "../lot/ownLotPage.ts";
+import { buildBuyerUnitReport } from "./reportFields.ts";
 
 export const REPORT_SITE_URL = "https://rvmax.app";
 /** Chrome sapphire R on a white rounded tile. Readable on the sapphire header. */
@@ -65,66 +62,6 @@ export type ShareReport = {
   siteLabel: string;
   siteUrl: string;
 };
-
-const DIMENSION_KEYS = new Set([
-  "vehicle_body_length",
-  "length_ft",
-  "vehicle_body_height",
-  "height_ft",
-  "vehicle_body_width",
-  "width_ft",
-  "max_sleeping_count",
-  "sleeps",
-  "number_of_slideouts",
-  "slides",
-  "wheelbase",
-  "wheel_base",
-]);
-
-const CHASSIS_KEYS = new Set([
-  "engine",
-  "engine_type",
-  "chassis",
-  "chassis_brand",
-  "fuel_type",
-  "horsepower",
-  "torque",
-  "transmission",
-  "transmission_type",
-]);
-
-const WEIGHT_KEYS = new Set([
-  "gvwr",
-  "dry_weight",
-  "unloaded_vehicle_weight",
-  "hitch_weight",
-  "tongue_weight",
-  "dry_hitch_weight",
-  "payload",
-  "standard_payload",
-  "max_payload",
-  "towing_capacity",
-  "fuel_tank_capacity",
-  "total_fresh_water_tank_capacity",
-  "fresh_gal",
-  "total_gray_water_tank_capacity",
-  "gray_gal",
-  "total_black_water_tank_capacity",
-  "black_gal",
-  "propane_lbs",
-  "propane_gal",
-]);
-
-const SYSTEM_KEYS = new Set([
-  "air_conditioning_btu",
-  "air_conditioning_(btu)",
-  "heater_btu",
-  "heater_(btu)",
-  "generator",
-  "tire_size",
-  "tires",
-  "warranty",
-]);
 
 /** Empty, GAP, and “confirm brochure” stand-ins are not report values. */
 export function isOmittedReportValue(value: string | null | undefined): boolean {
@@ -418,8 +355,6 @@ function valueRow(label: string, value: string | null | undefined): ReportRow | 
   return { label, value: String(value).trim() };
 }
 
-const HEADLINE_LABELS = ["GVWR", "Length", "Horsepower", "Sleeps"] as const;
-
 export function buildUnitShareReport(
   unit: LotUnit,
   now: Date = new Date(),
@@ -429,39 +364,7 @@ export function buildUnitShareReport(
       .map((part) => part.trim())
       .filter((part) => part && !isOmittedReportValue(part))
       .join(" ") || unit.title.trim();
-  const lookup = lotLookupRows(unit);
-  const identity: ReportRow[] = [];
-  pushRow(identity, "VIN", lotTextOrGap(unit.vin) === LOT_GAP ? "" : unit.vin);
-  pushRow(
-    identity,
-    "Condition",
-    lotTextOrGap(unit.condition) === LOT_GAP ? "" : unit.condition,
-  );
-  pushRow(
-    identity,
-    "Location",
-    lotTextOrGap(unit.location) === LOT_GAP ? "" : unit.location,
-  );
-  pushRow(identity, "Type", unit.body_type);
-
-  const dimensions: ReportRow[] = [];
-  const chassis: ReportRow[] = [];
-  const weights: ReportRow[] = [];
-  const systems: ReportRow[] = [];
-  const details: ReportRow[] = [];
-  for (const row of lookup) {
-    if (isOmittedReportValue(row.value)) continue;
-    const next = { label: row.label, value: row.value };
-    if (DIMENSION_KEYS.has(row.key)) dimensions.push(next);
-    else if (CHASSIS_KEYS.has(row.key)) chassis.push(next);
-    else if (WEIGHT_KEYS.has(row.key)) weights.push(next);
-    else if (SYSTEM_KEYS.has(row.key)) systems.push(next);
-    else details.push(next);
-  }
-
-  const byLabel = new Map(lookup.map((row) => [row.label, row.value]));
-  const price = lotPriceOrGap(unit.price);
-  const stock = lotTextOrGap(unit.stock_number);
+  const buyer = buildBuyerUnitReport(unit);
   const id = unitReportId(unit);
 
   return finishReport({
@@ -469,19 +372,8 @@ export function buildUnitShareReport(
     title,
     generatedLabel: formatReportDate(now),
     photoUrl: lotUnitPhoto(unit),
-    headlines: takeHeadlines([
-      valueRow("Price", price),
-      valueRow("Stock number", stock),
-      ...HEADLINE_LABELS.map((label) => valueRow(label, byLabel.get(label))),
-    ]),
-    sections: [
-      section("Unit", identity),
-      section("Dimensions", dimensions),
-      section("Chassis and Engine", chassis),
-      section("Weights and Capacities", weights),
-      section("Systems", systems),
-      section("Details", details),
-    ].filter((item): item is ReportSection => item != null),
+    headlines: buyer.headlines,
+    sections: buyer.sections,
     sources: null,
     path: id ? unitReportPath(id) : "/report/unit",
   });
