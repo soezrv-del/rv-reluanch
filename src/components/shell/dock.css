@@ -111,7 +111,11 @@ html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bot
   box-shadow: inset 0 0 0 1.7px #ffffff;
 }
 
-html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-glyph,
+html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-glyph {
+  color: #e8eef5 !important;
+  -webkit-text-fill-color: #e8eef5 !important;
+}
+
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-caption {
   color: #e8eef5 !important;
   -webkit-text-fill-color: transparent !important;
