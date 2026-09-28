@@ -66,10 +66,25 @@ export function HomeScreen({
 
   useEffect(() => {
     if (reducedMotion || slides.length < 2) return;
-    const id = window.setInterval(() => {
-      setSlide((n) => (n + 1) % slides.length);
-    }, 5000);
-    return () => window.clearInterval(id);
+    let id = 0;
+    const arm = () => {
+      window.clearInterval(id);
+      id = 0;
+      if (document.documentElement.getAttribute("data-theme") !== "blue") return;
+      id = window.setInterval(() => {
+        setSlide((n) => (n + 1) % slides.length);
+      }, 5000);
+    };
+    arm();
+    const obs = new MutationObserver(arm);
+    obs.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+    return () => {
+      window.clearInterval(id);
+      obs.disconnect();
+    };
   }, [reducedMotion, slides.length]);
 
   const openUnit = (unit: LotUnit) => {
@@ -88,34 +103,138 @@ export function HomeScreen({
       data-no-swipe
       className="showroom-home absolute inset-0 z-30 flex flex-col overflow-x-hidden overflow-y-auto"
     >
-      {active ? (
-        <HomeHero
-          unit={active}
-          index={slide}
-          count={slides.length}
-          spotModel={activeIsSpot ? model : ""}
-          spotPrice={activeIsSpot ? specs?.price ?? "" : ""}
-          spotStock={activeIsSpot ? specs?.stock ?? "" : ""}
-          onView={() => openUnit(active)}
-          onAsk={() =>
-            onAsk(
-              `Tell me about the ${showroomUnitLabel(active)}, stock ${active.stock_number}.`,
-            )
-          }
-          onDot={(i) => setSlide(i)}
+      <div className="home-theme-white">
+        <WhiteSpotlight
+          model={model}
+          price={specs?.price ?? ""}
+          spotStock={specs?.stock ?? ""}
+          onOpen={spotUnit ? () => openUnit(spotUnit) : undefined}
         />
-      ) : null}
+        {arrivals.length > 0 ? (
+          <StaticArrivals
+            arrivals={arrivals}
+            onOpenUnit={(unit) => {
+              requestLotUnit(lotArrivalQuery(unit));
+              onOpenLot();
+            }}
+          />
+        ) : null}
+      </div>
 
-      {arrivals.length > 0 ? (
-        <NewestArrivals
-          arrivals={arrivals}
-          onOpenUnit={(unit) => {
-            requestLotUnit(lotArrivalQuery(unit));
-            onOpenLot();
-          }}
-        />
-      ) : null}
+      <div className="home-theme-blue">
+        {active ? (
+          <HomeHero
+            unit={active}
+            index={slide}
+            count={slides.length}
+            spotModel={activeIsSpot ? model : ""}
+            spotPrice={activeIsSpot ? (specs?.price ?? "") : ""}
+            spotStock={activeIsSpot ? (specs?.stock ?? "") : ""}
+            onView={() => openUnit(active)}
+            onAsk={() =>
+              onAsk(
+                `Tell me about the ${showroomUnitLabel(active)}, stock ${active.stock_number}.`,
+              )
+            }
+            onDot={(i) => setSlide(i)}
+          />
+        ) : null}
+
+        {arrivals.length > 0 ? (
+          <NewestArrivals
+            arrivals={arrivals}
+            onOpenUnit={(unit) => {
+              requestLotUnit(lotArrivalQuery(unit));
+              onOpenLot();
+            }}
+          />
+        ) : null}
+      </div>
     </div>
+  );
+}
+
+function WhiteSpotlight({
+  model,
+  price,
+  spotStock,
+  onOpen,
+}: {
+  model: string;
+  price: string;
+  spotStock: string;
+  onOpen?: () => void;
+}) {
+  const hero = (
+    <>
+      <div className="showroom-hero-beam" aria-hidden />
+      <img
+        src={SHOWROOM_SPOTLIGHT.image}
+        alt={SHOWROOM_SPOTLIGHT.alt}
+        className="showroom-coach"
+      />
+      <div className="showroom-hero-pool" aria-hidden />
+    </>
+  );
+  const placard = (
+    <>
+      <p className="showroom-spotmodel">{model}</p>
+      {price ? <p className="showroom-spotprice">{price}</p> : null}
+      {spotStock ? <p className="showroom-spotstock">Stock {spotStock}</p> : null}
+    </>
+  );
+  return (
+    <>
+      {onOpen ? (
+        <button type="button" className="showroom-hero" onClick={onOpen}>
+          {hero}
+        </button>
+      ) : (
+        <div className="showroom-hero">{hero}</div>
+      )}
+      {onOpen ? (
+        <button
+          type="button"
+          className="showroom-placard showroom-card"
+          data-home-placard
+          onClick={onOpen}
+        >
+          {placard}
+        </button>
+      ) : (
+        <section className="showroom-placard showroom-card" data-home-placard>
+          {placard}
+        </section>
+      )}
+    </>
+  );
+}
+
+function StaticArrivals({
+  arrivals,
+  onOpenUnit,
+}: {
+  arrivals: LotUnit[];
+  onOpenUnit: (unit: LotUnit) => void;
+}) {
+  return (
+    <section data-home-arrivals className="showroom-arrivals">
+      <p className="showroom-kicker">
+        <i className="showroom-kicker-dot" aria-hidden />
+        Newest arrivals
+      </p>
+      <div className="showroom-rail overflow-x-auto" data-arrival-loop="off">
+        <div className="showroom-arrival-set" data-arrival-set="primary">
+          {arrivals.map((unit, index) => (
+            <ArrivalCard
+              key={`${unit.printed.id ?? ""}-${unit.vin}-${index}`}
+              unit={unit}
+              onOpen={() => onOpenUnit(unit)}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
