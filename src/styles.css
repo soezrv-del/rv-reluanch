@@ -3493,3 +3493,46 @@ html[data-theme="light"] .app-shell .bg-\[\#0a1220\],
 html[data-theme="light"] .app-shell .bg-\[\#0c1220\] {
   background-color: #ffffff;
 }
+
+/* Tools menu only. Dark markup is unchanged. */
+html[data-theme="light"] [data-tools-menu] > p {
+  color: #3d4d68 !important;
+}
+html[data-theme="light"] [data-readable-cards][data-premium-screen] [data-tools-menu] .glass-prestige {
+  background: #ffffff;
+  border: 1px solid rgba(12, 28, 64, 0.12);
+  box-shadow: 0 16px 40px rgba(12, 28, 64, 0.08);
+  color: #0b1730;
+}
+html[data-theme="light"] [data-tools-menu] button {
+  border-color: rgba(12, 28, 64, 0.12);
+}
+html[data-theme="light"] [data-tools-menu] button:hover {
+  background: #eef2f7;
+}
+html[data-theme="light"] [data-tools-menu] button > span:first-child {
+  background: #eef2f7;
+  border: 1px solid rgba(12, 28, 64, 0.12);
+}
+html[data-theme="light"] [data-tools-menu] .text-white {
+  color: #0b1730 !important;
+}
+html[data-theme="light"] [data-tools-menu] .text-\[11px\].text-white {
+  color: #3d4d68 !important;
+}
+html[data-theme="light"] [data-tools-menu] button > svg.text-white {
+  color: #5c6b82 !important;
+}
+html[data-theme="light"] [data-tools-menu] .text-blue,
+html[data-theme="light"] [data-tools-menu] .text-sky-200 {
+  color: #1648c8 !important;
+}
+html[data-theme="light"] [data-tools-menu] .text-ruby {
+  color: #c01f2e !important;
+}
+html[data-theme="light"] [data-tools-menu] .text-green {
+  color: #1f7a4d !important;
+}
+html[data-theme="light"] [data-tools-menu] .text-amber {
+  color: #9a6b12 !important;
+}

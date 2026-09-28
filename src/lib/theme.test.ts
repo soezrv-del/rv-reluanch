@@ -25,6 +25,9 @@ test("light theme is paper, navy type, and a tight Raidho crop", () => {
   assert.match(theme, /rvfox-theme/);
   assert.match(more, /setTheme\(next\)/);
   assert.match(more, /title="Appearance"/);
+  assert.match(more, /data-tools-menu/);
+  assert.match(css, /\[data-tools-menu\] \.text-sky-200/);
+  assert.match(css, /\[data-tools-menu\] \.glass-prestige/);
   assert.match(brand, /raidho-shell-mark\.png/);
   assert.match(brand, /raidho-r-mark-light\.png/);
   assert.match(brand, /theme === "light" \? RAIDHO_SHELL_MARK_LIGHT : RAIDHO_SHELL_MARK/);

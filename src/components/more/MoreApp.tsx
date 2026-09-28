@@ -242,7 +242,7 @@ export function MoreApp({
           </section>
 
           {/* Quick tools */}
-          <section>
+          <section data-tools-menu>
             <p className="mb-2 px-0.5 text-[10px] font-bold tracking-[0.16em] text-white/90">
               TOOLS
             </p>
