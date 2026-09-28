@@ -5,6 +5,7 @@ import {
   isAndroidNativeWebView,
   isStationaryDockTap,
 } from "@/lib/hooks/nativeWebView";
+import "./dock.css";
 
 export type AppTab =
   | "rvgrok"
@@ -17,18 +18,18 @@ export type AppTab =
   | "rvlot"
   | "more";
 
-/** Six rooms, all visible. Gold line icons. The row does not slide. */
+/** Six rooms. Platinum line icons. The road slides. */
 const TABS: {
   id: Exclude<AppTab, "more" | "rvshare" | "rvsold">;
   label: string;
   short: string;
 }[] = [
   { id: "rvfax", label: "RvFACTS", short: "Facts" },
-  { id: "rvcal", label: "RvCAL", short: "Cal" },
+  { id: "rvlot", label: "Lot", short: "Lot" },
   { id: "rvgrok", label: "RvGROK", short: "Grok" },
   { id: "rvtow", label: "RvTOW", short: "Tow" },
+  { id: "rvcal", label: "RvCAL", short: "Cal" },
   { id: "rvtrips", label: "RV GPS", short: "RV GPS" },
-  { id: "rvlot", label: "Lot", short: "Lot" },
 ];
 
 function DockGlyph({ id }: { id: (typeof TABS)[number]["id"] }) {
@@ -98,8 +99,8 @@ function DockGlyph({ id }: { id: (typeof TABS)[number]["id"] }) {
 }
 
 /**
- * Gold line-icon dock on the Raidho mark ground.
- * Same six glyphs in White and Dark. The row does not slide.
+ * Platinum line-icon dock. Same six glyphs in White and Dark.
+ * The road slides. Page swipe stays on the suite panes, not the dock.
  * Android WebView: do NOT put pointer-events-none on this nav.
  */
 export function BottomTabs({
@@ -126,14 +127,14 @@ export function BottomTabs({
     <nav
       className="bottom-tabs-nav pointer-events-auto relative z-[80] w-full px-2 pt-1"
       data-bottom-dock
-      data-dock-icons="gold"
+      data-dock-icons="platinum"
       data-no-swipe
       data-active-tab={homeOpen ? "home" : tab}
-      style={{ touchAction: "manipulation" }}
+      style={{ touchAction: "pan-x" }}
     >
       <div
-        className="bottom-tabs-dock pointer-events-auto relative isolate mx-auto grid w-full grid-cols-6 items-stretch gap-0 overflow-hidden p-0"
-        style={{ touchAction: "manipulation" }}
+        className="bottom-tabs-dock pointer-events-auto relative isolate mx-auto flex w-full items-stretch gap-0 overflow-x-auto overflow-y-hidden p-0"
+        style={{ touchAction: "pan-x" }}
       >
         {TABS.map(({ id, label, short }) => {
           const active = !homeOpen && tab === id;
@@ -166,7 +167,7 @@ export function BottomTabs({
               aria-label={label}
               title={label}
               className={cn(
-                "bottom-tab-btn group relative z-[3] flex min-h-[48px] w-full min-w-0 flex-col items-center justify-center gap-0.5 px-0.5 py-1.5 sm:min-h-[52px]",
+                "bottom-tab-btn group relative z-[3] flex min-h-[56px] min-w-[4.5rem] flex-col items-center justify-center gap-0.5 px-1 py-1.5",
                 "transition-[transform,opacity] duration-200 ease-out",
                 "pointer-events-auto active:scale-[0.94] touch-manipulation select-none",
                 active && "is-active",

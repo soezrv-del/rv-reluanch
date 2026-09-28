@@ -1,13 +1,13 @@
 import type { AppTab } from "./BottomTabs";
 
-/** Dock + swipe order — Facts, Cal, Grok, Tow, RV GPS, then Lot. Share is not a dock tab. */
+/** Dock + swipe order — Facts, Lot, Grok, Tow, Cal, RV GPS. Share is not a dock tab. */
 export const TAB_ORDER = [
   "rvfax",
-  "rvcal",
+  "rvlot",
   "rvgrok",
   "rvtow",
+  "rvcal",
   "rvtrips",
-  "rvlot",
 ] as const satisfies readonly AppTab[];
 
 /** Dock + swipe — six tools. Sold lives in Premium, never a dock square. */
