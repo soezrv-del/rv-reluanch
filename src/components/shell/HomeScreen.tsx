@@ -5,8 +5,6 @@ import { readTheme, serverTheme, subscribeTheme } from "@/lib/theme";
 import type { AppTab } from "@/components/shell/BottomTabs";
 
 const EMPTY_UNITS: LotUnit[] = [];
-/** Dealer lot photo. Light mode only — dark uses the studio cutout. */
-const LIGHT_LOT_HERO = "/assets/showroom/spotlight-lot.jpg";
 import {
   SHOWROOM_SPOTLIGHT,
   lotArrivalQuery,
@@ -50,10 +48,7 @@ export function HomeScreen({
   const spotUnit = useMemo(() => spotlightLotUnit(listed), [listed]);
   const specs = spotUnit ? spotlightSpecs(spotUnit) : null;
   const model = specs?.model || SHOWROOM_SPOTLIGHT.series;
-  const spotYear = (spotUnit?.year || SHOWROOM_SPOTLIGHT.year).trim();
-  const spotMake = (spotUnit?.make || SHOWROOM_SPOTLIGHT.make).trim();
-  const heroSrc = theme === "light" ? LIGHT_LOT_HERO : SHOWROOM_SPOTLIGHT.image;
-  const heroKind = theme === "light" ? "photo" : "cutout";
+  const heroSrc = SHOWROOM_SPOTLIGHT.image;
   const lotTotal =
     units && units.length > 0 ? units.length.toLocaleString("en-US") : "";
   const openSpot = () => {
@@ -66,21 +61,20 @@ export function HomeScreen({
     <div
       data-home-screen
       data-showroom-home=""
+      data-home-theme={theme}
       data-no-swipe
       className="showroom-home absolute inset-0 z-30 flex flex-col overflow-x-hidden overflow-y-auto"
     >
-      <section className="showroom-hero" data-hero-kind={heroKind}>
-        {theme === "dark" ? <div className="showroom-hero-beam" aria-hidden /> : null}
+      <section className="showroom-hero" data-hero-kind="cutout">
+        <div className="showroom-hero-beam" aria-hidden />
         <img
           src={heroSrc}
           alt={SHOWROOM_SPOTLIGHT.alt}
           className="showroom-coach"
-          data-hero-kind={heroKind}
+          data-hero-kind="cutout"
         />
-        {theme === "dark" ? <div className="showroom-hero-pool" aria-hidden /> : null}
+        <div className="showroom-hero-pool" aria-hidden />
         <div className="showroom-placard" data-home-placard>
-          <p className="showroom-spotyear">{spotYear}</p>
-          <p className="showroom-spotmake">{spotMake}</p>
           <p className="showroom-spotmodel">{model}</p>
           {specs?.price ? <p className="showroom-spotprice">{specs.price}</p> : null}
           {specs?.stock ? (

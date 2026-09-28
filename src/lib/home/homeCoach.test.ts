@@ -347,8 +347,8 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
     /\.showroom-header \{[^}]*env\(safe-area-inset-top, 0px\)/,
   );
   assert.match(home, /readTheme/);
-  assert.match(home, /spotlight-lot\.jpg/);
-  assert.match(home, /SHOWROOM_SPOTLIGHT\.image/);
+  assert.match(home, /const heroSrc = SHOWROOM_SPOTLIGHT\.image/);
+  assert.doesNotMatch(home, /spotlight-lot\.jpg/);
   assert.match(home, /Open coach/);
   assert.match(home, /data-lot-whisper/);
   assert.doesNotMatch(home, /Learn more|showroom-coach-lot|data-arrival-set="duplicate"/);
