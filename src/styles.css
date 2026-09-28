@@ -3741,6 +3741,9 @@ html[data-theme="light"] .showroom-spotprice,
 html[data-theme="light"] .showroom-arrival-price {
   color: #1648c8 !important;
 }
+html[data-theme="light"] .showroom-kicker {
+  color: #3d4d68 !important;
+}
 html[data-theme="light"] .showroom-mic,
 html[data-theme="light"] .showroom-live {
   color: #000000;
@@ -3831,6 +3834,23 @@ html[data-theme="light"] .report-share-menu button {
 html[data-theme="light"] [data-camera-well] > p {
   color: #3d4d68 !important;
   -webkit-text-fill-color: #3d4d68 !important;
+}
+
+html[data-theme="light"] [class*="text-gold"],
+html[data-theme="light"] [class*="text-ruby"],
+html[data-theme="light"] [class*="text-amber"],
+html[data-theme="light"] [class*="text-emerald"],
+html[data-theme="light"] [class*="text-green"],
+html[data-theme="light"] [class*="text-sky"],
+html[data-theme="light"] [class*="text-blue"],
+html[data-theme="light"] [class*="text-sapphire"] {
+  color: #1648c8 !important;
+  -webkit-text-fill-color: #1648c8 !important;
+}
+html[data-theme="light"] [data-nda-gate] .text-white,
+html[data-theme="light"] [data-nda-gate] [class*="text-white"] {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
 }
 
 /* Type painted on a coach photo or the live picture stays white. */
