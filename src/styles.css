@@ -194,34 +194,35 @@
   }
 
   /*
-   * Suite-wide contrast: washed Tailwind whites → bright white.
+   * Dark only. Washed Tailwind whites → bright white.
+   * Light mode replaces these at the end of this file.
    * Picker wheels keep dim unselected rows (iOS drum).
    */
-  .app-shell .text-white\/35,
-  .app-shell .text-white\/40,
-  .app-shell .text-white\/45,
-  .app-shell .text-white\/50,
-  .app-shell .text-white\/55,
-  .app-shell .text-white\/60,
-  .app-shell .text-white\/65,
-  .app-shell .text-white\/70,
-  .app-shell .text-white\/75,
-  .app-shell .text-white\/80,
-  .app-shell .text-white\/82,
-  .app-shell .text-white\/85,
-  .app-shell .text-white\/88,
-  .app-shell .text-muted,
-  .app-shell .text-dim {
+  html:not([data-theme="light"]) .app-shell .text-white\/35,
+  html:not([data-theme="light"]) .app-shell .text-white\/40,
+  html:not([data-theme="light"]) .app-shell .text-white\/45,
+  html:not([data-theme="light"]) .app-shell .text-white\/50,
+  html:not([data-theme="light"]) .app-shell .text-white\/55,
+  html:not([data-theme="light"]) .app-shell .text-white\/60,
+  html:not([data-theme="light"]) .app-shell .text-white\/65,
+  html:not([data-theme="light"]) .app-shell .text-white\/70,
+  html:not([data-theme="light"]) .app-shell .text-white\/75,
+  html:not([data-theme="light"]) .app-shell .text-white\/80,
+  html:not([data-theme="light"]) .app-shell .text-white\/82,
+  html:not([data-theme="light"]) .app-shell .text-white\/85,
+  html:not([data-theme="light"]) .app-shell .text-white\/88,
+  html:not([data-theme="light"]) .app-shell .text-muted,
+  html:not([data-theme="light"]) .app-shell .text-dim {
     color: #ffffff !important;
   }
-  .app-shell [data-picker] .text-white\/35,
-  .app-shell [data-picker] .text-white\/40,
-  .app-shell [data-picker] .text-white\/45,
-  .app-shell [data-picker] .text-white\/50,
-  .app-shell [data-picker] .text-white\/55 {
+  html:not([data-theme="light"]) .app-shell [data-picker] .text-white\/35,
+  html:not([data-theme="light"]) .app-shell [data-picker] .text-white\/40,
+  html:not([data-theme="light"]) .app-shell [data-picker] .text-white\/45,
+  html:not([data-theme="light"]) .app-shell [data-picker] .text-white\/50,
+  html:not([data-theme="light"]) .app-shell [data-picker] .text-white\/55 {
     color: rgb(255 255 255 / 0.42) !important;
   }
-  .app-shell [data-picker] .text-white {
+  html:not([data-theme="light"]) .app-shell [data-picker] .text-white {
     color: #ffffff !important;
   }
 
@@ -2642,6 +2643,10 @@ html.kb-open [data-rvgrok-composer-dock] {
   height: 1.65rem;
   width: auto;
 }
+/* Light crop stays out of the black dock until data-theme flips. */
+.showroom-mark[data-suite-mark="light"] {
+  display: none;
+}
 .showroom-word {
   font-size: 1.125rem;
   font-weight: 700;
@@ -3265,4 +3270,237 @@ body:has(.report-page) {
   .report-headlines {
     break-inside: avoid;
   }
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+  --color-bg: #f4f6f8;
+  --color-bg-elevated: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-2: #eef2f7;
+  --color-fg: #0b1730;
+  --color-muted: #3d4d68;
+  --color-dim: #5c6b82;
+  --color-border: rgba(12, 28, 64, 0.12);
+  --color-border-strong: rgba(12, 28, 64, 0.22);
+  --color-ink-foam: #1a2744;
+  --color-ink-ink: #0b1730;
+  --color-tide-bg: #f4f6f8;
+  --color-tide-surface: #ffffff;
+  --color-tide-ink: #0b1730;
+  --color-tiimo-bg: #f4f6f8;
+  --color-tiimo-surface: #ffffff;
+  --color-tiimo-ink: #0b1730;
+  --dock-surface: #f4f6f8;
+  --dock-label-color: #1a2744;
+  --dock-label-color-active: #0a2a8a;
+  --color-showroom: #f4f6f8;
+  --color-showroom-ink: #0b1730;
+  --color-showroom-muted: #4a5a72;
+  --color-showroom-glass: rgba(255, 255, 255, 0.9);
+  --shadow-panel: 0 16px 40px rgba(12, 28, 64, 0.08);
+  --shadow-showroom: 0 18px 40px -16px rgba(12, 28, 64, 0.14);
+  --shadow-glass:
+    0 10px 28px rgba(12, 28, 64, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+html[data-theme="light"] .app-shell .text-white,
+html[data-theme="light"] .app-shell .text-white\/35,
+html[data-theme="light"] .app-shell .text-white\/40,
+html[data-theme="light"] .app-shell .text-white\/45,
+html[data-theme="light"] .app-shell .text-white\/50,
+html[data-theme="light"] .app-shell .text-white\/55,
+html[data-theme="light"] .app-shell .text-white\/60,
+html[data-theme="light"] .app-shell .text-white\/65,
+html[data-theme="light"] .app-shell .text-white\/70,
+html[data-theme="light"] .app-shell .text-white\/75,
+html[data-theme="light"] .app-shell .text-white\/80,
+html[data-theme="light"] .app-shell .text-white\/82,
+html[data-theme="light"] .app-shell .text-white\/85,
+html[data-theme="light"] .app-shell .text-white\/88,
+html[data-theme="light"] .app-shell .text-muted,
+html[data-theme="light"] .app-shell .text-dim,
+html[data-theme="light"] .text-label,
+html[data-theme="light"] .text-body-bright,
+html[data-theme="light"] .text-prestige,
+html[data-theme="light"] .text-prestige-muted,
+html[data-theme="light"] .glass-field,
+html[data-theme="light"] .glass-prestige,
+html[data-theme="light"] .glass-prestige-deep,
+html[data-theme="light"] .glass-panel,
+html[data-theme="light"] .glass-chip {
+  color: #0b1730 !important;
+  text-shadow: none;
+}
+
+html[data-theme="light"] .showroom-stage,
+html[data-theme="light"] .showroom-plain {
+  background: radial-gradient(120% 70% at 50% 0%, #ffffff 0%, #f4f6f8 60%, #e7edf5 100%);
+}
+
+html[data-theme="light"] .showroom-word {
+  background: linear-gradient(180deg, #0b1730 0%, #1648c8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+html[data-theme="light"] .ice-text,
+html[data-theme="light"] .ice-text-sapphire {
+  background: linear-gradient(180deg, #0a2a8a 0%, #1648c8 55%, #0b1730 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: none;
+}
+
+/*
+ * Token swap misses: other white opacities, dark glass plates,
+ * black chips, and pale sky type on Facts, Cal, Grok, and the dock.
+ * Coach photos, the lot well, the live camera, and the Einstein
+ * medallion are not recolored.
+ */
+html[data-theme="light"] .showroom-mark[data-suite-mark="dark"] {
+  display: none;
+}
+html[data-theme="light"] .showroom-mark[data-suite-mark="light"] {
+  display: inline;
+}
+
+html[data-theme="light"] body.text-white {
+  color: #0b1730 !important;
+}
+
+html[data-theme="light"] .app-shell .text-white\/5,
+html[data-theme="light"] .app-shell .text-white\/10,
+html[data-theme="light"] .app-shell .text-white\/15,
+html[data-theme="light"] .app-shell .text-white\/20,
+html[data-theme="light"] .app-shell .text-white\/25,
+html[data-theme="light"] .app-shell .text-white\/30,
+html[data-theme="light"] .app-shell .text-white\/90,
+html[data-theme="light"] .app-shell .text-white\/95 {
+  color: #3d4d68 !important;
+  text-shadow: none;
+}
+
+html[data-theme="light"] .app-shell .text-sky-50,
+html[data-theme="light"] .app-shell .text-sky-50\/90,
+html[data-theme="light"] .app-shell .text-sky-100,
+html[data-theme="light"] .app-shell .text-sky-100\/90,
+html[data-theme="light"] .app-shell .text-sky-200 {
+  color: #1648c8 !important;
+}
+
+html[data-theme="light"] .app-shell [data-picker] .text-white\/35,
+html[data-theme="light"] .app-shell [data-picker] .text-white\/40,
+html[data-theme="light"] .app-shell [data-picker] .text-white\/45,
+html[data-theme="light"] .app-shell [data-picker] .text-white\/50,
+html[data-theme="light"] .app-shell [data-picker] .text-white\/55 {
+  color: #5c6b82 !important;
+}
+
+html[data-theme="light"] .app-shell .bg-blue.text-white,
+html[data-theme="light"] .app-shell .bg-sapphire.text-white,
+html[data-theme="light"] .app-shell .bg-ruby.text-white,
+html[data-theme="light"] .app-shell .bg-sky-500.text-white,
+html[data-theme="light"] .app-shell .bg-blue .text-white,
+html[data-theme="light"] .app-shell .bg-sapphire .text-white,
+html[data-theme="light"] .app-shell .bg-ruby .text-white,
+html[data-theme="light"] .app-shell .bg-sky-500 .text-white,
+html[data-theme="light"] .app-shell .bg-ruby\/90 .text-white {
+  color: #ffffff !important;
+}
+
+html[data-theme="light"] .glass-prestige,
+html[data-theme="light"] .glass-prestige-deep,
+html[data-theme="light"] .glass-prestige-gold,
+html[data-theme="light"] .glass-panel,
+html[data-theme="light"] .glass-surface,
+html[data-theme="light"] .glass-field,
+html[data-theme="light"] .glass-chip,
+html[data-theme="light"] [data-readable-cards] .glass-prestige,
+html[data-theme="light"] [data-readable-cards] .glass-prestige-deep,
+html[data-theme="light"] [data-readable-cards] .glass-prestige-gold,
+html[data-theme="light"] [data-readable-cards] .glass-panel,
+html[data-theme="light"] [data-readable-cards] .glass-surface,
+html[data-theme="light"] .showroom-card,
+html[data-theme="light"] .showroom-float {
+  background: #ffffff;
+  border-color: rgba(12, 28, 64, 0.12);
+  box-shadow: var(--shadow-panel);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+html[data-theme="light"] .glass-field::placeholder {
+  color: #5c6b82;
+}
+
+html[data-theme="light"] .app-shell .bg-black\/25,
+html[data-theme="light"] .app-shell .bg-black\/30,
+html[data-theme="light"] .app-shell .bg-black\/35,
+html[data-theme="light"] .app-shell .bg-black\/40,
+html[data-theme="light"] .app-shell .bg-black\/45,
+html[data-theme="light"] .app-shell .bg-black\/50,
+html[data-theme="light"] .app-shell .bg-black\/55,
+html[data-theme="light"] .app-shell .bg-black\/60 {
+  background-color: #ffffff;
+}
+
+html[data-theme="light"] .app-shell .bg-white\/5,
+html[data-theme="light"] .app-shell .bg-white\/8,
+html[data-theme="light"] .app-shell .bg-white\/10 {
+  background-color: #eef2f7;
+}
+
+html[data-theme="light"] .app-shell .bg-black\/70 {
+  background-color: rgba(12, 28, 64, 0.4);
+}
+
+html[data-theme="light"] .app-shell .border-white\/10,
+html[data-theme="light"] .app-shell .border-white\/15,
+html[data-theme="light"] .app-shell .border-white\/20,
+html[data-theme="light"] .app-shell .border-white\/25,
+html[data-theme="light"] .app-shell .border-white\/30,
+html[data-theme="light"] .app-shell .border-white\/40 {
+  border-color: rgba(12, 28, 64, 0.12);
+}
+
+html[data-theme="light"] [data-camera-well],
+html[data-theme="light"] [data-camera-well] .bg-black {
+  background-color: #000000 !important;
+}
+html[data-theme="light"] [data-camera-well] .text-white {
+  color: #ffffff !important;
+}
+
+html[data-theme="light"] .app-shell select,
+html[data-theme="light"] .app-shell input,
+html[data-theme="light"] .app-shell textarea,
+html[data-theme="light"] .app-shell .\[color-scheme\:dark\] {
+  color-scheme: light;
+}
+
+html[data-theme="light"] .bottom-tab-einstein,
+html[data-theme="light"] .showroom-coach,
+html[data-theme="light"] .lot-well,
+html[data-theme="light"] .lot-well img {
+  filter: none;
+}
+
+html[data-theme="light"] .glass-prestige-gold,
+html[data-theme="light"] .glass-surface {
+  color: #0b1730 !important;
+  text-shadow: none;
+}
+
+html[data-theme="light"] .showroom-word,
+html[data-theme="light"] .ice-text,
+html[data-theme="light"] .ice-text-sapphire {
+  -webkit-text-fill-color: transparent;
+}
+
+html[data-theme="light"] .app-shell .bg-\[\#0a1220\],
+html[data-theme="light"] .app-shell .bg-\[\#0c1220\] {
+  background-color: #ffffff;
 }

@@ -1,0 +1,43 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = dirname(fileURLToPath(import.meta.url));
+
+function read(rel: string) {
+  return readFileSync(join(root, rel), "utf8");
+}
+
+test("light theme is paper, navy type, and a tight Raidho crop", () => {
+  const css = read("../styles.css");
+  const brand = read("../components/shell/SuiteBrand.tsx");
+  const more = read("../components/more/MoreApp.tsx");
+  const rootDoc = read("../routes/__root.tsx");
+  const theme = read("./theme.ts");
+  const mark = join(root, "../../public/assets/brand/raidho-r-mark-light.png");
+
+  assert.ok(existsSync(mark), "light mark");
+  assert.match(theme, /localStorage\.setItem\("rvfox-theme", next\)/);
+  assert.match(theme, /document\.documentElement\.dataset\.theme = next/);
+  assert.match(rootDoc, /THEME_BOOT_SCRIPT/);
+  assert.match(theme, /rvfox-theme/);
+  assert.match(more, /setTheme\(next\)/);
+  assert.match(more, /title="Appearance"/);
+  assert.match(brand, /raidho-shell-mark\.png/);
+  assert.match(brand, /raidho-r-mark-light\.png/);
+  assert.match(brand, /data-suite-mark="light"/);
+  assert.match(css, /html\[data-theme="light"\]/);
+  assert.match(css, /--color-fg:\s*#0b1730/);
+  assert.match(css, /--color-muted:\s*#3d4d68/);
+  assert.match(css, /--color-border:\s*rgba\(12, 28, 64, 0\.12\)/);
+  assert.match(css, /--color-sapphire:\s*#1648c8/);
+  assert.match(css, /--dock-surface:\s*#f4f6f8/);
+  assert.match(css, /html:not\(\[data-theme="light"\]\) \.app-shell \.text-white\\\/35/);
+  assert.match(css, /html\[data-theme="light"\] \.showroom-mark\[data-suite-mark="light"\]/);
+  assert.match(css, /\[data-camera-well\]/);
+  assert.match(css, /\.bottom-tab-einstein/);
+  assert.match(css, /\.lot-well/);
+  assert.doesNotMatch(css, /html\[data-theme="light"\][^{]*filter:\s*invert/);
+});

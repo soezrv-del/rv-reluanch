@@ -1864,7 +1864,10 @@ export function RvGrokApp({
         )}
 
         {liveCam ? (
-          <div className="mx-auto mb-2 max-w-2xl overflow-hidden rounded-2xl border border-white/20 bg-black">
+          <div
+            className="mx-auto mb-2 max-w-2xl overflow-hidden rounded-2xl border border-white/20 bg-black"
+            data-camera-well=""
+          >
             <div className="relative aspect-[4/3] w-full bg-black">
               <video
                 ref={liveVideoRef}

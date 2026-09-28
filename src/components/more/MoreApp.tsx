@@ -15,6 +15,7 @@ import {
   Share2,
   Shield,
   Star,
+  Sun,
   FileText,
   Volume2,
   X,
@@ -36,6 +37,7 @@ import { AccessMoreSection } from "@/components/access/AccessMoreSection";
 import { VoicePanel } from "@/components/rvgrok/VoicePanel";
 import { VIN_DECODER_SCREEN } from "@/lib/rvgrok/screenGuides";
 import { setActiveScreen } from "@/lib/rvgrok/screenContext";
+import { setTheme, type SuiteTheme } from "@/lib/theme";
 import type { GrokVoice } from "@/lib/rvgrok/voice";
 import {
   DEFAULT_VOICE,
@@ -95,6 +97,7 @@ export function MoreApp({
 
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [vinOpen, setVinOpen] = useState(false);
+  const [theme, setThemeState] = useState<SuiteTheme>("dark");
 
   useEffect(() => {
     if (!active) return;
@@ -105,6 +108,12 @@ export function MoreApp({
   const [liveVoice, setLiveVoice] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [previewingId, setPreviewingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setThemeState(
+      document.documentElement.dataset.theme === "light" ? "light" : "dark",
+    );
+  }, []);
 
   useEffect(() => {
     try {
@@ -238,6 +247,16 @@ export function MoreApp({
               TOOLS
             </p>
             <div className="glass-prestige overflow-hidden rounded-[1.25rem]">
+              <RowLink
+                icon={<Sun className="size-4 text-blue" />}
+                title="Appearance"
+                sub={theme === "light" ? "Light · paper" : "Dark · night"}
+                onClick={() => {
+                  const next: SuiteTheme = theme === "light" ? "dark" : "light";
+                  setTheme(next);
+                  setThemeState(next);
+                }}
+              />
               <RowLink
                 icon={<Volume2 className="size-4 text-ruby" />}
                 title="RvGrok Voice Settings"
@@ -603,7 +622,7 @@ function InfoSheet({ id, onClose }: { id: SheetId; onClose: () => void }) {
   if (!id) return null;
   const copy = SHEETS[id];
   return (
-    <div className="absolute inset-0 z-50 flex flex-col bg-black/70 backdrop-blur-md">
+    <div className="absolute inset-0 z-50 flex flex-col bg-bg">
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
         <h2 className="text-[16px] font-bold text-white">{copy.title}</h2>
         <button
