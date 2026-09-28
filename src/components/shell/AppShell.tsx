@@ -420,8 +420,9 @@ export function AppShell({
   );
 
   const show = (id: AppTab) => suiteReady && visited.has(id);
-  const frostPages =
-    !homeOpen && (tab === "rvfax" || tab === "rvcal" || tab === "rvtow");
+  // White page + Grok-card frost on every screen, including home, so the
+  // three-color ink (black / sapphire / dark gray) never sits on a dark plate.
+  const frostPages = true;
 
   return (
     <ShellNavProvider value={nav}>

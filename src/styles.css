@@ -17,7 +17,7 @@
   --color-ink-surface: #0c1c40;
   --color-ink-surface-2: #12244e;
   --color-ink-foam: #e8eef8;
-  --color-ink-ink: #f4f7fb;
+  --color-ink-ink: #000000;
 
   --color-sapphire: #1648c8;
   --color-sapphire-deep: #0a2a8a;
@@ -42,9 +42,9 @@
   --color-bg-elevated: var(--color-ink-elevated);
   --color-surface: var(--color-ink-surface);
   --color-surface-2: var(--color-ink-surface-2);
-  --color-fg: var(--color-ink-ink);
-  --color-muted: color-mix(in srgb, var(--color-ink-foam) 78%, transparent);
-  --color-dim: color-mix(in srgb, var(--color-ink-foam) 52%, transparent);
+  --color-fg: #000000;
+  --color-muted: #3d4d68;
+  --color-dim: #3d4d68;
   --color-accent: var(--color-sapphire);
 
   --color-border: color-mix(in srgb, var(--color-ink-foam) 16%, transparent);
@@ -58,7 +58,7 @@
   --color-ruby-soft: rgba(192, 31, 46, 0.14);
   --color-ruby-mid: rgba(192, 31, 46, 0.24);
 
-  --color-blue: #6aafff;
+  --color-blue: #1648c8;
   --color-green: #3dba8a;
   --color-amber: #e0a04a;
 
@@ -105,8 +105,8 @@
 
   --color-showroom: #05070b;
   --color-showroom-accent: #1e63d6;
-  --color-showroom-ink: #eef2f8;
-  --color-showroom-muted: #c5cedb;
+  --color-showroom-ink: #000000;
+  --color-showroom-muted: #3d4d68;
   --color-showroom-glass: rgba(11, 16, 28, 0.84);
   --shadow-showroom: 0 18px 50px -12px rgba(0, 0, 0, 0.85), 0 2px 10px rgba(0, 0, 0, 0.45);
 
@@ -114,8 +114,8 @@
   --dock-label-size: 1.125rem;
   --dock-label-size-sm: 1.1875rem;
   --dock-label-track: 0.5px;
-  --dock-label-color: #f3f5f8;
-  --dock-label-color-active: #ffffff;
+  --dock-label-color: #3d4d68;
+  --dock-label-color-active: #1648c8;
   --dock-icon-size: 3.25rem;
 }
 
@@ -194,8 +194,8 @@
   }
 
   /*
-   * Suite-wide contrast: washed Tailwind whites → bright white.
-   * Picker wheels keep dim unselected rows (iOS drum).
+   * Secondary ink is dark gray. Picker wheels keep the unselected rows
+   * in that same gray; the selected row is black.
    */
   .app-shell .text-white\/35,
   .app-shell .text-white\/40,
@@ -212,17 +212,17 @@
   .app-shell .text-white\/88,
   .app-shell .text-muted,
   .app-shell .text-dim {
-    color: #ffffff !important;
+    color: #3d4d68 !important;
   }
   .app-shell [data-picker] .text-white\/35,
   .app-shell [data-picker] .text-white\/40,
   .app-shell [data-picker] .text-white\/45,
   .app-shell [data-picker] .text-white\/50,
   .app-shell [data-picker] .text-white\/55 {
-    color: rgb(255 255 255 / 0.42) !important;
+    color: #3d4d68 !important;
   }
   .app-shell [data-picker] .text-white {
-    color: #ffffff !important;
+    color: #000000 !important;
   }
 
   .rv-scroll {
@@ -2368,15 +2368,15 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
 .app-shell [data-rvgrok-wingman] .text-muted,
 .app-shell [data-rvgrok-wingman] .grok-status-word,
 .app-shell [data-rvgrok-wingman] .placeholder\:text-muted::placeholder {
-  color: color-mix(in srgb, var(--color-ink-foam) 70%, transparent) !important;
+  color: #3d4d68 !important;
 }
 .grok-display {
   font-family: var(--font-display);
   font-optical-sizing: auto;
 }
 /*
- * Grok card. Facts, Tow, and Calculator reuse this exact rule — same
- * fill, blur, hairline, and shadow. No second recipe.
+ * Grok card. Facts, Tow, Calculator, RV Grok, and Lot reuse this exact
+ * rule — same fill, blur, hairline, and shadow. No second recipe.
  */
 .grok-frost,
 .app-shell[data-frost-pages] :is(
@@ -2392,10 +2392,28 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   .showroom-ask,
   .showroom-tab,
   .showroom-mic,
+  .showroom-card,
+  .showroom-placard,
+  .showroom-arrival,
+  .showroom-float,
   .select-sheet-panel,
   .exclusive-lender-row,
-  button:not(.showroom-brand):not([data-suite-brand]):not(:has(img)),
-  [role="button"]:not(:has(img)),
+  .grok-composer-pill,
+  .grok-chip,
+  .grok-lot-chip,
+  .grok-starter,
+  .grok-report-pill,
+  .grok-report-card,
+  .grok-report-note,
+  .grok-mic-btn,
+  .grok-send-btn,
+  .lot-card,
+  .lot-chip,
+  .lot-search,
+  .lot-pill,
+  .bottom-tabs-dock,
+  button:not(.showroom-brand):not([data-suite-brand]):not(.showroom-hero):not(:has(img)),
+  [role="button"]:not(.showroom-hero):not(:has(img)),
   input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([data-room-ask-input]),
   select,
   textarea,
@@ -2417,7 +2435,9 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   [class~="bg-gold/15"]:not([class~="inset-0"]),
   [class~="bg-sky-500/10"]:not([class~="inset-0"]),
   [class~="bg-sky-500/20"]:not([class~="inset-0"]),
-  [class~="bg-amber/10"]:not([class~="inset-0"])
+  [class~="bg-amber/10"]:not([class~="inset-0"]),
+  [class~="bg-sapphire"]:not([class~="inset-0"]),
+  [class~="bg-black/70"]:not([class~="inset-0"])
 ) {
   background: linear-gradient(
     155deg,
@@ -2430,7 +2450,7 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   backdrop-filter: blur(28px) saturate(1.7);
   border: 1px solid var(--color-gold-border);
   box-shadow: var(--shadow-glow-gold), var(--shadow-glass);
-  color: var(--color-fg);
+  color: #000000;
 }
 [data-readable-cards][data-rvgrok-wingman] .grok-frost,
 [data-rvgrok-wingman][data-readable-cards] .glass-prestige,
@@ -3313,32 +3333,47 @@ body:has(.report-page) {
 }
 
 /*
- * Facts, Tow, Calculator sit on a clean white page. Surfaces above use
- * .grok-frost. Ink is darkened here so the translucent card stays readable.
+ * White page. Surfaces use .grok-frost. Ink is only black, sapphire
+ * (#1648c8), or dark gray (#3d4d68). White type is limited to text
+ * sitting on a photo or video.
  */
-.app-shell[data-frost-pages] {
+.app-shell[data-frost-pages],
+[data-nda-gate],
+[data-nda-state="loading"] {
   background: #fff;
-  color: #172033;
+  color: #000000;
   color-scheme: light;
 }
 .app-shell[data-frost-pages] .showroom-stage,
 .app-shell[data-frost-pages] .showroom-plain,
 .app-shell[data-frost-pages] .page-backdrop-bright,
 .app-shell[data-frost-pages] .page-scrim-soft,
-.app-shell[data-frost-pages] .suite-raidho-field {
+.app-shell[data-frost-pages] .suite-raidho-field,
+[data-nda-gate] .suite-raidho-backdrop,
+[data-nda-state="loading"] .suite-raidho-backdrop {
   display: none;
 }
 .app-shell[data-frost-pages] .rvfax-screen,
 .app-shell[data-frost-pages] .showroom-page,
 .app-shell[data-frost-pages] [data-coach-detail],
-.app-shell[data-frost-pages] [data-compare-view] {
+.app-shell[data-frost-pages] [data-compare-view],
+.app-shell[data-frost-pages] [data-rvgrok-wingman],
+.app-shell[data-frost-pages] .lot-stock-screen,
+.app-shell[data-frost-pages] .showroom-home {
   background: transparent;
-  color: #172033;
+  color: #000000;
+}
+.app-shell[data-frost-pages] .lot-well[data-lot-scene="empty"],
+.app-shell[data-frost-pages] .lot-well[data-lot-scene="empty"] .lot-mark {
+  background: transparent;
+}
+.app-shell[data-frost-pages] .bottom-tabs-nav {
+  background: transparent;
 }
 .app-shell[data-frost-pages] .showroom-word {
   background: none;
-  -webkit-text-fill-color: #172033;
-  color: #172033;
+  -webkit-text-fill-color: #000000;
+  color: #000000;
 }
 .app-shell[data-frost-pages] :is(
   .sapphire-banner-ambient,
@@ -3360,12 +3395,12 @@ body:has(.report-page) {
 ) {
   background: none !important;
   background-image: none !important;
-  -webkit-text-fill-color: #172033 !important;
-  color: #172033 !important;
+  -webkit-text-fill-color: #000000 !important;
+  color: #000000 !important;
   filter: none !important;
   text-shadow: none !important;
 }
-.app-shell[data-frost-pages] :is(
+.app-shell :is(
   .grok-frost,
   .glass-prestige,
   .glass-prestige-deep,
@@ -3377,25 +3412,43 @@ body:has(.report-page) {
   .showroom-ask,
   .showroom-tab,
   .showroom-mic,
+  .showroom-card,
+  .showroom-word,
+  .showroom-spotmodel,
+  .showroom-spotprice,
+  .showroom-arrival-name,
+  .showroom-arrival-price,
   .select-sheet-panel,
+  .lot-pill-value,
+  .grok-display,
+  .grok-status-word,
+  .text-value,
+  .text-body-bright,
+  .text-prestige,
+  .text-prestige-muted,
+  .text-fg,
+  .text-white,
   button,
   input,
   select,
-  textarea,
-  [class*="text-white"],
+  textarea
+),
+[data-nda-gate] :is(
+  .glass-prestige,
   .text-fg,
-  .text-muted,
-  .text-dim,
-  .text-label,
-  .text-body-bright,
-  .text-prestige,
-  .text-prestige-muted
+  .text-white,
+  button,
+  [class*="text-white"]
 ) {
-  color: #172033 !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
   text-shadow: none !important;
 }
-.app-shell[data-frost-pages] :is(
-  .text-white,
+.app-shell :is(
+  .text-muted,
+  .text-dim,
+  .text-label-ice,
+  .text-hint-ice,
   .text-white\/35,
   .text-white\/40,
   .text-white\/45,
@@ -3410,42 +3463,140 @@ body:has(.report-page) {
   .text-white\/85,
   .text-white\/88,
   .text-white\/90,
-  .text-muted,
-  .text-dim,
-  .text-fg
-) {
-  color: #172033 !important;
+  .showroom-spotstock,
+  .showroom-kicker,
+  .lot-pill-label,
+  .lot-pill-value.is-gap
+),
+[data-nda-gate] :is(.text-muted, [class*="text-white/"]) {
+  color: #3d4d68 !important;
+  -webkit-text-fill-color: #3d4d68 !important;
   text-shadow: none !important;
 }
-.app-shell[data-frost-pages] :is(.text-sky-50, .text-sky-100, .text-sky-200, .text-sky-300, .text-blue, .rvfax-sapphire-label) {
-  color: #0a2a8a !important;
+.app-shell :is(
+  .text-blue,
+  .text-sky-50,
+  .text-sky-100,
+  .text-sky-200,
+  .text-sky-300,
+  .text-sapphire,
+  .text-sapphire-glow,
+  .text-gold,
+  .text-gold-bright,
+  .text-amber,
+  .text-ruby,
+  .text-green,
+  .text-label,
+  .rvfax-sapphire-label,
+  .showroom-tab[aria-pressed="true"],
+  .lot-chip.is-on,
+  .bottom-tab-btn.is-active .bottom-tab-label,
+  a,
+  [class*="text-sky"],
+  [class*="text-amber"],
+  [class*="text-emerald"],
+  [class*="text-gold"],
+  [class*="text-ruby"],
+  [class*="text-green"]
+),
+[data-nda-gate] :is(.text-gold, .text-gold-bright, a) {
+  color: #1648c8 !important;
+  -webkit-text-fill-color: #1648c8 !important;
+  text-shadow: none !important;
 }
-.app-shell[data-frost-pages] :is(.text-gold, .text-gold-bright) {
-  color: #6b5424 !important;
-}
-.app-shell[data-frost-pages] .text-amber {
-  color: #8a5a10 !important;
-}
-.app-shell[data-frost-pages] .relative:has(> img) [class*="text-white"],
-.app-shell[data-frost-pages] .relative:has(> img) :is(.text-white, .text-amber, .text-blue) {
+/* Text painted on a photo or live camera may stay white. */
+.app-shell :is(
+  .relative:has(> img),
+  .relative:has(> video)
+) :is(.absolute, .lot-well-id),
+.app-shell :is(
+  .relative:has(> img),
+  .relative:has(> video)
+) :is(.absolute, .lot-well-id) :is(
+  span,
+  p,
+  strong,
+  em,
+  [class*="text-"]
+),
+.app-shell .lot-well[data-lot-scene="photo"] .lot-well-id,
+.app-shell .lot-well[data-lot-scene="photo"] .lot-well-id * {
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55) !important;
 }
-.app-shell[data-frost-pages] :is(input, textarea)::placeholder {
-  color: rgba(23, 32, 51, 0.45) !important;
+.app-shell :is(input, textarea)::placeholder,
+[data-nda-gate] :is(input, textarea)::placeholder {
+  color: #3d4d68 !important;
+  -webkit-text-fill-color: #3d4d68 !important;
+  opacity: 1;
 }
-.app-shell[data-frost-pages] :is(select, input, textarea) {
+.app-shell :is(select, input, textarea) {
   color-scheme: light;
 }
 .app-shell[data-frost-pages] .select-sheet-root > .absolute.inset-0 {
-  background: rgba(23, 32, 51, 0.12);
+  background: rgba(0, 0, 0, 0.12);
 }
-.app-shell[data-frost-pages] [data-room-ask-input] {
-  background: transparent;
-  border: 0;
-  box-shadow: none;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  color: #172033;
+.app-shell[data-frost-pages] [data-room-ask-input],
+.app-shell[data-frost-pages] .grok-composer-pill textarea {
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  color: #000000 !important;
+}
+.app-shell[data-frost-pages] [data-rvgrok-followups] .grok-followup:hover span,
+.app-shell[data-frost-pages] [data-rvgrok-followups] .grok-followup:focus-visible span {
+  color: #1648c8 !important;
+}
+[data-nda-gate] :is(.glass-prestige, button, [class~="bg-sapphire"]) {
+  background: linear-gradient(
+    155deg,
+    rgba(240, 215, 140, 0.14) 0%,
+    rgba(255, 255, 255, 0.08) 36%,
+    rgba(10, 8, 6, 0.18) 100%
+  );
+  -webkit-backdrop-filter: blur(28px) saturate(1.7);
+  backdrop-filter: blur(28px) saturate(1.7);
+  border: 1px solid var(--color-gold-border);
+  box-shadow: var(--shadow-glow-gold), var(--shadow-glass);
+  color: #000000;
+}
+[data-nda-gate] .nda-accept-bar {
+  background: #fff;
+  border-color: var(--color-gold-border);
+}
+.app-shell .metal-hammered-strike {
+  display: none;
+}
+.app-shell .metal-hammered-face {
+  background: none !important;
+  background-image: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-text-fill-color: #1648c8 !important;
+  color: #1648c8 !important;
+  -webkit-text-stroke: 0 !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+.report-band {
+  background: #fff;
+  color: #000000;
+  border-bottom: 1px solid var(--color-gold-border);
+}
+.report-eyebrow,
+.report-date,
+.report-headlines dt,
+.report-section dt,
+.report-sources,
+.report-foot,
+.report-status {
+  color: #3d4d68;
+}
+.report-section h2,
+.report-foot a {
+  color: #1648c8;
 }

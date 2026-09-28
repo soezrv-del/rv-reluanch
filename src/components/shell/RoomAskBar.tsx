@@ -47,8 +47,7 @@ export function RoomAskBar({
   const [draft, setDraft] = useState("");
   const [voice, setVoice] = useState<RoomVoicePhase>("idle");
   const hidePinnedAsk = !homeOpen && tab === "rvgrok";
-  const frostPage =
-    !homeOpen && (tab === "rvfax" || tab === "rvcal" || tab === "rvtow");
+  const frostPage = true;
   const live = voice !== "idle";
 
   useEffect(() => subscribeRoomVoice(setVoice), []);

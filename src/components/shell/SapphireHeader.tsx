@@ -38,7 +38,7 @@ export function SapphireHeader({ tab }: { tab: AppTab }) {
             "0 16px 48px rgba(0,10,40,0.55), inset 0 1px 0 rgba(160,210,255,0.28), inset 0 -1px 0 rgba(40,80,160,0.25)",
         };
 
-  const frostPage = tab === "rvfax" || tab === "rvcal" || tab === "rvtow";
+  const frostPage = true;
   const badgeTone =
     accent === "gold"
       ? "border-gold/40 bg-gold-dim text-gold-bright"
