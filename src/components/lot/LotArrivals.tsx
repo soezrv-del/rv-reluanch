@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { CoveredCoach } from "@/components/shell/CoveredCoach";
-import { lotUnitPhoto, type LotUnit } from "@/lib/lot/ownLotPage";
+import { lotTextOrGap, lotUnitPhoto, type LotUnit } from "@/lib/lot/ownLotPage";
 import {
   arrivalsForHome,
   coverVariant,
@@ -45,6 +45,11 @@ function ArrivalCard({
   const [ok, setOk] = useState(true);
   const photo = ok ? lotUnitPhoto(unit) : null;
   const name = showroomUnitLabel(unit);
+  const meta = [
+    lotTextOrGap(unit.stock_number),
+    lotTextOrGap(unit.location),
+    lotTextOrGap(unit.condition),
+  ].join(" · ");
   const amount =
     typeof unit.price === "number" && unit.price > 0
       ? formatHomePrice(Math.round(unit.price))
@@ -63,6 +68,7 @@ function ArrivalCard({
       )}
       <span className="showroom-arrival-meta">
         <span className="showroom-arrival-name">{name}</span>
+        <span className="showroom-arrival-sub">{meta}</span>
         {amount ? <span className="showroom-arrival-price">{amount}</span> : null}
       </span>
     </button>

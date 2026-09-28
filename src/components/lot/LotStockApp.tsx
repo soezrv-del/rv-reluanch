@@ -17,7 +17,12 @@ import {
   type LotSnapshotView,
   type LotUnit,
 } from "@/lib/lot/ownLotPage";
-import { LOT_UNIT_OPEN_EVENT, lotArrivalQuery, takePendingLotQuery } from "@/lib/home/homeCoach";
+import {
+  LOT_UNIT_OPEN_EVENT,
+  lotArrivalQuery,
+  showroomUnitLabel,
+  takePendingLotQuery,
+} from "@/lib/home/homeCoach";
 import { LotArrivals } from "@/components/lot/LotArrivals";
 import { ReportShareButton } from "@/components/report/ReportShareButton";
 import { buildUnitShareReport } from "@/lib/rv/shareReport";
@@ -273,7 +278,7 @@ export function LotStockApp() {
                   {rail.map((unit, i) => {
                     const key = lotUnitKey(unit, i + 1);
                     return (
-                      <li key={key}>
+                      <li key={key} className="min-w-0">
                         <LotUnitCard
                           unit={unit}
                           open={openKey === key}
@@ -368,16 +373,13 @@ function LotUnitCard({
   open: boolean;
   onToggle: () => void;
 }) {
-  const title =
-    [unit.make, unit.model].filter(Boolean).join(" ") ||
-    unit.title.trim() ||
-    "GAP";
+  const headline = showroomUnitLabel(unit).trim() || "GAP";
   const price = lotPriceOrGap(unit.price);
-  const stock = lotTextOrGap(unit.stock_number);
-  const location = lotTextOrGap(unit.location);
-  const year = lotTextOrGap(unit.year);
-  const trim = lotTextOrGap(unit.trim);
-  const condition = lotTextOrGap(unit.condition);
+  const meta = [
+    lotTextOrGap(unit.stock_number),
+    lotTextOrGap(unit.location),
+    lotTextOrGap(unit.condition),
+  ].join(" · ");
   const photoUrl = lotUnitPhoto(unit);
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const photo = photoUrl && failedSrc !== photoUrl ? photoUrl : null;
@@ -428,30 +430,20 @@ function LotUnitCard({
           >
             {price}
           </span>
-          <div className="lot-well-id">
-            <p className="text-[12px] font-semibold text-sapphire-glow">
-              {year}
-            </p>
-            <p
-              className={cn(
-                "font-bold leading-snug text-white",
-                featured ? "text-[18px]" : "text-[16px]",
-              )}
-              data-lot-unit
-            >
-              {title}
-            </p>
-          </div>
         </div>
-        <div className="space-y-2.5 px-4 py-3">
-          <p className="truncate text-[13px] text-white/75">
-            {trim === "GAP" ? "Trim GAP" : trim}
+        <div className="min-w-0 space-y-1.5 px-4 py-3">
+          <p
+            className={cn(
+              "lot-unit-title",
+              featured ? "is-featured" : "is-rail",
+            )}
+            data-lot-unit
+          >
+            {headline}
           </p>
-          <dl className="lot-pills">
-            <Pill label="Stock" value={stock} />
-            <Pill label="Location" value={location} />
-            <Pill label="Condition" value={condition} />
-          </dl>
+          <p className="lot-unit-meta" data-lot-meta>
+            {meta}
+          </p>
           {open ? (
             <dl className="grid grid-cols-2 gap-x-3 gap-y-2 border-t border-white/15 pt-3 text-[12px]">
               <Field label="VIN" value={lotTextOrGap(unit.vin)} />
@@ -468,18 +460,6 @@ function LotUnitCard({
         </div>
       ) : null}
     </article>
-  );
-}
-
-function Pill({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="lot-pill" data-lot-pill={label}>
-      <dt className="sr-only">{label}</dt>
-      <dd className={cn("lot-pill-value", value === "GAP" && "is-gap")}>
-        {value}
-      </dd>
-      <p className="lot-pill-label">{label}</p>
-    </div>
   );
 }
 
