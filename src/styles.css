@@ -3426,7 +3426,7 @@ html[data-theme="light"] [data-readable-cards] .glass-surface,
 html[data-theme="light"] .showroom-card,
 html[data-theme="light"] .showroom-float {
   background: #ffffff !important;
-  border-color: #eeeeee;
+  border: 1px solid #171a20 !important;
   box-shadow: none;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
@@ -3444,7 +3444,8 @@ html[data-theme="light"] .app-shell .bg-black\/45,
 html[data-theme="light"] .app-shell .bg-black\/50,
 html[data-theme="light"] .app-shell .bg-black\/55,
 html[data-theme="light"] .app-shell .bg-black\/60 {
-  background-color: #ffffff;
+  background-color: #dfe2e8;
+  color: #171a20;
 }
 
 html[data-theme="light"] .app-shell .bg-white\/5,
@@ -3463,7 +3464,7 @@ html[data-theme="light"] .app-shell .border-white\/20,
 html[data-theme="light"] .app-shell .border-white\/25,
 html[data-theme="light"] .app-shell .border-white\/30,
 html[data-theme="light"] .app-shell .border-white\/40 {
-  border-color: #eeeeee;
+  border-color: #171a20;
 }
 
 html[data-theme="light"] [data-camera-well],
@@ -3508,19 +3509,19 @@ html[data-theme="light"] [data-tools-menu] > p {
 }
 html[data-theme="light"] [data-readable-cards][data-premium-screen] [data-tools-menu] .glass-prestige {
   background: #ffffff !important;
-  border: 1px solid #eeeeee;
+  border: 1px solid #171a20 !important;
   box-shadow: none;
   color: #171a20;
 }
 html[data-theme="light"] [data-tools-menu] button {
-  border-color: #eeeeee;
+  border-color: #171a20;
 }
 html[data-theme="light"] [data-tools-menu] button:hover {
-  background: #f4f4f4;
+  background: #e7e9ee;
 }
 html[data-theme="light"] [data-tools-menu] button > span:first-child {
-  background: #f4f4f4;
-  border: 1px solid #eeeeee;
+  background: #dfe2e8;
+  border: 1px solid #171a20;
 }
 html[data-theme="light"] [data-tools-menu] .text-white {
   color: #171a20 !important;
@@ -3540,18 +3541,32 @@ html[data-theme="light"] [data-tools-menu] .text-amber {
 }
 
 /*
- * Tesla.com light chrome. White canvas, carbon type, no glass,
- * no sheen, no gradient titles. Electric blue is the only action color.
- * Inline dark plates on the sapphire header lose to these !important rules.
+ * Light chrome. White page, carbon type, one accent (#3e6ae1).
+ * Cards keep a carbon border. Buttons and tabs use a solid fill
+ * with dark type. Premium gets a hero plate behind the title.
  * Dark mode is untouched.
  */
 html[data-theme="light"] .sapphire-header-inner,
 html[data-theme="light"] [data-page-accent="gold"] .sapphire-header-inner {
   background: #ffffff !important;
-  border-color: transparent !important;
+  border: 1px solid #171a20 !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+}
+html[data-theme="light"] [data-premium-screen] .sapphire-header {
+  padding-top: 0.35rem;
+  padding-bottom: 0.85rem;
+}
+html[data-theme="light"] [data-premium-screen] .sapphire-header-inner {
+  background:
+    radial-gradient(120% 90% at 50% 120%, rgba(62, 106, 225, 0.95) 0%, rgba(62, 106, 225, 0) 58%),
+    linear-gradient(165deg, #10151f 0%, #1a2744 42%, #1e4fd0 100%) !important;
+  border: 0 !important;
+  border-radius: 16px !important;
+  padding-top: 2.75rem !important;
+  padding-bottom: 2.5rem !important;
+  box-shadow: none !important;
 }
 html[data-theme="light"] .sapphire-banner-ambient,
 html[data-theme="light"] .sapphire-banner-edge,
@@ -3563,13 +3578,18 @@ html[data-theme="light"] .sapphire-header-inner > .pointer-events-none {
   display: none !important;
 }
 html[data-theme="light"] .sapphire-header-title {
-  font-weight: 500 !important;
-  letter-spacing: 0 !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.03em !important;
   background: none !important;
   color: #171a20 !important;
   -webkit-text-fill-color: #171a20 !important;
   filter: none !important;
   text-shadow: none !important;
+}
+html[data-theme="light"] [data-premium-screen] .sapphire-header-title {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-weight: 700 !important;
 }
 html[data-theme="light"] .sapphire-header-line,
 html[data-theme="light"] .sapphire-header-badge {
@@ -3589,14 +3609,27 @@ html[data-theme="light"] .metal-hammered-face {
   -webkit-text-fill-color: #5c5e62 !important;
   -webkit-text-stroke: 0;
   filter: none;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.04em;
 }
-html[data-theme="light"] .premium-menu-btn {
+html[data-theme="light"] [data-premium-screen] .sapphire-header-line,
+html[data-theme="light"] [data-premium-screen] .sapphire-header-badge,
+html[data-theme="light"] [data-premium-screen] .metal-hammered-face {
+  color: rgba(255, 255, 255, 0.88) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.88) !important;
   background: transparent !important;
   border-color: transparent !important;
+}
+html[data-theme="light"] .premium-menu-btn {
+  background: #dfe2e8 !important;
+  border: 1px solid #171a20 !important;
   color: #171a20 !important;
   box-shadow: none !important;
+}
+html[data-theme="light"] [data-premium-screen] .premium-menu-btn {
+  background: rgba(255, 255, 255, 0.16) !important;
+  border: 1px solid rgba(255, 255, 255, 0.72) !important;
+  color: #ffffff !important;
 }
 html[data-theme="light"] [data-readable-cards][data-premium-screen] .glass-prestige,
 html[data-theme="light"] [data-readable-cards][data-premium-screen] .glass-prestige-deep,
@@ -3608,7 +3641,7 @@ html[data-theme="light"] [data-readable-cards][data-tow-landing] .glass-prestige
 html[data-theme="light"] [data-readable-cards][data-sold-book] .glass-prestige,
 html[data-theme="light"] [data-readable-cards][data-coach-detail] .glass-prestige {
   background: #ffffff !important;
-  border-color: #eeeeee !important;
+  border: 1px solid #171a20 !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -3618,23 +3651,30 @@ html[data-theme="light"] [data-premium-screen] svg {
   color: #171a20;
 }
 html[data-theme="light"] [data-premium-screen] button.bg-blue,
-html[data-theme="light"] .app-shell .bg-blue,
-html[data-theme="light"] .app-shell .bg-sapphire {
-  background-color: #3e6ae1;
-  box-shadow: none;
+html[data-theme="light"] .app-shell button.bg-blue,
+html[data-theme="light"] .app-shell button.bg-sapphire,
+html[data-theme="light"] .app-shell a.bg-blue,
+html[data-theme="light"] .app-shell a.bg-sapphire,
+html[data-theme="light"] .app-shell button.bg-blue.text-white,
+html[data-theme="light"] .app-shell button.bg-sapphire.text-white,
+html[data-theme="light"] .app-shell a.bg-blue.text-white,
+html[data-theme="light"] .app-shell a.bg-sapphire.text-white {
+  background-color: #dfe2e8 !important;
+  border: 1px solid #171a20 !important;
+  box-shadow: none !important;
+  color: #171a20 !important;
+  font-weight: 600;
 }
-html[data-theme="light"] [data-premium-screen] button.bg-blue,
-html[data-theme="light"] .app-shell .bg-blue.text-white,
-html[data-theme="light"] .app-shell .bg-sapphire.text-white {
-  color: #ffffff !important;
+html[data-theme="light"] .bottom-tabs-nav {
+  border-top: 1px solid #171a20;
 }
 html[data-theme="light"] .bottom-tab-btn.is-active,
 html[data-theme="light"] .bottom-tab-btn[aria-current="page"] {
-  border-top-color: #171a20;
+  border-top-color: #3e6ae1;
 }
 html[data-theme="light"] .showroom-ask {
-  background: #ffffff;
-  border: 1px solid #eeeeee;
+  background: #ffffff !important;
+  border: 1px solid #171a20 !important;
   box-shadow: none;
 }
 html[data-theme="light"] .showroom-ask input::placeholder {
@@ -3645,22 +3685,22 @@ html[data-theme="light"] .showroom-mic {
   box-shadow: none;
   color: #ffffff;
 }
-html[data-theme="light"] .showroom-tab {
-  color: #171a20;
-  font-weight: 500;
-  background: #ffffff;
-  border: 1px solid #eeeeee;
+html[data-theme="light"] .showroom-tab.showroom-float {
+  color: #171a20 !important;
+  font-weight: 600;
+  background: #dfe2e8 !important;
+  border: 1px solid #171a20 !important;
   box-shadow: none;
 }
 html[data-theme="light"] .showroom-tab[aria-pressed="true"] {
-  background: #171a20 !important;
-  color: #ffffff !important;
-  border-color: #171a20 !important;
+  background: #e7eefe !important;
+  color: #171a20 !important;
+  border: 1px solid #3e6ae1 !important;
 }
 html[data-theme="light"] .showroom-tab-icon,
 html[data-theme="light"] .showroom-menu-icon {
   color: currentColor;
 }
 html[data-theme="light"] .showroom-tab[aria-pressed="true"] .showroom-tab-icon {
-  color: #ffffff;
+  color: #3e6ae1;
 }
