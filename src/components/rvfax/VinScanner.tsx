@@ -347,7 +347,7 @@ export function VinScanner({
 
   return (
     <div className="fixed inset-0 z-[80] flex flex-col bg-black">
-      <div className="relative z-20 flex items-center gap-2 px-3 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
+      <div className="relative z-20 flex items-center gap-2 px-3 pb-2 pt-[max(0.75rem,var(--safe-top,env(safe-area-inset-top)))] pl-[max(0.75rem,var(--safe-left,0px))] pr-[max(0.75rem,var(--safe-right,0px))]">
         <button
           type="button"
           onClick={() => {
@@ -410,7 +410,7 @@ export function VinScanner({
           </div>
         </div>
 
-        <div className="absolute inset-x-0 bottom-0 z-10 space-y-2 bg-gradient-to-t from-black via-black/85 to-transparent px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-10">
+        <div className="absolute inset-x-0 bottom-0 z-10 space-y-2 bg-gradient-to-t from-black via-black/85 to-transparent px-4 pb-[max(1.25rem,var(--safe-bottom,env(safe-area-inset-bottom)))] pt-10">
           {status === "starting" ? (
             <p className="flex items-center justify-center gap-2 text-[13px] font-semibold text-white">
               <Loader2 className="size-4 animate-spin text-sky-300" />

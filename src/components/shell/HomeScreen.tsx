@@ -70,14 +70,6 @@ export function HomeScreen({
       className="showroom-home absolute inset-0 z-30 flex flex-col overflow-x-hidden overflow-y-auto"
     >
       <section className="showroom-hero" data-hero-kind="cutout">
-        <div className="showroom-hero-beam" aria-hidden />
-        <img
-          src={heroSrc}
-          alt={SHOWROOM_SPOTLIGHT.alt}
-          className="showroom-coach"
-          data-hero-kind="cutout"
-        />
-        <div className="showroom-hero-pool" aria-hidden />
         <div className="showroom-placard" data-home-placard>
           {who ? <p className="showroom-spotyear">{who}</p> : null}
           <p className="showroom-spotmodel">{model}</p>
@@ -88,27 +80,28 @@ export function HomeScreen({
               {place ? <span className="showroom-spotplace"> · {place}</span> : null}
             </p>
           ) : null}
-          {spotUnit ? (
-            <button
-              type="button"
-              className="showroom-hero-primary"
-              onClick={openSpot}
-            >
-              Open coach
-            </button>
-          ) : null}
         </div>
+        <img
+          src={heroSrc}
+          alt={SHOWROOM_SPOTLIGHT.alt}
+          className="showroom-coach"
+          data-hero-kind="cutout"
+        />
+        <div className="showroom-hero-pool" aria-hidden />
+        {spotUnit ? (
+          <button
+            type="button"
+            className="showroom-hero-primary"
+            onClick={openSpot}
+          >
+            Open coach
+          </button>
+        ) : null}
       </section>
 
       <div className="home-truth">
         <MetalVerifiedTrue size="md" />
       </div>
-
-      {lotTotal ? (
-        <p className="showroom-lot-whisper" data-lot-whisper>
-          {lotTotal}
-        </p>
-      ) : null}
 
       <nav className="home-jumps" aria-label="Go to">
         {JUMPS.map((jump) => (
@@ -118,7 +111,12 @@ export function HomeScreen({
             className="home-jump"
             onClick={() => onOpen(jump.id)}
           >
-            <span className="home-jump-label">{jump.label}</span>
+            <span className="home-jump-label">
+              {jump.label}
+              {jump.id === "rvlot" && lotTotal ? (
+                <span className="home-jump-sub">{lotTotal} in stock</span>
+              ) : null}
+            </span>
             <span className="home-jump-hint">{jump.hint}</span>
           </button>
         ))}

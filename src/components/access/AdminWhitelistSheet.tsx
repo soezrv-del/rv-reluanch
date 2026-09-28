@@ -255,7 +255,7 @@ export function AdminWhitelistSheet({
       aria-modal="true"
       aria-labelledby="admin-whitelist-title"
     >
-      <div className="flex items-center justify-between border-b border-white/10 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
         <h2 id="admin-whitelist-title" className="text-[16px] font-bold text-white">
           Access list
         </h2>

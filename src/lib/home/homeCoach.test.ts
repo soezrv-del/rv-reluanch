@@ -138,8 +138,10 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   const shell = readFileSync(join(root, "../../components/shell/AppShell.tsx"), "utf8");
   const home = readFileSync(join(root, "../../components/shell/HomeScreen.tsx"), "utf8");
   const brand = readFileSync(join(root, "../../components/shell/SuiteBrand.tsx"), "utf8");
-  const mark = join(root, "../../../public/assets/brand/raidho-shell-mark.png");
+  const mark = join(root, "../../../public/assets/brand/r-mark-final-60.png");
+  const retired = join(root, "../../../public/assets/brand/raidho-shell-mark.png");
   assert.ok(existsSync(mark), "owner mark asset");
+  assert.equal(existsSync(retired), false, "old shell mark removed");
   assert.match(shell, /<SuiteBrand onHome=\{\(\) => setHomeOpen\(true\)\} showMenu=\{homeOpen\} \/>/);
   assert.match(brand, /aria-label="Home"/);
   assert.match(shell, /homeOpen/);
@@ -164,7 +166,8 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   const lot = readFileSync(join(root, "../../components/lot/LotStockApp.tsx"), "utf8");
   assert.match(lot, /takePendingLotQuery/);
   assert.match(lot, /LotArrivals/);
-  assert.match(brand, /\/assets\/brand\/raidho-shell-mark\.png/);
+  assert.match(brand, /\/assets\/brand\/r-mark-final-60\.png/);
+  assert.doesNotMatch(brand, /raidho-shell-mark/);
   assert.match(brand, /RvFOX/);
   assert.doesNotMatch(home, /unsplash|placeholder|allegro/i);
   assert.doesNotMatch(shell, /RvFaxApp\.tsx|LotStockApp\.tsx|RvCalApp\.tsx|RvTowApp\.tsx/);
@@ -312,7 +315,9 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
   );
   assert.doesNotMatch(css, /showroom-coach-fallback|showroom-reflect|showroom-contact|showroom-hero picture|showroom-hero-wash|showroom-hero-glint/);
   assert.doesNotMatch(home, /showroom-hero-wash|showroom-hero-glint|showroom-roof-glint|feMorphology|feFlood|preserveAspectRatio/);
-  assert.match(css, /\.showroom-hero-beam \{/);
+  assert.doesNotMatch(css, /\.showroom-hero-beam \{/);
+  assert.doesNotMatch(css, /\.showroom-ambient \{/);
+  assert.doesNotMatch(css, /\.showroom-grain \{/);
   assert.match(css, /\.showroom-hero-pool \{/);
   assert.doesNotMatch(
     css,
@@ -323,7 +328,7 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
   assert.match(css, /\.showroom-spotstock \{/);
   assert.match(home, /SHOWROOM_SPOTLIGHT\.alt/);
   assert.match(home, /SHOWROOM_SPOTLIGHT\.image/);
-  assert.match(home, /showroom-hero-beam/);
+  assert.doesNotMatch(home, /showroom-hero-beam/);
   assert.match(home, /showroom-hero-pool/);
   assert.doesNotMatch(home, /spotlightJpegPath|showroom-reflect|showroom-contact/);
   assert.doesNotMatch(coach, /spotlightJpegPath|2026-entegra-cornerstone\.jpg/);
@@ -350,7 +355,9 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
   assert.match(home, /const heroSrc = SHOWROOM_SPOTLIGHT\.image/);
   assert.doesNotMatch(home, /spotlight-lot\.jpg/);
   assert.match(home, /Open coach/);
-  assert.match(home, /data-lot-whisper/);
+  assert.doesNotMatch(home, /data-lot-whisper|showroom-lot-whisper/);
+  assert.match(home, /home-jump-sub/);
+  assert.match(home, /in stock/);
   assert.doesNotMatch(home, /Learn more|showroom-coach-lot|data-arrival-set="duplicate"/);
   assert.doesNotMatch(css, /showroom-coach-lot/);
 });

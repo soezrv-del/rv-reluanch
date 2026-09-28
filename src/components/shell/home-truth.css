@@ -1,83 +1,9 @@
-/* Platinum plate for Verified and True. Loaded after the suite sheet so it wins on white. */
-
-/* Same forged platinum as dark. Darker on white so the letters still read. No plate. */
-
-html[data-theme="light"] .metal-hammered {
-  display: inline-block;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: none;
-  box-shadow: none;
-}
-
-html[data-theme="light"] .metal-hammered-strike {
-  display: block;
-  color: rgba(17, 17, 17, 0.35);
-  text-shadow: none;
-}
-
-html[data-theme="light"] .metal-hammered-face {
-  background-image: linear-gradient(180deg, #8e9bab 0%, #5c6a78 40%, #3d4856 100%) !important;
-  -webkit-background-clip: text !important;
-  background-clip: text !important;
-  color: transparent !important;
-  -webkit-text-fill-color: transparent !important;
-  -webkit-text-stroke: 0.35px rgba(17, 17, 17, 0.28);
-  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.7));
-}
+/* Home truth mark spacing. Type and metal live in styles.css under the theme. */
 
 .home-truth {
   display: flex;
   justify-content: center;
   margin: 0.9rem 1.25rem 0;
-}
-
-.home-jumps {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-  margin: 0.85rem 1.15rem 1.25rem;
-}
-
-.home-jump {
-  display: flex;
-  min-height: 3.15rem;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  border-radius: 0.9rem;
-  border: 1px solid rgba(197, 206, 219, 0.55);
-  background: #111111;
-  padding: 0.55rem 0.95rem;
-  text-align: left;
-  color: #e8eef5;
-}
-
-.home-jump-label {
-  font-size: 1rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-.home-jump-hint {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #c5cedb;
-}
-
-html[data-theme="light"] .app-shell button.home-jump {
-  background: #ffffff !important;
-  color: #111111 !important;
-  border: 1px solid #c5cedb !important;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08) !important;
-}
-
-html[data-theme="light"] .app-shell button.home-jump .home-jump-hint {
-  color: #1648c8 !important;
-  -webkit-text-fill-color: #1648c8 !important;
 }
 
 .lot-arrivals {

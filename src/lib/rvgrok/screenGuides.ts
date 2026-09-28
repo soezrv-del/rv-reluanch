@@ -68,12 +68,11 @@ Under that bar is a dock of six gold line icons. All six are visible. The dock d
 Swiping the page (not the dock) moves between tools in this order: Rv Facts, Calculator, RV Grok, Tow Guide, RV GPS, Lot Inventory. Swiping doesn't work on Home.`;
 
 const GUIDES: Record<string, string> = {
-  Home: `Home is the showroom. Light mode is one full-bleed lot photo of the stocked 2026 Entegra Cornerstone. Dark mode is that same coach, one studio cutout, on a black ground. The page loads only the photo that theme uses.
-- Year, make, and model sit on the image in large type. Price and stock are quiet lines on the image, not a second card. The model number is Cornerstone 45D and the stock number is Stock 45282 when that unit is on the lot.
+  Home: `Home is the showroom for the app. The title sits above the coach: year and make, then the model, then price and stock. The stocked coach is the 2026 Entegra Cornerstone. The model number is Cornerstone 45D and the stock number is Stock 45282 when that unit is on the lot. Light mode is a white page. Dark mode is the same coach cutout on a black ground.
 - One button: Open coach. It opens that unit in Lot Inventory. There is no Learn more button. Tapping it does not open Rv Facts.
-- Under the hero, the printed lot count from the lot sheet is a small frozen number. It does not count down.
-- "Newest arrivals" is a still row of up to six recent lot units. He pushes it with a finger. It does not auto-loop. Each card has a photo (or a covered-coach drawing when the unit has no photo) and a price. Tapping one opens Lot Inventory already searched to that unit.
-Next step: tap Open coach, or push Newest arrivals.`,
+- Under the hero, VERIFIED AND TRUE, then a flat list of jumps: New arrivals, Facts, Grok, Tow, Cal, and RV GPS. The New arrivals jump shows how many units are in stock.
+- Newest arrivals is a still row on Lot Inventory, not on Home. He pushes it with a finger. It does not auto-loop. Each card has a photo (or a covered-coach drawing when the unit has no photo) and a price. Tapping one opens that unit.
+Next step: tap Open coach, or tap New arrivals.`,
 
   Facts: `Rv Facts is the spec report for one coach: specs, ratings, market value, and NHTSA recalls.
 Search, in the RV Search card:

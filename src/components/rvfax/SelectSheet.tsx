@@ -410,9 +410,13 @@ export function SelectSheet({
         top: kb.open && kb.vvOffsetTop > 0 ? kb.vvOffsetTop : 0,
         bottom: kb.open ? "auto" : 0,
         height: kb.open && kb.vvHeight > 0 ? `${kb.vvHeight}px` : "auto",
-        paddingTop: "0.75rem",
+        paddingTop: "max(0.75rem, var(--safe-top, 0px))",
         paddingBottom:
-          kbPad > 0 ? `max(0.75rem, ${kbPad + 12}px)` : "0.75rem",
+          kbPad > 0
+            ? `max(var(--safe-bottom, 0px), ${kbPad + 12}px)`
+            : "max(0.75rem, var(--safe-bottom, 0px))",
+        paddingLeft: "max(0.75rem, var(--safe-left, 0px))",
+        paddingRight: "max(0.75rem, var(--safe-right, 0px))",
       }}
     >
       <button

@@ -34,6 +34,9 @@ export function NdaGate({ children }: { children: ReactNode }) {
     top: "var(--vv-offset-top, 0px)",
     height: "var(--vv-height, 100%)",
     maxHeight: "var(--vv-height, 100%)",
+    paddingTop: "var(--safe-top, 0px)",
+    paddingLeft: "var(--safe-left, 0px)",
+    paddingRight: "var(--safe-right, 0px)",
   } as const;
 
   if (!ready) {

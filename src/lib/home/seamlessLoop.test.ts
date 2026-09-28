@@ -42,6 +42,10 @@ test("the arrivals row is still and the dock does not loop", () => {
     join(root, "../../components/shell/HomeScreen.tsx"),
     "utf8",
   );
+  const arrivals = readFileSync(
+    join(root, "../../components/lot/LotArrivals.tsx"),
+    "utf8",
+  );
   const bar = readFileSync(
     join(root, "../../components/shell/RoomAskBar.tsx"),
     "utf8",
@@ -49,9 +53,11 @@ test("the arrivals row is still and the dock does not loop", () => {
   const ask = readFileSync(join(root, "../rvgrok/roomAsk.ts"), "utf8");
   const css = readFileSync(join(root, "../../styles.css"), "utf8");
 
-  assert.match(home, /data-arrival-loop="off"/);
-  assert.match(home, /Newest arrivals/);
+  assert.match(arrivals, /data-arrival-loop="off"/);
+  assert.match(arrivals, /Newest arrivals/);
+  assert.match(home, /New arrivals/);
   assert.match(home, /requestLotUnit/);
+  assert.doesNotMatch(home, /data-arrival-loop|Newest arrivals|showroom-arrival/);
   assert.doesNotMatch(home, /shouldSeamlessLoop|nextSeamlessScroll|data-arrival-set="duplicate"/);
 
   assert.doesNotMatch(bar, /nextPillScroll|nextSeamlessScroll|shouldLoopPills|shouldSeamlessLoop/);

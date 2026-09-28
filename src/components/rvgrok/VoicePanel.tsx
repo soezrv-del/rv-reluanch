@@ -43,13 +43,17 @@ export function VoicePanel({
 
   return (
     <div
+      data-voice-panel=""
       className="fixed inset-x-0 top-0 z-50 flex items-end justify-center sm:items-center"
       style={{
         height: kb.vvHeight > 0 ? `${kb.vvHeight}px` : "100dvh",
         top: kb.vvOffsetTop || 0,
+        paddingTop: "var(--safe-top, 0px)",
+        paddingLeft: "max(0.75rem, var(--safe-left, 0px))",
+        paddingRight: "max(0.75rem, var(--safe-right, 0px))",
         paddingBottom: kb.open
-          ? `max(0.75rem, ${kb.inset + 12}px)`
-          : "max(0.75rem, env(safe-area-inset-bottom))",
+          ? `max(var(--safe-bottom, 0px), ${kb.inset + 12}px)`
+          : "max(0.75rem, var(--safe-bottom, env(safe-area-inset-bottom)))",
       }}
     >
       <button

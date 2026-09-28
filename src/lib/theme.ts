@@ -24,13 +24,9 @@ export function setTheme(next: SuiteTheme) {
     const dark = img.dataset.markDark;
     const light3 = img.dataset.markLight3x;
     if (!light || !dark) return;
-    if (next === "light") {
-      img.src = light;
-      img.srcset = light3 ? `${light} 2x, ${light3} 3x` : "";
-    } else {
-      img.src = dark;
-      img.srcset = "";
-    }
+    const src = next === "light" ? light : dark;
+    img.src = src;
+    img.srcset = light3 ? `${src} 2x, ${light3} 3x` : "";
   });
   const color = next === "light" ? "#ffffff" : "#050505";
   document

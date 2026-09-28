@@ -41,6 +41,7 @@ import {
   useFocusScrollIntoView,
   useKeyboardInset,
 } from "@/lib/hooks/useKeyboardInset";
+import { pinScreenScrollOnOpen } from "@/lib/hooks/screenScroll";
 import { useDockSafeInset } from "@/lib/hooks/nativeWebView";
 import {
   clearGrokSeedOnDockTap,
@@ -174,6 +175,11 @@ export function AppShell({
   useKeyboardInset();
   useFocusScrollIntoView(true);
   useDockSafeInset();
+
+  useEffect(() => {
+    if (typeof history !== "undefined") history.scrollRestoration = "manual";
+    return pinScreenScrollOnOpen();
+  }, [tab, homeOpen]);
 
   const markVisited = useCallback((id: AppTab) => {
     setVisited((prev) => {
@@ -425,24 +431,14 @@ export function AppShell({
     <ShellNavProvider value={nav}>
       <div
         ref={shellRef}
-        className="app-shell showroom-app relative flex h-full min-h-0 w-full flex-col overflow-hidden overscroll-none text-fg"
+        className="app-shell showroom-app relative flex min-h-0 w-full flex-col overflow-hidden overscroll-none text-fg"
         data-home-open={homeOpen ? "" : undefined}
         data-page-accent={PAGE_ACCENT[tab] ?? "sapphire"}
         style={{
           overscrollBehavior: "none",
         }}
       >
-        <div className="showroom-stage" aria-hidden>
-          <div className="showroom-ambient" />
-          {homeOpen ? (
-            <>
-              <div className="showroom-spot" />
-              <div className="showroom-spot-src" />
-              <div className="showroom-spot-pool" />
-            </>
-          ) : null}
-          <div className="showroom-grain" />
-        </div>
+        <div className="showroom-stage" aria-hidden />
         <SuiteBrand onHome={() => setHomeOpen(true)} showMenu={homeOpen} />
         <main
           ref={mainRef}
