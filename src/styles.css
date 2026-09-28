@@ -3411,6 +3411,8 @@ html[data-theme="light"] .app-shell .bg-ruby\/90 .text-white {
   color: #ffffff !important;
 }
 
+/* Same recipe as .grok-frost. Page background stays the white canvas. */
+html[data-theme="light"] [data-tools-menu] .glass-prestige,
 html[data-theme="light"] .glass-prestige,
 html[data-theme="light"] .glass-prestige-deep,
 html[data-theme="light"] .glass-prestige-gold,
@@ -3424,12 +3426,29 @@ html[data-theme="light"] [data-readable-cards] .glass-prestige-gold,
 html[data-theme="light"] [data-readable-cards] .glass-panel,
 html[data-theme="light"] [data-readable-cards] .glass-surface,
 html[data-theme="light"] .showroom-card,
-html[data-theme="light"] .showroom-float {
-  background: #ffffff !important;
-  border: 1px solid #171a20 !important;
-  box-shadow: none;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
+html[data-theme="light"] .showroom-float,
+html[data-theme="light"] .showroom-ask,
+html[data-theme="light"] .showroom-tab,
+html[data-theme="light"] .showroom-mic,
+html[data-theme="light"] .grok-composer-pill,
+html[data-theme="light"] .grok-chip,
+html[data-theme="light"] .premium-menu-btn,
+html[data-theme="light"] .app-shell button:not(.showroom-brand):not(.bottom-tab-btn),
+html[data-theme="light"] .app-shell .glass-field,
+html[data-theme="light"] .app-shell input,
+html[data-theme="light"] .app-shell select,
+html[data-theme="light"] .app-shell textarea {
+  background: linear-gradient(
+    155deg,
+    rgba(240, 215, 140, 0.14) 0%,
+    rgba(255, 255, 255, 0.08) 36%,
+    rgba(10, 8, 6, 0.18) 100%
+  ) !important;
+  backdrop-filter: blur(28px) saturate(1.7) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(1.7) !important;
+  border: 1px solid var(--color-gold-border) !important;
+  box-shadow: var(--shadow-glow-gold), var(--shadow-glass) !important;
+  color: var(--color-fg);
 }
 
 html[data-theme="light"] .glass-field::placeholder {
@@ -3444,14 +3463,13 @@ html[data-theme="light"] .app-shell .bg-black\/45,
 html[data-theme="light"] .app-shell .bg-black\/50,
 html[data-theme="light"] .app-shell .bg-black\/55,
 html[data-theme="light"] .app-shell .bg-black\/60 {
-  background-color: #dfe2e8;
   color: #171a20;
 }
 
 html[data-theme="light"] .app-shell .bg-white\/5,
 html[data-theme="light"] .app-shell .bg-white\/8,
 html[data-theme="light"] .app-shell .bg-white\/10 {
-  background-color: #f4f4f4;
+  background-color: transparent;
 }
 
 html[data-theme="light"] .app-shell .bg-black\/70 {
@@ -3464,7 +3482,7 @@ html[data-theme="light"] .app-shell .border-white\/20,
 html[data-theme="light"] .app-shell .border-white\/25,
 html[data-theme="light"] .app-shell .border-white\/30,
 html[data-theme="light"] .app-shell .border-white\/40 {
-  border-color: #171a20;
+  border-color: var(--color-gold-border);
 }
 
 html[data-theme="light"] [data-camera-well],
@@ -3507,21 +3525,13 @@ html[data-theme="light"] [data-tools-menu] > p {
   font-weight: 500;
   text-transform: none;
 }
-html[data-theme="light"] [data-readable-cards][data-premium-screen] [data-tools-menu] .glass-prestige {
-  background: #ffffff !important;
-  border: 1px solid #171a20 !important;
-  box-shadow: none;
-  color: #171a20;
-}
-html[data-theme="light"] [data-tools-menu] button {
-  border-color: #171a20;
-}
 html[data-theme="light"] [data-tools-menu] button:hover {
-  background: #e7e9ee;
-}
-html[data-theme="light"] [data-tools-menu] button > span:first-child {
-  background: #dfe2e8;
-  border: 1px solid #171a20;
+  background: linear-gradient(
+    155deg,
+    rgba(240, 215, 140, 0.14) 0%,
+    rgba(255, 255, 255, 0.08) 36%,
+    rgba(10, 8, 6, 0.18) 100%
+  );
 }
 html[data-theme="light"] [data-tools-menu] .text-white {
   color: #171a20 !important;
@@ -3548,11 +3558,16 @@ html[data-theme="light"] [data-tools-menu] .text-amber {
  */
 html[data-theme="light"] .sapphire-header-inner,
 html[data-theme="light"] [data-page-accent="gold"] .sapphire-header-inner {
-  background: #ffffff !important;
-  border: 1px solid #171a20 !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+  background: linear-gradient(
+    155deg,
+    rgba(240, 215, 140, 0.14) 0%,
+    rgba(255, 255, 255, 0.08) 36%,
+    rgba(10, 8, 6, 0.18) 100%
+  ) !important;
+  border: 1px solid var(--color-gold-border) !important;
+  box-shadow: var(--shadow-glow-gold), var(--shadow-glass) !important;
+  backdrop-filter: blur(28px) saturate(1.7) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(1.7) !important;
 }
 html[data-theme="light"] [data-premium-screen] .sapphire-header {
   padding-top: 0.35rem;
@@ -3620,50 +3635,17 @@ html[data-theme="light"] [data-premium-screen] .metal-hammered-face {
   background: transparent !important;
   border-color: transparent !important;
 }
-html[data-theme="light"] .premium-menu-btn {
-  background: #dfe2e8 !important;
-  border: 1px solid #171a20 !important;
-  color: #171a20 !important;
-  box-shadow: none !important;
-}
 html[data-theme="light"] [data-premium-screen] .premium-menu-btn {
-  background: rgba(255, 255, 255, 0.16) !important;
-  border: 1px solid rgba(255, 255, 255, 0.72) !important;
   color: #ffffff !important;
-}
-html[data-theme="light"] [data-readable-cards][data-premium-screen] .glass-prestige,
-html[data-theme="light"] [data-readable-cards][data-premium-screen] .glass-prestige-deep,
-html[data-theme="light"] [data-readable-cards][data-premium-screen] .glass-panel,
-html[data-theme="light"] [data-readable-cards][data-premium-screen] .glass-surface,
-html[data-theme="light"] [data-readable-cards] [data-rv-search-card].glass-prestige,
-html[data-theme="light"] [data-readable-cards][data-cal-screen] .glass-prestige,
-html[data-theme="light"] [data-readable-cards][data-tow-landing] .glass-prestige,
-html[data-theme="light"] [data-readable-cards][data-sold-book] .glass-prestige,
-html[data-theme="light"] [data-readable-cards][data-coach-detail] .glass-prestige {
-  background: #ffffff !important;
-  border: 1px solid #171a20 !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  color: #171a20;
 }
 html[data-theme="light"] [data-premium-screen] svg {
   color: #171a20;
 }
-html[data-theme="light"] [data-premium-screen] button.bg-blue,
-html[data-theme="light"] .app-shell button.bg-blue,
-html[data-theme="light"] .app-shell button.bg-sapphire,
-html[data-theme="light"] .app-shell a.bg-blue,
-html[data-theme="light"] .app-shell a.bg-sapphire,
 html[data-theme="light"] .app-shell button.bg-blue.text-white,
 html[data-theme="light"] .app-shell button.bg-sapphire.text-white,
 html[data-theme="light"] .app-shell a.bg-blue.text-white,
 html[data-theme="light"] .app-shell a.bg-sapphire.text-white {
-  background-color: #dfe2e8 !important;
-  border: 1px solid #171a20 !important;
-  box-shadow: none !important;
   color: #171a20 !important;
-  font-weight: 600;
 }
 html[data-theme="light"] .bottom-tabs-nav {
   border-top: 1px solid #171a20;
@@ -3672,30 +3654,23 @@ html[data-theme="light"] .bottom-tab-btn.is-active,
 html[data-theme="light"] .bottom-tab-btn[aria-current="page"] {
   border-top-color: #3e6ae1;
 }
-html[data-theme="light"] .showroom-ask {
-  background: #ffffff !important;
-  border: 1px solid #171a20 !important;
-  box-shadow: none;
+html[data-theme="light"] .showroom-ask input,
+html[data-theme="light"] .showroom-ask input::placeholder {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 html[data-theme="light"] .showroom-ask input::placeholder {
   color: #8e8e8e;
 }
-html[data-theme="light"] .showroom-mic {
-  background: #3e6ae1;
-  box-shadow: none;
-  color: #ffffff;
-}
-html[data-theme="light"] .showroom-tab.showroom-float {
+html[data-theme="light"] .showroom-tab {
   color: #171a20 !important;
   font-weight: 600;
-  background: #dfe2e8 !important;
-  border: 1px solid #171a20 !important;
-  box-shadow: none;
 }
 html[data-theme="light"] .showroom-tab[aria-pressed="true"] {
-  background: #e7eefe !important;
   color: #171a20 !important;
-  border: 1px solid #3e6ae1 !important;
 }
 html[data-theme="light"] .showroom-tab-icon,
 html[data-theme="light"] .showroom-menu-icon {

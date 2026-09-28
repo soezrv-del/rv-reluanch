@@ -48,6 +48,10 @@ test("light theme is a white Tesla canvas and a tight Raidho crop", () => {
   assert.match(css, /--dock-surface:\s*#ffffff/);
   assert.match(css, /#3e6ae1/);
   assert.match(css, /html\[data-theme="light"\] \.sapphire-header-inner/);
+  assert.match(
+    css,
+    /html\[data-theme="light"\] \.glass-prestige[\s\S]*?rgba\(240, 215, 140, 0\.14\)[\s\S]*?blur\(28px\) saturate\(1\.7\)[\s\S]*?var\(--color-gold-border\)/,
+  );
   assert.match(css, /html:not\(\[data-theme="light"\]\) \.app-shell \.text-white\\\/35/);
   assert.match(theme, /dataset\.theme === "light"/);
   assert.match(css, /\[data-camera-well\]/);
