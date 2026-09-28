@@ -47,6 +47,8 @@ export function RoomAskBar({
   const [draft, setDraft] = useState("");
   const [voice, setVoice] = useState<RoomVoicePhase>("idle");
   const hidePinnedAsk = !homeOpen && tab === "rvgrok";
+  const frostPage =
+    !homeOpen && (tab === "rvfax" || tab === "rvcal" || tab === "rvtow");
   const live = voice !== "idle";
 
   useEffect(() => subscribeRoomVoice(setVoice), []);
@@ -79,7 +81,11 @@ export function RoomAskBar({
             send();
           }}
         >
-          <div className="showroom-ask showroom-float">
+          <div
+            className={
+              "showroom-ask showroom-float" + (frostPage ? " grok-frost" : "")
+            }
+          >
             <input
               data-room-ask-input
               value={draft}
@@ -98,6 +104,7 @@ export function RoomAskBar({
               data-room-ask-mic
               className={
                 "showroom-mic" +
+                (frostPage ? " grok-frost" : "") +
                 (live ? " is-live" : "") +
                 (voice === "speaking" ? " is-armed" : "")
               }
@@ -129,6 +136,7 @@ export function RoomAskBar({
             key={chip.id}
             chip={chip}
             active={!homeOpen && tab === chip.id}
+            frost={frostPage}
             onOpen={() => openRoom(chip.id)}
           />
         ))}
@@ -140,10 +148,12 @@ export function RoomAskBar({
 function RoomChip({
   chip,
   active,
+  frost,
   onOpen,
 }: {
   chip: (typeof ROOM_CHIPS)[number];
   active: boolean;
+  frost: boolean;
   onOpen: () => void;
 }) {
   const Icon = chip.icon;
@@ -155,7 +165,9 @@ function RoomChip({
       aria-pressed={active}
       aria-current={active ? "page" : undefined}
       onClick={onOpen}
-      className="showroom-tab showroom-float min-h-11"
+      className={
+        "showroom-tab showroom-float min-h-11" + (frost ? " grok-frost" : "")
+      }
     >
       <Icon
         className="showroom-tab-icon"

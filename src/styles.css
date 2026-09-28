@@ -2374,15 +2374,60 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   font-family: var(--font-display);
   font-optical-sizing: auto;
 }
-.grok-frost {
+/*
+ * Grok card. Facts, Tow, and Calculator reuse this exact rule — same
+ * fill, blur, hairline, and shadow. No second recipe.
+ */
+.grok-frost,
+.app-shell[data-frost-pages] :is(
+  .glass-prestige,
+  .glass-prestige-deep,
+  .glass-prestige-gold,
+  .glass-panel,
+  .glass-surface,
+  .glass-field,
+  .glass-chip,
+  .sapphire-header-inner,
+  .rvfax-report-chrome,
+  .showroom-ask,
+  .showroom-tab,
+  .showroom-mic,
+  .select-sheet-panel,
+  .exclusive-lender-row,
+  button:not(.showroom-brand):not([data-suite-brand]):not(:has(img)),
+  [role="button"]:not(:has(img)),
+  input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([data-room-ask-input]),
+  select,
+  textarea,
+  [class~="bg-black/25"]:not([class~="inset-0"]),
+  [class~="bg-black/30"]:not([class~="inset-0"]),
+  [class~="bg-black/40"]:not([class~="inset-0"]),
+  [class~="bg-black/50"]:not([class~="inset-0"]),
+  [class~="bg-black/55"]:not([class~="inset-0"]),
+  [class~="bg-white/5"]:not([class~="inset-0"]),
+  [class~="bg-white/8"]:not([class~="inset-0"]),
+  [class~="bg-white/10"]:not([class~="inset-0"]),
+  [class~="bg-white/[0.03]"]:not([class~="inset-0"]),
+  [class~="bg-white/[0.04]"]:not([class~="inset-0"]),
+  [class~="bg-blue/10"]:not([class~="inset-0"]),
+  [class~="bg-blue/15"]:not([class~="inset-0"]),
+  [class~="bg-blue/20"]:not([class~="inset-0"]),
+  [class~="bg-blue/25"]:not([class~="inset-0"]),
+  [class~="bg-gold/10"]:not([class~="inset-0"]),
+  [class~="bg-gold/15"]:not([class~="inset-0"]),
+  [class~="bg-sky-500/10"]:not([class~="inset-0"]),
+  [class~="bg-sky-500/20"]:not([class~="inset-0"]),
+  [class~="bg-amber/10"]:not([class~="inset-0"])
+) {
   background: linear-gradient(
     155deg,
     rgba(240, 215, 140, 0.14) 0%,
     rgba(255, 255, 255, 0.08) 36%,
     rgba(10, 8, 6, 0.18) 100%
   );
-  backdrop-filter: blur(28px) saturate(1.7);
+  /* WebKit prefix first so the production build keeps backdrop-filter. */
   -webkit-backdrop-filter: blur(28px) saturate(1.7);
+  backdrop-filter: blur(28px) saturate(1.7);
   border: 1px solid var(--color-gold-border);
   box-shadow: var(--shadow-glow-gold), var(--shadow-glass);
   color: var(--color-fg);
@@ -2399,8 +2444,8 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
     rgba(255, 255, 255, 0.08) 36%,
     rgba(10, 8, 6, 0.18) 100%
   );
-  backdrop-filter: blur(28px) saturate(1.7);
   -webkit-backdrop-filter: blur(28px) saturate(1.7);
+  backdrop-filter: blur(28px) saturate(1.7);
   border-color: var(--color-gold-border);
 }
 /* Grok landing sits under the showroom logo. The logo row owns the notch. */
@@ -3265,4 +3310,142 @@ body:has(.report-page) {
   .report-headlines {
     break-inside: avoid;
   }
+}
+
+/*
+ * Facts, Tow, Calculator sit on a clean white page. Surfaces above use
+ * .grok-frost. Ink is darkened here so the translucent card stays readable.
+ */
+.app-shell[data-frost-pages] {
+  background: #fff;
+  color: #172033;
+  color-scheme: light;
+}
+.app-shell[data-frost-pages] .showroom-stage,
+.app-shell[data-frost-pages] .showroom-plain,
+.app-shell[data-frost-pages] .page-backdrop-bright,
+.app-shell[data-frost-pages] .page-scrim-soft,
+.app-shell[data-frost-pages] .suite-raidho-field {
+  display: none;
+}
+.app-shell[data-frost-pages] .rvfax-screen,
+.app-shell[data-frost-pages] .showroom-page,
+.app-shell[data-frost-pages] [data-coach-detail],
+.app-shell[data-frost-pages] [data-compare-view] {
+  background: transparent;
+  color: #172033;
+}
+.app-shell[data-frost-pages] .showroom-word {
+  background: none;
+  -webkit-text-fill-color: #172033;
+  color: #172033;
+}
+.app-shell[data-frost-pages] :is(
+  .sapphire-banner-ambient,
+  .sapphire-banner-edge,
+  .sapphire-banner-shine,
+  .sapphire-title-ambient,
+  .sapphire-title-shine,
+  .sapphire-title-sheen,
+  .sapphire-header-inner > .pointer-events-none
+) {
+  display: none;
+}
+.app-shell[data-frost-pages] :is(
+  .ice-text,
+  .ice-text-soft,
+  .ice-text-sapphire,
+  .sapphire-header-title,
+  .sapphire-header-line
+) {
+  background: none !important;
+  background-image: none !important;
+  -webkit-text-fill-color: #172033 !important;
+  color: #172033 !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+.app-shell[data-frost-pages] :is(
+  .grok-frost,
+  .glass-prestige,
+  .glass-prestige-deep,
+  .glass-prestige-gold,
+  .glass-panel,
+  .glass-surface,
+  .glass-field,
+  .glass-chip,
+  .showroom-ask,
+  .showroom-tab,
+  .showroom-mic,
+  .select-sheet-panel,
+  button,
+  input,
+  select,
+  textarea,
+  [class*="text-white"],
+  .text-fg,
+  .text-muted,
+  .text-dim,
+  .text-label,
+  .text-body-bright,
+  .text-prestige,
+  .text-prestige-muted
+) {
+  color: #172033 !important;
+  text-shadow: none !important;
+}
+.app-shell[data-frost-pages] :is(
+  .text-white,
+  .text-white\/35,
+  .text-white\/40,
+  .text-white\/45,
+  .text-white\/50,
+  .text-white\/55,
+  .text-white\/60,
+  .text-white\/65,
+  .text-white\/70,
+  .text-white\/75,
+  .text-white\/80,
+  .text-white\/82,
+  .text-white\/85,
+  .text-white\/88,
+  .text-white\/90,
+  .text-muted,
+  .text-dim,
+  .text-fg
+) {
+  color: #172033 !important;
+  text-shadow: none !important;
+}
+.app-shell[data-frost-pages] :is(.text-sky-50, .text-sky-100, .text-sky-200, .text-sky-300, .text-blue, .rvfax-sapphire-label) {
+  color: #0a2a8a !important;
+}
+.app-shell[data-frost-pages] :is(.text-gold, .text-gold-bright) {
+  color: #6b5424 !important;
+}
+.app-shell[data-frost-pages] .text-amber {
+  color: #8a5a10 !important;
+}
+.app-shell[data-frost-pages] .relative:has(> img) [class*="text-white"],
+.app-shell[data-frost-pages] .relative:has(> img) :is(.text-white, .text-amber, .text-blue) {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55) !important;
+}
+.app-shell[data-frost-pages] :is(input, textarea)::placeholder {
+  color: rgba(23, 32, 51, 0.45) !important;
+}
+.app-shell[data-frost-pages] :is(select, input, textarea) {
+  color-scheme: light;
+}
+.app-shell[data-frost-pages] .select-sheet-root > .absolute.inset-0 {
+  background: rgba(23, 32, 51, 0.12);
+}
+.app-shell[data-frost-pages] [data-room-ask-input] {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  color: #172033;
 }

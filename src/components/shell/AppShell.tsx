@@ -420,6 +420,8 @@ export function AppShell({
   );
 
   const show = (id: AppTab) => suiteReady && visited.has(id);
+  const frostPages =
+    !homeOpen && (tab === "rvfax" || tab === "rvcal" || tab === "rvtow");
 
   return (
     <ShellNavProvider value={nav}>
@@ -427,6 +429,7 @@ export function AppShell({
         ref={shellRef}
         className="app-shell showroom-app relative flex h-full min-h-0 w-full flex-col overflow-hidden overscroll-none text-fg"
         data-home-open={homeOpen ? "" : undefined}
+        data-frost-pages={frostPages ? "" : undefined}
         data-page-accent={PAGE_ACCENT[tab] ?? "sapphire"}
         style={{
           overscrollBehavior: "none",

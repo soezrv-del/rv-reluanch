@@ -38,6 +38,7 @@ export function SapphireHeader({ tab }: { tab: AppTab }) {
             "0 16px 48px rgba(0,10,40,0.55), inset 0 1px 0 rgba(160,210,255,0.28), inset 0 -1px 0 rgba(40,80,160,0.25)",
         };
 
+  const frostPage = tab === "rvfax" || tab === "rvcal" || tab === "rvtow";
   const badgeTone =
     accent === "gold"
       ? "border-gold/40 bg-gold-dim text-gold-bright"
@@ -50,13 +51,18 @@ export function SapphireHeader({ tab }: { tab: AppTab }) {
     >
       <div
         className={cn(
-          "sapphire-header-inner relative overflow-hidden rounded-[1.35rem] border border-white/20 px-3 py-3.5 sm:px-6 sm:py-4",
+          "sapphire-header-inner relative overflow-hidden rounded-[1.35rem] px-3 py-3.5 sm:px-6 sm:py-4",
+          frostPage ? "grok-frost" : "border border-white/20",
         )}
-        style={{
-          ...shellGlow,
-          backdropFilter: "blur(24px) saturate(1.45)",
-          WebkitBackdropFilter: "blur(24px) saturate(1.45)",
-        }}
+        style={
+          frostPage
+            ? undefined
+            : {
+                ...shellGlow,
+                backdropFilter: "blur(24px) saturate(1.45)",
+                WebkitBackdropFilter: "blur(24px) saturate(1.45)",
+              }
+        }
       >
         <div
           className="pointer-events-none absolute inset-0 opacity-80"
