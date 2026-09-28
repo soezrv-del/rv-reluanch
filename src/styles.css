@@ -2505,7 +2505,7 @@ html.kb-open [data-rvgrok-composer-dock] {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: #f2f2f2;
+  background: #e4e9f0;
 }
 .showroom-stage {
   z-index: 0;
@@ -2958,16 +2958,16 @@ html:has(.report-page),
 body:has(.report-page) {
   height: 100%;
   overflow: hidden;
-  background: #f4f1ea;
-  color: #142033;
+  background: #e4e9f0;
+  color: #111111;
   color-scheme: light;
 }
 
 .report-page {
   height: 100%;
   overflow-y: auto;
-  background: #f4f1ea;
-  color: #142033;
+  background: #e4e9f0;
+  color: #111111;
   font-family: var(--font-sans);
 }
 
@@ -2975,9 +2975,15 @@ body:has(.report-page) {
   display: flex;
   align-items: center;
   gap: 0.85rem;
+  margin: 0.85rem 0.85rem 0;
   padding: calc(env(safe-area-inset-top) + 1rem) 1.15rem 1rem;
-  background: #0a2a8a;
-  color: #fff;
+  border-radius: 1.15rem;
+  background: #ffffff;
+  color: #111111;
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    0 0 0 1px rgba(17, 24, 39, 0.08),
+    0 10px 22px rgba(16, 24, 40, 0.1);
 }
 
 .report-logo {
@@ -2998,7 +3004,7 @@ body:has(.report-page) {
   font-size: 0.72rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #d6e2ff;
+  color: #1648c8;
 }
 
 .report-date {
@@ -3007,13 +3013,20 @@ body:has(.report-page) {
   text-align: right;
   font-size: 0.72rem;
   line-height: 1.3;
-  color: #d6e2ff;
+  color: #3d4d68;
 }
 
 .report-sheet {
-  width: min(860px, 100%);
-  margin: 0 auto;
+  width: min(860px, calc(100% - 1.7rem));
+  margin: 0.85rem auto 1.5rem;
   padding: 1.25rem 1.15rem 2.5rem;
+  border-radius: 1.15rem;
+  background: #ffffff;
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    0 0 0 1px rgba(17, 24, 39, 0.08),
+    0 10px 22px rgba(16, 24, 40, 0.1),
+    0 26px 48px rgba(16, 24, 40, 0.12);
 }
 
 .report-title {
@@ -3021,6 +3034,7 @@ body:has(.report-page) {
   line-height: 1.15;
   font-weight: 700;
   letter-spacing: -0.03em;
+  color: #111111;
 }
 
 .report-hero {
@@ -3030,7 +3044,7 @@ body:has(.report-page) {
   margin-top: 1rem;
   object-fit: cover;
   border-radius: 0.75rem;
-  background: #e7e1d6;
+  background: #eef1f5;
 }
 
 .report-headlines {
@@ -3039,8 +3053,8 @@ body:has(.report-page) {
   gap: 0.85rem 1rem;
   margin: 1.1rem 0 0;
   padding: 0.9rem 0;
-  border-top: 1px solid #e3dccf;
-  border-bottom: 1px solid #e3dccf;
+  border-top: 1px solid rgba(17, 24, 39, 0.08);
+  border-bottom: 1px solid rgba(17, 24, 39, 0.08);
 }
 
 .report-headlines dt {
@@ -3048,13 +3062,14 @@ body:has(.report-page) {
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #5a6678;
+  color: #3d4d68;
 }
 
 .report-headlines dd {
   margin-top: 0.15rem;
   font-size: 1.05rem;
   font-weight: 700;
+  color: #111111;
 }
 
 .report-section {
@@ -3078,11 +3093,11 @@ body:has(.report-page) {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
   gap: 0.75rem;
   padding: 0.55rem 0;
-  border-bottom: 1px solid #e7e1d6;
+  border-bottom: 1px solid rgba(17, 24, 39, 0.08);
 }
 
 .report-section dt {
-  color: #5a6678;
+  color: #3d4d68;
   font-size: 0.92rem;
 }
 
@@ -3091,13 +3106,14 @@ body:has(.report-page) {
   text-align: right;
   font-weight: 650;
   font-size: 0.95rem;
+  color: #111111;
 }
 
 .report-sources,
 .report-foot,
 .report-status {
   margin-top: 1.25rem;
-  color: #5a6678;
+  color: #3d4d68;
   font-size: 0.82rem;
   line-height: 1.45;
 }
@@ -3152,9 +3168,10 @@ body:has(.report-page) {
 }
 
 .report-share-menu button {
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(10, 18, 36, 0.92);
-  color: #fff;
+  border: 1px solid rgba(17, 24, 39, 0.1);
+  background: #ffffff;
+  color: #111111;
+  box-shadow: 0 6px 16px rgba(16, 24, 40, 0.1);
 }
 
 .report-share-toast {
@@ -3263,8 +3280,8 @@ body:has(.report-page) {
 html:not([data-theme="blue"]) .app-shell,
 html:not([data-theme="blue"]) [data-nda-gate],
 html:not([data-theme="blue"]) [data-nda-state="loading"] {
-  background: #f2f2f2;
-  color: #0b1d45;
+  background: #e4e9f0;
+  color: #111111;
   color-scheme: light;
 }
 html:not([data-theme="blue"]) {
@@ -3275,19 +3292,19 @@ html:not([data-theme="blue"]) {
 .app-shell .text-label,
 [data-nda-gate] .text-white,
 [data-nda-gate] .text-fg {
-  color: #0b1d45;
+  color: #111111;
   text-shadow: none;
 }
 .app-shell [class*="text-white/"],
 .app-shell .text-prestige-muted,
 [data-nda-gate] [class*="text-white/"] {
-  color: #5c6b80;
+  color: #3d4d68;
   text-shadow: none;
 }
 .app-shell .text-muted,
 .app-shell .text-dim,
 [data-nda-gate] .text-muted {
-  color: #5c6b80;
+  color: #3d4d68;
 }
 .app-shell .bg-sapphire,
 .app-shell .bg-sapphire.text-white {
@@ -3299,21 +3316,34 @@ html:not([data-theme="blue"]) {
 .app-shell [role="button"]:not(.tesla-main):not([data-tone="main"]):not(.glass-prestige):not(.showroom-card):not(.showroom-arrival),
 [data-nda-gate] button:not(.tesla-main):not(.tesla-secondary) {
   background: #fff;
-  color: #0b1d45;
-  border: 1px solid rgba(11, 29, 69, 0.14);
-  box-shadow: none;
+  color: #111111;
+  border: 1px solid rgba(17, 24, 39, 0.1);
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    0 4px 12px rgba(16, 24, 40, 0.1);
   text-shadow: none;
 }
-.app-shell :is(.glass-prestige, .glass-prestige-gold, .glass-panel, .tesla-tile) :is(input, textarea, select, .glass-field) {
-  background: #ffffff !important;
+.app-shell :is(
+  .glass-prestige,
+  .glass-prestige-deep,
+  .glass-prestige-gold,
+  .glass-panel,
+  .glass-surface,
+  .tesla-tile,
+  .grok-report-card
+) :is(input, textarea, select, .glass-field),
+.app-shell .glass-field,
+.app-shell select {
+  background: #f4f7fb !important;
   background-image: none !important;
-  border: 1px solid rgba(11, 29, 69, 0.14) !important;
+  border: 1px solid rgba(17, 24, 39, 0.14) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 1px 2px rgba(16, 24, 40, 0.07) !important;
+    inset 0 1px 0 #ffffff,
+    0 1px 2px rgba(16, 24, 40, 0.08),
+    0 8px 16px rgba(16, 24, 40, 0.12) !important;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
-  color: #0b1d45;
+  color: #111111;
   color-scheme: light;
 }
 .app-shell .exclusive-lender-row {
@@ -3339,23 +3369,23 @@ html:not([data-theme="blue"]) {
 }
 .app-shell :is(input, textarea)::placeholder,
 [data-nda-gate] :is(input, textarea)::placeholder {
-  color: #5c6b80;
+  color: #3d4d68;
   opacity: 1;
 }
 [data-nda-gate] .glass-prestige {
-  color: #0b1d45;
+  color: #111111;
 }
 .report-band {
   background: #fff;
-  color: #0b1d45;
-  border-bottom: 1px solid rgba(11, 29, 69, 0.08);
+  color: #111111;
+  border-bottom: 0;
 }
 .app-shell .glass-prestige > button:not(.tesla-main):not(.tesla-secondary):not(.glass-field):not(.metal-seg):not(.lot-chip),
 .app-shell .grok-composer-pill button:not(.grok-mic-btn) {
   background: transparent !important;
   border-color: transparent !important;
   box-shadow: none !important;
-  color: #0b1d45 !important;
+  color: #111111 !important;
 }
 .app-shell .bg-sapphire {
   background: #1648c8 !important;
@@ -3396,7 +3426,7 @@ html:not([data-theme="blue"]) .showroom-header,
 html:not([data-theme="blue"]) .showroom-dock,
 html:not([data-theme="blue"]) [data-nda-gate],
 html:not([data-theme="blue"]) [data-nda-state="loading"] {
-  background-color: #f2f2f2 !important;
+  background-color: #e4e9f0 !important;
 }
 [data-nda-gate],
 [data-nda-state="loading"] {
@@ -3465,9 +3495,9 @@ html:not([data-theme="blue"]) [data-nda-gate],
 html:not([data-theme="blue"]) [data-nda-state="loading"],
 html:not([data-theme="blue"]) [data-nda-gate] .showroom-plain,
 html:not([data-theme="blue"]) [data-nda-gate] .nda-accept-bar {
-  background: #f2f2f2 !important;
+  background: #e4e9f0 !important;
   background-image: none !important;
-  color: #0b1d45;
+  color: #111111;
 }
 html:not([data-theme="blue"]) [data-nda-gate] .text-muted,
 html:not([data-theme="blue"]) [data-nda-gate] .text-fg,
@@ -3650,7 +3680,8 @@ html[data-theme="blue"] [data-nda-gate] [data-nda-agree-row] {
   border-color: rgba(150, 112, 48, 0.4) !important;
 }
 
-/* Light page frost — cool translucent fill, blur, hairline, stacked shadow. */
+/* Light page frost — opaque white glass lifted off #f2f2f2.
+   The old translucent fill sampled the page and disappeared into it. */
 html:not([data-theme="blue"]) :is(
   .glass-prestige,
   .glass-prestige-deep,
@@ -3658,29 +3689,69 @@ html:not([data-theme="blue"]) :is(
   .glass-panel,
   .glass-surface,
   .grok-frost,
+  .grok-report-hero,
+  .grok-report-card,
+  .grok-report-pill,
+  .grok-report-note,
   .showroom-card,
   .showroom-float,
   .showroom-ask,
   .showroom-tab,
   .showroom-menu,
   .lot-search,
-  .tesla-tile
+  .lot-card,
+  .tesla-tile,
+  .rvfax-report-chrome,
+  .suite-back-chip,
+  .select-sheet-panel
 ) {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.8) 0%,
-    rgba(244, 247, 252, 0.72) 100%
-  ) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(1.35);
-  backdrop-filter: blur(28px) saturate(1.35);
-  border: 1px solid rgba(255, 255, 255, 0.92) !important;
+  background: #ffffff !important;
+  background-image: none !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  backdrop-filter: blur(18px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.96) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    0 0 0 1px rgba(11, 29, 69, 0.07),
-    0 2px 4px rgba(16, 24, 40, 0.06),
-    0 12px 28px rgba(16, 24, 40, 0.1),
-    0 28px 56px rgba(16, 24, 40, 0.14) !important;
+    inset 0 1px 0 #ffffff,
+    0 0 0 1px rgba(17, 24, 39, 0.1),
+    0 2px 6px rgba(16, 24, 40, 0.08),
+    0 14px 28px rgba(16, 24, 40, 0.14),
+    0 32px 56px rgba(16, 24, 40, 0.16) !important;
   color: #111111;
+}
+html:not([data-theme="blue"]) .showroom-tab[aria-pressed="true"],
+html:not([data-theme="blue"]) .showroom-tab[aria-current="page"] {
+  color: #1648c8 !important;
+}
+html:not([data-theme="blue"]) .showroom-tab-icon {
+  color: #111111;
+}
+html:not([data-theme="blue"]) .showroom-tab[aria-pressed="true"] .showroom-tab-icon,
+html:not([data-theme="blue"]) .showroom-tab[aria-current="page"] .showroom-tab-icon {
+  color: #1648c8;
+}
+html:not([data-theme="blue"]) .app-shell :is(.tesla-main, button.tesla-main),
+html:not([data-theme="blue"]) [data-nda-gate] :is(.tesla-main, button.tesla-main) {
+  background: #1648c8 !important;
+  color: #ffffff !important;
+  border-color: #1648c8 !important;
+  box-shadow: 0 8px 18px rgba(22, 72, 200, 0.28) !important;
+}
+html:not([data-theme="blue"]) .app-shell :is(.showroom-mic, .grok-mic-btn) {
+  background: #ffffff !important;
+  color: #111111 !important;
+  border: 1px solid rgba(17, 24, 39, 0.12) !important;
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    0 4px 12px rgba(16, 24, 40, 0.12) !important;
+}
+html:not([data-theme="blue"]) .select-sheet-handle > div {
+  background: #c5ceda !important;
+}
+html:not([data-theme="blue"]) .select-sheet-panel :is(h2, .text-white) {
+  color: #111111 !important;
+}
+html:not([data-theme="blue"]) .select-sheet-panel [class*="text-white/"] {
+  color: #3d4d68 !important;
 }
 
 html:not([data-theme="blue"]) .app-shell a[href] {
@@ -3825,7 +3896,7 @@ html:not([data-theme="blue"]) .app-shell [data-rvgrok-wingman] [data-app-scroll]
 html:not([data-theme="blue"]),
 html:not([data-theme="blue"]) body,
 html:not([data-theme="blue"]) #root {
-  background: #f2f2f2 !important;
+  background: #e4e9f0 !important;
   background-image: none !important;
 }
 
