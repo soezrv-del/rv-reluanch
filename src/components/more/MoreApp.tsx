@@ -15,6 +15,7 @@ import {
   Share2,
   Shield,
   Star,
+  Sun,
   FileText,
   Volume2,
   X,
@@ -195,38 +196,13 @@ export function MoreApp({
       onPullReset={() => setRefreshTick((n) => n + 1)}
       pullLabel="Release to refresh Premium"
     >
-        <div className="mx-auto w-full max-w-lg space-y-5 px-3 pb-12 pt-3 sm:px-4">
-          <section data-theme-toggle aria-label="Color scheme">
-            <p className="mb-2 px-0.5 text-[10px] font-bold tracking-[0.16em] text-muted">
-              APPEARANCE
-            </p>
-            <div className="theme-switch" role="group" aria-label="Color scheme">
-              <button
-                type="button"
-                className="theme-choice"
-                data-theme-choice="white"
-                aria-pressed={scheme === "white"}
-                onClick={() => chooseScheme("white")}
-              >
-                White
-              </button>
-              <button
-                type="button"
-                className="theme-choice"
-                data-theme-choice="blue"
-                aria-pressed={scheme === "blue"}
-                onClick={() => chooseScheme("blue")}
-              >
-                Blue
-              </button>
-            </div>
-          </section>
+        <div className="mx-auto w-full max-w-lg space-y-5 px-3 pb-12 pt-2 sm:px-4">
           <header className="flex items-center justify-between gap-3">
             {onNavigate ? (
               <button
                 type="button"
                 onClick={() => onNavigate("rvfax")}
-                className="inline-flex items-center gap-1 rounded-full border border-white/20 bg-black/30 px-2.5 py-1 text-[11px] font-bold text-white"
+                className="suite-back-chip"
               >
                 <ChevronLeft className="size-3.5" />
                 Back
@@ -269,11 +245,17 @@ export function MoreApp({
           </section>
 
           {/* Quick tools */}
-          <section>
+          <section data-tools-menu>
             <p className="mb-2 px-0.5 text-[10px] font-bold tracking-[0.16em] text-white/90">
               TOOLS
             </p>
             <div className="glass-prestige overflow-hidden rounded-[1.25rem]">
+              <RowLink
+                icon={<Sun className="size-4 text-amber" />}
+                title="Appearance"
+                sub={scheme === "white" ? "White" : "Blue"}
+                onClick={() => chooseScheme(scheme === "white" ? "blue" : "white")}
+              />
               <RowLink
                 icon={<Volume2 className="size-4 text-ruby" />}
                 title="RvGrok Voice Settings"

@@ -2176,9 +2176,9 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   border-radius: 99px;
 }
 .lot-chip.is-on {
-  background: var(--color-sapphire);
-  border-color: color-mix(in srgb, var(--color-sapphire-glow) 55%, transparent);
-  color: #fff;
+  background: linear-gradient(180deg, #fff8e8 0%, #f3dba8 40%, #d4b06a 100%);
+  border-color: rgba(150, 112, 48, 0.4);
+  color: #1a140c;
 }
 .lot-well {
   background: transparent;
@@ -2366,15 +2366,17 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   letter-spacing: 0.22em;
 }
 .grok-mic-btn {
-  background: #1648c8;
-  color: #fff;
-  border: 0;
-  box-shadow: none;
+  background: linear-gradient(180deg, #f7f4ee 0%, #d9d4cc 48%, #b7b1a8 100%);
+  color: #1a140c;
+  border: 1px solid rgba(70, 62, 52, 0.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 1px 2px rgba(20, 16, 10, 0.14);
 }
 .grok-mic-btn.is-live,
 .grok-mic-btn.is-rec {
-  background: #1648c8;
-  color: #fff;
+  background: linear-gradient(180deg, #fff8e8 0%, #f3dba8 40%, #d4b06a 100%);
+  color: #1a140c;
   box-shadow: none;
 }
 .grok-mic-btn.is-armed {
@@ -2788,7 +2790,7 @@ html.kb-open [data-rvgrok-composer-dock] {
   font-size: 1rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: #1648c8;
+  color: #111111;
 }
 .showroom-dock {
   position: relative;
@@ -2847,11 +2849,13 @@ html.kb-open [data-rvgrok-composer-dock] {
   flex: 0 0 2.75rem;
   align-items: center;
   justify-content: center;
-  border: 0;
+  border: 1px solid rgba(70, 62, 52, 0.28);
   border-radius: 999px;
-  background: #1648c8;
-  color: #fff;
-  box-shadow: none;
+  background: linear-gradient(180deg, #f7f4ee 0%, #d9d4cc 48%, #b7b1a8 100%);
+  color: #1a140c;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 1px 2px rgba(20, 16, 10, 0.14);
 }
 .showroom-mic.is-live {
   box-shadow:
@@ -2888,8 +2892,8 @@ html.kb-open [data-rvgrok-composer-dock] {
   box-shadow: var(--shadow-glow-gold), var(--shadow-glass);
 }
 .showroom-tab[aria-pressed="true"] {
-  color: #1648c8;
-  border-color: rgba(22, 72, 200, 0.55);
+  color: #111111;
+  border-color: rgba(20, 16, 8, 0.28);
 }
 .showroom-tab-icon {
   width: 1.375rem;
@@ -3197,53 +3201,63 @@ body:has(.report-page) {
 
 
 /* Tesla light page (#f2f2f2) with Grok-card frost on surfaces.
-   Sapphire is main actions, prices, the mic, and the word FACTS. */
+   Titles, prices, mics, and primary buttons stay ink / metal.
+   Sapphire is the verified line and links. */
 .tesla-page-head {
   padding: 0.85rem 1.2rem 0.35rem;
   text-align: left;
 }
+.suite-hero.tesla-page-head {
+  padding: 0;
+  text-align: inherit;
+}
 .tesla-page-title {
   margin: 0;
   font-family: var(--font-sans);
-  font-size: clamp(2.6rem, 12vw, 3.4rem);
+  font-size: clamp(2.8rem, 12vw, 3.55rem);
   font-weight: 700;
   letter-spacing: -0.045em;
   line-height: 0.92;
-  color: #0b1d45;
+  color: #111111;
   background: none;
 }
 .tesla-facts-word {
-  color: #1648c8;
+  color: #111111;
 }
 .tesla-page-line {
-  margin: 0.55rem 0 0;
+  margin: 0.45rem 0 0;
   max-width: 24rem;
   color: #5c6b80;
-  font-size: 0.98rem;
+  font-size: 0.95rem;
   font-weight: 500;
   line-height: 1.35;
 }
 .tesla-main {
-  background: #1648c8;
-  color: #fff;
-  border: 0;
-  box-shadow: none;
+  background: linear-gradient(180deg, #fff8e8 0%, #f3dba8 40%, #d4b06a 100%);
+  color: #1a140c;
+  border: 1px solid rgba(150, 112, 48, 0.4);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 1px 2px rgba(20, 16, 10, 0.16);
 }
 .tesla-secondary {
   background: #fff;
-  color: #0b1d45;
+  color: #111111;
   border: 1px solid rgba(11, 29, 69, 0.16);
   box-shadow: none;
 }
 .tesla-segment {
-  display: inline-flex;
-  gap: 0.25rem;
-  padding: 0;
+  display: flex;
+  width: 100%;
+  gap: 0.7rem;
+  padding: 0.15rem 0 0.1rem;
   background: transparent;
   border: 0;
 }
-.tesla-stat {
-  color: #1648c8;
+.tesla-stat,
+.suite-price,
+.showroom-arrival-price {
+  color: #111111;
 }
 
 html:not([data-theme="blue"]) .app-shell,
@@ -3276,18 +3290,12 @@ html:not([data-theme="blue"]) {
   color: #5c6b80;
 }
 .app-shell .bg-sapphire,
-.app-shell .bg-sapphire.text-white,
-.app-shell .tesla-main,
-.app-shell .showroom-mic,
-.app-shell .grok-mic-btn,
-.app-shell .lot-chip.is-on,
-.app-shell [data-tone="main"],
-[data-nda-gate] .tesla-main {
+.app-shell .bg-sapphire.text-white {
   background: #1648c8;
   color: #fff;
   border-color: #1648c8;
 }
-.app-shell button:not(.showroom-brand):not(.tesla-main):not(.tesla-secondary):not(.showroom-mic):not(.showroom-menu):not(.grok-mic-btn):not(.lot-chip.is-on):not([data-tone="main"]):not(.home-hero-dots button):not(.glass-prestige):not(.glass-prestige-deep):not(.glass-prestige-gold):not(.glass-panel):not(.showroom-card):not(.showroom-arrival):not(.showroom-tab):not(.tesla-tile):not(.grok-frost):not(.lot-card):not(.grok-chip):not(.grok-lot-chip):not(.grok-starter):not(.theme-choice),
+.app-shell button:not(.showroom-brand):not(.tesla-main):not(.tesla-secondary):not(.showroom-mic):not(.showroom-menu):not(.grok-mic-btn):not(.lot-chip):not(.metal-seg):not([data-tone="main"]):not(.home-hero-dots button):not(.glass-prestige):not(.glass-prestige-deep):not(.glass-prestige-gold):not(.glass-panel):not(.showroom-card):not(.showroom-arrival):not(.showroom-tab):not(.tesla-tile):not(.grok-frost):not(.lot-card):not(.grok-chip):not(.grok-lot-chip):not(.grok-starter):not(.theme-choice):not(.suite-back-chip),
 .app-shell [role="button"]:not(.tesla-main):not([data-tone="main"]):not(.glass-prestige):not(.showroom-card):not(.showroom-arrival),
 [data-nda-gate] button:not(.tesla-main):not(.tesla-secondary) {
   background: #fff;
@@ -3326,8 +3334,9 @@ html:not([data-theme="blue"]) {
   color: #fff;
 }
 .app-shell .showroom-arrival-price,
-.app-shell .tesla-stat {
-  color: #1648c8;
+.app-shell .tesla-stat,
+.app-shell .suite-price {
+  color: #111111;
 }
 .app-shell :is(input, textarea)::placeholder,
 [data-nda-gate] :is(input, textarea)::placeholder {
@@ -3352,23 +3361,17 @@ html:not([data-theme="blue"]) {
   color: #0b1d45;
   border-bottom: 1px solid rgba(11, 29, 69, 0.08);
 }
-.app-shell .glass-prestige button:not([data-tone="main"]):not(.tesla-main):not(.tesla-secondary):not(.grok-mic-btn):not(.showroom-mic),
-.app-shell .glass-prestige-gold button:not([data-tone="main"]):not(.tesla-main):not(.tesla-secondary):not(.grok-mic-btn):not(.showroom-mic),
-.app-shell .glass-surface button:not([data-tone="main"]):not(.tesla-main):not(.tesla-secondary):not(.grok-mic-btn):not(.showroom-mic),
-.app-shell .tesla-tile button:not([data-tone="main"]):not(.tesla-main):not(.grok-mic-btn):not(.showroom-mic),
+.app-shell .glass-prestige button:not([data-tone="main"]):not(.tesla-main):not(.tesla-secondary):not(.grok-mic-btn):not(.showroom-mic):not(.suite-hero-menu):not(.showroom-menu):not(.metal-seg):not(.lot-chip),
+.app-shell .glass-prestige-gold button:not([data-tone="main"]):not(.tesla-main):not(.tesla-secondary):not(.grok-mic-btn):not(.showroom-mic):not(.showroom-menu):not(.metal-seg):not(.lot-chip),
+.app-shell .glass-surface button:not([data-tone="main"]):not(.tesla-main):not(.tesla-secondary):not(.grok-mic-btn):not(.showroom-mic):not(.showroom-menu):not(.metal-seg):not(.lot-chip),
+.app-shell .tesla-tile button:not([data-tone="main"]):not(.tesla-main):not(.grok-mic-btn):not(.showroom-mic):not(.metal-seg),
 .app-shell .grok-composer-pill button:not(.grok-mic-btn) {
   background: transparent !important;
   border-color: transparent !important;
   box-shadow: none !important;
   color: #0b1d45 !important;
 }
-.app-shell [data-tone="main"],
-.app-shell .tesla-main,
-.app-shell .showroom-mic,
-.app-shell .grok-mic-btn,
-.app-shell .lot-chip.is-on,
-.app-shell .bg-sapphire,
-[data-nda-gate] .tesla-main {
+.app-shell .bg-sapphire {
   background: #1648c8 !important;
   color: #fff !important;
   border-color: #1648c8 !important;
@@ -3384,7 +3387,7 @@ html:not([data-theme="blue"]) {
   box-shadow: none !important;
 }
 .app-shell .home-hero-dots button[aria-current="true"] {
-  background: #1648c8 !important;
+  background: #111111 !important;
 }
 .app-shell .home-hero-scrim :is(.showroom-spotmodel, .showroom-spotprice, .showroom-spotstock),
 .app-shell .lot-well[data-lot-scene="photo"] :is(.absolute, .lot-well-id),
@@ -3461,8 +3464,11 @@ html[data-theme="blue"] :is(
 ) {
   color: #e8eef8;
 }
-html[data-theme="blue"] :is(.tesla-facts-word, .showroom-arrival-price, .tesla-stat) {
-  color: var(--color-sapphire-glow);
+html[data-theme="blue"] :is(.tesla-facts-word, .showroom-arrival-price, .tesla-stat, .suite-price) {
+  color: #e8eef8;
+}
+html[data-theme="blue"] .suite-verified {
+  color: #1648c8;
 }
 html[data-theme="blue"] .showroom-word {
   -webkit-text-fill-color: #e8eef8;
@@ -3499,9 +3505,9 @@ html[data-theme="blue"] [data-nda-gate] .nda-accept-glyph {
 }
 [data-nda-gate] .tesla-main,
 [data-nda-gate] button.tesla-main {
-  background: #1648c8 !important;
-  color: #fff !important;
-  border-color: #1648c8 !important;
+  background: linear-gradient(180deg, #fff8e8 0%, #f3dba8 40%, #d4b06a 100%) !important;
+  color: #1a140c !important;
+  border-color: rgba(150, 112, 48, 0.4) !important;
 }
 html:not([data-theme="blue"]) [data-nda-gate] button.tesla-secondary {
   background: #fff !important;
@@ -3536,7 +3542,170 @@ html[data-theme="blue"] [data-nda-gate] [data-nda-agree-row] {
   border: 1px solid var(--color-gold-border);
 }
 .theme-choice[aria-pressed="true"] {
-  background: #1648c8;
-  color: #fff;
-  border-color: #1648c8;
+  background: linear-gradient(180deg, #fff8e8 0%, #f3dba8 40%, #d4b06a 100%);
+  color: #1a140c;
+  border-color: rgba(150, 112, 48, 0.4);
+}
+
+/* Premium layout + frosted tool title. Menu sits in the title, not over the cards. */
+.suite-hero {
+  position: relative;
+  margin: 0.35rem 0.85rem 0.15rem;
+}
+.suite-hero-plain {
+  padding: 0.15rem 2.8rem 0.1rem 0.35rem;
+  text-align: left;
+}
+.suite-hero-card {
+  border-radius: 1.35rem;
+  padding: 1.15rem 1.15rem 1.05rem;
+  text-align: center;
+}
+.suite-hero-menu {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  z-index: 2;
+}
+.suite-hero-plain .suite-hero-menu {
+  top: 0;
+  right: 0;
+}
+.suite-hero-eyebrow {
+  margin: 0 0 0.15rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+.suite-hero-plain .tesla-page-title {
+  font-size: clamp(3.15rem, 14vw, 4.2rem);
+  color: #111111;
+}
+.suite-hero-card .tesla-page-title,
+.suite-hero-card .tesla-page-line,
+.suite-hero-card .suite-verified {
+  text-align: center;
+}
+.suite-hero-card .tesla-page-line {
+  margin-left: auto;
+  margin-right: auto;
+}
+.suite-verified {
+  margin: 0.4rem 0 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #1648c8;
+}
+.suite-back-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  min-height: 2rem;
+  padding: 0.15rem 0.7rem 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: #fff;
+  color: #111111;
+  border: 1px solid rgba(17, 17, 17, 0.1);
+  box-shadow: 0 1px 2px rgba(16, 20, 32, 0.06);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+/* Metal segmented control — cream gold selected, gray metal idle. */
+.app-shell .tesla-segment > button,
+.app-shell .metal-seg,
+[data-nda-gate] .tesla-segment > button {
+  flex: 1 1 0;
+  min-height: 3rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #eceae6 0%, #c8c4bc 46%, #9c9892 100%) !important;
+  color: #1a140c !important;
+  border: 1px solid rgba(70, 62, 52, 0.28) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.78),
+    inset 0 -1px 0 rgba(40, 36, 30, 0.22),
+    0 1px 2px rgba(20, 16, 10, 0.14) !important;
+}
+.app-shell .tesla-segment > button[data-tone="main"],
+.app-shell .tesla-segment > button[aria-pressed="true"],
+.app-shell .metal-seg[data-tone="main"],
+.app-shell .metal-seg[aria-pressed="true"] {
+  background: linear-gradient(180deg, #fff8e8 0%, #f3dba8 40%, #d4b06a 100%) !important;
+  color: #1a140c !important;
+  border-color: rgba(150, 112, 48, 0.42) !important;
+}
+.app-shell .lot-chip {
+  background: linear-gradient(180deg, #eceae6 0%, #c8c4bc 46%, #9c9892 100%) !important;
+  color: #1a140c !important;
+  border: 1px solid rgba(70, 62, 52, 0.28) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    0 1px 2px rgba(20, 16, 10, 0.12) !important;
+}
+.app-shell .lot-chip.is-on {
+  background: linear-gradient(180deg, #fff8e8 0%, #f3dba8 40%, #d4b06a 100%) !important;
+  color: #1a140c !important;
+  border-color: rgba(150, 112, 48, 0.42) !important;
+}
+.app-shell .showroom-mic,
+.app-shell .grok-mic-btn {
+  background: linear-gradient(180deg, #f7f4ee 0%, #d9d4cc 48%, #b7b1a8 100%) !important;
+  color: #1a140c !important;
+  border: 1px solid rgba(70, 62, 52, 0.28) !important;
+}
+.app-shell .tesla-main,
+[data-nda-gate] .tesla-main {
+  background: linear-gradient(180deg, #fff8e8 0%, #f3dba8 40%, #d4b06a 100%) !important;
+  color: #1a140c !important;
+  border-color: rgba(150, 112, 48, 0.4) !important;
+}
+
+/* Light page frost — translucent fill, blur, hairline, layered shadow. */
+html:not([data-theme="blue"]) :is(
+  .glass-prestige,
+  .glass-prestige-deep,
+  .glass-prestige-gold,
+  .glass-panel,
+  .glass-surface,
+  .grok-frost,
+  .showroom-card,
+  .showroom-float,
+  .showroom-ask,
+  .showroom-tab,
+  .showroom-menu
+) {
+  background: linear-gradient(
+    165deg,
+    rgba(255, 252, 246, 0.86) 0%,
+    rgba(255, 255, 255, 0.66) 46%,
+    rgba(232, 226, 214, 0.8) 100%
+  ) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(1.7);
+  backdrop-filter: blur(28px) saturate(1.7);
+  border: 1px solid rgba(255, 255, 255, 0.72) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.88),
+    inset 0 -1px 0 rgba(40, 32, 16, 0.08),
+    0 12px 28px rgba(16, 20, 32, 0.1),
+    0 2px 6px rgba(16, 20, 32, 0.06) !important;
+  color: #111111;
+}
+
+html:not([data-theme="blue"]) .app-shell a[href] {
+  color: #1648c8;
+}
+
+/* Activity accents stay their own colors. */
+html:not([data-theme="blue"]) .app-shell .text-ruby {
+  color: var(--color-ruby);
+}
+html:not([data-theme="blue"]) .app-shell .text-emerald-400 {
+  color: #34d399;
+}
+html:not([data-theme="blue"]) .app-shell .text-blue {
+  color: #1648c8;
 }

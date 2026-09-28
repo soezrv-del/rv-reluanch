@@ -721,7 +721,7 @@ export function RvCalApp() {
       </section>
       <section className="glass-prestige rounded-[var(--radius-xl)] p-3.5">
         <div>
-          <div className="mb-1.5 flex items-center justify-between gap-2">
+          <div className="mb-2.5 flex flex-col gap-2">
             <span className="flex items-center gap-1.5 text-[10px] font-bold tracking-[0.12em] text-gold">
               <Car className="size-3.5" />
               {priceMode === "finance" ? "FINANCED" : "PRICE"}
@@ -740,8 +740,9 @@ export function RvCalApp() {
                   setPriceFocused(false);
                   setPriceDraft("");
                 }}
+                aria-pressed={priceMode === "purchase"}
                 data-tone={priceMode === "purchase" ? "main" : undefined}
-                className="min-h-9 rounded-full px-3 text-[11px] font-bold tracking-wide"
+                className="metal-seg flex min-h-11 flex-1 items-center justify-center rounded-full px-3 text-[13px] font-bold"
               >
                 Purchase
               </button>
@@ -758,8 +759,9 @@ export function RvCalApp() {
                     setFinanceDriven(true);
                   }
                 }}
+                aria-pressed={priceMode === "finance"}
                 data-tone={priceMode === "finance" ? "main" : undefined}
-                className="min-h-9 rounded-full px-3 text-[11px] font-bold tracking-wide"
+                className="metal-seg flex min-h-11 flex-1 items-center justify-center rounded-full px-3 text-[13px] font-bold"
               >
                 Financed
               </button>

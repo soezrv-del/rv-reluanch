@@ -226,7 +226,7 @@ export function LotStockApp() {
           <div className="space-y-4">
             {featured ? (
               <section className="space-y-2" data-lot-featured>
-                <p className="text-[10px] font-bold tracking-[0.18em] text-sapphire-glow">
+                <p className="text-[10px] font-bold tracking-[0.18em] text-muted">
                   FEATURED REPORT
                 </p>
                 <LotUnitCard
@@ -335,7 +335,7 @@ function StatusCard({
         <button
           type="button"
           onClick={onAction}
-          className="mt-3 min-h-11 rounded-full bg-sapphire px-4 text-[13px] font-bold text-white"
+          className="tesla-main mt-3 min-h-11 rounded-full px-4 text-[13px] font-bold"
         >
           {action}
         </button>
@@ -403,7 +403,7 @@ function LotUnitCard({
               />
             </span>
           )}
-          <span className="absolute left-3 top-3 rounded-full bg-sapphire px-2.5 py-1 text-[11px] font-bold text-white shadow-lg">
+          <span className="absolute left-3 top-3 rounded-full bg-ink-black px-2.5 py-1 text-[11px] font-bold text-white shadow-lg">
             {shortLotTypeLabel(unit.body_type)}
           </span>
           <span
@@ -416,7 +416,7 @@ function LotUnitCard({
             {price}
           </span>
           <div className="lot-well-id">
-            <p className="text-[12px] font-semibold text-sapphire-glow">
+            <p className="text-[12px] font-semibold text-white">
               {year}
             </p>
             <p

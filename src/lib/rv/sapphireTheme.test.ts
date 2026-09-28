@@ -89,7 +89,9 @@ test("Sold and Premium share sapphire accent + Raidho suite chrome — no dock S
   assert.doesNotMatch(constants, /rvsold:\s*"gold"/);
   assert.doesNotMatch(constants, /more:\s*"gold"/);
   assert.match(header, /tesla-page-head/);
-  assert.match(header, /tesla-facts-word/);
+  assert.match(header, /suite-verified/);
+  assert.match(header, /VERIFIED AND TRUE/);
+  assert.doesNotMatch(header, /tesla-facts-word/);
   assert.match(suite, /data-sold-book=\{tab === "rvsold"/);
   assert.match(suite, /data-premium-screen=\{tab === "more"/);
   assert.match(sold, /SuitePage/);

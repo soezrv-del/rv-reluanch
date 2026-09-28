@@ -857,7 +857,7 @@ export function RvTowApp() {
                 className="glass-prestige space-y-1 rounded-[var(--radius-xl)] p-3"
               >
                 <div className="mb-1 flex items-center justify-between gap-2">
-                  <p className="flex items-center gap-1.5 text-[12px] font-bold text-blue">
+                  <p className="flex items-center gap-1.5 text-[12px] font-bold text-white">
                     <img
                       src="/assets/brand/icon-rvtow.png"
                       alt=""
@@ -865,7 +865,7 @@ export function RvTowApp() {
                     />
                     Truck
                   </p>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={clearVehicle}
@@ -878,7 +878,7 @@ export function RvTowApp() {
                     <button
                       type="button"
                       onClick={resetDefaults}
-                      className="inline-flex items-center gap-1 rounded-full border border-blue/30 bg-blue/10 px-2.5 py-1 text-[10px] font-semibold text-blue"
+                      className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold"
                       aria-label="Reset to defaults"
                     >
                       <RefreshCw className="size-3" />
@@ -906,7 +906,7 @@ export function RvTowApp() {
                       aria-pressed={kindFilter === id}
                       onClick={() => applyKindFilter(id)}
                       data-tone={kindFilter === id ? "main" : undefined}
-                      className="flex min-h-11 flex-1 items-center justify-center gap-1 rounded-full px-2 text-[12px] font-bold"
+                      className="metal-seg flex min-h-11 flex-1 items-center justify-center gap-1 rounded-full px-2 text-[13px] font-bold"
                     >
                       {id === "truck" ? (
                         <Truck className="size-3.5" />
@@ -962,7 +962,7 @@ export function RvTowApp() {
               data-tow-coach
               className="glass-surface rounded-[var(--radius-xl)] p-3"
             >
-              <p className="mb-1 text-[10px] font-bold tracking-[0.12em] text-blue">
+              <p className="mb-1 text-[10px] font-bold tracking-[0.12em] text-muted">
                 Coach
               </p>
               {prefill.kind === "towable" ? (
@@ -1097,7 +1097,7 @@ export function RvTowApp() {
                         if (id === "reverse") openReverse();
                         else setShopMode("match");
                       }}
-                      className="flex min-h-11 flex-1 items-center justify-center gap-1 rounded-full px-2 text-[12px] font-bold"
+                      className="metal-seg flex min-h-11 flex-1 items-center justify-center gap-1 rounded-full px-2 text-[13px] font-bold"
                     >
                       {id === "reverse" ? (
                         <Search className="size-3.5" />
@@ -1117,7 +1117,7 @@ export function RvTowApp() {
                   </p>
                   <div className="grid grid-cols-3 gap-2 pt-1">
                     <label className="block">
-                      <span className="mb-1 block text-[9px] font-bold tracking-wide text-blue">
+                      <span className="mb-1 block text-[9px] font-bold tracking-wide text-muted">
                         MAX TOW
                       </span>
                       <input
@@ -1131,7 +1131,7 @@ export function RvTowApp() {
                       />
                     </label>
                     <label className="block">
-                      <span className="mb-1 block text-[9px] font-bold tracking-wide text-blue">
+                      <span className="mb-1 block text-[9px] font-bold tracking-wide text-muted">
                         PAYLOAD
                       </span>
                       <input
@@ -1145,7 +1145,7 @@ export function RvTowApp() {
                       />
                     </label>
                     <label className="block">
-                      <span className="mb-1 block text-[9px] font-bold tracking-wide text-blue">
+                      <span className="mb-1 block text-[9px] font-bold tracking-wide text-muted">
                         GCWR
                       </span>
                       <input
@@ -1173,12 +1173,12 @@ export function RvTowApp() {
                     </p>
                     {formatTrimYearRange(trim) ? (
                       <p className="mt-1">
-                        <span className="inline-flex rounded-full border border-blue/35 bg-blue/15 px-2 py-0.5 text-[10px] font-bold tracking-wide text-blue">
+                        <span className="inline-flex rounded-full border border-blue/35 bg-blue/15 px-2 py-0.5 text-[10px] font-bold tracking-wide text-muted">
                           {formatTrimYearRange(trim)}
                         </span>
                       </p>
                     ) : null}
-                    <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-blue/90">
+                    <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
                       {rating.kind === "suv" ? "SUV" : "Truck"} · {rating.hitch}
                     </p>
                   </div>
@@ -1237,7 +1237,7 @@ export function RvTowApp() {
               </section>
 
               <label className="block">
-                <span className="mb-1 block text-[10px] font-bold tracking-[0.12em] text-blue">
+                <span className="mb-1 block text-[10px] font-bold tracking-[0.12em] text-muted">
                   RV GVWR (lbs) *
                 </span>
                 <input
@@ -1340,11 +1340,11 @@ function SuiteHandoffCard({
       : "No truck saved on this device";
   return (
     <section className="glass-surface rounded-[var(--radius-xl)] p-3.5">
-      <p className="mb-1 text-[10px] font-bold tracking-[0.12em] text-blue">
+      <p className="mb-1 text-[10px] font-bold tracking-[0.12em] text-muted">
         SUITE
       </p>
       <p className="flex items-start gap-1.5 text-[13px] font-bold text-white">
-        <Bookmark className="mt-0.5 size-3.5 shrink-0 text-blue" />
+        <Bookmark className="mt-0.5 size-3.5 shrink-0 text-muted" />
         {saved ? "Saved on this device" : "Last truck"}
       </p>
       <p className="mt-1 pl-5 text-[12px] leading-snug text-white/85">
@@ -1389,7 +1389,7 @@ function ReverseResults({
 }) {
   return (
     <section className="glass-surface rounded-[var(--radius-xl)] p-3.5">
-      <p className="mb-3 text-[10px] font-bold tracking-[0.12em] text-blue">
+      <p className="mb-3 text-[10px] font-bold tracking-[0.12em] text-muted">
         TRUCKS THAT FIT
         {gvwrN > 0 ? ` · ${gvwrN.toLocaleString()}` : ""}
         {year ? ` · ${year}` : ""}
@@ -1489,7 +1489,7 @@ function HitchWeightField({
           <button
             type="button"
             onClick={() => onChange("")}
-            className="text-[10px] font-semibold text-blue"
+            className="text-[10px] font-semibold text-muted"
           >
             Clear {noun}
           </button>
@@ -1646,7 +1646,7 @@ function Field({
 }) {
   return (
     <div className={flush ? "mt-2.5" : "mt-2.5 first:mt-0"}>
-      <p className="mb-1 text-[10px] font-bold tracking-[0.12em] text-blue">
+      <p className="mb-1 text-[10px] font-bold tracking-[0.12em] text-muted">
         {label}
       </p>
       <button
@@ -1677,7 +1677,7 @@ function Field({
 function Stat({ value, sub }: { value: string; sub: string }) {
   return (
     <div className="rounded-[var(--radius-md)] border border-blue/30 bg-blue/10 px-2 py-2.5 text-center">
-      <p className="text-[20px] font-bold tabular-nums text-blue">{value}</p>
+      <p className="suite-price text-[20px] font-bold tabular-nums">{value}</p>
       <p className="mt-0.5 whitespace-pre-line text-[9px] leading-tight text-white">
         {sub}
       </p>
@@ -1701,19 +1701,19 @@ function AnswerHero({
       aria-label="Max tow and pin weight"
     >
       <div className="glass-surface flex min-h-28 flex-col justify-center rounded-[var(--radius-xl)] px-3 py-3">
-        <p className="text-[10px] font-bold tracking-[0.16em] text-blue">
+        <p className="text-[10px] font-bold tracking-[0.16em] text-muted">
           MAX TOW
         </p>
-        <p className="rvtow-hero-pct mt-1 font-black tabular-nums text-blue">
+        <p className="suite-price rvtow-hero-pct mt-1 font-black tabular-nums">
           {maxTow > 0 ? maxTow.toLocaleString() : "—"}
         </p>
         <p className="mt-0.5 text-[11px] font-semibold text-white/80">lbs</p>
       </div>
       <div className="glass-surface flex min-h-28 flex-col justify-center rounded-[var(--radius-xl)] px-3 py-3">
-        <p className="text-[10px] font-bold tracking-[0.16em] text-blue">
+        <p className="text-[10px] font-bold tracking-[0.16em] text-muted">
           {hitchKind === "pin" ? "PIN WEIGHT" : "TONGUE"}
         </p>
-        <p className="rvtow-hero-pct mt-1 font-black tabular-nums text-blue">
+        <p className="suite-price rvtow-hero-pct mt-1 font-black tabular-nums">
           {hitchLbs > 0 ? hitchLbs.toLocaleString() : "—"}
         </p>
         <p className="mt-0.5 text-[11px] font-semibold text-white/80">lbs</p>
@@ -1740,11 +1740,11 @@ function GuideHero({
         active ? "border-blue/55" : "border-white/20",
       )}
     >
-      <p className="text-[10px] font-bold tracking-[0.16em] text-blue">
+      <p className="text-[10px] font-bold tracking-[0.16em] text-muted">
         {kicker}
       </p>
       <p className="mt-0.5 text-[11px] font-semibold text-white/85">{title}</p>
-      <p className="mt-1 text-[22px] font-black tabular-nums text-blue">
+      <p className="suite-price mt-1 text-[22px] font-black tabular-nums">
         {pct}
       </p>
     </div>
