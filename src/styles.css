@@ -3266,3 +3266,567 @@ body:has(.report-page) {
     break-inside: avoid;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Dual theme.
+   Everything above is the e76a8cb sapphire navy cascade. It paints when
+   data-theme is "blue" or unset. White rules below are scoped to
+   html[data-theme="white"] (localStorage key rvfox-theme).
+   New layout classes the screens already use (photo hero, Premium titles,
+   metal segments) are defined here without replacing the navy rules.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.home-hero {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 100%;
+  margin: 0.35rem 0 0;
+}
+.home-hero-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: #101820;
+}
+.home-hero-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+.home-hero-fallback {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: #101820;
+}
+.home-hero-scrim {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  padding: 3.2rem 1rem 1rem;
+  background: linear-gradient(180deg, transparent 0%, rgba(6, 10, 20, 0.72) 100%);
+}
+.home-hero-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.85rem;
+}
+.home-hero-actions button {
+  min-height: 44px;
+  padding: 0.7rem 1.15rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+.home-hero-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.7rem 0 0.15rem;
+}
+.home-hero-dots button {
+  width: 7px;
+  height: 7px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.45);
+}
+.home-hero-dots button[aria-current="true"] {
+  background: #ffffff;
+}
+.home-hero-scrim :is(.showroom-spotmodel, .showroom-spotprice) {
+  color: #fff;
+}
+.home-hero-scrim .showroom-spotstock {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.suite-hero {
+  position: relative;
+  margin: 0.35rem 0.85rem 0.15rem;
+}
+.suite-hero-plain {
+  padding: 0.15rem 2.8rem 0.1rem 0.35rem;
+  text-align: left;
+}
+.suite-hero-card {
+  border-radius: 1.35rem;
+  padding: 1.15rem 1.15rem 1.05rem;
+  text-align: center;
+}
+.suite-hero-menu {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  z-index: 2;
+}
+.suite-hero-plain .suite-hero-menu {
+  top: 0;
+  right: 0;
+}
+.suite-hero-eyebrow {
+  margin: 0 0 0.15rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #c5cedb;
+}
+.tesla-page-head {
+  padding: 0.85rem 1.2rem 0.35rem;
+  text-align: left;
+}
+.suite-hero.tesla-page-head {
+  padding: 0;
+  text-align: inherit;
+}
+.tesla-page-title {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: clamp(2.8rem, 12vw, 3.55rem);
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 0.92;
+  color: #eef2f8;
+  background: none;
+}
+.suite-hero-plain .tesla-page-title {
+  font-size: clamp(3.15rem, 14vw, 4.2rem);
+}
+.tesla-facts-word {
+  color: #eef2f8;
+}
+.tesla-page-line {
+  margin: 0.45rem 0 0;
+  max-width: 24rem;
+  color: #c5cedb;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+.suite-hero-card .tesla-page-title,
+.suite-hero-card .tesla-page-line,
+.suite-hero-card .suite-verified {
+  text-align: center;
+}
+.suite-hero-card .tesla-page-line {
+  margin-left: auto;
+  margin-right: auto;
+}
+.suite-verified {
+  margin: 0.4rem 0 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #1648c8;
+}
+.tesla-stat,
+.suite-price {
+  color: #eef2f8;
+}
+.suite-back-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  min-height: 2rem;
+  padding: 0.15rem 0.7rem 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: #0c1c40;
+  color: #eef2f8;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+/* Metal segments — Truck/SUV and the other metal controls. */
+.app-shell .tesla-segment > button,
+.app-shell .metal-seg,
+[data-nda-gate] .tesla-segment > button {
+  flex: 1 1 0;
+  min-height: 3rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #eceae6 0%, #c8c4bc 46%, #9c9892 100%) !important;
+  color: #1a140c !important;
+  border: 1px solid rgba(70, 62, 52, 0.28) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.78),
+    inset 0 -1px 0 rgba(40, 36, 30, 0.22),
+    0 1px 2px rgba(20, 16, 10, 0.14) !important;
+}
+.app-shell .tesla-segment > button[data-tone="main"],
+.app-shell .tesla-segment > button[aria-pressed="true"],
+.app-shell .metal-seg[data-tone="main"],
+.app-shell .metal-seg[aria-pressed="true"] {
+  background: linear-gradient(180deg, #fff8e8 0%, #f3dba8 40%, #d4b06a 100%) !important;
+  color: #1a140c !important;
+  border-color: rgba(150, 112, 48, 0.42) !important;
+}
+.home-hero-actions .tesla-main,
+.app-shell .tesla-main {
+  background: linear-gradient(180deg, #fff8e8 0%, #f3dba8 40%, #d4b06a 100%);
+  color: #1a140c;
+  border: 1px solid rgba(150, 112, 48, 0.4);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 1px 2px rgba(20, 16, 10, 0.16);
+}
+.home-hero-actions .tesla-secondary,
+.app-shell .tesla-secondary {
+  background: #fff;
+  color: #111111;
+  border: 1px solid rgba(11, 29, 69, 0.16);
+  box-shadow: none;
+}
+
+[data-nda-gate],
+[data-nda-state="loading"] {
+  padding-top: env(safe-area-inset-top, 0px);
+  box-sizing: border-box;
+}
+[data-nda-gate] button.tesla-main {
+  background: #1648c8 !important;
+  color: #fff !important;
+  border-color: #1648c8 !important;
+}
+html:not([data-theme="white"]) [data-nda-gate] button.tesla-secondary {
+  background: rgba(22, 72, 200, 0.4) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  opacity: 1 !important;
+}
+
+/* White page (#f2f2f2). Frost, ink, and safe areas apply only here. */
+html[data-theme="white"] {
+  --color-ink-ink: #0b1d45;
+  --color-bg: #f2f2f2;
+  --color-bg-elevated: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-2: #ffffff;
+  --color-fg: #0b1d45;
+  --color-muted: #5c6b80;
+  --color-dim: #5c6b80;
+  --color-blue: #1648c8;
+  --color-showroom: #f2f2f2;
+  --color-showroom-accent: #1648c8;
+  --color-showroom-ink: #0b1d45;
+  --color-showroom-muted: #5c6b80;
+  --color-showroom-glass: #ffffff;
+  --shadow-showroom: 0 1px 1px rgba(11, 29, 69, 0.05);
+  --dock-label-color: #3d4d68;
+  --dock-label-color-active: #1648c8;
+  color-scheme: light;
+  background-color: #f2f2f2;
+  color: #0b1d45;
+}
+html[data-theme="white"],
+html[data-theme="white"] body,
+html[data-theme="white"] .app-shell,
+html[data-theme="white"] .showroom-app,
+html[data-theme="white"] .showroom-home,
+html[data-theme="white"] .showroom-plain,
+html[data-theme="white"] .showroom-stage,
+html[data-theme="white"] .showroom-header,
+html[data-theme="white"] .showroom-dock,
+html[data-theme="white"] [data-nda-gate],
+html[data-theme="white"] [data-nda-state="loading"] {
+  background: #f2f2f2 !important;
+  background-image: none !important;
+  color: #0b1d45;
+  color-scheme: light;
+}
+html[data-theme="white"] .showroom-ambient,
+html[data-theme="white"] .showroom-spot,
+html[data-theme="white"] .showroom-spot-src,
+html[data-theme="white"] .showroom-spot-pool,
+html[data-theme="white"] .showroom-grain {
+  display: none;
+}
+
+html[data-theme="white"] .app-shell .text-white,
+html[data-theme="white"] .app-shell .text-fg,
+html[data-theme="white"] .app-shell .text-prestige,
+html[data-theme="white"] .app-shell .text-body-bright,
+html[data-theme="white"] .app-shell .text-label,
+html[data-theme="white"] [data-nda-gate] .text-white,
+html[data-theme="white"] [data-nda-gate] .text-fg {
+  color: #0b1d45 !important;
+  -webkit-text-fill-color: #0b1d45;
+  text-shadow: none;
+}
+html[data-theme="white"] .app-shell [class*="text-white/"],
+html[data-theme="white"] .app-shell .text-prestige-muted,
+html[data-theme="white"] .app-shell .text-muted,
+html[data-theme="white"] .app-shell .text-dim,
+html[data-theme="white"] [data-nda-gate] [class*="text-white/"],
+html[data-theme="white"] [data-nda-gate] .text-muted {
+  color: #5c6b80 !important;
+  -webkit-text-fill-color: #5c6b80;
+  text-shadow: none;
+}
+html[data-theme="white"] .app-shell [data-picker] :is(
+  .text-white\/35,
+  .text-white\/40,
+  .text-white\/45,
+  .text-white\/50,
+  .text-white\/55
+) {
+  color: #5c6b80 !important;
+  -webkit-text-fill-color: #5c6b80;
+}
+html[data-theme="white"] .app-shell [data-picker] .text-white {
+  color: #0b1d45 !important;
+  -webkit-text-fill-color: #0b1d45;
+}
+
+html[data-theme="white"] .app-shell .text-ruby,
+html[data-theme="white"] [data-nda-gate] .text-ruby {
+  color: var(--color-ruby) !important;
+  -webkit-text-fill-color: var(--color-ruby);
+}
+html[data-theme="white"] .app-shell .text-emerald-400 {
+  color: #34d399 !important;
+  -webkit-text-fill-color: #34d399;
+}
+html[data-theme="white"] .app-shell .text-blue,
+html[data-theme="white"] .app-shell .text-sky-200,
+html[data-theme="white"] .app-shell .text-sky-100 {
+  color: #1648c8 !important;
+  -webkit-text-fill-color: #1648c8;
+}
+html[data-theme="white"] .app-shell a[href] {
+  color: #1648c8;
+}
+
+html[data-theme="white"] .app-shell button:not(.showroom-brand):not(.tesla-main):not(.tesla-secondary):not(.showroom-mic):not(.showroom-menu):not(.grok-mic-btn):not(.lot-chip):not(.metal-seg):not([data-tone="main"]):not(.home-hero-dots button):not(.glass-prestige):not(.glass-prestige-deep):not(.glass-prestige-gold):not(.glass-panel):not(.showroom-card):not(.showroom-arrival):not(.showroom-tab):not(.tesla-tile):not(.grok-frost):not(.lot-card):not(.grok-chip):not(.grok-lot-chip):not(.grok-starter):not(.theme-choice):not(.suite-back-chip),
+html[data-theme="white"] .app-shell [role="button"]:not(.tesla-main):not([data-tone="main"]):not(.glass-prestige):not(.showroom-card):not(.showroom-arrival),
+html[data-theme="white"] [data-nda-gate] button:not(.tesla-main):not(.tesla-secondary) {
+  background: #fff;
+  color: #0b1d45;
+  border: 1px solid rgba(11, 29, 69, 0.14);
+  box-shadow: none;
+  text-shadow: none;
+}
+
+/* Grok card frost — translucent gold sheen, blur, hairline. Same recipe on every readable card. */
+html[data-theme="white"] [data-readable-cards] .glass-prestige,
+html[data-theme="white"] [data-readable-cards] .glass-prestige-deep,
+html[data-theme="white"] [data-readable-cards] .glass-prestige-gold,
+html[data-theme="white"] [data-readable-cards] .glass-panel,
+html[data-theme="white"] [data-readable-cards] .glass-surface {
+  background: linear-gradient(
+    155deg,
+    rgba(240, 215, 140, 0.14) 0%,
+    rgba(255, 255, 255, 0.08) 36%,
+    rgba(10, 8, 6, 0.18) 100%
+  );
+  -webkit-backdrop-filter: blur(28px) saturate(1.7);
+  backdrop-filter: blur(28px) saturate(1.7);
+  border: 1px solid var(--color-gold-border);
+  box-shadow: var(--shadow-glow-gold), var(--shadow-glass);
+  color: #0b1d45;
+}
+
+/* Light page frost — translucent fill, blur, hairline, layered shadow.
+   WebKit prefix is first so LightningCSS keeps backdrop-filter.
+   !important beats the navy card rules and this :is() list. */
+html[data-theme="white"] :is(
+  .glass-prestige,
+  .glass-prestige-deep,
+  .glass-prestige-gold,
+  .glass-panel,
+  .glass-surface,
+  .grok-frost,
+  .tesla-tile,
+  .showroom-card,
+  .showroom-float,
+  .showroom-arrival,
+  .showroom-ask,
+  .showroom-tab,
+  .showroom-menu,
+  .grok-composer-pill,
+  .grok-chip,
+  .grok-lot-chip
+) {
+  background: linear-gradient(
+    165deg,
+    rgba(255, 252, 246, 0.86) 0%,
+    rgba(255, 255, 255, 0.66) 46%,
+    rgba(232, 226, 214, 0.8) 100%
+  ) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(1.7);
+  backdrop-filter: blur(28px) saturate(1.7);
+  border: 1px solid rgba(255, 255, 255, 0.72) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.88),
+    inset 0 -1px 0 rgba(40, 32, 16, 0.08),
+    0 12px 28px rgba(16, 20, 32, 0.1),
+    0 2px 6px rgba(16, 20, 32, 0.06) !important;
+  color: #111111;
+}
+html[data-theme="white"] .app-shell .glass-prestige button:not([data-tone="main"]):not(.tesla-main):not(.tesla-secondary):not(.grok-mic-btn):not(.showroom-mic):not(.suite-hero-menu):not(.showroom-menu):not(.metal-seg):not(.lot-chip),
+html[data-theme="white"] .app-shell .glass-prestige-gold button:not([data-tone="main"]):not(.tesla-main):not(.tesla-secondary):not(.grok-mic-btn):not(.showroom-mic):not(.showroom-menu):not(.metal-seg):not(.lot-chip),
+html[data-theme="white"] .app-shell .glass-surface button:not([data-tone="main"]):not(.tesla-main):not(.tesla-secondary):not(.grok-mic-btn):not(.showroom-mic):not(.showroom-menu):not(.metal-seg):not(.lot-chip),
+html[data-theme="white"] .app-shell .tesla-tile button:not([data-tone="main"]):not(.tesla-main):not(.grok-mic-btn):not(.showroom-mic):not(.metal-seg),
+html[data-theme="white"] .app-shell .grok-composer-pill button:not(.grok-mic-btn) {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  color: #0b1d45 !important;
+}
+html[data-theme="white"] .app-shell .bg-sapphire,
+html[data-theme="white"] [data-nda-gate] .bg-sapphire {
+  background: #1648c8 !important;
+  color: #fff !important;
+  border-color: #1648c8 !important;
+}
+html[data-theme="white"] .showroom-word {
+  color: #0b1d45 !important;
+  background: none !important;
+  -webkit-text-fill-color: #0b1d45 !important;
+}
+html[data-theme="white"] .tesla-page-title,
+html[data-theme="white"] .tesla-facts-word,
+html[data-theme="white"] .showroom-kicker,
+html[data-theme="white"] .showroom-arrival-name,
+html[data-theme="white"] .showroom-arrival-price,
+html[data-theme="white"] .tesla-stat,
+html[data-theme="white"] .suite-price {
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111;
+}
+html[data-theme="white"] .tesla-page-line,
+html[data-theme="white"] .suite-hero-eyebrow {
+  color: #5c6b80;
+  -webkit-text-fill-color: #5c6b80;
+}
+html[data-theme="white"] .suite-verified {
+  color: #1648c8 !important;
+  -webkit-text-fill-color: #1648c8;
+}
+html[data-theme="white"] .suite-back-chip {
+  background: #fff;
+  color: #111111;
+  border-color: rgba(17, 17, 17, 0.1);
+  box-shadow: 0 1px 2px rgba(16, 20, 32, 0.06);
+}
+html[data-theme="white"] .showroom-kicker {
+  font-size: 1.35rem;
+  letter-spacing: -0.03em;
+  text-transform: none;
+}
+html[data-theme="white"] .showroom-arrival {
+  color: #0b1d45;
+}
+html[data-theme="white"] .showroom-arrival-photo {
+  background: #fff;
+}
+html[data-theme="white"] .showroom-ask input,
+html[data-theme="white"] .showroom-tab,
+html[data-theme="white"] .showroom-tab-icon,
+html[data-theme="white"] .showroom-menu,
+html[data-theme="white"] .showroom-menu-icon {
+  color: #0b1d45;
+}
+html[data-theme="white"] .showroom-ask input::placeholder,
+html[data-theme="white"] .glass-field::placeholder {
+  color: #5c6b80;
+  opacity: 1;
+}
+html[data-theme="white"] .showroom-live {
+  color: #1648c8;
+}
+html[data-theme="white"] .app-shell .showroom-mic,
+html[data-theme="white"] .app-shell .grok-mic-btn {
+  background: linear-gradient(180deg, #f7f4ee 0%, #d9d4cc 48%, #b7b1a8 100%) !important;
+  color: #1a140c !important;
+  border: 1px solid rgba(70, 62, 52, 0.28) !important;
+}
+html[data-theme="white"] .app-shell .lot-chip {
+  background: linear-gradient(180deg, #eceae6 0%, #c8c4bc 46%, #9c9892 100%) !important;
+  color: #1a140c !important;
+  border: 1px solid rgba(70, 62, 52, 0.28) !important;
+}
+html[data-theme="white"] .app-shell .lot-chip.is-on {
+  background: linear-gradient(180deg, #fff8e8 0%, #f3dba8 40%, #d4b06a 100%) !important;
+  color: #1a140c !important;
+  border-color: rgba(150, 112, 48, 0.42) !important;
+}
+html[data-theme="white"] .home-hero-dots button {
+  background: #c8c8c8 !important;
+}
+html[data-theme="white"] .home-hero-dots button[aria-current="true"] {
+  background: #111111 !important;
+}
+html[data-theme="white"] .home-hero-frame,
+html[data-theme="white"] .home-hero-fallback {
+  background: #e4e4e4;
+}
+html[data-theme="white"] .showroom-tab[aria-pressed="true"] {
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111;
+}
+
+/* NDA on white: light page, readable type, sapphire Continue. */
+html[data-theme="white"] [data-nda-gate],
+html[data-theme="white"] [data-nda-state="loading"],
+html[data-theme="white"] [data-nda-gate] .showroom-plain,
+html[data-theme="white"] [data-nda-gate] .nda-accept-bar {
+  background: #f2f2f2 !important;
+  background-image: none !important;
+  color: #0b1d45;
+}
+html[data-theme="white"] [data-nda-gate] .text-muted,
+html[data-theme="white"] [data-nda-gate] .text-fg,
+html[data-theme="white"] [data-nda-gate] [data-nda-agree-row] {
+  color: #0b1d45 !important;
+  -webkit-text-fill-color: #0b1d45;
+}
+html[data-theme="white"] [data-nda-gate] .nda-accept-glyph {
+  background-color: #fff !important;
+  border-color: #0b1d45 !important;
+}
+html[data-theme="white"] [data-nda-gate] .nda-accept-glyph[data-checked="true"] {
+  background-color: #1648c8 !important;
+  border-color: #1648c8 !important;
+}
+html[data-theme="white"] [data-nda-gate] .nda-accept-glyph[data-checked="true"] svg {
+  color: #fff !important;
+}
+html[data-theme="white"] [data-nda-gate] button.tesla-secondary {
+  background: #fff !important;
+  color: #0b1d45 !important;
+  -webkit-text-fill-color: #0b1d45;
+  border: 1px solid rgba(11, 29, 69, 0.28) !important;
+  opacity: 1 !important;
+}
+html[data-theme="white"] [data-nda-gate] button.tesla-main {
+  background: #1648c8 !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff;
+  border-color: #1648c8 !important;
+}
+
+/* Blue / unset lock — same navy tokens as the e76a8cb cascade. */
+html[data-theme="blue"] {
+  --color-bg: #061228;
+  --color-fg: #f4f7fb;
+  --color-showroom: #05070b;
+  --color-showroom-ink: #eef2f8;
+  --color-showroom-accent: #1e63d6;
+  --color-showroom-muted: #c5cedb;
+  --color-showroom-glass: rgba(11, 16, 28, 0.84);
+  --color-blue: #6aafff;
+  --dock-label-color: #f3f5f8;
+  --dock-label-color-active: #ffffff;
+  color-scheme: dark;
+  background-color: #061228;
+}
