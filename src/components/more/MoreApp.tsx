@@ -15,7 +15,6 @@ import {
   Share2,
   Shield,
   Star,
-  Sun,
   FileText,
   Volume2,
   X,
@@ -47,7 +46,7 @@ import {
   speakWithBrowserTts,
   stopBrowserTts,
 } from "@/lib/rvgrok/voice";
-import { applyTheme, readStoredTheme, type ColorScheme } from "@/lib/theme";
+import { ThemeSwitch } from "@/components/shell/ThemeSwitch";
 
 const VinDecoder = lazy(() =>
   import("@/components/rvfax/VinDecoder").then((m) => ({ default: m.VinDecoder })),
@@ -107,17 +106,6 @@ export function MoreApp({
   const [liveVoice, setLiveVoice] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [previewingId, setPreviewingId] = useState<string | null>(null);
-  const [scheme, setScheme] = useState<ColorScheme>("blue");
-
-  useEffect(() => {
-    setScheme(readStoredTheme());
-  }, []);
-
-  const chooseScheme = (next: ColorScheme) => {
-    setScheme(next);
-    applyTheme(next);
-  };
-
   useEffect(() => {
     try {
       const v = localStorage.getItem(VOICE_STORAGE_KEY);
@@ -212,6 +200,13 @@ export function MoreApp({
             )}
           </header>
 
+          <section aria-label="Appearance">
+            <p className="mb-2 px-0.5 text-[10px] font-bold tracking-[0.16em] text-white/90">
+              APPEARANCE
+            </p>
+            <ThemeSwitch />
+          </section>
+
           {/* YOUR ACTIVITY — only real app surfaces */}
           <section>
             <p className="mb-2 px-0.5 text-[10px] font-bold tracking-[0.16em] text-white/90">
@@ -250,12 +245,6 @@ export function MoreApp({
               TOOLS
             </p>
             <div className="glass-prestige overflow-hidden rounded-[1.25rem]">
-              <RowLink
-                icon={<Sun className="size-4 text-amber" />}
-                title="Appearance"
-                sub={scheme === "white" ? "White" : "Blue"}
-                onClick={() => chooseScheme(scheme === "white" ? "blue" : "white")}
-              />
               <RowLink
                 icon={<Volume2 className="size-4 text-ruby" />}
                 title="RvGrok Voice Settings"

@@ -27,8 +27,8 @@ export const Route = createRootRoute({
         content:
           "RvGrok — professional RV intelligence powered by xAI Grok. Specs, pricing, recalls, financing, and multi-step Agent research.",
       },
-      { name: "theme-color", content: "#061228" },
-      { name: "color-scheme", content: "dark" },
+      { name: "theme-color", content: "#f2f2f2" },
+      { name: "color-scheme", content: "light" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       {
@@ -57,10 +57,10 @@ function RootComponent() {
 
 /**
  * Runs in the document head before the body is painted.
- * Unset or blue paints the original sapphire navy (#061228).
- * A saved "white" choice paints #f2f2f2 on the first frame.
+ * Unset or white paints #f2f2f2 before the body.
+ * A saved "blue" choice paints the original sapphire navy (#061228).
  */
-const THEME_BOOT = `(function(){var t="blue";try{var stored=localStorage.getItem("rvfox-theme");if(stored==="white"||stored==="blue")t=stored;}catch(e){}var bg=t==="white"?"#f2f2f2":"#061228";var h=document.documentElement;h.setAttribute("data-theme",t);h.style.backgroundColor=bg;h.style.colorScheme=t==="white"?"light":"dark";var s=document.createElement("style");s.id="theme-boot";s.textContent="html,body{background-color:"+bg+" !important}";(document.head||h).appendChild(s);var m=document.querySelector('meta[name="theme-color"]');if(!m){m=document.createElement("meta");m.setAttribute("name","theme-color");(document.head||h).appendChild(m);}m.setAttribute("content",bg);})();`;
+const THEME_BOOT = `(function(){var t="white";try{var stored=localStorage.getItem("rvfox-theme");if(stored==="white"||stored==="blue")t=stored;}catch(e){}var bg=t==="blue"?"#061228":"#f2f2f2";var h=document.documentElement;h.setAttribute("data-theme",t);h.style.backgroundColor=bg;h.style.colorScheme=t==="white"?"light":"dark";var s=document.createElement("style");s.id="theme-boot";s.textContent="html,body{background-color:"+bg+" !important}";(document.head||h).appendChild(s);var m=document.querySelector('meta[name="theme-color"]');if(!m){m=document.createElement("meta");m.setAttribute("name","theme-color");(document.head||h).appendChild(m);}m.setAttribute("content",bg);})();`;
 
 /** Re-apply after hydration so the head meta matches the stored scheme. */
 function ThemeChromeSync() {

@@ -3830,3 +3830,153 @@ html[data-theme="blue"] {
   color-scheme: dark;
   background-color: #061228;
 }
+
+/* Main menu opened from the header ⋯ */
+.main-menu-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+}
+.main-menu-scrim {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: transparent;
+}
+.main-menu-sheet {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 3.5rem);
+  right: 0.75rem;
+  width: min(17.5rem, calc(100% - 1.5rem));
+  padding: 0.9rem;
+  border-radius: 1.15rem;
+  background: #fff;
+  color: #111111;
+  border: 1px solid rgba(11, 29, 69, 0.12);
+  box-shadow: 0 16px 40px rgba(16, 20, 32, 0.16);
+}
+html[data-theme="blue"] .main-menu-sheet {
+  background: #0c1c40;
+  color: #eef2f8;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.main-menu-kicker {
+  margin: 0 0 0.5rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.theme-switch {
+  display: flex;
+  gap: 0.4rem;
+}
+.theme-choice {
+  flex: 1 1 0;
+  min-height: 44px;
+  border-radius: 999px;
+  padding: 0 0.8rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  background: transparent;
+  color: inherit;
+  border: 1px solid rgba(11, 29, 69, 0.2);
+}
+html[data-theme="blue"] .theme-choice {
+  border-color: rgba(255, 255, 255, 0.28);
+}
+.theme-choice[aria-pressed="true"] {
+  background: linear-gradient(180deg, #fff8e8 0%, #f3dba8 40%, #d4b06a 100%);
+  color: #1a140c;
+  border-color: rgba(150, 112, 48, 0.45);
+}
+.main-menu-link {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 0.7rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(11, 29, 69, 0.16);
+  background: transparent;
+  color: inherit;
+  font-weight: 700;
+}
+html[data-theme="blue"] .main-menu-link {
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+/* White theme covers Lot, RV Grok, and GPS — those screens paint their own navy. */
+html[data-theme="white"] [data-rvgrok-wingman],
+html[data-theme="white"] [data-suite-pane="rvgrok"],
+html[data-theme="white"] [data-suite-pane="rvlot"],
+html[data-theme="white"] [data-suite-pane="rvtrips"],
+html[data-theme="white"] [data-trips-screen],
+html[data-theme="white"] .lot-stock-screen,
+html[data-theme="white"] [data-compare-view] {
+  background: #f2f2f2 !important;
+  background-image: none !important;
+  color: #0b1d45;
+}
+html[data-theme="white"] .lot-well,
+html[data-theme="white"] .lot-mark {
+  background: #e6e6e6 !important;
+  background-image: none !important;
+}
+html[data-theme="white"] .lot-well[data-lot-scene="photo"] {
+  background: #101820 !important;
+}
+html[data-theme="white"] .lot-pill {
+  background: rgba(255, 255, 255, 0.82) !important;
+  border-color: rgba(11, 29, 69, 0.12) !important;
+}
+html[data-theme="white"] .lot-pill-value {
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111;
+}
+html[data-theme="white"] .lot-pill-value.is-gap,
+html[data-theme="white"] .lot-pill-label {
+  color: #5c6b80 !important;
+  -webkit-text-fill-color: #5c6b80;
+}
+html[data-theme="white"] .app-shell [data-rvgrok-wingman] .text-muted,
+html[data-theme="white"] .app-shell [data-rvgrok-wingman] .grok-status-word,
+html[data-theme="white"] .app-shell [data-rvgrok-wingman] .placeholder\:text-muted::placeholder {
+  color: #5c6b80 !important;
+  -webkit-text-fill-color: #5c6b80;
+}
+html[data-theme="white"] .grok-avatar-well {
+  background: #f4f4f4 !important;
+}
+html[data-theme="white"] [data-readable-cards][data-rvgrok-wingman] .grok-frost,
+html[data-theme="white"] [data-rvgrok-wingman][data-readable-cards] :is(
+  .glass-prestige,
+  .glass-prestige-deep,
+  .glass-prestige-gold,
+  .glass-panel,
+  .glass-surface,
+  .grok-frost
+),
+html[data-theme="white"] .lot-stock-screen[data-readable-cards] :is(
+  .glass-prestige,
+  .glass-prestige-deep,
+  .glass-panel,
+  .glass-surface
+) {
+  background: linear-gradient(
+    165deg,
+    rgba(255, 252, 246, 0.86) 0%,
+    rgba(255, 255, 255, 0.66) 46%,
+    rgba(232, 226, 214, 0.8) 100%
+  ) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(1.7);
+  backdrop-filter: blur(28px) saturate(1.7);
+  color: #111111 !important;
+}
+html[data-theme="white"] .lot-well .text-white,
+html[data-theme="white"] .lot-well [class*="text-white/"],
+html[data-theme="white"] .lot-well .text-prestige {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff;
+}

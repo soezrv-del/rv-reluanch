@@ -10,21 +10,23 @@ function read(rel: string) {
   return readFileSync(join(root, rel), "utf8");
 }
 
-test("blue is the default scheme; a stored white choice stays light", () => {
+test("white is the default scheme; a stored blue choice stays navy", () => {
   const theme = read("../theme.ts");
   const root = read("../../routes/__root.tsx");
   const more = read("../../components/more/MoreApp.tsx");
+  const menu = read("../../components/shell/PremiumMenuButton.tsx");
 
-  assert.match(theme, /=== "white" \? "white" : "blue"/);
-  assert.match(theme, /return "blue"/);
+  assert.match(theme, /=== "blue" \? "blue" : "white"/);
+  assert.match(theme, /return "white"/);
   assert.match(theme, /blue: "#061228"/);
   assert.match(theme, /white: "#f2f2f2"/);
-  assert.match(root, /var t="blue"/);
+  assert.match(root, /var t="white"/);
   assert.match(root, /stored==="white"\|\|stored==="blue"/);
-  assert.match(root, /t==="white"\?"#f2f2f2":"#061228"/);
-  assert.match(root, /content: "#061228"/);
-  assert.match(more, /useState<ColorScheme>\("blue"\)/);
-  assert.match(more, /chooseScheme\(scheme === "white" \? "blue" : "white"\)/);
+  assert.match(root, /t==="blue"\?"#061228":"#f2f2f2"/);
+  assert.match(root, /content: "#f2f2f2"/);
+  assert.match(more, /<ThemeSwitch \/>/);
+  assert.match(menu, /data-main-menu/);
+  assert.match(menu, /<ThemeSwitch/);
 });
 
 test("theme tokens are sapphire / cobalt — not Tiimo lavender", () => {

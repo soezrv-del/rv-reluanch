@@ -1,10 +1,11 @@
 /**
- * Stored color scheme. Blue (original sapphire navy) is the default.
- * White is the saved second choice. Auth stays off — localStorage only.
+ * Stored color scheme. White is the default. Blue is the saved navy choice.
+ * Auth stays off — localStorage only.
  *
  * Blue page color is `--color-bg` from e76a8cb83fd59b8c76992045684ae0895385f56e.
  */
 export const THEME_STORAGE_KEY = "rvfox-theme";
+export const THEME_CHANGE_EVENT = "rvfox-theme-change";
 
 export type ColorScheme = "white" | "blue";
 
@@ -15,9 +16,9 @@ export const THEME_BG: Record<ColorScheme, string> = {
 
 export function readStoredTheme(): ColorScheme {
   try {
-    return localStorage.getItem(THEME_STORAGE_KEY) === "white" ? "white" : "blue";
+    return localStorage.getItem(THEME_STORAGE_KEY) === "blue" ? "blue" : "white";
   } catch {
-    return "blue";
+    return "white";
   }
 }
 
@@ -39,4 +40,5 @@ export function applyTheme(theme: ColorScheme) {
   if (boot) boot.textContent = `html,body{background-color:${bg} !important}`;
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute("content", bg);
+  window.dispatchEvent(new CustomEvent(THEME_CHANGE_EVENT, { detail: next }));
 }
