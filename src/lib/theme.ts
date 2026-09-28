@@ -19,6 +19,7 @@ export function readStoredTheme(): ColorScheme {
 /** Apply immediately so a toggle does not wait for a reload. */
 export function applyTheme(theme: ColorScheme) {
   const next: ColorScheme = theme === "blue" ? "blue" : "white";
+  const bg = THEME_BG[next];
   try {
     localStorage.setItem(THEME_STORAGE_KEY, next);
   } catch {
@@ -26,6 +27,9 @@ export function applyTheme(theme: ColorScheme) {
   }
   const root = document.documentElement;
   root.setAttribute("data-theme", next);
-  root.style.backgroundColor = THEME_BG[next];
+  root.style.backgroundColor = bg;
   root.style.colorScheme = next === "blue" ? "dark" : "light";
+  if (document.body) document.body.style.backgroundColor = bg;
+  const boot = document.getElementById("theme-boot");
+  if (boot) boot.textContent = `html,body{background-color:${bg} !important}`;
 }

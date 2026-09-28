@@ -3398,6 +3398,23 @@ html:not([data-theme="blue"]) {
 }
 }
 
+/* White page color fills the notch and home-indicator bands. Blue keeps navy. */
+html:not([data-theme="blue"]),
+html:not([data-theme="blue"]) body,
+html:not([data-theme="blue"]) .app-shell,
+html:not([data-theme="blue"]) .showroom-app,
+html:not([data-theme="blue"]) .showroom-header,
+html:not([data-theme="blue"]) .showroom-dock,
+html:not([data-theme="blue"]) [data-nda-gate],
+html:not([data-theme="blue"]) [data-nda-state="loading"] {
+  background-color: #f2f2f2 !important;
+}
+[data-nda-gate],
+[data-nda-state="loading"] {
+  padding-top: env(safe-area-inset-top, 0px);
+  box-sizing: border-box;
+}
+
 /* Blue scheme — the existing navy field. White stays the default above. */
 html[data-theme="blue"] {
   --color-bg: #061228;
@@ -3416,11 +3433,13 @@ html[data-theme="blue"] {
 html[data-theme="blue"] body,
 html[data-theme="blue"] .app-shell,
 html[data-theme="blue"] .showroom-app,
+html[data-theme="blue"] .showroom-header,
+html[data-theme="blue"] .showroom-dock,
 html[data-theme="blue"] .showroom-plain,
 html[data-theme="blue"] .showroom-stage,
 html[data-theme="blue"] [data-nda-gate],
 html[data-theme="blue"] [data-nda-state="loading"] {
-  background-color: #061228;
+  background-color: #061228 !important;
   color: #e8eef8;
   color-scheme: dark;
 }
