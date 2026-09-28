@@ -112,8 +112,11 @@ test("Facts voice searches for specs; the session prompt matches the other scree
     "",
     "Lot",
   ).session as { instructions: string };
-  assert.match(facts.instructions, /override an injected lot snapshot/);
-  assert.match(lot.instructions, /override an injected lot snapshot/);
+  assert.match(facts.instructions, /Do not call query_lot for that/);
+  assert.match(lot.instructions, /Do not call query_lot for that/);
+  assert.doesNotMatch(facts.instructions, /SCRAPE ROW WINS/);
+  assert.doesNotMatch(facts.instructions, /override an injected lot snapshot/);
+  assert.doesNotMatch(lot.instructions, /override an injected lot snapshot/);
   assert.match(facts.instructions, /closest saved pin when one exists/);
   const decision = decideVoiceWebResearch({
     transcript: SPEC,

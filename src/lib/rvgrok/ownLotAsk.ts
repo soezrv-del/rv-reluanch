@@ -8,12 +8,10 @@
 
 import {
   extractFloorplanToken,
-  looksLikeLengthMeasureAsk,
   normalizeFloorplanToken,
   parseCoachFromText,
 } from "./parseCoach.ts";
 import {
-  looksLikeInventoryOrCountQuestion,
   looksLikeSpecQuestion,
   normalizeAskText,
 } from "./webIntent.ts";
@@ -41,8 +39,30 @@ export function looksLikeOwnLotUnitListQuestion(text: string): boolean {
   return OWN_LOT_UNIT_LIST_RE.test(t);
 }
 
-const EXPLICIT_WE_HAVE_STOCK_RE =
-  /\b(?:do|did|does)\s+(?:we|you)\s+have\b|\bhave\s+we\s+got\b|\bwe\s+have\s+any\b|\b(?:can|could)\s+you\s+see\s+if\b|\bdo\s+you\s+see\b|\bsee\s+if\s+(?:we|you)\s+have\b|\b(?:tell|show)\s+me\s+if\s+we\s+have\b/i;
+/**
+ * Inventory phrases that open lot mode. One list. Word boundaries,
+ * case-insensitive. A model or series name without one of these is a
+ * catalog / spec question, not a lot question.
+ */
+export const LOT_INVENTORY_PHRASES = [
+  "on the lot",
+  "in inventory",
+  "in stock",
+  "do we have",
+  "what do we have",
+  "we got",
+] as const;
+
+const LOT_INVENTORY_PHRASE_RE = new RegExp(
+  `\\b(?:${LOT_INVENTORY_PHRASES.map((phrase) =>
+    phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+  ).join("|")})\\b`,
+  "i",
+);
+
+export function looksLikeLotInventoryPhrase(text: string): boolean {
+  return LOT_INVENTORY_PHRASE_RE.test(normalizeAskText(text));
+}
 
 /** look/find/search/pull/check — salesman lot search, not "look up" catalog. */
 const STRONG_LOT_SEARCH_RE =
@@ -282,30 +302,6 @@ export function looksLikeOwnLotSearchAsk(text: string): boolean {
   return false;
 }
 
-/**
- * "What about the 29S Entegra Vision?" mid-inventory is the lot, not a
- * catalog report. "Tell me about" without a floorplan stays a product ask.
- */
-export function looksLikeLotFloorplanFollowUp(text: string): boolean {
-  const t = normalizeAskText(text);
-  if (looksLikeSpecQuestion(t)) return false;
-  const parsed = parseCoachFromText(t);
-  if (!(parsed.floorplan && (parsed.make || parsed.model))) return false;
-  if (/\b(?:what|how)\s+about\b/i.test(t)) return true;
-  return /\b(?:missing|where(?:'s| is)|that(?:'s| is) there|on the show)\b/i.test(t);
-}
-
-/** "30-foot Class As at the Carson RV show" is the lot even without "in stock". */
-export function looksLikeSizedLotAsk(text: string): boolean {
-  if (!looksLikeLengthMeasureAsk(text)) return false;
-  const t = normalizeAskText(text);
-  return (
-    /\bclass\s*[abc]s?\b/i.test(t) ||
-    /\brv\s+show\b/i.test(t) ||
-    /\b(?:in stock|on (?:the |our )?lot|inventor)/i.test(t)
-  );
-}
-
 export type OwnLotSortBy = "price" | "length" | "year";
 export type OwnLotSortDir = "asc" | "desc";
 
@@ -400,26 +396,27 @@ export function looksLikeOwnLotFollowUp(text: string): boolean {
   return false;
 }
 
+/** Lot mode for a fresh question: an inventory phrase, and nothing else. */
 export function looksLikeOwnLotStockQuestion(text: string): boolean {
-  // Explicit stock only — "do we have" / on the lot / in stock / inventory /
-  // diesel count / stock # / lot listing prices / lot search (look for 27A).
-  // A year+make+model+floorplan designation is a CATALOG report, not an
-  // own-lot probe. "What about the 29S Entegra Vision?" is the exception:
-  // a named floorplan follow-up stays on the lot.
-  if (looksLikeLotFloorplanFollowUp(text)) return true;
-  if (looksLikeSizedLotAsk(text)) return true;
-  if (looksLikeOwnLotRankQuestion(text) || looksLikeOwnLotPriceOnThose(text)) {
-    return true;
-  }
-  if (
-    looksLikeInventoryOrCountQuestion(text) ||
-    looksLikeOwnLotListingPriceQuestion(text) ||
-    Boolean(parseOwnLotStockNumber(text)) ||
-    looksLikeOwnLotSearchAsk(text)
-  ) {
-    return true;
-  }
-  return EXPLICIT_WE_HAVE_STOCK_RE.test(normalizeAskText(text));
+  return looksLikeLotInventoryPhrase(text);
+}
+
+/**
+ * Lot mode for this turn. A fresh inventory phrase, or a follow-up while
+ * a lot filter from an earlier lot question is still active.
+ */
+export function looksLikeLotQuestion(
+  text: string,
+  memory?: { filter?: object } | null,
+): boolean {
+  if (looksLikeLotInventoryPhrase(text)) return true;
+  const filter = memory?.filter;
+  if (!filter) return false;
+  const active = Object.values(filter).some(
+    (value) => value !== undefined && value !== false && value !== "",
+  );
+  if (!active) return false;
+  return looksLikeOwnLotFollowUp(text);
 }
 
 
@@ -619,14 +616,6 @@ export function ownLotVoiceCoachLock(notes: string): {
 }
 
 /**
- * Spoken first on a lot turn, ahead of web research and the catalog.
- * Printed scrape fields stay in front. Lot total, floorplan count, and
- * store lines below this still apply.
- */
-export const OWN_LOT_SCRAPE_IN_FRONT =
-  "SCRAPE ROW WINS. This line is in front of every other instruction this turn. Every printed field on a unit line is the RV Country lot scrape. You have total power to look up and speak any of those fields. Nothing after this line overrides a printed scrape field — not web research, a brochure pin, the catalog, or a shorter field list. A blank field stays blank. If mileage is printed, that is the odometer. If mileage is not on the line, the odometer is not on the row. Do not guess. Never say a stock that is printed here is not in any online listings, not on the lot, or not in the catalog. The lot total, a printed floorplan count, and the store lines still apply. Name only a unit printed in this block or returned by query_lot. If the block says none, say none. Do not invent a coach, price, stock number, or store to fill a miss. The 85 to 90 percent rule is for GVWR and spec pins, not lot inventory.";
-
-/**
  * Voice must hear the lot total and the matched unit. Do not trim this
  * down to a short web-note slice — that cut used to drop the stock line
  * and leave an older website total in the spoken answer.
@@ -654,13 +643,11 @@ export function ownLotNotesForSpeech(notes: string): string {
     .filter((line) => line.startsWith("- ") && /stk\s+/i.test(line))
     .slice(0, 12);
   return [
-    OWN_LOT_SCRAPE_IN_FRONT,
     "OWN-LOT inventory (our lot snapshot this turn — not a website count):",
     total,
     breakdown,
     ...placeNotes,
     ...units,
-    "If a unit line is printed, that coach IS on this lot. Never say it is missing.",
     "Stores on these lines are the locations. Do not keep a store from an earlier turn if it is not on a line.",
     "If a floorplan breakdown is printed, say that count once. Do not give a second count.",
     "Speak the Lot total above. Do not say a smaller website total or an older scrape.",

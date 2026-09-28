@@ -91,7 +91,7 @@ test("2016 Ventana at Carson is a show miss, not a zero-lot lie", () => {
     snapshot,
     "Hello, are you able to check uh the Carson show for a 2016 Ventana?",
   );
-  assert.match(block, /No own-lot hit for this exact series/);
+  assert.match(block, /None\. No own-lot hit for this filter/);
   assert.match(block, /Matched: 0/);
   assert.doesNotMatch(block, /Lot total:\s*0/);
 

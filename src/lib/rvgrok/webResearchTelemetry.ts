@@ -15,12 +15,11 @@ import {
 import {
   formatOwnLotBlock,
   loadOwnLotSnapshot,
-  looksLikeOwnLotStockQuestion,
   OWN_LOT_MODEL,
   shouldSkipWebForOwnLot,
   type OwnLotSnapshot,
 } from "./ownLotInventory.ts";
-import { looksLikeOwnLotFollowUp } from "./ownLotAsk.ts";
+import { looksLikeLotQuestion } from "./ownLotAsk.ts";
 import { resolveLotTurn, type LotMemory } from "./lotMemory.ts";
 import {
   fetchWebSearchNotes,
@@ -302,9 +301,11 @@ export async function executeWebResearch(
   const factsSpec =
     isFactsScreen(screen) && factsSpecRequestsWebSearch(screen, query);
 
+  const lotish = looksLikeLotQuestion(query, opts.lotMemory ?? null);
   const lotFollow =
-    Boolean(opts.lotMemory) && looksLikeOwnLotFollowUp(query);
-  const lotish = looksLikeOwnLotStockQuestion(query) || lotFollow;
+    Boolean(opts.lotMemory) &&
+    lotish &&
+    !looksLikeLotQuestion(query, null);
   let ownLotSnapshot = opts.ownLotSnapshot;
   if (!factsSpec && !ownLotSnapshot && lotish) {
     ownLotSnapshot = await loadOwnLotSnapshot({

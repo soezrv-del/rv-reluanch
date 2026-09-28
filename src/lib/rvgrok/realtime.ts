@@ -72,9 +72,9 @@ import {
   withVoiceSpecExtras,
 } from "./voiceSpecTurn";
 import {
+  looksLikeLotQuestion,
   looksLikeOwnLotFollowUp,
   looksLikeOwnLotStockQuestion,
-  OWN_LOT_SCRAPE_IN_FRONT,
   ownLotVoiceCoachLock,
 } from "./ownLotAsk";
 import type { LotMemory } from "./lotMemory";
@@ -165,6 +165,8 @@ export class GrokRealtimeSession {
   private lastLessonLotNotes = "";
   /** Last own-lot filter. Follow-ups that name no new filter keep it. */
   private lotMemory: LotMemory | null = null;
+  /** Last thing the salesman said. query_lot runs only for a lot question. */
+  private lastUserTranscript = "";
   private handledToolCallIds = new Set<string>();
   private introSpoken = false;
   private lastDeskQuery = "";
@@ -675,6 +677,20 @@ export class GrokRealtimeSession {
       });
       return;
     }
+    if (!looksLikeLotQuestion(this.lastUserTranscript, this.lotMemory)) {
+      this.sendToolOutput(
+        callId,
+        {
+          ok: true,
+          none: false,
+          skipped: true,
+          speech:
+            "Not a lot question. Answer from the catalog pin and web search.",
+        },
+        "This is not a lot question. Answer from the closest saved pin and web search. Do not say the lot has none.",
+      );
+      return;
+    }
     let args: Record<string, unknown> = {};
     const raw = nested.arguments ?? msg.arguments ?? "{}";
     try {
@@ -706,7 +722,7 @@ export class GrokRealtimeSession {
     }
   }
 
-  private sendToolOutput(callId: string, data: unknown) {
+  private sendToolOutput(callId: string, data: unknown, instructions?: string) {
     const ws = this.ws;
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
     ws.send(
@@ -725,7 +741,8 @@ export class GrokRealtimeSession {
         response: {
           modalities: ["text", "audio"],
           instructions:
-            "Speak only units in the query_lot result. If none is true or the speech says None, say none. Do not invent a unit, price, stock number, or store.",
+            instructions ||
+            "Speak only units in the query_lot result. If none is true, say none. Do not invent a unit, price, stock number, or store.",
         },
       }),
     );
@@ -1220,6 +1237,7 @@ export class GrokRealtimeSession {
 
   private async maybeEnrichWithWebResearch(transcript: string) {
     const spoken = transcript;
+    this.lastUserTranscript = spoken;
     this.recentUserTurns.push(spoken);
     if (this.recentUserTurns.length > 12) this.recentUserTurns.shift();
     const priorTurns = this.recentUserTurns.slice(0, -1);
@@ -1553,7 +1571,7 @@ export class GrokRealtimeSession {
           response: {
             modalities: ["text", "audio"],
             instructions: inventoryTurn
-              ? `${OWN_LOT_SCRAPE_IN_FRONT}\n\n${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}\n\nThis turn is OWN-LOT inventory. Speak the Lot total and any listed unit. Every printed field on that unit line is yours to answer from. Name only a unit printed on a line. If the block says none, say none. Do not invent a coach, price, or store. Do not say a smaller count. Do not web-search over this snapshot. If a floorplan breakdown is printed, say it once and do not recount. Do not keep a store from an earlier turn unless that store is on a unit line.`
+              ? `${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}\n\nThis turn is a lot question. Speak the Lot total and any listed unit. If the block says none, say none. Do not invent a coach, price, or store. If a floorplan breakdown is printed, say it once and do not recount. Do not keep a store from an earlier turn unless that store is on a unit line.`
               : plantTurn
                 ? `${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}\n\nThis is a factory or company question, not a coach. Answer it in full. Do not stop after the factory's name. Do not ask for a year, make, model, or floorplan.`
                 : looksLikeRepairQuestion(this.lastResearchTranscript)

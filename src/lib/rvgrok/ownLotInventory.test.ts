@@ -211,12 +211,15 @@ test("David's own-lot stock asks hit intent; specs and nights do not", () => {
   const yes = [
     "how many diesels do we have in stock?",
     "How many diesel Newmar Dutch Stars are in inventory?",
+    "what do we have on the lot",
+  ];
+  const modelOnly = [
     "What's the diesel count for 2024 Tiffin Allegro?",
     "Any Entegra inventory near Dallas?",
-    "what do we have on the lot",
     "units available at Wilsonville",
     "how many Super C are on our lot",
     "our inventory of Class A",
+    "tell me about the Odyssey 29V",
   ];
   const hit: OwnLotSnapshot = snapshotFromJson({
     source: "own",
@@ -239,6 +242,10 @@ test("David's own-lot stock asks hit intent; specs and nights do not", () => {
     assert.equal(shouldSkipWebForOwnLot(q, hit), true, `${q} skips web on hit`);
     assert.equal(shouldSkipWebForOwnLot(q, miss), false, `${q} browses on miss`);
     assert.equal(shouldSkipWebForOwnLot(q), false, `${q} no snapshot yet → do not skip`);
+  }
+  for (const q of modelOnly) {
+    assert.equal(looksLikeOwnLotStockQuestion(q), false, q);
+    assert.equal(shouldSkipWebForOwnLot(q, hit), false, q);
   }
   assert.equal(ownLotHasHit(hit), true);
   assert.equal(ownLotHasHit(miss), false);
@@ -266,9 +273,9 @@ test("David's own-lot stock asks hit intent; specs and nights do not", () => {
   ];
   for (const q of lotPrices) {
     assert.equal(looksLikeOwnLotListingPriceQuestion(q), true, q);
-    assert.equal(looksLikeOwnLotStockQuestion(q), true, q);
+    assert.equal(looksLikeOwnLotStockQuestion(q), false, q);
     assert.equal(looksLikeMarketValueQuestion(q), false, q);
-    assert.equal(shouldSkipWebForOwnLot(q, hit), true, `${q} stays on own-lot`);
+    assert.equal(shouldSkipWebForOwnLot(q, hit), false, `${q} is not an inventory phrase`);
   }
 });
 
@@ -918,7 +925,11 @@ test("stock-number ask matches that unit and injects a priced listing", () => {
     "stock number 4 5 2 8 2",
   ]) {
     assert.equal(parseOwnLotStockNumber(ask), "45282", ask);
-    assert.equal(looksLikeOwnLotStockQuestion(ask), true, ask);
+    assert.equal(
+      looksLikeOwnLotStockQuestion(ask),
+      /\b(?:do we have|on the lot)\b/i.test(ask),
+      ask,
+    );
     const filter = parseOwnLotAsk(ask, ["Fresno CA", "Wilsonville"]);
     assert.equal(filter.stockNumber, "45282", ask);
     assert.equal(filter.model, undefined, `${ask} must not invent a model`);
@@ -1718,17 +1729,14 @@ const DAVID_INVENTORY_ASKS = [
 ];
 
 test("lot search asks (look/find/27A) open own-lot; product designations do not", () => {
-  const yes = [
-    "look for a 27A",
-    "find 27A",
-    "search 27A",
-    "27A on the lot",
-    "27A",
-    "do we have a 27A",
-  ];
+  const yes = ["27A on the lot", "do we have a 27A", "what do we have in stock"];
+  const namedOnly = ["look for a 27A", "find 27A", "search 27A", "27A"];
   for (const q of yes) {
     assert.equal(looksLikeOwnLotStockQuestion(q), true, q);
-    assert.equal(looksLikeOwnLotSearchAsk(q) || /do we have/i.test(q), true, q);
+  }
+  for (const q of namedOnly) {
+    assert.equal(looksLikeOwnLotStockQuestion(q), false, q);
+    assert.equal(looksLikeOwnLotSearchAsk(q), true, q);
   }
   assert.equal(lotSearchQueryFromAsk("look for a 27A"), "27a");
   assert.equal(lotSearchQueryFromAsk("find 27A"), "27a");
@@ -1914,7 +1922,7 @@ test("David inventory asks list the three 27ASE stocks even with catalog GAP spe
   const expected = ["46222", "47033", "47034"];
 
   for (const ask of DAVID_INVENTORY_ASKS) {
-    assert.equal(looksLikeOwnLotStockQuestion(ask), true, ask);
+    assert.equal(looksLikeOwnLotStockQuestion(ask), false, ask);
     assert.equal(looksLikeInventoryOrCountQuestion(ask), true, ask);
     const filter = parseOwnLotAsk(ask, locations, units);
     assert.match(filter.make || "", /Entegra/i, ask);
@@ -2174,7 +2182,7 @@ function carryLot(texts: string[], snap: OwnLotSnapshot) {
 
 test("what about the 29S Vision searches the full lot, and yeah does not stay on Carson", () => {
   const about = "What about the 29S uh Entegra Vision?";
-  assert.equal(looksLikeOwnLotStockQuestion(about), true);
+  assert.equal(looksLikeOwnLotStockQuestion(about), false);
   assert.equal(
     looksLikeOwnLotStockQuestion("tell me about the Entegra Vision SE"),
     false,
@@ -2281,7 +2289,7 @@ test("30-foot Class As at the Carson RV show is a lot ask for the two coaches", 
     "Hello, can you tell me how many 30-foot Class As we had at the, uh, Carson RV show?";
   const second =
     "No, I'm sorry. I meant, in our inventory at this, uh, Carson RV show, how many 30-foots do we have?";
-  assert.equal(looksLikeOwnLotStockQuestion(first), true);
+  assert.equal(looksLikeOwnLotStockQuestion(first), false);
   assert.equal(looksLikeLengthMeasureAsk(second), true);
   const snap = snapshotFromJson(
     JSON.parse(readFileSync(join(process.cwd(), "public/inventory/own-lot-latest.json"), "utf8")),
@@ -2366,7 +2374,7 @@ test("a stock ask speaks every printed scrape field and does not invent blanks",
   assert.equal(usedZero.printed?.mileage, "0 mi");
 
   assert.equal(parseOwnLotStockNumber("how many miles on UPF9963"), "UPF9963");
-  assert.equal(looksLikeOwnLotStockQuestion("how many miles on UPF9963"), true);
+  assert.equal(looksLikeOwnLotStockQuestion("how many miles on UPF9963"), false);
   assert.equal(
     looksLikeOwnLotStockQuestion("How many slides does a 2023 Dream have?"),
     false,
@@ -2391,8 +2399,8 @@ test("a stock ask speaks every printed scrape field and does not invent blanks",
   assert.match(block, /lot_status: Available/);
   assert.match(block, /engine: Cummins \/ I6 Diesel Pusher/);
   assert.match(block, /chassis_brand: Freightliner/);
-  assert.match(block, /SCRAPE ROW WINS/);
-  assert.match(block, /not in any online listings/);
+  assert.doesNotMatch(block, /SCRAPE ROW WINS/);
+  assert.doesNotMatch(block, /not in any online listings/);
   assert.doesNotMatch(block, /do not have that coach/i);
   assert.doesNotMatch(block, /payload:/i);
   assert.doesNotMatch(block, /hitch_weight:/i);
@@ -2400,23 +2408,26 @@ test("a stock ask speaks every printed scrape field and does not invent blanks",
   assert.doesNotMatch(block, /example\.test\/photo/);
 
   const spoken = ownLotNotesForSpeech(block);
-  assert.match(spoken, /^SCRAPE ROW WINS/);
+  assert.match(spoken, /^OWN-LOT inventory/);
+  assert.doesNotMatch(spoken, /SCRAPE ROW WINS/);
   assert.match(spoken, /mileage: 6,870 mi/);
   assert.match(spoken, /stk UPF9963/);
-  assert.match(spoken, /odometer is not on the row/);
+  assert.doesNotMatch(spoken, /odometer is not on the row/);
 
   const ask = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "ownLotAsk.ts"), "utf8");
   assert.match(ask, /export function looksLikeOwnLotStockQuestion/);
   assert.match(ask, /export function parseOwnLotStockNumber/);
   assert.match(ask, /export function lotSearchQueryFromAsk/);
-  assert.match(ask, /export const OWN_LOT_SCRAPE_IN_FRONT/);
+  assert.match(ask, /export const LOT_INVENTORY_PHRASES/);
+  assert.doesNotMatch(ask, /OWN_LOT_SCRAPE_IN_FRONT/);
+  assert.doesNotMatch(ask, /SCRAPE ROW WINS/);
   assert.doesNotMatch(ask, /RESTORE_FROM_LOCAL_TMP_OWNLOTASK/);
 
   const voice = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "realtime.ts"), "utf8");
-  const lockAt = voice.indexOf("OWN_LOT_SCRAPE_IN_FRONT");
-  const afterLock = voice.indexOf("VOICE_RESEARCH_ANSWER_INSTRUCTIONS", lockAt);
-  assert.ok(lockAt >= 0 && afterLock > lockAt);
+  assert.doesNotMatch(voice, /OWN_LOT_SCRAPE_IN_FRONT/);
+  assert.doesNotMatch(voice, /SCRAPE ROW WINS/);
+  assert.match(voice, /looksLikeLotQuestion/);
   assert.doesNotMatch(voice, /year, make, model, stock, location, price/);
-  assert.match(voice, /Every printed field on that unit line is yours to answer from/);
+  assert.doesNotMatch(voice, /Every printed field on that unit line is yours to answer from/);
 });
 
