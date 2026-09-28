@@ -3925,7 +3925,7 @@ html[data-theme="light"] :is(
   .tow-hero-panel,
   .exclusive-card,
   .grok-landing-card
-) button:not(.rounded-full):not([aria-pressed="true"]):not(.showroom-mic):not(.grok-mic-btn):not(.showroom-hero-primary):not(.showroom-hero-secondary):not(.showroom-tab):not(.lot-chip):not(.grok-chip):not(.grok-starter):not(.grok-lot-chip):not([data-facts-search]) {
+) button:not(.rounded-full):not([aria-pressed="true"]):not([data-catalog-field]):not(.grok-chip):not(.grok-starter):not(.grok-lot-chip):not(.lot-chip) {
   background: transparent !important;
   background-color: transparent !important;
   border-color: transparent !important;
