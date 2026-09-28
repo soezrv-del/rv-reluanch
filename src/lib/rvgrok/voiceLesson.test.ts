@@ -11,7 +11,6 @@ import {
 } from "./voiceLesson.ts";
 
 const LOT = [
-  "SCRAPE ROW WINS.",
   "OWN-LOT inventory (our lot snapshot this turn — not a website count):",
   "Lot total: 1 units.",
   "- 2022 · Tiffin · Allegro Red 360 · 33 AA · Fresno CA · stk UPF9963 · $229,995 · mileage: 6,870 mi · gvwr: 37320 lbs · vehicle_body_length: 35.17 ft",

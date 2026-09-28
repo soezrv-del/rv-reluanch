@@ -14,7 +14,6 @@ import {
   looksLikeCatalogAnswerableCoachCompare,
   looksLikeCasualNonResearch,
   looksLikeImageOnlyAsk,
-  looksLikeInventoryOrCountQuestion,
   looksLikeLiveResearchQuestion,
   looksLikeCarfaxQuestion,
   looksLikeOriginQuestion,
@@ -28,7 +27,7 @@ import {
 } from "./factsScreenPolicy.ts";
 import {
   isOwnLotResearchNotes,
-  looksLikeOwnLotStockQuestion,
+  looksLikeLotInventoryPhrase,
   ownLotNotesForSpeech,
 } from "./ownLotAsk.ts";
 
@@ -121,9 +120,7 @@ export function shouldSpeakVoiceResearchHold(
   if (looksLikeCarfaxQuestion(t)) return false;
   // Forum / repair / manual still hold even when both coaches are known.
   if (looksLikeLiveResearchQuestion(t)) return true;
-  if (looksLikeOwnLotStockQuestion(t) || looksLikeInventoryOrCountQuestion(t)) {
-    return false;
-  }
+  if (looksLikeLotInventoryPhrase(t)) return false;
   // Unpinned OEM specs hold while search runs. A lock does not hold.
   if (looksLikeSpecQuestion(t) && catalogGapNeedsWeb(specs ?? null, t)) {
     return true;
@@ -157,14 +154,11 @@ export function decideVoiceWebResearch(opts: {
       speakHold: shouldSpeakVoiceResearchHold(transcript, opts.specs),
     };
   }
-  // "Do we have a 2012 Tiffin Phaeton?" is an own-lot ask but not an
-  // inventory/count phrase, so needsWebFallback stays false and voice
-  // used to answer from memory. Lot questions must still load the snapshot.
+  // An inventory phrase loads the lot snapshot. A model or series name
+  // does not. A follow-up keeps the lot only while a lot filter is active.
   // A Facts spec ask already returned above, so the lot does not replace it.
   const ownLot =
-    looksLikeOwnLotStockQuestion(transcript) ||
-    looksLikeInventoryOrCountQuestion(transcript) ||
-    Boolean(opts.lotFollowUp);
+    looksLikeLotInventoryPhrase(transcript) || Boolean(opts.lotFollowUp);
   if (!ownLot && !needsWebFallback(opts.specs ?? null, transcript)) {
     return { action: "pass" };
   }

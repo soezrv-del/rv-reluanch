@@ -29,6 +29,7 @@ import {
 } from "./screenGuides.ts";
 import { liveVoiceOutputFor, preferIosLoudspeaker, releaseLiveVoiceOutput } from "./voiceOutput.ts";
 import { PCM_SAMPLE_RATE, RV_VOICE_INSTRUCTIONS, VOICE_MIC_RULES } from "./voice.ts";
+import { LOT_INVENTORY_PHRASES } from "./ownLotAsk.ts";
 
 export type LiveVoicePrewarm = {
   audioCtx: AudioContext | null;
@@ -185,8 +186,7 @@ export function releaseLiveCapture() {
 export const QUERY_LOT_TOOL = {
   type: "function",
   name: "query_lot",
-  description:
-    "Query RV Country's own lot. Use this for inventory, counts, prices, cheapest, lowest, priciest, shortest, longest, newest, oldest, and follow-ups like 'the ones around 30 foot'. Fill filters from the conversation. If the user names no new filter, omit it and the server keeps the last one. A newly named body type, make, model, location, year, price, or length replaces that previous filter. For 'around N foot', set length_ft_min to N-2 and length_ft_max to N+2. Speak only units this tool returns. If it returns none, say none. Never invent a unit.",
+  description: `Query RV Country's own lot only when the salesman says an inventory phrase (${LOT_INVENTORY_PHRASES.join(", ")}) or continues a lot question whose filter is still active. Do not call this when they only name a model or series. When a lot question matches units, the scrape row is the truth for that unit's price, location, and status. Fill filters from the conversation. If the user names no new filter, omit it and the server keeps the last one. A newly named body type, make, model, location, year, price, or length replaces that previous filter. For 'around N foot', set length_ft_min to N-2 and length_ft_max to N+2. Speak only units this tool returns. If it returns none, say none. Never invent a unit.`,
   parameters: {
     type: "object",
     properties: {
@@ -249,7 +249,7 @@ export function buildRealtimeSessionUpdate(
   const screenSection = screen
     ? `${SCREEN_GUIDE_PREAMBLE}\n\n${formatScreenContext(screen)}`
     : SCREEN_GUIDE_PREAMBLE;
-  const instructions = `${core}\n\n${personalBlock}${memoryBlock}${catalogBlock}When a turn injects a lot snapshot, speak that total. Never replace it with a website count. This session has native web_search and query_lot. For a GVWR or other spec pin, a saved pin is the best available answer. Use the closest saved pin when one exists, and otherwise answer from web search. Never refuse, stall, or skip a spec pin because the match is not perfect. Lot inventory is exact. Call query_lot and name only units it returns. If it returns none, say none. Do not invent a coach, a price, or a store. Do not use web search for our lot prices or to override an injected lot snapshot or a query_lot result. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${intro} Then listen. Never repeat this intro.\n\n${VOICE_MIC_RULES}\n\n${screenSection}`;
+  const instructions = `${core}\n\n${personalBlock}${memoryBlock}${catalogBlock}When a turn injects a lot snapshot, speak that total. Never replace it with a website count. This session has native web_search and query_lot. For a GVWR or other spec pin, a saved pin is the best available answer. Use the closest saved pin when one exists, and otherwise answer from web search. Never refuse, stall, or skip a spec pin because the match is not perfect. Call query_lot only for an inventory phrase or a follow-up to an active lot filter, as that tool describes. A model or series name without an inventory phrase is answered from the closest saved pin and web search. Do not call query_lot for that, and do not say none from the lot. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${intro} Then listen. Never repeat this intro.\n\n${VOICE_MIC_RULES}\n\n${screenSection}`;
   return {
     type: "session.update",
     session: {

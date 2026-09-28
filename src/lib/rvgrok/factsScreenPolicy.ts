@@ -8,7 +8,6 @@ import { looksLikeOwnLotStockQuestion } from "./ownLotAsk.ts";
 import {
   looksLikeCasualNonResearch,
   looksLikeCoachFactAsk,
-  looksLikeInventoryOrCountQuestion,
   looksLikeNamedCoachProductQuestion,
   looksLikePureLifestyleOrPayment,
   looksLikeSpecQuestion,
@@ -44,12 +43,7 @@ export function looksLikeFactsSpecOrInfo(text: string): boolean {
   if (specCue) return true;
   // A pure stock ask stays on the lot. A spec that also mentions stock
   // already returned above, so the lot does not replace the web search.
-  if (
-    looksLikeOwnLotStockQuestion(t) ||
-    looksLikeInventoryOrCountQuestion(t)
-  ) {
-    return false;
-  }
+  if (looksLikeOwnLotStockQuestion(t)) return false;
   return (
     looksLikeCoachFactAsk(t) || looksLikeNamedCoachProductQuestion(t)
   );
