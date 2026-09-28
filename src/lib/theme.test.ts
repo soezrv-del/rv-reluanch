@@ -44,11 +44,11 @@ test("light theme is a flat Tesla canvas and dark chrome is unchanged", () => {
   assert.match(light, /--light-lift:/);
   assert.match(light, /0 8px 22px rgba\(15, 23, 42, 0\.08\)/);
   assert.match(light, /inset 0 1px 0 rgba\(255, 255, 255, 0\.85\)/);
-  assert.match(light, /\.showroom-tab \{[^}]*box-shadow:\s*var\(--light-lift\)/);
+  assert.match(light, /\.showroom-tab \{[^}]*box-shadow:\s*var\(--light-raise\)/);
   assert.match(light, /\.showroom-dock \{\s*gap:\s*1rem/);
   assert.match(light, /--color-bg:\s*#f2f2f2/);
-  assert.match(light, /--color-fg:\s*#0b1730/);
-  assert.match(light, /--color-muted:\s*#5c5e62/);
+  assert.match(light, /--color-fg:\s*#0b1d45/);
+  assert.match(light, /--color-muted:\s*#0b1d45/);
   assert.match(light, /\.showroom-mark \{[^}]*height:\s*30px/);
   assert.match(light, /\.showroom-word \{[^}]*#0b1d45/);
   assert.match(light, /\.showroom-word \{[^}]*font-weight:\s*700 !important/);

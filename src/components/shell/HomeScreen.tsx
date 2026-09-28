@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { readTheme, serverTheme, subscribeTheme } from "@/lib/theme";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchLotSnapshot, lotUnitPhoto, type LotUnit } from "@/lib/lot/ownLotPage";
 import { CoveredCoach } from "@/components/shell/CoveredCoach";
 import {
@@ -78,11 +77,8 @@ export function HomeScreen({
   const spotWhere = [specs?.stock, spotUnit?.location.trim() ?? ""]
     .filter(Boolean)
     .join(" · ");
-  const theme = useSyncExternalStore(subscribeTheme, readTheme, serverTheme);
-  const spotPhoto = spotUnit ? lotUnitPhoto(spotUnit) : null;
-  const heroSrc =
-    theme === "light" && spotPhoto ? spotPhoto : SHOWROOM_SPOTLIGHT.image;
-  const heroKind = theme === "light" && spotPhoto ? "photo" : "cutout";
+  const heroSrc = SHOWROOM_SPOTLIGHT.image;
+  const heroKind = "cutout" as const;
   const openSpot = () => {
     if (!spotUnit) return;
     requestLotUnit(lotArrivalQuery(spotUnit));
