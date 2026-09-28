@@ -1,4 +1,4 @@
-import { REPORT_MARK_URL, type ShareReport } from "./shareReport.ts";
+import { REPORT_MARK_URL, splitHeadlineNote, type ShareReport } from "./shareReport.ts";
 
 const PAGE_W = 612;
 const PAGE_H = 792;
@@ -6,6 +6,9 @@ const MARGIN = 36;
 const SAPPHIRE = { r: 10 / 255, g: 42 / 255, b: 138 / 255 };
 const INK = { r: 20 / 255, g: 32 / 255, b: 51 / 255 };
 const MUTED = { r: 90 / 255, g: 102 / 255, b: 120 / 255 };
+
+type PdfFont = { widthOfTextAtSize: (text: string, size: number) => number };
+type Wrapped = { lines: string[]; size: number };
 
 async function fetchBytes(url: string, ms = 2500): Promise<Uint8Array | null> {
   if (!url) return null;
@@ -120,10 +123,28 @@ export async function buildShareReportPdf(report: ShareReport): Promise<Uint8Arr
       color: rgb(0.82, 0.88, 1),
     });
 
-    const fitted = fitOnePage(rows.length, Boolean(photo));
+    const contentWidth = PAGE_W - MARGIN * 2;
+    const headlineCol = report.headlines.length
+      ? contentWidth / report.headlines.length
+      : contentWidth;
+    const headlineParts = report.headlines.map((item) => ({
+      label: item.label,
+      ...splitHeadlineNote(item.value),
+    }));
+    const headlineNotes = headlineParts.map((part) =>
+      part.note ? layoutNote(part.note, font, headlineCol - 8) : null,
+    );
+    const noteSize = headlineNotes.find((note) => note)?.size ?? 7;
+    const noteLines = Math.max(0, ...headlineNotes.map((note) => note?.lines.length ?? 0));
+    const headlineBlock = report.headlines.length ? headlineDrop(noteLines, noteSize) : 26;
+    const sourceLayout = report.sources
+      ? layoutWrapped(report.sources, font, 7, contentWidth, 2, 6)
+      : null;
+    const footer = sourceClearance(sourceLayout);
+    const fitted = fitOnePage(rows.length, Boolean(photo), headlineBlock, footer);
     let y = PAGE_H - 96;
     const titleSize = report.title.length > 42 ? 13 : 15;
-    page.drawText(clip(report.title, bold, titleSize, PAGE_W - MARGIN * 2), {
+    page.drawText(clip(report.title, bold, titleSize, contentWidth), {
       x: MARGIN,
       y,
       size: titleSize,
@@ -133,10 +154,9 @@ export async function buildShareReportPdf(report: ShareReport): Promise<Uint8Arr
     y -= 18;
 
     if (report.headlines.length) {
-      const col = (PAGE_W - MARGIN * 2) / report.headlines.length;
       const headSize = fitted.size < 8 ? 9 : 10;
-      report.headlines.forEach((item, i) => {
-        const hx = MARGIN + col * i;
+      headlineParts.forEach((item, i) => {
+        const hx = MARGIN + headlineCol * i;
         page.drawText(item.label.toUpperCase(), {
           x: hx,
           y,
@@ -144,15 +164,26 @@ export async function buildShareReportPdf(report: ShareReport): Promise<Uint8Arr
           font: bold,
           color: rgb(MUTED.r, MUTED.g, MUTED.b),
         });
-        page.drawText(clip(item.value, bold, headSize, col - 6), {
+        page.drawText(clip(item.value, bold, headSize, headlineCol - 8), {
           x: hx,
           y: y - 12,
           size: headSize,
           font: bold,
           color: rgb(INK.r, INK.g, INK.b),
         });
+        const note = headlineNotes[i];
+        if (!note) return;
+        note.lines.forEach((line, lineIndex) => {
+          page.drawText(line, {
+            x: hx,
+            y: y - 24 - lineIndex * (note.size + 2),
+            size: note.size,
+            font,
+            color: rgb(MUTED.r, MUTED.g, MUTED.b),
+          });
+        });
       });
-      y -= 26;
+      y -= headlineBlock;
     }
 
     if (photo && fitted.photoH > 0) {
@@ -211,13 +242,17 @@ export async function buildShareReportPdf(report: ShareReport): Promise<Uint8Arr
       font: bold,
       color: rgb(SAPPHIRE.r, SAPPHIRE.g, SAPPHIRE.b),
     });
-    if (report.sources && y > 78) {
-      page.drawText(clip(report.sources, font, 7, PAGE_W - MARGIN * 2), {
-        x: MARGIN,
-        y: 50,
-        size: 7,
-        font,
-        color: rgb(MUTED.r, MUTED.g, MUTED.b),
+    if (sourceLayout && y >= footer) {
+      const lineH = sourceLayout.size + 2.5;
+      const top = 50 + (sourceLayout.lines.length - 1) * lineH;
+      sourceLayout.lines.forEach((line, index) => {
+        page.drawText(line, {
+          x: MARGIN,
+          y: top - index * lineH,
+          size: sourceLayout.size,
+          font,
+          color: rgb(MUTED.r, MUTED.g, MUTED.b),
+        });
       });
     }
   };
@@ -227,11 +262,15 @@ export async function buildShareReportPdf(report: ShareReport): Promise<Uint8Arr
 }
 
 /** Shrink the photo and type until every row fits above the footer. */
-function fitOnePage(rowCount: number, hasPhoto: boolean): { size: number; photoH: number } {
-  const footer = 56;
+function fitOnePage(
+  rowCount: number,
+  hasPhoto: boolean,
+  headlineBlock: number,
+  footer: number,
+): { size: number; photoH: number } {
   const fits = (size: number, photoH: number) => {
     let y = PAGE_H - 96 - 18;
-    y -= 26;
+    y -= headlineBlock;
     if (photoH > 0) y -= photoH + 8;
     return y - rowCount * (size + 3.2) >= footer;
   };
@@ -241,6 +280,77 @@ function fitOnePage(rowCount: number, hasPhoto: boolean): { size: number; photoH
   while (!fits(size, photoH) && size > 7) size -= 0.5;
   while (!fits(size, photoH) && photoH > 0) photoH -= 6;
   return { size, photoH };
+}
+
+/** Label baseline to the next section. A note under the figure needs more than 26. */
+function headlineDrop(noteLines: number, noteSize: number): number {
+  if (noteLines <= 0) return 26;
+  const lastNote = 24 + (noteLines - 1) * (noteSize + 2);
+  return lastNote + 12;
+}
+
+/** One smaller line when it fits; otherwise a second line, then a slight shrink. */
+function layoutNote(text: string, font: PdfFont, maxWidth: number): Wrapped {
+  const clean = text.replace(/\s+/g, " ").trim();
+  for (let size = 7; size >= 6; size -= 0.25) {
+    if (font.widthOfTextAtSize(clean, size) <= maxWidth) return { lines: [clean], size };
+  }
+  return layoutWrapped(clean, font, 7, maxWidth, 2, 6);
+}
+
+/**
+ * Keep every word. Prefer the starting size, then shrink until the words
+ * fit on `maxLines`.
+ */
+function layoutWrapped(
+  text: string,
+  font: PdfFont,
+  size: number,
+  maxWidth: number,
+  maxLines: number,
+  minSize: number,
+): Wrapped {
+  const words = text.replace(/\s+/g, " ").trim().split(" ").filter(Boolean);
+  if (!words.length) return { lines: [], size };
+  let next = size;
+  while (next >= minSize - 0.01) {
+    const lines = packWords(words, font, next, maxWidth, maxLines);
+    if (lines) return { lines, size: next };
+    next -= 0.25;
+  }
+  return { lines: words, size: minSize };
+}
+
+function packWords(
+  words: string[],
+  font: PdfFont,
+  size: number,
+  maxWidth: number,
+  maxLines: number,
+): string[] | null {
+  const lines: string[] = [];
+  let current = "";
+  for (const word of words) {
+    if (font.widthOfTextAtSize(word, size) > maxWidth) return null;
+    const trial = current ? `${current} ${word}` : word;
+    if (font.widthOfTextAtSize(trial, size) <= maxWidth) {
+      current = trial;
+      continue;
+    }
+    if (lines.length + 1 >= maxLines) return null;
+    lines.push(current);
+    current = word;
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
+/** Body text must stop above a one- or two-line source note. */
+function sourceClearance(layout: Wrapped | null): number {
+  if (!layout || layout.lines.length === 0) return 56;
+  const lineH = layout.size + 2.5;
+  const top = 50 + (layout.lines.length - 1) * lineH;
+  return Math.max(56, top + layout.size + 8);
 }
 
 function clip(
