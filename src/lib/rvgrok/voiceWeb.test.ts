@@ -437,11 +437,11 @@ test("generic asks and catalog compares do not speak a research hold", () => {
     "Do you see a 2012 Tiffin Phaeton?",
     "See if we have a 2012 Tiffin Phaeton",
     "Do you have a 2012 Tiffin Phaeton?",
+    "tell me about the Odyssey 29V",
   ]) {
-    assert.equal(looksLikeOwnLotStockQuestion(q), true, q);
+    assert.equal(looksLikeOwnLotStockQuestion(q), false, q);
     const decided = decideVoiceWebResearch({ transcript: q, specs: null });
-    assert.equal(decided.action, "research", q);
-    if (decided.action === "research") assert.equal(decided.speakHold, false, q);
+    assert.equal(decided.action, "pass", q);
   }
   assert.equal(
     looksLikeOwnLotStockQuestion("2022 Newmar Dutch Star 4369"),

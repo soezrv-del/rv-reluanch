@@ -2,10 +2,10 @@
  * RV Country own-lot stock for in-app RV Grok.
  *
  * Brochure catalog (`rvData`) is the default SoT for year/make/model reports.
- * The midnight own-lot scrape (source=own) is SoT only for explicit stock
- * asks ("do we have", on the lot, in stock, inventory, diesel count) and
- * lot *search* (look/find/search + floorplan/stock, bare "27A"). Never
- * treat a coach designation or "tell me about" product report as a lot miss.
+ * The midnight own-lot scrape (source=own) answers an inventory phrase
+ * (see LOT_INVENTORY_PHRASES) and a follow-up while that lot filter is
+ * active. A model or series name without that phrase stays on catalog
+ * pins and web research.
  *
  * File has no fuel field. Diesel ≈ body_type "Class A Diesel" + "Class Super C".
  * Listing prices are on the scrape (`price`, then price_current / price_hidden /
@@ -29,9 +29,6 @@ import {
   looksLikeLengthMeasureAsk,
   normalizeCoachAsk,
   parseCoachFromText,
-  parseSeriesAlias,
-  parseSpokenSeries,
-  seriesAliasEquals,
   stripLengthMeasures,
 } from "./parseCoach.ts";
 import {
@@ -42,13 +39,10 @@ import {
 import {
   LOT_ASK_STOP,
   looksLikeOwnLotListingPriceQuestion,
-  looksLikeOwnLotPriceOnThose,
-  looksLikeOwnLotRankQuestion,
   looksLikeOwnLotSearchAsk,
   looksLikeOwnLotStockQuestion,
   looksLikeOwnLotUnitListQuestion,
   lotSearchQueryFromAsk,
-  OWN_LOT_SCRAPE_IN_FRONT,
   parseLotRank,
   parseOwnLotStockNumber,
   type OwnLotSort,
@@ -101,6 +95,8 @@ export type OwnLotUnit = {
   make: string;
   model: string;
   trim: string;
+  /** Scrape series when it is stored apart from model. */
+  series?: string;
   body_type: string;
   location: string;
   stock_number: string;
@@ -219,17 +215,9 @@ export function shouldSkipWebForOwnLot(
   text: string,
   snapshot?: OwnLotSnapshot | null,
 ): boolean {
-  const lotPrice =
-    looksLikeOwnLotRankQuestion(text) || looksLikeOwnLotPriceOnThose(text);
-  if (!looksLikeOwnLotStockQuestion(text) && !lotPrice) return false;
+  if (!looksLikeOwnLotStockQuestion(text)) return false;
   if (looksLikeRepairQuestion(text)) return false;
-  if (
-    looksLikeMarketValueQuestion(text) &&
-    !lotPrice &&
-    !looksLikeOwnLotPriceOnThose(text)
-  ) {
-    return false;
-  }
+  if (looksLikeMarketValueQuestion(text)) return false;
   if (/\b(?:worth|market\s+value|comps?\b|book\s+value|trade[- ]?in)\b/i.test(text)) {
     return false;
   }
@@ -629,10 +617,13 @@ export function printedScrapeFields(
 
 export function rowToUnit(row: Record<string, unknown>): OwnLotUnit {
   const printed = printedScrapeFields(row);
+  const seriesName = pickStr(row, "series");
+  const modelName = pickStr(row, "model") || seriesName;
   return {
     year: pickStr(row, "year", "model_year", "my"),
     make: pickStr(row, "make", "brand", "manufacturer"),
-    model: pickStr(row, "model", "series"),
+    model: modelName,
+    series: seriesName && seriesName !== modelName ? seriesName : "",
     trim: pickStr(row, "trim", "floorplan", "plan"),
     body_type: pickStr(
       row,
@@ -919,7 +910,7 @@ export function looksLikeGhostOwnLotModel(model: string): boolean {
 
 function lotHasModel(units: OwnLotUnit[], model: string): boolean {
   if (!norm(model) || !units.length) return false;
-  return units.some((u) => unitModelMatchesAsk(u, model));
+  return units.some((u) => unitMatchesCoachName(u, model));
 }
 
 /**
@@ -1331,41 +1322,56 @@ export function floorplanTokensAlign(ask: string, unitToken: string): boolean {
   return false;
 }
 
-function unitTrimMatchesAsk(unit: OwnLotUnit, ask: string): boolean {
-  if (floorplanTokensAlign(ask, unit.trim)) return true;
-  const blob = `${unit.model} ${unit.trim}`.trim();
-  const blobFp = extractFloorplanToken(blob);
-  if (blobFp && floorplanTokensAlign(ask, blobFp)) return true;
+/** "29 V" / "29-V" / "29V" share one token. Case, spaces, and hyphens drop out. */
+function lotNameTokens(raw: string): string[] {
+  const normalized = (raw || "")
+    .toLowerCase()
+    .replace(/-/g, " ")
+    .replace(/(\d+)\s+([a-z]{1,4})\b/g, "$1$2")
+    .replace(/\s+/g, " ")
+    .trim();
+  return normalized
+    .split(" ")
+    .filter(
+      (token) => token && !LOT_ASK_STOP.has(token) && !OWN_LOT_MODEL_JUNK.has(token),
+    );
+}
+
+/** 27A ↔ 27ASE. Plain words stay exact so "Entegra" does not hit "E-Series". */
+function floorplanToken(token: string): boolean {
+  return /\d/.test(token);
+}
+
+function tokenHitsField(token: string, field: string): boolean {
+  if (!field) return false;
+  const compactTok = compactFloorplanToken(token);
+  if (!compactTok) return false;
+  if (compactFloorplanToken(field) === compactTok) return true;
+  if (floorplanToken(compactTok) && floorplanTokensAlign(token, field)) return true;
+  for (const part of lotNameTokens(field)) {
+    if (!part) continue;
+    const compactPart = compactFloorplanToken(part);
+    if (part === compactTok || compactPart === compactTok) return true;
+    if (
+      (floorplanToken(compactTok) || floorplanToken(compactPart)) &&
+      floorplanTokensAlign(compactTok, part)
+    ) {
+      return true;
+    }
+  }
   return false;
 }
 
-function seriesCodesAlign(ask: string, unitModel: string): boolean {
-  const spoken = parseSpokenSeries(ask) || parseSeriesAlias(norm(ask));
-  const unit = parseSeriesAlias(norm(unitModel));
-  if (!spoken?.code || !unit?.code) return false;
-  if (spoken.code !== unit.code) return false;
-  if (!spoken.family || !unit.family) return true;
-  return spoken.family === unit.family;
-}
-
-function visionSpeechAligns(unitModel: string, ask: string): boolean {
-  const u = norm(unitModel);
-  const a = norm(ask);
-  if (!u || !a) return false;
-  if (!/\bvision\b/.test(u)) return false;
-  return /\b(?:s?e\s+)?visions?(?:\s+s?e)?\b/.test(a) || /\be\s+visions?\b/.test(a);
-}
-
-function unitModelMatchesAsk(unit: OwnLotUnit, wanted: string): boolean {
-  const um = norm(unit.model);
-  const fm = norm(wanted);
-  if (!fm) return true;
-  if (um && (um.includes(fm) || fm.includes(um))) return true;
-  if (seriesAliasEquals(um, fm) || seriesCodesAlign(fm, um)) return true;
-  if (visionSpeechAligns(um, fm)) return true;
-  const blob = norm(`${unit.model} ${unit.trim}`);
-  if (blob && (blob.includes(fm) || fm.includes(blob))) return true;
-  return false;
+/**
+ * Bare model or floorplan text matches without the make. Every token must
+ * hit make, model, series, or floorplan/trim. "Odyssey 29V" does not match
+ * Odyssey SE, and "29V" does not require "Entegra".
+ */
+function unitMatchesCoachName(unit: OwnLotUnit, wanted: string): boolean {
+  const tokens = lotNameTokens(wanted);
+  if (!tokens.length) return false;
+  const fields = [unit.make, unit.model, unit.series || "", unit.trim];
+  return tokens.every((token) => fields.some((field) => tokenHitsField(token, field)));
 }
 
 export function unitMatchesFilter(
@@ -1385,13 +1391,8 @@ export function unitMatchesFilter(
     if (filter.yearMin != null && year < filter.yearMin) return false;
     if (filter.yearMax != null && year > filter.yearMax) return false;
   }
-  if (filter.make) {
-    const um = norm(unit.make);
-    const fm = norm(filter.make);
-    if (!um || (!um.includes(fm) && !fm.includes(um))) return false;
-  }
-  if (filter.model && !unitModelMatchesAsk(unit, filter.model)) return false;
-  if (filter.trim && !unitTrimMatchesAsk(unit, filter.trim)) return false;
+  const nameQuery = [filter.make, filter.model, filter.trim].filter(Boolean).join(" ");
+  if (nameQuery && !unitMatchesCoachName(unit, nameQuery)) return false;
   if (filter.location) {
     const ul = norm(unit.location);
     const fl = norm(filter.location);
@@ -1916,7 +1917,6 @@ export function formatOwnLotBlock(
     if (!rows.length) return;
     lines.push(
       lead || ownLotRowsHeading(active, rows.length, counts.matched),
-      OWN_LOT_SCRAPE_IN_FRONT,
       ...rows.map(formatUnitListing),
       "Specific units ARE listed above. If a unit line is printed, that coach IS on this lot. Name only these units. Never invent a unit that is not printed here.",
     );

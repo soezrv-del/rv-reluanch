@@ -8,7 +8,6 @@ import { GENERATE_IMAGE_TOOL } from "./imageGen.ts";
 import { lookupGroundedSpecs } from "./grounding.ts";
 import { parseCoachFromText } from "./parseCoach.ts";
 import {
-  looksLikeInventoryOrCountQuestion,
   looksLikeMarketValueQuestion,
   looksLikeNamedCoachProductQuestion,
   looksLikeSpecQuestion,
@@ -128,12 +127,7 @@ export function requiredToolForAsk(text: string): string | null {
   const t = normalizeAskText(text);
   if (!t.trim()) return null;
   if (wantsGeneratedImage(t)) return "generate_image";
-  if (
-    looksLikeOwnLotStockQuestion(t) ||
-    looksLikeInventoryOrCountQuestion(t)
-  ) {
-    return "get_own_lot";
-  }
+  if (looksLikeOwnLotStockQuestion(t)) return "get_own_lot";
   if (/\b(recalls?|nhtsa|campaign)\b/i.test(t)) return "check_recalls";
   if (
     /\b(monthly\s+payment|loan\s+payment|\bapr\b|interest\s+rate|financing|finance this|payment\s+on|estimate(?:\s+a)?\s+payment|what(?:'s| is) the payment)\b/i.test(

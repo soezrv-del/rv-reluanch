@@ -274,9 +274,10 @@ test("a lot miss says none and does not invent a unit", () => {
 
 test("cheapest and prices-on-those stay on the lot; a worth ask still browses", () => {
   const hit = fixture([CLASS_C]);
-  assert.equal(shouldSkipWebForOwnLot("top 10 cheapest", hit), true);
-  assert.equal(shouldSkipWebForOwnLot("the lowest priced ones", hit), true);
-  assert.equal(shouldSkipWebForOwnLot("prices on those", hit), true);
+  assert.equal(shouldSkipWebForOwnLot("cheapest 10 Class C on the lot", hit), true);
+  assert.equal(shouldSkipWebForOwnLot("top 10 cheapest", hit), false);
+  assert.equal(shouldSkipWebForOwnLot("the lowest priced ones", hit), false);
+  assert.equal(shouldSkipWebForOwnLot("prices on those", hit), false);
   assert.equal(looksLikeMarketValueQuestion("top 10 cheapest"), false);
   assert.equal(looksLikeMarketValueQuestion("what's the least expensive"), false);
   assert.equal(looksLikeMarketValueQuestion("prices on those"), false);
