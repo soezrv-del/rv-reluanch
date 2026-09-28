@@ -1,14 +1,7 @@
 import { useEffect, useState } from "react";
-import {
-  Calculator,
-  FileText,
-  LayoutGrid,
-  MessageCircle,
-  Mic,
-  Radio,
-  Truck,
-} from "lucide-react";
+import { Mic, Radio } from "lucide-react";
 import type { AppTab } from "./BottomTabs";
+import { BottomTabs } from "./BottomTabs";
 import {
   roomAskMic,
   roomAskSend,
@@ -17,23 +10,9 @@ import {
 } from "@/lib/rvgrok/roomAsk";
 import { markAskBarGrokEntry } from "@/lib/rvgrok/screenContext";
 
-/** Floating pill tabs. RV GPS stays in Premium. */
-const ROOM_CHIPS: {
-  id: AppTab;
-  label: string;
-  icon: typeof FileText;
-}[] = [
-  { id: "rvfax", label: "Rv Facts", icon: FileText },
-  { id: "rvlot", label: "Lot Inventory", icon: LayoutGrid },
-  { id: "rvcal", label: "Calculator", icon: Calculator },
-  { id: "rvgrok", label: "RV Grok", icon: MessageCircle },
-  { id: "rvtow", label: "Tow Guide", icon: Truck },
-];
-
 /**
- * Shared ask bar. Mic starts Live Voice on the current screen.
+ * Ask bar plus the six-icon dock. The dock does not slide.
  * A typed ask is appended to the open RV Grok thread.
- * The pill row is a native horizontal scroller — it does not auto-scroll.
  */
 export function RoomAskBar({
   tab,
@@ -60,14 +39,6 @@ export function RoomAskBar({
     onOpen("rvgrok");
   };
 
-  const openRoom = (id: AppTab) => {
-    if (id === "rvfax") onOpen("rvfax");
-    else if (id === "rvcal") onOpen("rvcal");
-    else if (id === "rvtow") onOpen("rvtow");
-    else if (id === "rvlot") onOpen("rvlot");
-    else if (id === "rvgrok") onOpen("rvgrok");
-  };
-
   return (
     <div data-room-ask data-no-swipe className="showroom-dock">
       {hidePinnedAsk ? null : (
@@ -84,8 +55,8 @@ export function RoomAskBar({
               data-room-ask-input
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder="What's up?"
-              aria-label="What's up?"
+              placeholder="Ask RV Grok"
+              aria-label="Ask RV Grok"
               enterKeyHint="send"
             />
             {live ? (
@@ -123,47 +94,11 @@ export function RoomAskBar({
           </div>
         </form>
       )}
-      <div data-room-tabs className="showroom-rail showroom-pills">
-        {ROOM_CHIPS.map((chip) => (
-          <RoomChip
-            key={chip.id}
-            chip={chip}
-            active={!homeOpen && tab === chip.id}
-            onOpen={() => openRoom(chip.id)}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function RoomChip({
-  chip,
-  active,
-  onOpen,
-}: {
-  chip: (typeof ROOM_CHIPS)[number];
-  active: boolean;
-  onOpen: () => void;
-}) {
-  const Icon = chip.icon;
-  return (
-    <button
-      type="button"
-      data-room-chip={chip.id}
-      data-room-tab={chip.id}
-      aria-pressed={active}
-      aria-current={active ? "page" : undefined}
-      onClick={onOpen}
-      className="showroom-tab showroom-float min-h-11"
-    >
-      <Icon
-        className="showroom-tab-icon"
-        aria-hidden
-        strokeWidth={1.6}
-        fill="currentColor"
+      <BottomTabs
+        tab={tab}
+        homeOpen={homeOpen}
+        onChange={(id) => onOpen(id)}
       />
-      {chip.label}
-    </button>
+    </div>
   );
 }

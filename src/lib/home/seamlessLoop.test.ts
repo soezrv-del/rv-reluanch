@@ -37,7 +37,7 @@ test("seamless loop runs only when the strip overflows and motion is allowed", (
   assert.equal(nextSeamlessScroll(40, 100, 250), 90);
 });
 
-test("the arrivals strip owns the loop and the pill row does not", () => {
+test("the arrivals row is still and the dock does not loop", () => {
   const home = readFileSync(
     join(root, "../../components/shell/HomeScreen.tsx"),
     "utf8",
@@ -49,21 +49,15 @@ test("the arrivals strip owns the loop and the pill row does not", () => {
   const ask = readFileSync(join(root, "../rvgrok/roomAsk.ts"), "utf8");
   const css = readFileSync(join(root, "../../styles.css"), "utf8");
 
-  assert.match(home, /shouldSeamlessLoop/);
-  assert.match(home, /nextSeamlessScroll/);
-  assert.match(home, /SEAMLESS_LOOP_RESUME_MS/);
-  assert.match(home, /prefers-reduced-motion: reduce/);
-  assert.match(home, /data-arrival-set="duplicate"/);
-  assert.match(home, /aria-hidden="true"/);
-  assert.match(home, /tabIndex=\{mirror \? -1 : undefined\}/);
-  assert.match(home, /requestLotUnit/);
+  assert.match(home, /data-arrival-loop="off"/);
   assert.match(home, /Newest arrivals/);
+  assert.match(home, /requestLotUnit/);
+  assert.doesNotMatch(home, /shouldSeamlessLoop|nextSeamlessScroll|data-arrival-set="duplicate"/);
 
   assert.doesNotMatch(bar, /nextPillScroll|nextSeamlessScroll|shouldLoopPills|shouldSeamlessLoop/);
   assert.doesNotMatch(bar, /data-pill-loop|data-room-chip-set|showroom-pill-set/);
   assert.doesNotMatch(bar, /requestAnimationFrame/);
-  assert.doesNotMatch(bar, /PILL_LOOP/);
-  assert.equal((bar.match(/ROOM_CHIPS\.map/g) || []).length, 1);
+  assert.doesNotMatch(bar, /PILL_LOOP|ROOM_CHIPS/);
 
   assert.doesNotMatch(ask, /nextPillScroll|shouldLoopPills|PILL_LOOP|nextSeamlessScroll/);
   assert.doesNotMatch(css, /\.showroom-pill-set/);

@@ -160,7 +160,6 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   assert.match(home, /fetchLotSnapshot/);
   const lot = readFileSync(join(root, "../../components/lot/LotStockApp.tsx"), "utf8");
   assert.match(lot, /takePendingLotQuery/);
-  assert.match(home, /prefers-reduced-motion/);
   assert.match(brand, /\/assets\/brand\/raidho-shell-mark\.png/);
   assert.match(brand, /RvFOX/);
   assert.doesNotMatch(home, /unsplash|placeholder|allegro/i);
@@ -172,13 +171,10 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   assert.doesNotMatch(suite, /RAIDHO_R_MARK/);
   assert.doesNotMatch(suite, /suite-raidho-bleed/);
   assert.doesNotMatch(suite, /raidho-r-mark/);
-  assert.match(bar, /What's up\?/);
+  assert.match(bar, /Ask RV Grok/);
   assert.match(bar, /roomAskMic\(\)/);
-  const chips = bar.match(/const ROOM_CHIPS[\s\S]*?\];/)?.[0] ?? "";
-  assert.match(
-    chips,
-    /Rv Facts[\s\S]*Lot Inventory[\s\S]*Calculator[\s\S]*RV Grok[\s\S]*Tow Guide/,
-  );
+  assert.match(bar, /<BottomTabs/);
+  assert.doesNotMatch(bar, /ROOM_CHIPS|Rv Facts|Lot Inventory|Learn more/);
 });
 
 test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-first", () => {
@@ -340,18 +336,16 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
   assert.doesNotMatch(fax, /takePendingSpotlightFacts|SPOTLIGHT_FACTS/);
   assert.doesNotMatch(shell, /openSpotlightFacts|onOpenFacts/);
   assert.doesNotMatch(coach, /spotlightFactsTarget|requestSpotlightFacts/);
-  assert.match(css, /\.showroom-hero \{[^}]*margin:\s*0\.75rem auto 0;/);
+  assert.match(css, /\.showroom-hero \{[^}]*margin:\s*0;/);
   assert.match(
     css,
     /\.showroom-header \{[^}]*env\(safe-area-inset-top, 0px\)/,
   );
-  const heroPhoto = home.slice(home.indexOf("function SpotlightPhoto"), home.indexOf("export function HomeScreen"));
-  assert.doesNotMatch(heroPhoto, /lotUnitPhoto|unit\.photo/);
+  assert.match(home, /readTheme/);
   assert.match(home, /spotlight-lot\.jpg/);
-  assert.match(home, /showroom-coach-lot/);
-  assert.match(css, /\.showroom-coach-lot \{\s*display:\s*none/);
-  assert.match(
-    css,
-    /html\[data-theme="light"\] \.showroom-coach-lot \{\s*display:\s*block/,
-  );
+  assert.match(home, /SHOWROOM_SPOTLIGHT\.image/);
+  assert.match(home, /Open coach/);
+  assert.match(home, /data-lot-whisper/);
+  assert.doesNotMatch(home, /Learn more|showroom-coach-lot|data-arrival-set="duplicate"/);
+  assert.doesNotMatch(css, /showroom-coach-lot/);
 });

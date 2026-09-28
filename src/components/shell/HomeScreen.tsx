@@ -1,15 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { fetchLotSnapshot, lotUnitPhoto, type LotUnit } from "@/lib/lot/ownLotPage";
 import { CoveredCoach } from "@/components/shell/CoveredCoach";
-import {
-  SEAMLESS_LOOP_PX_PER_SEC,
-  SEAMLESS_LOOP_RESUME_MS,
-  nextSeamlessScroll,
-  shouldSeamlessLoop,
-} from "@/lib/home/seamlessLoop";
+import { readTheme, serverTheme, subscribeTheme } from "@/lib/theme";
 
 const EMPTY_UNITS: LotUnit[] = [];
-/** Dealer lot photo for the light hero. Stable asset — not the studio cutout. */
+/** Dealer lot photo. Light mode only — dark uses the studio cutout. */
 const LIGHT_LOT_HERO = "/assets/showroom/spotlight-lot.jpg";
 import {
   SHOWROOM_SPOTLIGHT,
@@ -23,32 +18,12 @@ import {
   spotlightSpecs,
 } from "@/lib/home/homeCoach";
 
-function SpotlightPhoto({
-  className,
-  alt,
-  src,
-  kind,
-}: {
-  className: string;
-  alt: string;
-  src: string;
-  kind: "photo" | "cutout";
-}) {
-  return (
-    <img
-      src={src}
-      alt={alt}
-      className={className}
-      data-hero-kind={kind}
-    />
-  );
-}
-
 export function HomeScreen({
   onOpenLot,
 }: {
   onOpenLot: () => void;
 }) {
+  const theme = useSyncExternalStore(subscribeTheme, readTheme, serverTheme);
   const [units, setUnits] = useState<LotUnit[] | null>(null);
 
   useEffect(() => {
@@ -70,53 +45,17 @@ export function HomeScreen({
   const spotUnit = useMemo(() => spotlightLotUnit(listed), [listed]);
   const specs = spotUnit ? spotlightSpecs(spotUnit) : null;
   const model = specs?.model || SHOWROOM_SPOTLIGHT.series;
-  const spotYearMake = [
-    (spotUnit?.year || SHOWROOM_SPOTLIGHT.year).trim(),
-    (spotUnit?.make || SHOWROOM_SPOTLIGHT.make).trim(),
-  ]
-    .filter(Boolean)
-    .join(" ");
-  const spotWhere = [specs?.stock, spotUnit?.location.trim() ?? ""]
-    .filter(Boolean)
-    .join(" · ");
+  const spotYear = (spotUnit?.year || SHOWROOM_SPOTLIGHT.year).trim();
+  const spotMake = (spotUnit?.make || SHOWROOM_SPOTLIGHT.make).trim();
+  const heroSrc = theme === "light" ? LIGHT_LOT_HERO : SHOWROOM_SPOTLIGHT.image;
+  const heroKind = theme === "light" ? "photo" : "cutout";
+  const lotTotal =
+    units && units.length > 0 ? units.length.toLocaleString("en-US") : "";
   const openSpot = () => {
     if (!spotUnit) return;
     requestLotUnit(lotArrivalQuery(spotUnit));
     onOpenLot();
   };
-
-  const hero = (
-    <>
-      <div className="showroom-hero-beam" aria-hidden />
-      <SpotlightPhoto
-        className="showroom-coach"
-        alt={SHOWROOM_SPOTLIGHT.alt}
-        src={SHOWROOM_SPOTLIGHT.image}
-        kind="cutout"
-      />
-      {/* Light mode shows this lot photo and hides the studio cutout in CSS.
-          The src is static so it does not swap after the snapshot loads. */}
-      <SpotlightPhoto
-        className="showroom-coach showroom-coach-lot"
-        alt={SHOWROOM_SPOTLIGHT.alt}
-        src={LIGHT_LOT_HERO}
-        kind="photo"
-      />
-      <div className="showroom-hero-pool" aria-hidden />
-    </>
-  );
-
-  const placard = (
-    <>
-      {spotYearMake ? <p className="showroom-spotyear">{spotYearMake}</p> : null}
-      <p className="showroom-spotmodel">{model}</p>
-      {specs?.price ? <p className="showroom-spotprice">{specs.price}</p> : null}
-      {specs?.stock ? (
-        <p className="showroom-spotstock">Stock {specs.stock}</p>
-      ) : null}
-      {spotWhere ? <p className="showroom-spotplace">{spotWhere}</p> : null}
-    </>
-  );
 
   return (
     <div
@@ -125,50 +64,39 @@ export function HomeScreen({
       data-no-swipe
       className="showroom-home absolute inset-0 z-30 flex flex-col overflow-x-hidden overflow-y-auto"
     >
-      {spotUnit ? (
-        <button type="button" className="showroom-hero" onClick={openSpot}>
-          {hero}
-        </button>
-      ) : (
-        <div className="showroom-hero">{hero}</div>
-      )}
-
-      {spotUnit ? (
-        <button
-          type="button"
-          className="showroom-placard showroom-card"
-          data-home-placard
-          onClick={openSpot}
-        >
-          {placard}
-        </button>
-      ) : (
-        <section className="showroom-placard showroom-card" data-home-placard>
-          {placard}
-        </section>
-      )}
-
-      {spotUnit ? (
-        <div className="showroom-hero-actions">
-          <button
-            type="button"
-            className="showroom-hero-primary"
-            onClick={openSpot}
-          >
-            View coach
-          </button>
-          <button
-            type="button"
-            className="showroom-hero-secondary"
-            onClick={() => {
-              document
-                .querySelector("[data-home-arrivals]")
-                ?.scrollIntoView({ behavior: "smooth", block: "start" });
-            }}
-          >
-            Learn more
-          </button>
+      <section className="showroom-hero" data-hero-kind={heroKind}>
+        {theme === "dark" ? <div className="showroom-hero-beam" aria-hidden /> : null}
+        <img
+          src={heroSrc}
+          alt={SHOWROOM_SPOTLIGHT.alt}
+          className="showroom-coach"
+          data-hero-kind={heroKind}
+        />
+        {theme === "dark" ? <div className="showroom-hero-pool" aria-hidden /> : null}
+        <div className="showroom-placard" data-home-placard>
+          <p className="showroom-spotyear">{spotYear}</p>
+          <p className="showroom-spotmake">{spotMake}</p>
+          <p className="showroom-spotmodel">{model}</p>
+          {specs?.price ? <p className="showroom-spotprice">{specs.price}</p> : null}
+          {specs?.stock ? (
+            <p className="showroom-spotstock">Stock {specs.stock}</p>
+          ) : null}
+          {spotUnit ? (
+            <button
+              type="button"
+              className="showroom-hero-primary"
+              onClick={openSpot}
+            >
+              Open coach
+            </button>
+          ) : null}
         </div>
+      </section>
+
+      {lotTotal ? (
+        <p className="showroom-lot-whisper" data-lot-whisper>
+          {lotTotal}
+        </p>
       ) : null}
 
       {arrivals.length > 0 ? (
@@ -191,151 +119,22 @@ function NewestArrivals({
   arrivals: LotUnit[];
   onOpenUnit: (unit: LotUnit) => void;
 }) {
-  const scrollerRef = useRef<HTMLDivElement>(null);
-  const setRef = useRef<HTMLDivElement>(null);
-  const dupRef = useRef<HTMLDivElement>(null);
-  const pausedRef = useRef(false);
-  const heldRef = useRef(false);
-  const resumeTimer = useRef(0);
-  const [reducedMotion, setReducedMotion] = useState(false);
-  const [overflows, setOverflows] = useState(false);
-  const loop = shouldSeamlessLoop({ reducedMotion, overflows });
-
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const apply = () => setReducedMotion(mq.matches);
-    apply();
-    mq.addEventListener("change", apply);
-    return () => mq.removeEventListener("change", apply);
-  }, []);
-
-  useEffect(() => {
-    const scroller = scrollerRef.current;
-    const set = setRef.current;
-    if (!scroller || !set) return;
-    const measure = () => {
-      const styles = getComputedStyle(scroller);
-      const pad =
-        (Number.parseFloat(styles.paddingLeft) || 0) +
-        (Number.parseFloat(styles.paddingRight) || 0);
-      const next = set.offsetWidth > scroller.clientWidth - pad + 1;
-      setOverflows(next);
-      if (!shouldSeamlessLoop({ reducedMotion, overflows: next })) {
-        scroller.scrollLeft = 0;
-      }
-    };
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(scroller);
-    observer.observe(set);
-    return () => observer.disconnect();
-  }, [reducedMotion, loop, arrivals]);
-
-  useEffect(() => {
-    if (!loop) return;
-    const scroller = scrollerRef.current;
-    if (!scroller) return;
-    let raf = 0;
-    let last = 0;
-    // Keep the position here. Reading scrollLeft back each frame rounds
-    // subpixel steps up to 1px and runs the strip too fast.
-    let pos = scroller.scrollLeft;
-    let wasPaused = pausedRef.current;
-    const frame = (now: number) => {
-      if (!last) last = now;
-      const dt = Math.min(0.05, (now - last) / 1000);
-      last = now;
-      const set = setRef.current;
-      const dup = dupRef.current;
-      if (pausedRef.current) {
-        wasPaused = true;
-      } else if (set && dup) {
-        if (wasPaused) {
-          pos = scroller.scrollLeft;
-          wasPaused = false;
-        }
-        const distance = dup.offsetLeft - set.offsetLeft;
-        pos = nextSeamlessScroll(pos, distance, SEAMLESS_LOOP_PX_PER_SEC * dt);
-        scroller.scrollLeft = pos;
-      }
-      raf = requestAnimationFrame(frame);
-    };
-    raf = requestAnimationFrame(frame);
-    return () => cancelAnimationFrame(raf);
-  }, [loop]);
-
-  useEffect(() => {
-    const release = () => {
-      if (!heldRef.current) return;
-      heldRef.current = false;
-      window.clearTimeout(resumeTimer.current);
-      resumeTimer.current = window.setTimeout(() => {
-        pausedRef.current = false;
-      }, SEAMLESS_LOOP_RESUME_MS);
-    };
-    window.addEventListener("pointerup", release);
-    window.addEventListener("pointercancel", release);
-    return () => {
-      window.removeEventListener("pointerup", release);
-      window.removeEventListener("pointercancel", release);
-      window.clearTimeout(resumeTimer.current);
-    };
-  }, []);
-
-  const holdRow = () => {
-    heldRef.current = true;
-    pausedRef.current = true;
-    window.clearTimeout(resumeTimer.current);
-  };
-
-  const pauseThenResume = () => {
-    pausedRef.current = true;
-    window.clearTimeout(resumeTimer.current);
-    resumeTimer.current = window.setTimeout(() => {
-      if (!heldRef.current) pausedRef.current = false;
-    }, SEAMLESS_LOOP_RESUME_MS);
-  };
-
-  const cards = (mirror: boolean) =>
-    arrivals.map((unit, index) => (
-      <ArrivalCard
-        key={`${unit.printed.id ?? ""}-${unit.vin}-${index}`}
-        unit={unit}
-        mirror={mirror}
-        onOpen={() => onOpenUnit(unit)}
-      />
-    ));
-
   return (
     <section data-home-arrivals className="showroom-arrivals">
-      <p className="showroom-kicker">
-        <i className="showroom-kicker-dot" aria-hidden />
-        Newest arrivals
-      </p>
+      <p className="showroom-kicker">Newest arrivals</p>
       <div
-        ref={scrollerRef}
-        data-arrival-loop={loop ? "on" : "off"}
+        data-arrival-loop="off"
         className="showroom-rail overflow-x-auto"
-        onPointerDown={holdRow}
-        onWheel={pauseThenResume}
       >
-        <div
-          ref={setRef}
-          className="showroom-arrival-set"
-          data-arrival-set="primary"
-        >
-          {cards(false)}
+        <div className="showroom-arrival-set" data-arrival-set="primary">
+          {arrivals.map((unit, index) => (
+            <ArrivalCard
+              key={`${unit.printed.id ?? ""}-${unit.vin}-${index}`}
+              unit={unit}
+              onOpen={() => onOpenUnit(unit)}
+            />
+          ))}
         </div>
-        {loop ? (
-          <div
-            ref={dupRef}
-            className="showroom-arrival-set"
-            data-arrival-set="duplicate"
-            aria-hidden="true"
-          >
-            {cards(true)}
-          </div>
-        ) : null}
       </div>
     </section>
   );
@@ -344,11 +143,9 @@ function NewestArrivals({
 function ArrivalCard({
   unit,
   onOpen,
-  mirror = false,
 }: {
   unit: LotUnit;
   onOpen: () => void;
-  mirror?: boolean;
 }) {
   const [ok, setOk] = useState(true);
   const photo = ok ? lotUnitPhoto(unit) : null;
@@ -361,7 +158,6 @@ function ArrivalCard({
   return (
     <button
       type="button"
-      tabIndex={mirror ? -1 : undefined}
       onClick={onOpen}
       className="showroom-arrival showroom-card"
     >

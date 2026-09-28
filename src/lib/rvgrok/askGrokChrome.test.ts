@@ -79,49 +79,27 @@ test("old bottom dock is not mounted and keyboard does not gate the shell", () =
   assert.match(shell, /enabled: swipeArmed,/);
 });
 
-test("Grok dock tab uses the same Einstein asset as RvGrok; other tabs are icon-free", () => {
+test("the dock is six gold line icons and does not use the Einstein photo", () => {
   const tabs = read("../../components/shell/BottomTabs.tsx");
   const bubble = read("../../components/rvgrok/MessageBubble.tsx");
   const css = read("../../styles.css");
 
   const grokSrc = bubble.match(/src="(\/assets\/brand\/icon-rvgrok\.png)"/)?.[1];
   assert.equal(grokSrc, "/assets/brand/icon-rvgrok.png");
-  assert.match(tabs, /id === "rvgrok"/);
-  assert.match(tabs, /src="\/assets\/brand\/icon-rvgrok\.png"/);
-  assert.equal(
-    (tabs.match(/<img\b/g) || []).length,
-    1,
-    "dock renders one img — Grok/Live Einstein only",
-  );
-  assert.doesNotMatch(
-    tabs,
-    /icon-rvfax|icon-rvcal|icon-rvtow|icon-rvtrips|icon-rvshare|icon-premium/,
-  );
+  assert.match(tabs, /id: "rvgrok"/);
+  assert.match(tabs, /data-dock-icons="gold"/);
+  assert.match(tabs, /bottom-tab-grok/);
+  assert.match(tabs, /bottom-tab-glyph/);
   assert.match(
     tabs,
-    /isLive \? \([\s\S]*bottom-tab-einstein[\s\S]*\) : \([\s\S]*<DockLabel/,
+    /short: "Facts"[\s\S]*short: "Cal"[\s\S]*short: "Grok"[\s\S]*short: "Tow"[\s\S]*short: "RV GPS"[\s\S]*short: "Lot"/,
   );
-  assert.doesNotMatch(tabs, /bottom-tab-live flex-col/);
-  const liveBranch = tabs.match(/isLive \? \([\s\S]*?\) : \(/)?.[0];
-  assert.ok(liveBranch, "Live tab is a dedicated Einstein branch");
-  assert.doesNotMatch(liveBranch, /DockLabel/);
-  assert.doesNotMatch(liveBranch, />Grok</);
-  assert.doesNotMatch(liveBranch, /text=\{short\}/);
+  assert.doesNotMatch(tabs, /icon-rvgrok|bottom-tab-einstein|Einstein|<img\b/);
   assert.match(tabs, /aria-label=\{label\}/);
   assert.match(tabs, /title=\{label\}/);
-  assert.doesNotMatch(tabs, /isSold/);
-  assert.match(css, /\.bottom-tab-einstein/);
+  assert.match(css, /\.bottom-tab-glyph \{[^}]*color:\s*var\(--color-gold\)/);
+  assert.match(css, /\.bottom-tab-grok \{[^}]*#1648c8/);
   assert.match(css, /--dock-icon-size:\s*3\.25rem/);
-  assert.match(css, /width:\s*var\(--dock-icon-size\)/);
-  const einsteinBlocks = [...css.matchAll(/\.bottom-tab-einstein \{[^}]+\}/g)].map(
-    (m) => m[0],
-  );
-  assert.ok(einsteinBlocks.length >= 1, "Einstein size rules present");
-  for (const block of einsteinBlocks) {
-    assert.doesNotMatch(block, /width:\s*1\.\d+rem/);
-    assert.doesNotMatch(block, /height:\s*1\.\d+rem/);
-    assert.match(block, /width:\s*(var\(--dock-icon-size\)|2\.75rem)/);
-  }
 });
 
 test("Removing overlay chrome does not rewrite dock plate or Facts/Tow internals", () => {
