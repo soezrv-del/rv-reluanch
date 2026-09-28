@@ -861,7 +861,12 @@ export function RvTowApp() {
                     <img
                       src="/assets/brand/icon-rvtow.png"
                       alt=""
-                      className="size-4 object-contain"
+                      className="tow-mark size-4 object-contain"
+                    />
+                    <img
+                      src="/assets/brand/icon-rvtow-light.png"
+                      alt=""
+                      className="tow-mark-light size-4 object-contain"
                     />
                     Truck
                   </p>

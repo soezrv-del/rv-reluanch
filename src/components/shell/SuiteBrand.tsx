@@ -4,9 +4,10 @@ import { readTheme, serverTheme, subscribeTheme } from "@/lib/theme";
 import { PremiumMenuButton } from "./PremiumMenuButton";
 
 export const RAIDHO_SHELL_MARK = "/assets/brand/raidho-shell-mark.png";
-/** Transparent sapphire R for light mode. 2x is 60px tall, 3x is 90px, for a 30px header. */
-export const RAIDHO_SHELL_MARK_LIGHT = "/assets/brand/raidho-r-mark-light.png";
-export const RAIDHO_SHELL_MARK_LIGHT_3X = "/assets/brand/raidho-r-mark-light-3x.png";
+/** David's finished cutout. 60px file is 2x, 90px file is 3x, for a 30px header. */
+export const RAIDHO_SHELL_MARK_LIGHT = "/assets/brand/r-mark-final-60.png";
+export const RAIDHO_SHELL_MARK_LIGHT_WEBP = "/assets/brand/r-mark-final-60.webp";
+export const RAIDHO_SHELL_MARK_LIGHT_3X = "/assets/brand/r-mark-final-90.png";
 
 export function SuiteBrand({
   onHome,
@@ -27,20 +28,29 @@ export function SuiteBrand({
         onClick={onHome}
         className="showroom-brand"
       >
-        <img
-          key={theme}
-          src={src}
-          srcSet={
-            theme === "light"
-              ? `${RAIDHO_SHELL_MARK_LIGHT} 2x, ${RAIDHO_SHELL_MARK_LIGHT_3X} 3x`
-              : undefined
-          }
-          alt=""
-          className="showroom-mark"
-          data-mark-dark={RAIDHO_SHELL_MARK}
-          data-mark-light={RAIDHO_SHELL_MARK_LIGHT}
-          data-mark-light-3x={RAIDHO_SHELL_MARK_LIGHT_3X}
-        />
+        <picture>
+          {theme === "light" ? (
+            <source
+              type="image/webp"
+              srcSet={`${RAIDHO_SHELL_MARK_LIGHT_WEBP} 2x`}
+              media="(max-resolution: 2.5dppx)"
+            />
+          ) : null}
+          <img
+            key={theme}
+            src={src}
+            srcSet={
+              theme === "light"
+                ? `${RAIDHO_SHELL_MARK_LIGHT} 2x, ${RAIDHO_SHELL_MARK_LIGHT_3X} 3x`
+                : undefined
+            }
+            alt=""
+            className="showroom-mark"
+            data-mark-dark={RAIDHO_SHELL_MARK}
+            data-mark-light={RAIDHO_SHELL_MARK_LIGHT}
+            data-mark-light-3x={RAIDHO_SHELL_MARK_LIGHT_3X}
+          />
+        </picture>
         <span className="showroom-word">RvFOX</span>
       </button>
       {showMenu ? <PremiumMenuButton variant="showroom" /> : null}
