@@ -1,19 +1,19 @@
-/* Platinum sliding dock — overrides gold line-icon rules in styles.css */
+/* Independent platinum tabs. Each room is its own chip. The row slides. */
 
 .bottom-tabs-nav[data-dock-icons="platinum"] {
-  --dock-platinum: #c5cedb;
-  --dock-platinum-active: #1648c8;
+  --dock-platinum: #d5dde8;
+  --dock-platinum-active: #ffffff;
 }
 
-/* Chrome platinum on paper — metal that still reads, not gold, not slate. */
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] {
-  --dock-platinum: #8e96a3;
-  --dock-platinum-active: #1648c8;
+  --dock-platinum: #e8eef5;
+  --dock-platinum-active: #ffffff;
+  background: #ffffff;
 }
 
 html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] {
   --dock-platinum: #d8dee8;
-  --dock-platinum-active: #6aafff;
+  --dock-platinum-active: #ffffff;
 }
 
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tabs-dock {
@@ -21,12 +21,17 @@ html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] {
   grid-template-columns: none;
   flex-wrap: nowrap;
   align-items: stretch;
-  gap: 0;
+  gap: 0.65rem !important;
   overflow-x: auto;
   overflow-y: hidden;
-  scroll-snap-type: x proximity;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 0.35rem;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0.2rem 0.15rem 0.35rem !important;
 }
 
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tabs-dock::-webkit-scrollbar {
@@ -35,68 +40,93 @@ html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] {
 
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn {
   flex: 0 0 auto;
-  min-width: 5.15rem;
-  min-height: 62px;
-  scroll-snap-align: start;
-  gap: 0.32rem;
+  min-width: 5.75rem !important;
+  min-height: 4.85rem !important;
+  scroll-snap-align: center;
+  gap: 0.35rem;
+  border-radius: 1.15rem;
+  border: 1px solid rgba(197, 206, 219, 0.55) !important;
+  border-top-color: rgba(197, 206, 219, 0.55) !important;
+  background: transparent;
+}
+
+html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn {
+  background: #111111 !important;
+  border-color: #c5cedb !important;
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.16);
+}
+
+html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn {
+  background: #000000;
+  border-color: rgba(216, 222, 232, 0.42) !important;
 }
 
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-glyph {
-  width: 2.2rem;
-  height: 2.2rem;
+  width: 2.15rem !important;
+  height: 2.15rem !important;
   color: var(--dock-platinum) !important;
 }
 
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-caption {
-  font-size: 0.75rem;
+  font-size: 0.78rem !important;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--dock-platinum) !important;
   -webkit-text-fill-color: var(--dock-platinum) !important;
+  background-image: linear-gradient(180deg, #ffffff 0%, #e8eef5 38%, #c5cedb 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
 }
 
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-grok {
   width: 2.55rem;
   height: 2.55rem;
-  box-shadow: inset 0 0 0 1.7px #1648c8;
+  box-shadow: inset 0 0 0 1.7px var(--dock-platinum);
 }
 
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-grok .bottom-tab-glyph {
-  width: 1.45rem;
-  height: 1.45rem;
-}
-
-.bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active .bottom-tab-glyph,
-.bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] .bottom-tab-glyph {
-  color: var(--dock-platinum-active) !important;
-}
-
-.bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active .bottom-tab-caption,
-.bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] .bottom-tab-caption {
-  color: var(--dock-platinum-active) !important;
-  -webkit-text-fill-color: var(--dock-platinum-active) !important;
+  width: 1.45rem !important;
+  height: 1.45rem !important;
 }
 
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active,
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] {
-  border-top-color: var(--dock-platinum-active);
+  background: #1648c8 !important;
+  border-color: #1648c8 !important;
+  border-top-color: #1648c8 !important;
 }
 
-.showroom-dock .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active,
-.showroom-dock .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] {
-  border-top-color: var(--dock-platinum-active);
+.bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active .bottom-tab-glyph,
+.bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] .bottom-tab-glyph,
+.bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active .bottom-tab-caption,
+.bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] .bottom-tab-caption {
+  color: var(--dock-platinum-active) !important;
+  -webkit-text-fill-color: var(--dock-platinum-active) !important;
+  background-image: none;
+}
+
+.bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active .bottom-tab-grok,
+.bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] .bottom-tab-grok {
+  box-shadow: inset 0 0 0 1.7px #ffffff;
 }
 
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-glyph,
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-caption {
-  color: var(--dock-platinum) !important;
-  -webkit-text-fill-color: var(--dock-platinum) !important;
+  color: #e8eef5 !important;
+  -webkit-text-fill-color: transparent !important;
 }
 
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active .bottom-tab-glyph,
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active .bottom-tab-caption,
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] .bottom-tab-glyph,
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] .bottom-tab-caption {
-  color: var(--dock-platinum-active) !important;
-  -webkit-text-fill-color: var(--dock-platinum-active) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background-image: none;
+}
+
+.showroom-dock .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active,
+.showroom-dock .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] {
+  border-top-color: #1648c8 !important;
 }

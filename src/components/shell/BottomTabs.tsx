@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { hapticLight } from "@/lib/haptics";
 import {
@@ -18,7 +18,7 @@ export type AppTab =
   | "rvlot"
   | "more";
 
-/** Six rooms. Platinum line icons. The road slides. */
+/** Six independent rooms. Platinum on each chip. The row slides. */
 const TABS: {
   id: Exclude<AppTab, "more" | "rvshare" | "rvsold">;
   label: string;
@@ -99,8 +99,7 @@ function DockGlyph({ id }: { id: (typeof TABS)[number]["id"] }) {
 }
 
 /**
- * Platinum line-icon dock. Same six glyphs in White and Dark.
- * The road slides. Page swipe stays on the suite panes, not the dock.
+ * Independent platinum chips. The row slides; page swipe stays on the suite.
  * Android WebView: do NOT put pointer-events-none on this nav.
  */
 export function BottomTabs({
@@ -114,6 +113,7 @@ export function BottomTabs({
 }) {
   const lastFire = useRef({ id: "" as AppTab | "", at: 0 });
   const press = useRef<{ id: AppTab; x: number; y: number } | null>(null);
+  const dockRef = useRef<HTMLDivElement>(null);
 
   const fire = (id: AppTab) => {
     const now = performance.now();
@@ -123,9 +123,18 @@ export function BottomTabs({
     onChange(id);
   };
 
+  useEffect(() => {
+    const dock = dockRef.current;
+    if (!dock || homeOpen) return;
+    const active = dock.querySelector<HTMLElement>(".is-active");
+    if (!active) return;
+    const left = active.offsetLeft - (dock.clientWidth - active.clientWidth) / 2;
+    dock.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
+  }, [tab, homeOpen]);
+
   return (
     <nav
-      className="bottom-tabs-nav pointer-events-auto relative z-[80] w-full px-2 pt-1"
+      className="bottom-tabs-nav pointer-events-auto relative z-[80] w-full px-3 pt-1"
       data-bottom-dock
       data-dock-icons="platinum"
       data-no-swipe
@@ -133,7 +142,8 @@ export function BottomTabs({
       style={{ touchAction: "pan-x" }}
     >
       <div
-        className="bottom-tabs-dock pointer-events-auto relative isolate mx-auto flex w-full items-stretch gap-0 overflow-x-auto overflow-y-hidden p-0"
+        ref={dockRef}
+        className="bottom-tabs-dock pointer-events-auto relative isolate mx-auto flex w-full items-stretch overflow-x-auto overflow-y-hidden"
         style={{ touchAction: "pan-x" }}
       >
         {TABS.map(({ id, label, short }) => {
@@ -167,7 +177,7 @@ export function BottomTabs({
               aria-label={label}
               title={label}
               className={cn(
-                "bottom-tab-btn group relative z-[3] flex min-h-[56px] min-w-[4.5rem] flex-col items-center justify-center gap-0.5 px-1 py-1.5",
+                "bottom-tab-btn group relative z-[3] flex flex-col items-center justify-center px-3 py-2",
                 "transition-[transform,opacity] duration-200 ease-out",
                 "pointer-events-auto active:scale-[0.94] touch-manipulation select-none",
                 active && "is-active",
