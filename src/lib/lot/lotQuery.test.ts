@@ -6,7 +6,7 @@ import { snapshotFromJson } from "../rvgrok/ownLotInventory.ts";
 import { answerQueryLotFromSnapshot } from "../rvgrok/lotMemory.ts";
 import { QUERY_LOT_TOOL } from "../rvgrok/liveVoice.ts";
 import { searchLot } from "./lotQuery.ts";
-import { singularizeLotToken } from "./lotSearch.ts";
+import { searchLotUnits, singularizeLotToken } from "./lotSearch.ts";
 
 function units() {
   const snap = snapshotFromJson(
@@ -86,6 +86,54 @@ test("Odyssey 29V is stock 46573 and sale pending", () => {
   assert.match(hit.units[0]?.lot_status || "", /sale pending/i);
   assert.match(hit.summary, /46573/);
   assert.match(hit.summary, /Sale Pending/);
+});
+
+test("31Z matches the six Lineage F 31ZW and 31ZW5 units, including stock 47559", () => {
+  const snap = units();
+  const hit = searchLot(snap.units, { query: "31Z" });
+  const page = searchLotUnits(snap.units, "31Z");
+  assert.equal(hit.matched, 6);
+  assert.equal(page.length, 6);
+  assert.ok(hit.units.some((unit) => unit.stock_number === "47559") || page.some((unit) => unit.stock_number === "47559"));
+  const stocks = page.map((unit) => unit.stock_number).sort();
+  assert.ok(stocks.includes("47559"));
+  assert.ok(
+    page.every(
+      (unit) =>
+        unit.model === "Lineage Series F" &&
+        (unit.trim === "31ZW" || unit.trim === "31ZW5"),
+    ),
+  );
+  assert.deepEqual(
+    hit.units.map((unit) => unit.stock_number).sort(),
+    stocks,
+  );
+});
+
+test("Linea prefix matches the same 27 Lineage coaches as Lineage", () => {
+  const snap = units();
+  const linea = searchLot(snap.units, { query: "Linea" });
+  const lineage = searchLot(snap.units, { query: "Lineage" });
+  const page = searchLotUnits(snap.units, "Linea");
+  assert.equal(linea.matched, 27);
+  assert.equal(lineage.matched, 27);
+  assert.equal(page.length, 27);
+  assert.equal(searchLotUnits(snap.units, "lineages").length, 27);
+  assert.deepEqual(
+    page.map((unit) => unit.stock_number).sort(),
+    snap.units
+      .filter((unit) => /lineage/i.test(unit.model || ""))
+      .map((unit) => unit.stock_number)
+      .sort(),
+  );
+});
+
+test("structured zero falls back to the plain type-ahead match", () => {
+  const snap = units();
+  const hit = searchLot(snap.units, { query: "class a lineage" });
+  assert.equal(hit.matched, 27);
+  assert.equal(hit.none, false);
+  assert.ok(hit.units.every((unit) => /lineage/i.test(unit.model)));
 });
 
 test("Linage suggests Lineage instead of a bare zero", () => {

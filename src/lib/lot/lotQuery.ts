@@ -5,7 +5,9 @@
 
 import {
   lotTokenMatchesUnit,
+  normalizeLotSearchQuery,
   singularizeLotToken,
+  tokenizeLotQuery,
   type LotSearchable,
 } from "./lotSearch.ts";
 
@@ -173,20 +175,9 @@ function num(value: unknown): number | undefined {
   return undefined;
 }
 
-/** Lowercase, drop possessives, keep "29 V" / "29-V" as 29V. */
+/** Lowercase, drop possessives, keep "29 V" / "29-V" as 29V. Shared with the Lot page. */
 export function normalizeLotQueryText(raw: string): string {
-  let s = (raw || "").toLowerCase();
-  s = s.replace(/['’]s\b/g, "").replace(/['’]/g, "");
-  s = s.replace(/[?!.,;:()]+/g, " ");
-  s = s.replace(/\b(\d{2,3})\s*-\s*([a-z]{1,4})\b/g, "$1$2");
-  s = s.replace(/\b(\d{2,3})\s+([a-z]{1,4})\b/g, "$1$2");
-  s = s.replace(/-/g, " ");
-  s = s.replace(/\s+/g, " ").trim();
-  return s
-    .split(/[\s,/|]+/)
-    .map((token) => singularizeLotToken(token))
-    .filter(Boolean)
-    .join(" ");
+  return normalizeLotSearchQuery(raw);
 }
 
 function take(phrase: string, re: RegExp): { hit: boolean; rest: string } {
@@ -410,7 +401,7 @@ export function lotUnitLength(unit: LotQueryUnit): {
   return { ft: null, source: "none" };
 }
 
-function identityProbe(unit: LotQueryUnit): LotSearchable {
+function asSearchable(unit: LotQueryUnit): LotSearchable {
   const series = unit.series || "";
   return {
     year: unit.year || "",
@@ -418,23 +409,32 @@ function identityProbe(unit: LotQueryUnit): LotSearchable {
     model: [unit.model, series].filter(Boolean).join(" "),
     trim: unit.trim || "",
     stock_number: unit.stock_number || "",
+    body_type: unit.body_type || "",
+    location: unit.location || "",
     vin: unit.vin || "",
-    title: [unit.year, unit.make, unit.model, series, unit.trim, unit.title]
+    condition: unit.condition || "",
+    lot_status: unit.lot_status || "",
+    title: [
+      unit.year,
+      unit.make,
+      unit.model,
+      series,
+      unit.trim,
+      unit.body_type,
+      unit.title,
+    ]
       .filter(Boolean)
       .join(" "),
   };
 }
 
 function tokenHitsIdentity(unit: LotQueryUnit, token: string): boolean {
-  // "se" is its own word in "Odyssey SE". It is not the "se" inside "Odyssey".
-  if (/^[a-z]{1,3}$/.test(token)) {
-    const words = `${unit.make || ""} ${unit.model || ""} ${unit.series || ""} ${unit.trim || ""}`
-      .toLowerCase()
-      .split(/[^a-z0-9]+/)
-      .map((word) => singularizeLotToken(word));
-    return words.some((word) => word === token);
-  }
-  return lotTokenMatchesUnit(identityProbe(unit), token);
+  return lotTokenMatchesUnit(asSearchable(unit), token);
+}
+
+/** Stop-word-free tokens for the dumb bar. Same matcher the Lot page uses. */
+function plainTypeaheadTokens(text: string): string[] {
+  return tokenizeLotQuery(text).filter((token) => !STOP.has(token));
 }
 
 function editDistanceAtMost1(a: string, b: string): boolean {
@@ -711,7 +711,18 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
   const parsed = parseArgs(units, args);
   const lengthBounded = parsed.lengthMin != null || parsed.lengthMax != null;
   const lengthRequired = lengthBounded || parsed.sort === "length";
-  const matched = units.filter((unit) => passes(unit, parsed, lengthRequired));
+  let matched = units.filter((unit) => passes(unit, parsed, lengthRequired));
+  if (!matched.length) {
+    const plainTokens = plainTypeaheadTokens(
+      [args.query, args.make, args.model].filter(Boolean).join(" "),
+    );
+    if (plainTokens.length) {
+      const plain = units.filter((unit) =>
+        plainTokens.every((token) => tokenHitsIdentity(unit, token)),
+      );
+      if (plain.length) matched = plain;
+    }
+  }
   const noLength = lengthRequired
     ? units.filter((unit) => {
         if (lotUnitLength(unit).ft != null) return false;
