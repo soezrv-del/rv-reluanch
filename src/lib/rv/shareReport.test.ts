@@ -607,6 +607,54 @@ test("PDF rows stay above the footer url on every page", async () => {
   assert.ok(all.includes("Vinyl"));
 });
 
+test("a long feature list prints in full above the footer", async () => {
+  const items = Array.from({ length: 28 }, (_, index) => `Feature Item ${index + 1}`);
+  const included = items.join(" · ");
+  const rows = [
+    ...Array.from({ length: 70 }, (_, index) => ({
+      label: `Spec ${index + 1}`,
+      value: `Value ${index + 1}`,
+    })),
+    { label: "Included", value: included },
+  ];
+  const bytes = await buildShareReportPdf({
+    kind: "unit",
+    title: "2027 Long Coach Example 40Z",
+    eyebrow: "Vehicle report",
+    generatedLabel: "September 27, 2026",
+    photoUrl: null,
+    headlines: [
+      { label: "Price", value: "$100,000" },
+      { label: "Stock number", value: "1" },
+    ],
+    sections: [{ title: "Features", rows }],
+    sources: null,
+    path: "/report/unit/1",
+    shareTitle: "2027 Long Coach Example 40Z",
+    shareText: "2027 Long Coach Example 40Z — RvFAX vehicle report",
+    footerNote: "Specs should be confirmed on the unit sticker.",
+    siteLabel: "rvmax.app",
+    siteUrl: "https://rvmax.app",
+  });
+  const doc = await PDFDocument.load(bytes);
+  assert.ok(doc.getPageCount() >= 2);
+  const all: string[] = [];
+  for (let pageIndex = 0; pageIndex < doc.getPageCount(); pageIndex += 1) {
+    const placed = pdfPlacedText(doc, pageIndex);
+    const url = placed.find((item) => item.text.includes("rvmax.app"));
+    assert.ok(url, `page ${pageIndex} missing footer url`);
+    for (const item of placed) {
+      if (item.text.includes("rvmax.app") || item.text.includes("unit sticker")) continue;
+      assert.ok(item.y >= url.y + 30, `"${item.text}" at ${item.y}`);
+      assert.equal(item.text.includes("…"), false);
+    }
+    all.push(...placed.map((item) => item.text));
+  }
+  const joined = all.join(" ");
+  for (const item of items) assert.ok(joined.includes(item), item);
+  assert.ok(all.filter((text) => text === "Included").length >= 1);
+});
+
 test("a long share report still prints as one PDF page", async () => {
   const rows = Array.from({ length: 36 }, (_, index) => ({
     label: `Spec ${index + 1}`,

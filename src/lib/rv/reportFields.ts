@@ -148,14 +148,23 @@ export function formatReportPounds(raw: string): string | null {
   return `${Math.round(n).toLocaleString("en-US")} lb`;
 }
 
-/** Fresh, gray, black, and fuel tank. Split tanks keep their F/R marks plus "gal". */
+/**
+ * Fresh, gray, black, and fuel tank.
+ * "40F / 40R" becomes "40 gal front / 40 gal rear".
+ */
 export function formatReportGallons(raw: string): string | null {
   const text = raw.trim();
   if (isHiddenReportValue(text)) return null;
-  if (/\d+\s*[FR]\b/i.test(text)) {
-    const body = text.replace(/\s*gal(?:lons?)?\s*$/i, "").trim();
-    if (isHiddenReportValue(body)) return null;
-    return `${body} gal`;
+  const split = [...text.matchAll(/(\d+(?:\.\d+)?)\s*([FR])\b/gi)];
+  if (split.length) {
+    const parts = split.map((match) => {
+      const n = Number(match[1]);
+      if (!Number.isFinite(n) || n <= 0) return "";
+      const shown = Number.isInteger(n) ? String(Math.round(n)) : String(Math.round(n * 10) / 10);
+      const side = match[2]?.toUpperCase() === "F" ? "front" : "rear";
+      return `${shown} gal ${side}`;
+    }).filter(Boolean);
+    if (parts.length) return parts.join(" / ");
   }
   const parts = pipeParts(text);
   const withUnit = parts.filter((part) => /\bgal(?:lons?)?\b/i.test(part));
@@ -235,14 +244,208 @@ export function formatReportEngine(engineType: string, engine: string): string |
   return named;
 }
 
-function formatReportTransmission(...candidates: string[]): string | null {
-  for (const candidate of candidates) {
-    const text = cleanDescribed(candidate);
-    if (!text || isHiddenReportValue(text) || isBareNumber(text)) continue;
-    return text;
+/** "6", "6 | 6", and "6-speed" are a gear count. Anything else is not. */
+function gearCount(raw: string): number | null {
+  const parts = pipeParts(raw);
+  const pool = parts.length ? parts : [raw.trim()].filter(Boolean);
+  for (const part of pool) {
+    const labeled = part.match(/^(\d+)\s*-?\s*speeds?$/i);
+    const bare = isBareNumber(part) ? firstNumber(part) : null;
+    const n = labeled ? Number(labeled[1]) : bare;
+    if (n == null || n < 1 || n > 18) continue;
+    return Math.round(n);
   }
   return null;
 }
+
+/**
+ * "Allison" plus a gear count of 6 is "Allison 6-speed".
+ * A transmission that is only the number stays off the report.
+ */
+function formatReportTransmission(brand: string, type: string, speeds: string): string | null {
+  const named = [brand, type]
+    .map((candidate) => cleanDescribed(candidate))
+    .find(
+      (text) =>
+        text &&
+        !isHiddenReportValue(text) &&
+        !isBareNumber(text) &&
+        !/^\d+\s*-?\s*speeds?$/i.test(text),
+    );
+  const speed = gearCount(speeds) ?? gearCount(type);
+  if (named && speed != null && !new RegExp(`\\b${speed}\\s*-?\\s*speeds?\\b`, "i").test(named)) {
+    return `${named} ${speed}-speed`;
+  }
+  return named ?? null;
+}
+
+function formatDisplacement(raw: string): string | null {
+  const text = raw.trim();
+  if (isHiddenReportValue(text)) return null;
+  const n = firstNumber(text);
+  if (n == null || n <= 0 || n > 20) return null;
+  const shown = Number.isInteger(n) ? String(Math.round(n)) : String(Math.round(n * 10) / 10);
+  return `${shown}L`;
+}
+
+function formatDriveline(raw: string): string | null {
+  const text = raw.trim();
+  if (isHiddenReportValue(text)) return null;
+  const match = text.match(/(\d)\s*[x×]\s*(\d)/i);
+  if (!match) return null;
+  return `${match[1]}x${match[2]}`;
+}
+
+function formatBtu(raw: string): string | null {
+  const text = raw.trim();
+  if (isHiddenReportValue(text)) return null;
+  const n = firstNumber(text);
+  if (n == null || n <= 0) return null;
+  return `${Math.round(n).toLocaleString("en-US")} BTU`;
+}
+
+/** "7' | 84" → "7 ft". Leftover inches stay in the phrase: "6 ft 8 in". */
+function formatFeetWords(raw: string): string | null {
+  const quoted = formatReportFeetInches(raw);
+  if (!quoted) return null;
+  const match = quoted.match(/^(\d+)'(?:(\d+)")?$/);
+  if (!match) return null;
+  const feet = Number(match[1]);
+  const inch = match[2] ? Number(match[2]) : 0;
+  if (feet === 0 && inch === 0) return null;
+  if (inch === 0) return `${feet} ft`;
+  return `${feet} ft ${inch} in`;
+}
+
+function awningFeet(raw: string): number | null {
+  const text = raw.trim();
+  if (!text || isHiddenReportValue(text)) return null;
+  const quoted = formatReportFeetInches(text);
+  if (quoted) {
+    const match = quoted.match(/^(\d+)'(?:(\d+)")?$/);
+    if (match) {
+      const feet = Number(match[1]);
+      const inch = match[2] ? Number(match[2]) : 0;
+      if (feet > 0 || inch > 0) return feet + inch / 12;
+    }
+  }
+  const nums = pipeParts(text)
+    .map((part) => firstNumber(part))
+    .filter((n): n is number => n != null && n > 0);
+  if (!nums.length) return null;
+  if (nums.length >= 2) {
+    const lo = Math.min(nums[0], nums[1]);
+    const hi = Math.max(nums[0], nums[1]);
+    if (Math.abs(hi - lo * 12) <= 2) return lo;
+  }
+  const n = nums[0];
+  return n >= 80 ? n / 12 : n;
+}
+
+function formatAwning(sizeRaw: string, lengthRaw: string, flags: string): string | null {
+  const feet = awningFeet(sizeRaw) ?? awningFeet(lengthRaw);
+  if (feet == null || feet <= 0) return null;
+  const whole = Math.abs(feet - Math.round(feet)) < 0.05;
+  const rounded = Math.round(feet);
+  const phrase = whole
+    ? `${rounded} ft`
+    : `${Math.floor(feet)} ft ${Math.round((feet - Math.floor(feet)) * 12)} in`;
+  const power = /power(?:\s+retractable)?\s+awning|\bawing\b[^.]{0,24}\bpower\b/i.test(flags);
+  return power ? `${phrase}, power` : phrase;
+}
+
+/** "880.7 | 154 cu ft" keeps the figure that carries the unit. */
+function formatStorage(raw: string): string | null {
+  const parts = pipeParts(raw);
+  if (!parts.length || isHiddenReportValue(raw)) return null;
+  const withUnit = parts.filter((part) => /cu(?:bic)?\s*\.?\s*ft/i.test(part));
+  const chosen = (withUnit.length ? withUnit : parts)[withUnit.length ? withUnit.length - 1 : parts.length - 1];
+  const n = firstNumber(chosen ?? "");
+  if (n == null || n <= 0) return null;
+  const shown = Number.isInteger(n)
+    ? Math.round(n).toLocaleString("en-US")
+    : String(Math.round(n * 10) / 10);
+  return `${shown} cu ft`;
+}
+
+/** "Front Power / Rear Power" → "front and rear power". */
+export function formatLevelingJacks(raw: string): string | null {
+  const text = raw.trim();
+  if (isHiddenReportValue(text)) return null;
+  const parts = text.split("/").map((part) => part.trim()).filter(Boolean);
+  if (parts.length >= 2) {
+    const words = parts.map((part) => part.toLowerCase().split(/\s+/));
+    const tail = words[0]?.[words[0].length - 1];
+    if (tail && words.every((word) => word.length === 2 && word[1] === tail)) {
+      return `${words.map((word) => word[0]).join(" and ")} ${tail}`;
+    }
+    return words.map((word) => word.join(" ")).join(" and ");
+  }
+  return text.toLowerCase();
+}
+
+function formatRefrigerator(size: string, power: string): string | null {
+  const bits: string[] = [];
+  const sized = size.trim();
+  if (sized && !isHiddenReportValue(sized)) {
+    bits.push(sized.toLowerCase().replace(/\s+/g, "-"));
+  }
+  const powered = power.trim();
+  if (powered && !isHiddenReportValue(powered)) {
+    const modes = powered
+      .split("/")
+      .map((part) => part.trim().toLowerCase())
+      .filter((part) => part && !isHiddenReportValue(part));
+    if (modes.length) bits.push(modes.join("/"));
+  }
+  return bits.length ? bits.join(", ") : null;
+}
+
+function formatWaterHeater(raw: string): string | null {
+  const text = raw.trim().replace(/\s+/g, " ");
+  if (!text || isHiddenReportValue(text) || isBareNumber(text)) return null;
+  return text;
+}
+
+function listParts(raw: string): string[] {
+  const text = raw.replace(/[®™]/g, "").replace(/\s+/g, " ").trim();
+  if (!text || isHiddenReportValue(text)) return [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const part of text.split(/\s*(?:\||,)\s*/)) {
+    const item = part.trim();
+    if (!item || isHiddenReportValue(item) || isBareNumber(item)) continue;
+    const key = item.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(item);
+  }
+  return out;
+}
+
+function formatFeatureList(raw: string): string | null {
+  const parts = listParts(raw);
+  return parts.length ? parts.join(" · ") : null;
+}
+
+/** Prose fields keep their sentences. Pipes become the same separator as feature lists. */
+function formatNarrative(raw: string): string | null {
+  const text = raw
+    .replace(/[®™]/g, "")
+    .replace(/\s*\|\s*/g, " · ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!text || isHiddenReportValue(text) || isBareNumber(text)) return null;
+  return text;
+}
+
+const NARRATIVE_FIELDS: ReadonlyArray<{ label: string; keys: readonly string[] }> = [
+  { label: "Description", keys: ["description", "unit_description"] },
+  { label: "Remarks", keys: ["remarks", "seller_notes"] },
+  { label: "Options", keys: ["options"] },
+  { label: "Extras", keys: ["extras"] },
+  { label: "More", keys: ["features", "additional_features"] },
+];
 
 function formatMoney(raw: string): string | null {
   const text = raw.trim();
@@ -414,6 +617,7 @@ export function buildBuyerUnitReport(unit: LotUnit): BuyerUnitReport {
     "Wheelbase",
     formatReportFeetInches(pick(printed, "wheelbase", "wheel_base")),
   );
+  pushRow(dimensionRows, "Interior height", formatFeetWords(pick(printed, "interior_height")));
   pushRow(dimensionRows, "Sleeps", formatCount(pick(printed, "max_sleeping_count", "sleeps")));
   pushRow(dimensionRows, "Slides", formatCount(pick(printed, "number_of_slideouts", "slides")));
   pushRow(dimensionRows, "Beds", formatReportBeds(printed));
@@ -429,6 +633,7 @@ export function buildBuyerUnitReport(unit: LotUnit): BuyerUnitReport {
     "Engine Type",
     formatReportEngine(pick(printed, "engine_type"), pick(printed, "engine")),
   );
+  pushRow(chassisRows, "Displacement", formatDisplacement(pick(printed, "displacement")));
   pushRow(chassisRows, "Horsepower", formatReportHorsepower(pick(printed, "horsepower")));
   pushRow(chassisRows, "Torque", formatReportTorque(pick(printed, "torque")));
   pushRow(
@@ -436,14 +641,18 @@ export function buildBuyerUnitReport(unit: LotUnit): BuyerUnitReport {
     "Transmission",
     formatReportTransmission(
       pick(printed, "transmission_brand"),
-      pick(printed, "transmission"),
-      pick(printed, "transmission_type"),
+      pick(printed, "transmission") || pick(printed, "transmission_type"),
+      pick(printed, "transmission_speeds") ||
+        pick(printed, "transmission_type") ||
+        pick(printed, "transmission"),
     ),
   );
+  pushRow(chassisRows, "Driveline", formatDriveline(pick(printed, "driveline_type", "driveline")));
   pushRow(chassisRows, "Fuel", formatReportFuel(pick(printed, "fuel_type", "fuel")));
 
   const weightRows: BuyerReportRow[] = [];
   pushRow(weightRows, "GVWR", formatReportPounds(pick(printed, "gvwr")));
+  pushRow(weightRows, "GCWR", formatReportPounds(pick(printed, "gcwr")));
   pushRow(weightRows, "Towing", formatReportPounds(pick(printed, "towing_capacity", "towing")));
   pushRow(
     weightRows,
@@ -481,6 +690,43 @@ export function buildBuyerUnitReport(unit: LotUnit): BuyerUnitReport {
       gal: pick(printed, "propane_gal"),
     }),
   );
+  pushRow(weightRows, "Storage", formatStorage(pick(printed, "storage_capacity")));
+
+  const livingRows: BuyerReportRow[] = [];
+  pushRow(
+    livingRows,
+    "Bathrooms",
+    formatCount(pick(printed, "number_of_bathroom(s)", "number_of_bathrooms")),
+  );
+  pushRow(
+    livingRows,
+    "TVs",
+    formatCount(
+      pick(printed, "number_of_television(s)", "number_of_televisions", "number_of_tvs"),
+    ),
+  );
+  pushRow(livingRows, "Water heater", formatWaterHeater(pick(printed, "water_heater_type")));
+  pushRow(
+    livingRows,
+    "Furnace",
+    formatBtu(pick(printed, "furnace_btu") || pick(printed, "heater_btu") || pick(printed, "heater_(btu)")),
+  );
+  pushRow(
+    livingRows,
+    "Awning",
+    formatAwning(
+      pick(printed, "awning_size"),
+      pick(printed, "awning_length"),
+      pick(printed, "flags"),
+    ),
+  );
+  pushRow(livingRows, "Leveling jacks", formatLevelingJacks(pick(printed, "leveling_jack_type")));
+  pushRow(
+    livingRows,
+    "Refrigerator",
+    formatRefrigerator(pick(printed, "refrigerator_size"), pick(printed, "refrigerator_power_mode")),
+  );
+  pushRow(livingRows, "Seatbelts", formatCount(pick(printed, "seatbelts")));
 
   const systemRows: BuyerReportRow[] = [];
   pushRow(
@@ -489,13 +735,30 @@ export function buildBuyerUnitReport(unit: LotUnit): BuyerUnitReport {
     preferLonger(pick(printed, "generator"), pick(printed, "generator_type")),
   );
 
+  const featureRows: BuyerReportRow[] = [];
+  const floorplan = formatFeatureList(pick(printed, "floorplan_feature"));
+  const included = formatFeatureList(pick(printed, "flags"));
+  pushRow(featureRows, "Floorplan", floorplan);
+  pushRow(featureRows, "Style", formatFeatureList(pick(printed, "floorplan_style")));
+  pushRow(featureRows, "Lifestyle", formatFeatureList(pick(printed, "floorplan_lifestyle")));
+  pushRow(featureRows, "Included", included);
+  for (const field of NARRATIVE_FIELDS) {
+    const text = formatNarrative(pick(printed, ...field.keys));
+    if (!text) continue;
+    if (floorplan && text === floorplan) continue;
+    if (included && text === included) continue;
+    pushRow(featureRows, field.label, text);
+  }
+
   const sections = [
     section("Unit", unitRows),
     section("Price", priceRows),
     section("Dimensions", dimensionRows),
     section("Chassis and Engine", chassisRows),
     section("Weights and Capacities", weightRows),
+    section("Living", livingRows),
     section("Systems", systemRows),
+    section("Features", featureRows),
   ].filter((item): item is BuyerReportSection => item != null);
 
   const byLabel = new Map(

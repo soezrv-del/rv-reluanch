@@ -145,7 +145,7 @@ test("propane and gvwr collapse to one row, and junk rows stay off the report", 
   assert.equal(rows.find((row) => row.label === "GVWR")?.value, "32,700 lb");
   assert.equal(rows.find((row) => row.label === "Propane")?.value, "105 lb");
   assert.equal(rows.find((row) => row.label === "Engine Type")?.value, "Cummins B6.7L");
-  assert.equal(rows.find((row) => row.label === "Transmission")?.value, "Allison");
+  assert.equal(rows.find((row) => row.label === "Transmission")?.value, "Allison 6-speed");
   assert.equal(rows.find((row) => row.label === "Length")?.value, "39'10\"");
   assert.equal(rows.find((row) => row.label === "Horsepower")?.value, "360 HP");
   assert.equal(rows.find((row) => row.label === "Fuel")?.value, "Diesel");
@@ -203,6 +203,25 @@ test("a bare inline engine and a bare transmission number are omitted", () => {
   assert.equal(labels.includes("Transmission"), false);
 });
 
+test("description and options stay on the report, fees and colors do not", () => {
+  const report = buildBuyerUnitReport(
+    unit({
+      description: "Ready for full-time travel",
+      options: "Solar | Generator",
+      document_fee: "399",
+      primary_color: "Black",
+      number_of_axles: "2",
+    }),
+  );
+  const rows = sectionRows(report);
+  assert.equal(rows.find((row) => row.label === "Description")?.value, "Ready for full-time travel");
+  assert.equal(rows.find((row) => row.label === "Options")?.value, "Solar · Generator");
+  const labels = rows.map((row) => row.label);
+  assert.equal(labels.includes("Document Fee"), false);
+  assert.equal(labels.includes("Primary Color"), false);
+  assert.equal(labels.includes("Axles"), false);
+});
+
 test("2027 Thor Inception 38DX stock 47492 is a short buyer report", () => {
   const here = dirname(fileURLToPath(import.meta.url));
   const snap = parseLotSnapshotJson(
@@ -216,7 +235,7 @@ test("2027 Thor Inception 38DX stock 47492 is a short buyer report", () => {
   const report = buildUnitShareReport(coach, NOW);
   const rows = sectionRows(report);
   const byLabel = new Map(rows.map((row) => [row.label, row.value]));
-  assert.equal(rows.length, 28);
+  assert.equal(rows.length, 45);
   assert.equal(report.title, "2027 Thor Motor Coach Inception 38DX");
   assert.equal(report.headlines.find((row) => row.label === "Price")?.value, "$305,995");
   assert.equal(report.headlines.find((row) => row.label === "Stock number")?.value, "47492");
@@ -230,24 +249,49 @@ test("2027 Thor Inception 38DX stock 47492 is a short buyer report", () => {
   assert.equal(byLabel.get("Height"), "13'3\"");
   assert.equal(byLabel.get("Width"), "8'5\"");
   assert.equal(byLabel.get("Wheelbase"), "23'3\"");
+  assert.equal(byLabel.get("Interior height"), "7 ft");
   assert.equal(byLabel.get("Sleeps"), "4");
   assert.equal(byLabel.get("Slides"), "3");
   assert.equal(byLabel.get("Beds"), "King · Full · Sofa bed");
   assert.equal(byLabel.get("Chassis"), "Freightliner S2RV");
   assert.equal(byLabel.get("Engine Type"), "Cummins B6.7L");
+  assert.equal(byLabel.get("Displacement"), "6.7L");
   assert.equal(byLabel.get("Horsepower"), "360 HP");
   assert.equal(byLabel.get("Torque"), "800 lb-ft");
-  assert.equal(byLabel.get("Transmission"), "Allison");
+  assert.equal(byLabel.get("Transmission"), "Allison 6-speed");
+  assert.equal(byLabel.get("Driveline"), "4x2");
   assert.equal(byLabel.get("Fuel"), "Diesel");
   assert.equal(byLabel.get("GVWR"), "32,700 lb");
+  assert.equal(byLabel.get("GCWR"), "46,000 lb");
   assert.equal(byLabel.get("Towing"), "15,000 lb");
   assert.equal(byLabel.get("Hitch"), "15,000 lb");
   assert.equal(byLabel.get("Fresh"), "100 gal");
-  assert.equal(byLabel.get("Gray"), "40F / 40R gal");
-  assert.equal(byLabel.get("Black"), "40F / 40R gal");
+  assert.equal(byLabel.get("Gray"), "40 gal front / 40 gal rear");
+  assert.equal(byLabel.get("Black"), "40 gal front / 40 gal rear");
   assert.equal(byLabel.get("Fuel tank"), "100 gal");
   assert.equal(byLabel.get("Propane"), "105 lb");
+  assert.equal(byLabel.get("Storage"), "154 cu ft");
+  assert.equal(byLabel.get("Bathrooms"), "2");
+  assert.equal(byLabel.get("TVs"), "3");
+  assert.equal(byLabel.get("Water heater"), "Tankless");
+  assert.equal(byLabel.get("Furnace"), "35,000 BTU");
+  assert.equal(byLabel.get("Awning"), "20 ft, power");
+  assert.equal(byLabel.get("Leveling jacks"), "front and rear power");
+  assert.equal(byLabel.get("Refrigerator"), "full-size, electric/propane");
+  assert.equal(byLabel.get("Seatbelts"), "8");
   assert.equal(byLabel.get("Generator"), "Diesel");
+  assert.equal(
+    byLabel.get("Floorplan"),
+    "Two Baths · King Bed · Outdoor Kitchen · Fireplace · Washer/Dryer Prep · Pantry · Entertainment Center · Theater Seating · Outdoor Entertainment",
+  );
+  assert.equal(
+    byLabel.get("Style"),
+    "Rear Bath · Center Bath · Front Living · Center Bedroom",
+  );
+  assert.match(byLabel.get("Lifestyle") ?? "", /Family Friendly/);
+  assert.match(byLabel.get("Included") ?? "", /Power Retractable Awning/);
+  assert.match(byLabel.get("Included") ?? "", /Bluetooth Audio/);
+  assert.equal((byLabel.get("Included") ?? "").includes("®"), false);
   assert.equal(byLabel.get("Status"), undefined);
   assert.equal(rows.filter((row) => row.label === "Propane").length, 1);
   assert.equal(rows.filter((row) => row.label === "GVWR").length, 1);
@@ -265,13 +309,15 @@ test("2027 Thor Inception 38DX stock 47492 is a short buyer report", () => {
     "Dealer Prep",
     "Incl Fees",
     "Biweekly",
-    "Heater",
-    "Awning",
+    "Heater Btu",
     "Axles",
     "Holding Tanks",
     "Oven",
     "Seat Material",
-    "Driveline",
+    "Primary Color",
+    "Secondary Color",
+    "Brake",
+    "Wheel Width",
   ]) {
     assert.equal(blob.includes(banned), false, banned);
   }

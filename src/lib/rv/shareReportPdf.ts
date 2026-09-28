@@ -250,13 +250,16 @@ export async function buildShareReportPdf(report: ShareReport): Promise<Uint8Arr
 
   let current = openPage(false);
   const rowH = fitted.size + 3.2;
-  for (const item of rows) {
-    const step = itemAdvance(item.kind, rowH);
-    if (current.y - step.baselineDrop < footer) {
-      current = openPage(true);
-    }
+  const placeLine = (kind: "head" | "row") => {
+    const step = itemAdvance(kind, rowH);
+    const broke = current.y - step.baselineDrop < footer;
+    if (broke) current = openPage(true);
     current.y -= step.baselineDrop;
+    return broke;
+  };
+  for (const item of rows) {
     if (item.kind === "head") {
+      placeLine("head");
       current.target.drawText(item.text.toUpperCase(), {
         x: MARGIN,
         y: current.y,
@@ -264,15 +267,24 @@ export async function buildShareReportPdf(report: ShareReport): Promise<Uint8Arr
         font: bold,
         color: rgb(SAPPHIRE.r, SAPPHIRE.g, SAPPHIRE.b),
       });
-    } else {
-      current.target.drawText(clip(item.label, font, fitted.size, 250), {
-        x: MARGIN,
-        y: current.y,
-        size: fitted.size,
-        font,
-        color: rgb(MUTED.r, MUTED.g, MUTED.b),
-      });
-      const value = clip(item.value, bold, fitted.size, 250);
+      current.y -= itemAdvance("head", rowH).after - itemAdvance("head", rowH).baselineDrop;
+      continue;
+    }
+    const labelW = font.widthOfTextAtSize(item.label, fitted.size);
+    const valueWidth = Math.max(120, contentWidth - labelW - 18);
+    const lines = wrapPdfValue(item.value, bold, fitted.size, valueWidth);
+    for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+      const broke = placeLine("row");
+      if (lineIndex === 0 || broke) {
+        current.target.drawText(clip(item.label, font, fitted.size, 250), {
+          x: MARGIN,
+          y: current.y,
+          size: fitted.size,
+          font,
+          color: rgb(MUTED.r, MUTED.g, MUTED.b),
+        });
+      }
+      const value = lines[lineIndex] ?? "";
       const vw = bold.widthOfTextAtSize(value, fitted.size);
       current.target.drawText(value, {
         x: PAGE_W - MARGIN - vw,
@@ -281,8 +293,9 @@ export async function buildShareReportPdf(report: ShareReport): Promise<Uint8Arr
         font: bold,
         color: rgb(INK.r, INK.g, INK.b),
       });
+      const step = itemAdvance("row", rowH);
+      current.y -= step.after - step.baselineDrop;
     }
-    current.y -= step.after - step.baselineDrop;
   }
   paintSource(current.target);
 
@@ -392,6 +405,44 @@ function sourceClearance(layout: Wrapped | null): number {
   const lineH = layout.size + 2.5;
   const top = FOOTER_NOTE_Y + 16 + (layout.lines.length - 1) * lineH;
   return Math.max(BODY_FLOOR, top + layout.size + 10);
+}
+
+/** Full value, wrapped beside the label. Short values stay one line. */
+function wrapPdfValue(
+  text: string,
+  font: PdfFont,
+  size: number,
+  maxWidth: number,
+): string[] {
+  const clean = text.replace(/\s+/g, " ").trim();
+  if (!clean) return [""];
+  if (font.widthOfTextAtSize(clean, size) <= maxWidth) return [clean];
+  const lines: string[] = [];
+  let current = "";
+  const push = (token: string) => {
+    const trial = current ? `${current} ${token}` : token;
+    if (font.widthOfTextAtSize(trial, size) <= maxWidth) {
+      current = trial;
+      return;
+    }
+    if (current) lines.push(current);
+    current = token;
+  };
+  for (const word of clean.split(" ")) {
+    if (font.widthOfTextAtSize(word, size) <= maxWidth) {
+      push(word);
+      continue;
+    }
+    let rest = word;
+    while (rest) {
+      let take = rest.length;
+      while (take > 1 && font.widthOfTextAtSize(rest.slice(0, take), size) > maxWidth) take -= 1;
+      push(rest.slice(0, take));
+      rest = rest.slice(take);
+    }
+  }
+  if (current) lines.push(current);
+  return lines.length ? lines : [clean];
 }
 
 function clip(
