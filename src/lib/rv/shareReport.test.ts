@@ -297,7 +297,6 @@ test("share report surfaces use the chrome RvFAX mark", () => {
   const root = join(here, "../../..");
   const files = [
     join(here, "shareReportPdf.ts"),
-    join(here, "reportOgImage.ts"),
     join(root, "src/components/report/ShareReportPage.tsx"),
   ];
   for (const file of files) {
@@ -305,6 +304,13 @@ test("share report surfaces use the chrome RvFAX mark", () => {
     assert.match(src, /REPORT_MARK_URL/);
     assert.doesNotMatch(src, /icon-rvfax\.png/);
   }
+  const og = readFileSync(join(here, "reportOgImage.ts"), "utf8");
+  assert.match(og, /rvfax-mark-og\.png\?inline/);
+  assert.doesNotMatch(og, /REPORT_MARK_URL/);
+  assert.doesNotMatch(og, /icon-rvfax\.png/);
+  const lookup = readFileSync(join(here, "reportRequestMeta.ts"), "utf8");
+  assert.match(lookup, /own-lot-latest\.json/);
+  assert.doesNotMatch(lookup, /fetch\(new URL\(LOT_SNAPSHOT_URL/);
   assert.equal(REPORT_ICON_URL, "/assets/brand/rvfax-mark-32.png");
   assert.equal(REPORT_TOUCH_ICON_URL, "/assets/brand/rvfax-mark-180.png");
   const links = reportShareIconLinks();
