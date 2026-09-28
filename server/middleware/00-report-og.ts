@@ -3,7 +3,7 @@
  * their own Open Graph and Twitter tags. Registered before grok-pwa
  * so this sees the already-injected HTML.
  */
-import { applyReportOpenGraph } from "../../src/lib/rv/reportOgHtml.mjs";
+import { applyReportIcons, applyReportOpenGraph } from "../../src/lib/rv/reportOgHtml.mjs";
 import { metaForReportUrl } from "../../src/lib/rv/reportRequestMeta.ts";
 
 interface ReportOgEvent {
@@ -33,10 +33,10 @@ export default async function reportOgMiddleware(
   } catch (error) {
     console.error("[report-og] meta failed", error);
   }
-  if (!meta) return new Response(html, { status: result.status, headers: result.headers });
   const headers = new Headers(result.headers);
   headers.delete("content-length");
-  return new Response(applyReportOpenGraph(html, meta), {
+  const body = meta ? applyReportOpenGraph(html, meta) : applyReportIcons(html);
+  return new Response(body, {
     status: result.status,
     statusText: result.statusText,
     headers,

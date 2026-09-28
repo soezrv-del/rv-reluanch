@@ -25,6 +25,22 @@ import {
 export const REPORT_SITE_URL = "https://rvmax.app";
 /** Chrome sapphire R on a white rounded tile. Readable on the sapphire header. */
 export const REPORT_MARK_URL = "/assets/brand/rvfax-mark.png";
+/** 32×32 site icon for a shared /report link. */
+export const REPORT_ICON_URL = "/assets/brand/rvfax-mark-32.png";
+/** 180×180 apple touch icon for a shared /report link. */
+export const REPORT_TOUCH_ICON_URL = "/assets/brand/rvfax-mark-180.png";
+
+export function reportShareIconLinks(): Array<{
+  rel: "icon" | "apple-touch-icon";
+  href: string;
+  type?: string;
+  sizes: string;
+}> {
+  return [
+    { rel: "icon", type: "image/png", sizes: "32x32", href: REPORT_ICON_URL },
+    { rel: "apple-touch-icon", sizes: "180x180", href: REPORT_TOUCH_ICON_URL },
+  ];
+}
 export const REPORT_SITE_LABEL = "rvmax.app";
 export const REPORT_FOOTER_NOTE =
   "Specs should be confirmed on the unit sticker.";

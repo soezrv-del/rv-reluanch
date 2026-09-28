@@ -2,7 +2,7 @@
  * Dev/preview twin of server/middleware/00-report-og.ts.
  * Register BEFORE grokPwaPlugin so this wrap is outside the injector.
  */
-import { applyReportOpenGraph } from "../src/lib/rv/reportOgHtml.mjs";
+import { applyReportIcons, applyReportOpenGraph } from "../src/lib/rv/reportOgHtml.mjs";
 
 function toBuffer(chunk, encoding) {
   if (!chunk || typeof chunk === "function") return null;
@@ -55,7 +55,7 @@ function install(middlewares, loadMeta) {
       Promise.resolve()
         .then(() => loadMeta(absolute))
         .then((meta) => {
-          const body = Buffer.from(meta ? applyReportOpenGraph(html, meta) : html);
+          const body = Buffer.from(meta ? applyReportOpenGraph(html, meta) : applyReportIcons(html));
           if (!res.headersSent) res.removeHeader("content-length");
           return originalEnd(body, undefined, done);
         })

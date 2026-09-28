@@ -16,7 +16,10 @@ import {
   findLotUnit,
   isOmittedReportValue,
   plainQueryText,
+  REPORT_ICON_URL,
   REPORT_MARK_URL,
+  REPORT_TOUCH_ICON_URL,
+  reportShareIconLinks,
   reportYear,
   unitReportPath,
 } from "./shareReport.ts";
@@ -301,6 +304,19 @@ test("share report surfaces use the chrome RvFAX mark", () => {
     const src = readFileSync(file, "utf8");
     assert.match(src, /REPORT_MARK_URL/);
     assert.doesNotMatch(src, /icon-rvfax\.png/);
+  }
+  assert.equal(REPORT_ICON_URL, "/assets/brand/rvfax-mark-32.png");
+  assert.equal(REPORT_TOUCH_ICON_URL, "/assets/brand/rvfax-mark-180.png");
+  const links = reportShareIconLinks();
+  assert.equal(links[0]?.rel, "icon");
+  assert.equal(links[0]?.sizes, "32x32");
+  assert.equal(links[1]?.rel, "apple-touch-icon");
+  assert.equal(links[1]?.sizes, "180x180");
+  for (const file of [
+    join(root, "src/routes/report/facts.tsx"),
+    join(root, "src/routes/report/unit/$id.tsx"),
+  ]) {
+    assert.match(readFileSync(file, "utf8"), /reportShareIconLinks\(\)/);
   }
 });
 

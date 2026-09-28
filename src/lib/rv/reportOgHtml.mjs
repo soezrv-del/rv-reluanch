@@ -22,6 +22,9 @@ const SHARE_KEYS = new Set([
   "description",
 ]);
 
+const REPORT_ICON_32 = "/assets/brand/rvfax-mark-32.png";
+const REPORT_ICON_180 = "/assets/brand/rvfax-mark-180.png";
+
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, "&amp;")
@@ -65,15 +68,56 @@ export function reportMetaTags(meta) {
   ].join("");
 }
 
+function linkRels(tag) {
+  const match = String(tag).match(/\brel\s*=\s*["']([^"']+)["']/i);
+  if (!match) return [];
+  return match[1].toLowerCase().split(/\s+/);
+}
+
+function isSiteIconLink(tag) {
+  return linkRels(tag).some(
+    (rel) =>
+      rel === "icon" ||
+      rel === "shortcut" ||
+      rel === "apple-touch-icon" ||
+      rel === "apple-touch-icon-precomposed",
+  );
+}
+
+function stripSiteIconLinks(html) {
+  return String(html).replace(/<link\b[^>]*>/gi, (tag) => (isSiteIconLink(tag) ? "" : tag));
+}
+
+/** Small site icon next to a shared /report link. Opaque, sized for the rel. */
+export function reportIconTags() {
+  return [
+    `<link rel="icon" type="image/png" sizes="32x32" href="${REPORT_ICON_32}">`,
+    `<link rel="apple-touch-icon" sizes="180x180" href="${REPORT_ICON_180}">`,
+  ].join("");
+}
+
+/**
+ * Replace whatever icon the app shell and platform injector emitted.
+ * iMessage uses the first apple-touch-icon it finds, so the old card
+ * and the platform 180 icon have to leave the /report document.
+ */
+export function applyReportIcons(html) {
+  if (typeof html !== "string") return html;
+  const next = stripSiteIconLinks(html);
+  const tags = reportIconTags();
+  if (/<\/head>/i.test(next)) return next.replace(/<\/head>/i, `${tags}</head>`);
+  return `${next}${tags}`;
+}
+
 /** Insert per-report Open Graph tags after any platform head injector. */
 export function applyReportOpenGraph(html, meta) {
-  if (!meta || typeof html !== "string") return html;
+  if (!meta || typeof html !== "string") return applyReportIcons(html);
   let next = stripShareMeta(html);
   const title = escapeHtml(meta.title);
   if (/<title>[^<]*<\/title>/i.test(next)) {
     next = next.replace(/<title>[^<]*<\/title>/i, `<title>${title}</title>`);
   }
   const tags = reportMetaTags(meta);
-  if (/<\/head>/i.test(next)) return next.replace(/<\/head>/i, `${tags}</head>`);
-  return `${next}${tags}`;
+  next = /<\/head>/i.test(next) ? next.replace(/<\/head>/i, `${tags}</head>`) : `${next}${tags}`;
+  return applyReportIcons(next);
 }

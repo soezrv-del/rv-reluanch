@@ -6,6 +6,7 @@ import { ensureCatalogLoaded } from "@/lib/rv/catalogLoad";
 import {
   buildFactsShareReport,
   factsReportSearch,
+  reportShareIconLinks,
   type FactsReportSearch,
   type ShareReport,
 } from "@/lib/rv/shareReport";
@@ -17,7 +18,10 @@ export const Route = createFileRoute("/report/facts")({
     const title = [match.search.year, match.search.make, match.search.series, match.search.floorplan]
       .filter((part) => part != null && String(part).trim())
       .join(" ");
-    return { meta: [{ title: title || "RvFAX vehicle report" }] };
+    return {
+      meta: [{ title: title || "RvFAX vehicle report" }],
+      links: reportShareIconLinks(),
+    };
   },
   component: FactsReportRoute,
 });
