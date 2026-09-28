@@ -2,6 +2,7 @@
 import { useSyncExternalStore } from "react";
 import { readTheme, serverTheme, subscribeTheme } from "@/lib/theme";
 import { PremiumMenuButton } from "./PremiumMenuButton";
+import { ThemeSwitch } from "./ThemeSwitch";
 
 export const RAIDHO_SHELL_MARK = "/assets/brand/raidho-shell-mark.png";
 /** David's finished cutout. 60px file is 2x, 90px file is 3x, for a 30px header. */
@@ -53,7 +54,12 @@ export function SuiteBrand({
         </picture>
         <span className="showroom-word">RvFOX</span>
       </button>
-      {showMenu ? <PremiumMenuButton variant="showroom" /> : null}
+      {showMenu ? (
+        <div className="showroom-header-tools">
+          <ThemeSwitch />
+          <PremiumMenuButton variant="showroom" />
+        </div>
+      ) : null}
     </div>
   );
 }

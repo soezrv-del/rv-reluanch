@@ -3531,7 +3531,7 @@ html[data-theme="light"] .suite-title-accent {
 html[data-theme="light"] .sapphire-header-inner .z-\[2\] {
   align-items: flex-start;
   text-align: left;
-  padding-right: 2.75rem;
+  padding-right: 6.4rem;
 }
 html[data-theme="light"] .sapphire-header-badge {
   margin: 0 0 0.35rem;
@@ -3544,18 +3544,22 @@ html[data-theme="light"] .sapphire-header-badge {
   font-weight: 600;
 }
 html[data-theme="light"] .metal-hammered-strike {
-  display: none;
+  color: rgba(17, 17, 17, 0.35);
+  text-shadow: none;
 }
 html[data-theme="light"] .metal-hammered-face {
-  background: none !important;
-  background-image: none !important;
-  color: #111111 !important;
-  -webkit-text-fill-color: #111111 !important;
-  -webkit-text-stroke: 0;
-  filter: none;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  font-size: 0.68rem;
+  background-image: linear-gradient(
+    180deg,
+    #8e9bab 0%,
+    #5c6a78 40%,
+    #3d4856 100%
+  ) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  -webkit-text-stroke: 0.35px rgba(17, 17, 17, 0.28);
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.7));
 }
 html[data-theme="light"] .sapphire-header-line {
   margin-top: 0.45rem;
@@ -3672,7 +3676,7 @@ html[data-theme="light"] [aria-label="Price input mode"] {
   gap: 0.5rem;
 }
 
-html[data-theme="light"] .app-shell button:not(.showroom-brand):not(.bottom-tab-btn):not(.showroom-hero):not(.showroom-placard):not(.showroom-arrival):not(.lot-card):not(.grok-mic-btn):not(.showroom-mic):not(.showroom-hero-primary) {
+html[data-theme="light"] .app-shell button:not(.showroom-brand):not(.bottom-tab-btn):not(.showroom-hero):not(.showroom-placard):not(.showroom-arrival):not(.lot-card):not(.grok-mic-btn):not(.showroom-mic):not(.showroom-hero-primary):not(.theme-switch) {
   background: var(--light-shade);
   background-color: var(--light-shade);
   color: #111111;
@@ -3757,8 +3761,8 @@ html[data-theme="light"] .showroom-hero-beam {
 }
 html[data-theme="light"] .showroom-hero-pool {
   display: block;
-  top: calc(42svh - 1.5rem);
-  bottom: auto;
+  top: auto;
+  bottom: 0.4rem;
   height: 3.2rem;
   background: radial-gradient(
     ellipse 42% 80% at 50% 50%,
@@ -3781,9 +3785,12 @@ html[data-theme="light"] .showroom-coach[data-hero-kind="photo"] {
   filter: drop-shadow(0 20px 18px rgba(17, 17, 17, 0.18));
 }
 html[data-theme="light"] .showroom-placard {
-  position: relative;
+  position: absolute;
   z-index: 4;
-  width: 100%;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: auto;
   margin: 0;
   border: 0 !important;
   border-radius: 0 !important;
@@ -3791,12 +3798,23 @@ html[data-theme="light"] .showroom-placard {
   box-shadow: none !important;
   backdrop-filter: none !important;
   text-align: left;
-  padding: 0.2rem 1.25rem 0.15rem;
+  padding: 0 1.2rem 0.9rem;
   pointer-events: none;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.45));
 }
-html[data-theme="light"] .showroom-spotyear,
-html[data-theme="light"] .showroom-spotmake,
-html[data-theme="light"] .showroom-spotplace {
+html[data-theme="light"] .showroom-spotyear {
+  display: block !important;
+  margin: 0 0 0.12rem;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: #5c6a78 !important;
+  -webkit-text-fill-color: #5c6a78 !important;
+  text-shadow: none;
+}
+html[data-theme="light"] .showroom-spotmake {
   display: none !important;
 }
 html[data-theme="light"] .showroom-spotmodel {
@@ -3807,43 +3825,47 @@ html[data-theme="light"] .showroom-spotmodel {
   font-weight: 600;
   letter-spacing: -0.03em;
   line-height: 1.05;
-  color: #111111 !important;
-  -webkit-text-fill-color: #111111 !important;
+  color: #3d4856 !important;
+  -webkit-text-fill-color: #3d4856 !important;
   text-shadow: none;
 }
 html[data-theme="light"] .showroom-spotprice {
   display: block;
-  margin-top: 0.35rem;
+  margin-top: 0.28rem;
   font-family: var(--font-sans);
   font-size: 0.95rem;
   font-weight: 500;
   letter-spacing: -0.01em;
-  color: #111111 !important;
-  -webkit-text-fill-color: #111111 !important;
+  color: #3d4856 !important;
+  -webkit-text-fill-color: #3d4856 !important;
+  text-shadow: none;
+}
+html[data-theme="light"] .showroom-spotstock,
+html[data-theme="light"] .showroom-spotplace {
+  display: inline;
+  margin-top: 0.12rem;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #5c6a78 !important;
+  -webkit-text-fill-color: #5c6a78 !important;
   text-shadow: none;
 }
 html[data-theme="light"] .showroom-spotstock {
   display: block;
-  margin-top: 0.12rem;
-  font-family: var(--font-sans);
-  font-size: 0.78rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  color: #6e7c8c !important;
-  -webkit-text-fill-color: #6e7c8c !important;
-  text-shadow: none;
 }
 html[data-theme="light"] .showroom-hero-primary {
   min-height: 2.6rem;
   min-width: 9.5rem;
   flex: 0 0 auto;
-  margin-top: 0.85rem;
-  border: 1px solid #111111 !important;
+  margin-top: 0.8rem;
+  border: 1px solid #3d4856 !important;
   border-radius: 4px;
   background: transparent !important;
   background-image: none !important;
-  color: #111111 !important;
-  -webkit-text-fill-color: #111111 !important;
+  color: #3d4856 !important;
+  -webkit-text-fill-color: #3d4856 !important;
   box-shadow: none !important;
   font-size: 0.95rem;
   font-weight: 600;
@@ -4162,20 +4184,25 @@ html[data-theme="light"] .app-shell * {
   text-shadow: none;
 }
 html[data-theme="light"] .showroom-spotmodel,
-html[data-theme="light"] .showroom-spotprice {
-  color: #111111 !important;
-  -webkit-text-fill-color: #111111 !important;
-  text-shadow: none;
-}
-html[data-theme="light"] .showroom-spotstock {
-  color: #6e7c8c !important;
-  -webkit-text-fill-color: #6e7c8c !important;
+html[data-theme="light"] .showroom-spotprice,
+html[data-theme="light"] .showroom-hero-primary {
+  color: #3d4856 !important;
+  -webkit-text-fill-color: #3d4856 !important;
   text-shadow: none;
 }
 html[data-theme="light"] .showroom-spotyear,
-html[data-theme="light"] .showroom-spotmake,
+html[data-theme="light"] .showroom-spotstock,
 html[data-theme="light"] .showroom-spotplace {
-  display: none !important;
+  color: #5c6a78 !important;
+  -webkit-text-fill-color: #5c6a78 !important;
+  text-shadow: none;
+}
+html[data-theme="light"] .showroom-spotyear,
+html[data-theme="light"] .showroom-spotplace {
+  display: inline;
+}
+html[data-theme="light"] .showroom-spotyear {
+  display: block !important;
 }
 html[data-theme="light"] .rvfax-sapphire-label,
 html[data-theme="light"] .lot-pill-label,
