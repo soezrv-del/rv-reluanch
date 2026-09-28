@@ -138,6 +138,19 @@ export function isOmittedReportValue(value: string | null | undefined): boolean 
   return false;
 }
 
+/**
+ * "50,000 lbs · smallest in series · confirm sticker" keeps the figure on the
+ * value line. The series or confirm note drops to the line under it.
+ */
+export function splitHeadlineNote(value: string): { value: string; note: string | null } {
+  const match = value.match(/^(.*?)\s·\s+(.+)$/);
+  if (!match) return { value, note: null };
+  const note = match[2]?.trim() ?? "";
+  if (!/smallest in series|\bconfirm\b/i.test(note)) return { value, note: null };
+  const head = match[1]?.trim() ?? "";
+  return head ? { value: head, note } : { value, note: null };
+}
+
 export function formatReportDate(now: Date = new Date()): string {
   return new Intl.DateTimeFormat("en-US", {
     timeZone: "UTC",

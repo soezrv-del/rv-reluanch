@@ -3,7 +3,10 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
-import { PDFDocument } from "pdf-lib";
+import { inflateSync } from "node:zlib";
+import { createRequire } from "node:module";
+import { PDFArray, PDFDocument, PDFRawStream, PDFStream, decodePDFRawStream } from "pdf-lib";
+import { initWasm, Resvg } from "@resvg/resvg-wasm";
 import type { RVSpec } from "./rvTypes.ts";
 import type { LotUnit } from "../lot/ownLotPage.ts";
 import { buildShareReportPdf } from "./shareReportPdf.ts";
@@ -16,6 +19,7 @@ import {
   findLotUnit,
   isOmittedReportValue,
   plainQueryText,
+  splitHeadlineNote,
   REPORT_ICON_URL,
   REPORT_MARK_URL,
   REPORT_TOUCH_ICON_URL,
@@ -23,6 +27,11 @@ import {
   reportYear,
   unitReportPath,
 } from "./shareReport.ts";
+import {
+  layoutShareTitle,
+  shareTitleMaxWidth,
+  ttfTextWidth,
+} from "./reportOgLayout.ts";
 
 const NOW = new Date("2026-09-27T15:00:00Z");
 
@@ -325,6 +334,190 @@ test("share report surfaces use the chrome RvFAX mark", () => {
     assert.match(readFileSync(file, "utf8"), /reportShareIconLinks\(\)/);
   }
 });
+
+test("headline notes split off the figure", () => {
+  assert.deepEqual(splitHeadlineNote("50,000 lbs · smallest in series · confirm sticker"), {
+    value: "50,000 lbs",
+    note: "smallest in series · confirm sticker",
+  });
+  assert.deepEqual(splitHeadlineNote("12,000 lbs · confirm sticker"), {
+    value: "12,000 lbs",
+    note: "confirm sticker",
+  });
+  assert.deepEqual(splitHeadlineNote("46' 7\""), { value: "46' 7\"", note: null });
+  assert.deepEqual(splitHeadlineNote("$132,995"), { value: "$132,995", note: null });
+});
+
+test("facts pdf keeps the headline note and the full source line", async () => {
+  const sources =
+    "OEM MY19–26 Cornerstone / Reserve: X15 605 / 1,950 · Spartan K3 · hitch 20k. SL is an option. · Tire / AC / generator are class-typical when no brochure pin — confirm door sticker.";
+  const bytes = await buildShareReportPdf({
+    kind: "facts",
+    title: "2026 Entegra Coach Cornerstone 45B",
+    eyebrow: "Vehicle report",
+    generatedLabel: "September 28, 2026",
+    photoUrl: null,
+    headlines: [
+      { label: "GVWR", value: "50,000 lbs · smallest in series · confirm sticker" },
+      { label: "Length", value: "46' 7\"" },
+      { label: "Horsepower", value: "605 HP" },
+      { label: "Engine", value: "Cummins X15 605HP" },
+    ],
+    sections: [
+      {
+        title: "Weights and Capacities",
+        rows: [{ label: "GVWR", value: "50,000 lbs · smallest in series · confirm sticker" }],
+      },
+    ],
+    sources,
+    path: "/report/facts?make=Entegra+Coach&series=Cornerstone&year=2026",
+    shareTitle: "2026 Entegra Coach Cornerstone 45B",
+    shareText: "2026 Entegra Coach Cornerstone 45B — RvFAX vehicle report",
+    footerNote: "Specs should be confirmed on the unit sticker.",
+    siteLabel: "rvmax.app",
+    siteUrl: "https://rvmax.app",
+  });
+  const doc = await PDFDocument.load(bytes);
+  assert.equal(doc.getPageCount(), 1);
+  const text = pdfLiterals(doc);
+  assert.ok(text.includes("50,000 lbs"));
+  assert.ok(text.includes("smallest in series · confirm sticker"));
+  assert.equal(/smallest in s…|smallest in s\.\.\./.test(text), false);
+  assert.ok(text.includes("confirm door"));
+  assert.ok(text.includes("sticker."));
+  assert.equal(text.includes("…"), false);
+});
+
+test("unit share title stays clear of the photo", async () => {
+  const here = dirname(fileURLToPath(import.meta.url));
+  const root = join(here, "../../..");
+  const semibold = readFileSync(join(root, "public/fonts/Geist-SemiBold.ttf"));
+  const regular = readFileSync(join(root, "public/fonts/Geist-Regular.ttf"));
+  const title = "2027 Thor Motor Coach Gemini AWD 22MT";
+  const max = shareTitleMaxWidth(true);
+  assert.equal(max, 748 - 56 - 24);
+  const measure = (text: string, size: number) => ttfTextWidth(semibold, text, size);
+  assert.ok(measure(title, 40) > max);
+  const laid = layoutShareTitle(title, max, measure);
+  assert.equal(laid.lines.join(" "), title);
+  for (const line of laid.lines) {
+    assert.ok(measure(line, laid.size) <= max + 0.01, line);
+    assert.equal(line.includes("…"), false);
+  }
+  const facts = layoutShareTitle("2026 Entegra Coach Cornerstone 45B", shareTitleMaxWidth(false), measure);
+  assert.deepEqual(facts, { lines: ["2026 Entegra Coach Cornerstone 45B"], size: 46 });
+
+  const require = createRequire(import.meta.url);
+  await initWasm(readFileSync(require.resolve("@resvg/resvg-wasm/index_bg.wasm")));
+  for (const line of laid.lines) {
+    const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="80" xmlns="http://www.w3.org/2000/svg">
+  <text x="0" y="60" fill="#142033" font-family="Geist" font-size="${laid.size}" font-weight="600">${line}</text>
+</svg>`;
+    const png = new Resvg(svg, {
+      font: { fontBuffers: [regular, semibold], defaultFontFamily: "Geist" },
+    }).render().asPng();
+    const ink = pngInkRight(png);
+    assert.ok(ink <= max + 1, `${line} ink ${ink}px exceeds ${max}`);
+  }
+});
+
+function pdfLiterals(doc: PDFDocument): string {
+  const page = doc.getPages()[0];
+  if (!page) return "";
+  const contents = page.node.Contents();
+  const streams: PDFStream[] = [];
+  if (contents instanceof PDFArray) {
+    for (let i = 0; i < contents.size(); i += 1) {
+      const obj = doc.context.lookup(contents.get(i));
+      if (obj instanceof PDFStream) streams.push(obj);
+    }
+  } else if (contents instanceof PDFStream) {
+    streams.push(contents);
+  }
+  const raw = streams
+    .map((stream) => {
+      const decoded =
+        stream instanceof PDFRawStream ? decodePDFRawStream(stream).decode() : stream.getContents();
+      return Buffer.from(decoded).toString("latin1");
+    })
+    .join("\n");
+  return decodePdfHex(raw);
+}
+
+/** pdf-lib writes WinAnsi text as hex strings. */
+function decodePdfHex(src: string): string {
+  const parts: string[] = [];
+  for (const match of src.matchAll(/<([0-9A-Fa-f\s]+)>/g)) {
+    const digits = match[1]?.replace(/\s+/g, "") ?? "";
+    let text = "";
+    for (let i = 0; i + 1 < digits.length; i += 2) {
+      text += String.fromCharCode(parseInt(digits.slice(i, i + 2), 16));
+    }
+    parts.push(text);
+  }
+  return parts.join("\n");
+}
+
+function pngInkRight(png: Uint8Array): number {
+  const view = new DataView(png.buffer, png.byteOffset, png.byteLength);
+  let offset = 8;
+  let width = 0;
+  let height = 0;
+  const idat: Uint8Array[] = [];
+  while (offset + 8 < png.byteLength) {
+    const length = view.getUint32(offset);
+    const type = Buffer.from(png.subarray(offset + 4, offset + 8)).toString("ascii");
+    if (type === "IHDR") {
+      width = view.getUint32(offset + 8);
+      height = view.getUint32(offset + 12);
+    } else if (type === "IDAT") {
+      idat.push(png.subarray(offset + 8, offset + 8 + length));
+    } else if (type === "IEND") break;
+    offset += 12 + length;
+  }
+  const inflated = inflateSync(Buffer.concat(idat));
+  const bpp = 4;
+  const stride = width * bpp;
+  const rows = Buffer.alloc(height * stride);
+  for (let y = 0; y < height; y += 1) {
+    const filter = inflated[y * (stride + 1)] ?? 0;
+    const src = y * (stride + 1) + 1;
+    const dest = y * stride;
+    for (let i = 0; i < stride; i += 1) {
+      const raw = inflated[src + i] ?? 0;
+      const left = i >= bpp ? rows[dest + i - bpp]! : 0;
+      const up = y > 0 ? rows[dest - stride + i]! : 0;
+      const upLeft = y > 0 && i >= bpp ? rows[dest - stride + i - bpp]! : 0;
+      let value = raw;
+      if (filter === 1) value = raw + left;
+      else if (filter === 2) value = raw + up;
+      else if (filter === 3) value = raw + Math.floor((left + up) / 2);
+      else if (filter === 4) value = raw + paeth(left, up, upLeft);
+      rows[dest + i] = value & 0xff;
+    }
+  }
+  let right = 0;
+  for (let y = 0; y < height; y += 1) {
+    for (let x = width - 1; x >= right; x -= 1) {
+      if ((rows[y * stride + x * bpp + 3] ?? 0) > 10) {
+        right = x + 1;
+        break;
+      }
+    }
+  }
+  return right;
+}
+
+function paeth(left: number, up: number, upLeft: number): number {
+  const estimate = left + up - upLeft;
+  const dl = Math.abs(estimate - left);
+  const du = Math.abs(estimate - up);
+  const dul = Math.abs(estimate - upLeft);
+  if (dl <= du && dl <= dul) return left;
+  if (du <= dul) return up;
+  return upLeft;
+}
 
 test("a long share report still prints as one PDF page", async () => {
   const rows = Array.from({ length: 36 }, (_, index) => ({

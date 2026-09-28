@@ -2,18 +2,25 @@ import { createRequire } from "node:module";
 import { readFile } from "node:fs/promises";
 import { initWasm, Resvg } from "@resvg/resvg-wasm";
 import { loadReportForUrl } from "./reportRequestMeta.ts";
-import type { ShareReport } from "./shareReport.ts";
+import {
+  REPORT_CARD_PHOTO_X,
+  REPORT_CARD_TITLE_X,
+  REPORT_CARD_WIDTH,
+  layoutShareTitle,
+  shareTitleMaxWidth,
+  ttfTextWidth,
+} from "./reportOgLayout.ts";
+import { splitHeadlineNote, type ShareReport } from "./shareReport.ts";
 import regularFont from "../../../public/fonts/Geist-Regular.ttf?inline";
 import semiboldFont from "../../../public/fonts/Geist-SemiBold.ttf?inline";
 import markInline from "../../../public/assets/brand/rvfax-mark-og.png?inline";
 
 const require = createRequire(import.meta.url);
 
-const WIDTH = 1200;
 const HEIGHT = 630;
 const cache = new Map<string, Uint8Array>();
 let wasmReady: Promise<void> | null = null;
-let fontBytes: Uint8Array[] | null = null;
+let fontBytes: [Uint8Array, Uint8Array] | null = null;
 
 function decodeInline(value: string): Uint8Array {
   const payload = value.startsWith("data:") ? (value.split(",")[1] ?? "") : value;
@@ -34,7 +41,7 @@ function ensureWasm(): Promise<void> {
  * the options JSON and never opened, so the card stays cream and blue.
  * Geist SemiBold's typographic family is "Geist" (weight 600).
  */
-function ogFonts(): Uint8Array[] {
+function ogFonts(): [Uint8Array, Uint8Array] {
   fontBytes ??= [decodeInline(regularFont), decodeInline(semiboldFont)];
   return fontBytes;
 }
@@ -132,16 +139,6 @@ function fitLine(
   return { text: `${cut}…`, size: next };
 }
 
-/** "50,000 lbs · smallest in series · confirm sticker" keeps the figure, and the note drops a line. */
-function splitHeadlineNote(value: string): { value: string; note: string | null } {
-  const match = value.match(/^(.*?)\s·\s+(.+)$/);
-  if (!match) return { value, note: null };
-  const note = match[2].trim();
-  if (!/smallest in series|\bconfirm\b/i.test(note)) return { value, note: null };
-  const head = match[1].trim();
-  return head ? { value: head, note } : { value, note: null };
-}
-
 function wrapLines(text: string, maxWidth: number, size: number, maxLines: number): string[] {
   const words = text.split(/\s+/).filter(Boolean);
   const lines: string[] = [];
@@ -164,27 +161,18 @@ function wrapLines(text: string, maxWidth: number, size: number, maxLines: numbe
   return lines;
 }
 
-function wrapTitle(title: string): string[] {
-  const clean = title.replace(/\s+/g, " ").trim();
-  if (clean.length <= 36) return [clean];
-  const cut = clean.lastIndexOf(" ", 36);
-  const at = cut > 14 ? cut : 36;
-  const second = clean.slice(at).trim();
-  return [
-    clean.slice(0, at).trim(),
-    second.length > 36 ? `${second.slice(0, 35)}…` : second,
-  ];
-}
-
 function cardSvg(report: ShareReport, logo: string | null, photo: string | null): string {
-  const lines = wrapTitle(report.title);
+  const laid = layoutShareTitle(report.title, shareTitleMaxWidth(Boolean(photo)), (text, size) =>
+    ttfTextWidth(ogFonts()[1], text, size),
+  );
+  const lines = laid.lines;
   const headlines = report.headlines.slice(0, 3);
-  const titleSize = lines.length > 1 ? 40 : 46;
+  const titleSize = laid.size;
   const titleY = photo ? 250 : 280;
   const title = lines
     .map(
       (line, index) =>
-        `<text x="56" y="${titleY + index * (titleSize + 8)}" fill="#142033" font-family="Geist" font-size="${titleSize}" font-weight="600">${xml(line)}</text>`,
+        `<text x="${REPORT_CARD_TITLE_X}" y="${titleY + index * (titleSize + 8)}" fill="#142033" font-family="Geist" font-size="${titleSize}" font-weight="600">${xml(line)}</text>`,
     )
     .join("");
   const headY = titleY + lines.length * (titleSize + 8) + 36;
@@ -192,7 +180,7 @@ function cardSvg(report: ShareReport, logo: string | null, photo: string | null)
   const colInner = colW - 16;
   const heads = headlines
     .map((row, index) => {
-      const x = 56 + index * colW;
+      const x = REPORT_CARD_TITLE_X + index * colW;
       const parts = splitHeadlineNote(row.value);
       const label = fitLine(row.label.toUpperCase(), colInner, 16, 12, 1.2);
       const value = fitLine(parts.value, colInner, 28, 16);
@@ -212,7 +200,7 @@ function cardSvg(report: ShareReport, logo: string | null, photo: string | null)
     .join("");
   const clips = headlines
     .map((_, index) => {
-      const x = 56 + index * colW;
+      const x = REPORT_CARD_TITLE_X + index * colW;
       return `<clipPath id="col${index}"><rect x="${x}" y="${headY - 24}" width="${colInner}" height="130"/></clipPath>`;
     })
     .join("");
@@ -221,21 +209,21 @@ function cardSvg(report: ShareReport, logo: string | null, photo: string | null)
     : "";
   const brandX = logo ? 140 : 48;
   const photoImg = photo
-    ? `<clipPath id="photo"><rect x="748" y="196" width="400" height="280" rx="16"/></clipPath>
-       <image href="${photo}" x="748" y="196" width="400" height="280" preserveAspectRatio="xMidYMid slice" clip-path="url(#photo)"/>`
+    ? `<clipPath id="photo"><rect x="${REPORT_CARD_PHOTO_X}" y="196" width="400" height="280" rx="16"/></clipPath>
+       <image href="${photo}" x="${REPORT_CARD_PHOTO_X}" y="196" width="400" height="280" preserveAspectRatio="xMidYMid slice" clip-path="url(#photo)"/>`
     : "";
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" xmlns="http://www.w3.org/2000/svg">
+<svg width="${REPORT_CARD_WIDTH}" height="${HEIGHT}" viewBox="0 0 ${REPORT_CARD_WIDTH} ${HEIGHT}" xmlns="http://www.w3.org/2000/svg">
   <defs>${clips}</defs>
-  <rect width="${WIDTH}" height="${HEIGHT}" fill="#f4f1ea"/>
-  <rect width="${WIDTH}" height="148" fill="#0a2a8a"/>
+  <rect width="${REPORT_CARD_WIDTH}" height="${HEIGHT}" fill="#f4f1ea"/>
+  <rect width="${REPORT_CARD_WIDTH}" height="148" fill="#0a2a8a"/>
   ${logoImg}
   <text x="${brandX}" y="78" fill="#ffffff" font-family="Geist" font-size="36" font-weight="600">RvFAX</text>
   <text x="${brandX}" y="110" fill="#d6e2ff" font-family="Geist" font-size="16" letter-spacing="2">VEHICLE REPORT</text>
   ${title}
   ${heads}
   ${photoImg}
-  <text x="56" y="590" fill="#5a6678" font-family="Geist" font-size="20">rvmax.app</text>
+  <text x="${REPORT_CARD_TITLE_X}" y="590" fill="#5a6678" font-family="Geist" font-size="20">rvmax.app</text>
 </svg>`;
 }
 
@@ -274,7 +262,7 @@ export async function renderReportOg(request: Request): Promise<Response> {
 function paintCard(report: ShareReport, logo: string | null, photo: string | null): Uint8Array | null {
   try {
     const png = new Resvg(cardSvg(report, logo, photo), {
-      fitTo: { mode: "width", value: WIDTH },
+      fitTo: { mode: "width", value: REPORT_CARD_WIDTH },
       font: {
         fontBuffers: ogFonts(),
         defaultFontFamily: "Geist",
