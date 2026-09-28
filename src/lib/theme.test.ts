@@ -35,7 +35,10 @@ test("light theme is a white Tesla canvas and a tight Raidho crop", () => {
   assert.match(brand, /data-mark-light=\{RAIDHO_SHELL_MARK_LIGHT\}/);
   assert.match(theme, /querySelectorAll<HTMLImageElement>\("\[data-mark-light\]"\)/);
   assert.doesNotMatch(brand, /data-suite-mark/);
-  assert.doesNotMatch(css, /showroom-mark[\s\S]{0,80}filter:/);
+  assert.doesNotMatch(brand, /width=\{19\}|height=\{32\}|filter:|transform:|mix-blend|invert\(/);
+  assert.match(css, /\.showroom-mark \{[^}]*filter:\s*none/);
+  assert.match(css, /\.showroom-mark \{[^}]*transform:\s*none/);
+  assert.doesNotMatch(css, /\.showroom-mark \{[^}]*(invert|brightness|saturate|hue-rotate|drop-shadow|sepia|contrast)\(/);
   assert.doesNotMatch(css, /\.showroom-mark\[data-suite-mark/);
   assert.match(css, /html\[data-theme="light"\]/);
   assert.match(css, /--color-fg:\s*#171a20/);

@@ -2640,8 +2640,15 @@ html.kb-open [data-rvgrok-composer-dock] {
   color: var(--color-showroom-ink);
 }
 .showroom-mark {
+  display: block;
   height: 1.65rem;
   width: auto;
+  aspect-ratio: auto;
+  object-fit: contain;
+  transform: none;
+  filter: none;
+  mix-blend-mode: normal;
+  opacity: 1;
 }
 .showroom-word {
   font-size: 1.125rem;

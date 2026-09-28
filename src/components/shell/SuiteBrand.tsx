@@ -4,7 +4,7 @@ import { readTheme, serverTheme, subscribeTheme } from "@/lib/theme";
 import { PremiumMenuButton } from "./PremiumMenuButton";
 
 export const RAIDHO_SHELL_MARK = "/assets/brand/raidho-shell-mark.png";
-/** Tight crop of the light-ground Raidho R. Dark shell mark stays untouched. */
+/** Light-ground Raidho file, shown as shipped. Dark file stays the dark header mark. */
 export const RAIDHO_SHELL_MARK_LIGHT = "/assets/brand/raidho-r-mark-light.png";
 
 export function SuiteBrand({
@@ -30,8 +30,6 @@ export function SuiteBrand({
           key={theme}
           src={src}
           alt=""
-          width={19}
-          height={32}
           className="showroom-mark"
           data-mark-dark={RAIDHO_SHELL_MARK}
           data-mark-light={RAIDHO_SHELL_MARK_LIGHT}
