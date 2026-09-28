@@ -44,8 +44,15 @@ test("light theme is a flat Tesla canvas and dark chrome is unchanged", () => {
   assert.match(light, /--color-bg:\s*#f2f2f2/);
   assert.match(light, /--color-fg:\s*#0b1730/);
   assert.match(light, /--color-muted:\s*#5c5e62/);
-  assert.match(light, /height:\s*28px/);
-  assert.match(light, /font-weight:\s*700 !important/);
+  assert.match(light, /\.showroom-mark \{[^}]*height:\s*30px/);
+  assert.match(light, /\.showroom-word \{[^}]*#0b1d45/);
+  assert.match(light, /\.showroom-word \{[^}]*font-weight:\s*700 !important/);
+  assert.match(light, /\.showroom-word \{[^}]*background-clip:\s*border-box/);
+  assert.equal(
+    existsSync(join(root, "../../public/assets/brand/raidho-r-mark-light.svg")),
+    false,
+    "svg stand-in removed",
+  );
   assert.match(light, /\.suite-title-accent[\s\S]*?#1648c8/);
   assert.match(light, /background:\s*#1648c8 !important/);
   assert.doesNotMatch(light, /Figtree/);

@@ -69,6 +69,15 @@ export function HomeScreen({
   const spotUnit = useMemo(() => spotlightLotUnit(listed), [listed]);
   const specs = spotUnit ? spotlightSpecs(spotUnit) : null;
   const model = specs?.model || SHOWROOM_SPOTLIGHT.series;
+  const spotYearMake = [
+    (spotUnit?.year || SHOWROOM_SPOTLIGHT.year).trim(),
+    (spotUnit?.make || SHOWROOM_SPOTLIGHT.make).trim(),
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const spotWhere = [specs?.stock, spotUnit?.location.trim() ?? ""]
+    .filter(Boolean)
+    .join(" · ");
   const theme = useSyncExternalStore(subscribeTheme, readTheme, serverTheme);
   const spotPhoto = spotUnit ? lotUnitPhoto(spotUnit) : null;
   const heroSrc =
@@ -95,11 +104,13 @@ export function HomeScreen({
 
   const placard = (
     <>
+      {spotYearMake ? <p className="showroom-spotyear">{spotYearMake}</p> : null}
       <p className="showroom-spotmodel">{model}</p>
       {specs?.price ? <p className="showroom-spotprice">{specs.price}</p> : null}
       {specs?.stock ? (
         <p className="showroom-spotstock">Stock {specs.stock}</p>
       ) : null}
+      {spotWhere ? <p className="showroom-spotplace">{spotWhere}</p> : null}
     </>
   );
 

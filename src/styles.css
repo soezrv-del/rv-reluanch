@@ -1459,6 +1459,12 @@
   display: none;
 }
 
+/* Year / place lines exist for the light hero. Dark placard stays model, price, stock. */
+.showroom-spotyear,
+.showroom-spotplace {
+  display: none;
+}
+
 /* Trips ⋯ sits in the page header, already below the showroom logo. */
 .premium-menu-corner {
   top: 0;
@@ -3338,7 +3344,7 @@ html[data-theme="light"] .showroom-brand {
   min-height: 0;
 }
 html[data-theme="light"] .showroom-mark {
-  height: 28px;
+  height: 30px;
   width: auto;
   object-fit: contain;
   transform: none;
@@ -3350,8 +3356,8 @@ html[data-theme="light"] .showroom-word {
   background-image: none !important;
   -webkit-background-clip: border-box !important;
   background-clip: border-box !important;
-  -webkit-text-fill-color: #0b1730 !important;
-  color: #0b1730 !important;
+  -webkit-text-fill-color: #0b1d45 !important;
+  color: #0b1d45 !important;
   font-weight: 700 !important;
   letter-spacing: -0.02em;
   filter: none !important;
@@ -3402,7 +3408,7 @@ html[data-theme="light"] .suite-title-flat {
   font-weight: 700;
   letter-spacing: -0.04em;
   line-height: 0.92;
-  color: #0b1730;
+  color: #0b1d45;
 }
 html[data-theme="light"] .suite-title-accent {
   color: #1648c8;
@@ -3471,11 +3477,11 @@ html[data-theme="light"] :is(
 ) {
   background: #ffffff !important;
   background-image: none !important;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04) !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 8px 18px rgba(0, 0, 0, 0.04) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  border-radius: 8px !important;
+  border-radius: 12px !important;
   color: #0b1730;
 }
 
@@ -3593,6 +3599,21 @@ html[data-theme="light"] .showroom-hero-secondary {
   border: 1px solid rgba(0, 0, 0, 0.14) !important;
   box-shadow: none !important;
 }
+html[data-theme="light"] [data-facts-search]:not(:disabled) {
+  background: #1648c8 !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border-color: #1648c8 !important;
+  box-shadow: none !important;
+}
+html[data-theme="light"] [data-facts-search]:disabled {
+  background: #ffffff !important;
+  color: #8e9199 !important;
+  -webkit-text-fill-color: #8e9199 !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  box-shadow: none !important;
+}
 
 /* Home hero: full-bleed photo, white type on the bottom fade, actions under it. */
 html[data-theme="light"] .showroom-home {
@@ -3611,11 +3632,29 @@ html[data-theme="light"] .showroom-hero {
   border: 0;
   background: #e6e8ec;
 }
+html[data-theme="light"] .showroom-hero::after {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 64%;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(8, 14, 28, 0) 0%,
+    rgba(8, 14, 28, 0.08) 32%,
+    rgba(8, 14, 28, 0.78) 100%
+  );
+}
 html[data-theme="light"] .showroom-coach {
   width: 100%;
-  height: 20.5rem;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  max-height: 17.5rem;
   object-fit: cover;
-  object-position: center 42%;
+  object-position: center 46%;
   filter: none;
 }
 html[data-theme="light"] .showroom-coach[data-hero-kind="cutout"] {
@@ -3633,33 +3672,57 @@ html[data-theme="light"] .showroom-placard {
   margin: 0;
   border: 0 !important;
   border-radius: 0 !important;
-  background: linear-gradient(180deg, transparent, rgba(11, 23, 48, 0.78)) !important;
+  background: transparent !important;
   box-shadow: none !important;
   text-align: left;
-  padding: 3.25rem 1.25rem 1rem;
+  padding: 0 1.15rem 4.55rem;
+  pointer-events: none;
 }
+html[data-theme="light"] .showroom-spotyear,
 html[data-theme="light"] .showroom-spotmodel,
 html[data-theme="light"] .showroom-spotprice,
-html[data-theme="light"] .showroom-spotstock {
+html[data-theme="light"] .showroom-spotplace {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.4);
+}
+html[data-theme="light"] .showroom-spotyear {
+  display: block;
+  margin: 0 0 0.12rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 html[data-theme="light"] .showroom-spotmodel {
-  font-size: 1.65rem;
+  font-size: 1.7rem;
   font-weight: 700;
   letter-spacing: -0.03em;
 }
 html[data-theme="light"] .showroom-spotprice {
-  font-size: 1.35rem;
+  font-size: 1.28rem;
   font-weight: 600;
+}
+html[data-theme="light"] .showroom-spotstock {
+  display: none;
+}
+html[data-theme="light"] .showroom-spotplace {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 html[data-theme="light"] .showroom-hero-actions {
   display: flex;
   grid-column: 1;
-  grid-row: 2;
+  grid-row: 1;
+  align-self: end;
+  z-index: 5;
   gap: 0.65rem;
-  padding: 0.9rem 1.25rem 0.25rem;
+  width: 100%;
+  margin: 0;
+  padding: 0 1.15rem 0.85rem;
+  background: transparent;
 }
 html[data-theme="light"] .showroom-hero-primary,
 html[data-theme="light"] .showroom-hero-secondary {
@@ -3672,8 +3735,11 @@ html[data-theme="light"] .showroom-hero-secondary {
 }
 html[data-theme="light"] .showroom-arrivals {
   grid-column: 1;
-  grid-row: 3;
-  margin-top: 1.65rem;
+  grid-row: 2;
+  margin-top: 1.15rem;
+}
+html[data-theme="light"] .showroom-kicker-dot {
+  background: #5c5e62;
 }
 html[data-theme="light"] .showroom-kicker {
   color: #5c5e62 !important;
@@ -3681,7 +3747,33 @@ html[data-theme="light"] .showroom-kicker {
   letter-spacing: 0.08em;
 }
 html[data-theme="light"] .showroom-arrival {
-  border-radius: 8px;
+  flex-direction: row;
+  width: 17.25rem;
+  flex-basis: 17.25rem;
+  align-items: stretch;
+  border-radius: 12px;
+  min-height: 5.6rem;
+}
+html[data-theme="light"] .showroom-arrival-photo {
+  width: 7.4rem;
+  height: auto;
+  min-height: 5.6rem;
+  flex: 0 0 7.4rem;
+  align-items: center;
+  background: #e6e8ec;
+}
+html[data-theme="light"] .showroom-arrival-photo img {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: cover;
+  object-position: center;
+}
+html[data-theme="light"] .showroom-arrival-meta {
+  border-top: 0;
+  min-height: 0;
+  justify-content: center;
+  padding: 0.7rem 0.8rem;
 }
 html[data-theme="light"] .showroom-arrival-name {
   color: #0b1730 !important;

@@ -164,8 +164,17 @@ export function SapphireHeader({ tab }: { tab: AppTab }) {
                 )}
                 aria-hidden
               >
-                {flatTitle.lead ? <span>{flatTitle.lead}</span> : null}
-                <span className="suite-title-accent">{flatTitle.accent}</span>
+                {flatTitle.accent === "FACTS" ? (
+                  <>
+                    {flatTitle.lead ? <span>{flatTitle.lead}</span> : null}
+                    <span className="suite-title-accent">{flatTitle.accent}</span>
+                  </>
+                ) : (
+                  <span>
+                    {flatTitle.lead}
+                    {flatTitle.accent}
+                  </span>
+                )}
               </p>
             </div>
 
