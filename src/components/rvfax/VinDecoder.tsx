@@ -164,10 +164,12 @@ export function VinDecoder({
       style={{
         height: frameH ? `${frameH}px` : "100dvh",
         top: kb.vvOffsetTop || 0,
-        paddingTop: "max(0.5rem, env(safe-area-inset-top))",
+        paddingTop: "max(0.5rem, var(--safe-top, env(safe-area-inset-top)))",
+        paddingLeft: "max(0.75rem, var(--safe-left, 0px))",
+        paddingRight: "max(0.75rem, var(--safe-right, 0px))",
         paddingBottom: kbPad
-          ? `max(0.75rem, ${kbPad + 8}px)`
-          : "max(0.75rem, env(safe-area-inset-bottom))",
+          ? `max(var(--safe-bottom, 0px), ${kbPad + 8}px)`
+          : "max(0.75rem, var(--safe-bottom, env(safe-area-inset-bottom)))",
       }}
     >
       <button

@@ -36,8 +36,6 @@ export function SuiteRaidhoBackdrop({
       data-showroom-plain=""
       data-raidho-bleed={bleed ? "" : undefined}
     >
-      <div className="showroom-ambient" />
-      <div className="showroom-grain" />
     </div>
   );
 }

@@ -37,14 +37,15 @@ test("light theme is a flat Tesla canvas and dark chrome is unchanged", () => {
   assert.match(rootDoc, /THEME_BOOT_SCRIPT/);
   assert.match(more, /setTheme\(next\)/);
   assert.match(more, /data-tools-menu/);
-  assert.match(brand, /raidho-shell-mark\.png/);
+  assert.doesNotMatch(brand, /raidho-shell-mark\.png/);
   assert.match(brand, /r-mark-final-60\.png/);
   assert.match(brand, /r-mark-final-90\.png/);
   assert.match(brand, /r-mark-final-60\.webp/);
   assert.doesNotMatch(brand, /raidho-r-mark-light/);
-  assert.match(brand, /theme === \"light\" \? RAIDHO_SHELL_MARK_LIGHT : RAIDHO_SHELL_MARK/);
+  assert.match(brand, /src=\{RAIDHO_SHELL_MARK\}/);
+  assert.match(brand, /RAIDHO_SHELL_MARK = \"\/assets\/brand\/r-mark-final-60\.png\"/);
   assert.match(brand, /data-mark-light=\{RAIDHO_SHELL_MARK_LIGHT\}/);
-  assert.match(theme, /querySelectorAll<HTMLImageElement>\(\"[data-mark-light]\"\)/);
+  assert.match(theme, /querySelectorAll<HTMLImageElement>\("\[data-mark-light\]"\)/);
   assert.match(css, /\.showroom-mark \{[^}]*filter:\s*none/);
   assert.match(css, /\.showroom-mark \{[^}]*transform:\s*none/);
   assert.doesNotMatch(css, /\.showroom-mark \{[^}]*(invert|brightness|saturate|hue-rotate|drop-shadow|sepia|contrast)\(/);
@@ -62,9 +63,9 @@ test("light theme is a flat Tesla canvas and dark chrome is unchanged", () => {
   assert.match(light, /\.showroom-word \{[^}]*font-weight:\s*700 !important/);
   assert.match(light, /\.showroom-word \{[^}]*background-clip:\s*border-box/);
   assert.equal(
-    existsSync(join(root, \"../../public/assets/brand/raidho-r-mark-light.svg\")),
+    existsSync(join(root, "../../public/assets/brand/raidho-r-mark-light.svg")),
     false,
-    \"svg stand-in removed\",
+    "svg stand-in removed",
   );
   assert.match(light, /\.suite-title-accent[\s\S]*?#1648c8/);
   assert.match(light, /background:\s*#1648c8 !important/);

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { isAndroidNativeWebView } from "@/lib/hooks/nativeWebView";
+import { grokComposerKeyboardLift } from "@/lib/rvgrok/keyboardSafe";
 
 export type KeyboardInset = {
   /** Keyboard height overlapping the layout (px) */
@@ -53,13 +54,31 @@ function applyCssVars(k: KeyboardInset) {
       : typeof window !== "undefined"
         ? window.innerHeight
         : 0;
+  const layoutHeight = typeof window !== "undefined" ? window.innerHeight : 0;
+  const lift = grokComposerKeyboardLift({
+    open: k.open,
+    inset: k.inset,
+    vvHeight: k.vvHeight || frameH,
+    vvOffsetTop: k.vvOffsetTop,
+    layoutHeight,
+  });
   root.style.setProperty("--kb-inset", `${k.inset}px`);
+  root.style.setProperty("--kb-lift", `${lift}px`);
   if (frameH > 0) {
     root.style.setProperty("--vv-height", `${Math.round(frameH)}px`);
   }
   root.style.setProperty("--vv-offset-top", `${k.vvOffsetTop}px`);
   root.classList.toggle("kb-open", k.open);
   root.dataset.kbOpen = k.open ? "1" : "0";
+}
+
+/** Dock / composer chrome is lifted with --kb-lift. Scrolling it moves the page. */
+function isPinnedChromeField(el: HTMLElement): boolean {
+  return Boolean(
+    el.closest(
+      "[data-room-ask], [data-rvgrok-composer-dock], [data-keyboard-anchor]",
+    ),
+  );
 }
 
 function isTextField(el: EventTarget | null): el is HTMLElement {
@@ -108,10 +127,12 @@ function findScrollParent(el: HTMLElement): HTMLElement | null {
  */
 export function scrollFieldIntoVisibleArea(el: HTMLElement, keyboardInset = 0) {
   if (typeof window === "undefined") return;
+  if (isPinnedChromeField(el)) return;
 
   const vv = window.visualViewport;
   const vvTop = vv?.offsetTop ?? 0;
   const vvHeight = vv?.height ?? window.innerHeight;
+  const layoutH = window.innerHeight;
   const kb =
     keyboardInset > 0
       ? keyboardInset
@@ -120,9 +141,13 @@ export function scrollFieldIntoVisibleArea(el: HTMLElement, keyboardInset = 0) {
             "0",
         ) || 0;
 
-  // Visible band inside the visual viewport (leave room above keyboard)
+  // When the shell already follows the shrunk visual viewport, subtracting
+  // the inset again scrolls the field too far. Only subtract the overlap
+  // the viewport did not already give up.
+  const shellTracksVv = vvHeight > 80 && layoutH - (vvHeight + vvTop) > 40;
+  const cover = shellTracksVv ? 0 : Math.max(kb, 0);
   const visibleTop = vvTop + 12;
-  const visibleBottom = vvTop + vvHeight - Math.max(kb, 0) - FOCUS_GAP;
+  const visibleBottom = vvTop + vvHeight - cover - FOCUS_GAP;
 
   const rect = el.getBoundingClientRect();
   // Prefer scrolling the nearest scroll parent so fixed overlays keep working
@@ -152,23 +177,7 @@ export function scrollFieldIntoVisibleArea(el: HTMLElement, keyboardInset = 0) {
 
     if (needs) {
       const next = Math.max(0, current + delta);
-      try {
-        scroller.scrollTo({ top: next, behavior: "smooth" });
-      } catch {
-        scroller.scrollTop = next;
-      }
-    }
-    return;
-  }
-
-  // Fallback: native scrollIntoView
-  try {
-    el.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
-  } catch {
-    try {
-      el.scrollIntoView(true);
-    } catch {
-      /* */
+      scroller.scrollTop = next;
     }
   }
 }
@@ -286,6 +295,7 @@ export function useKeyboardInset(): KeyboardInset {
       removeCap?.();
       document.documentElement.classList.remove("kb-open");
       document.documentElement.style.removeProperty("--kb-inset");
+      document.documentElement.style.removeProperty("--kb-lift");
     };
   }, []);
 

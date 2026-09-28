@@ -111,6 +111,7 @@ test("Lot stock is the last dock tab and not RV Grok", () => {
 test("a lot unit with no photo shows the Raidho mark and a real photo stays", () => {
   const lot = read("../../components/lot/LotStockApp.tsx");
   const cover = read("../../components/shell/CoveredCoach.tsx");
+  const arrivals = read("../../components/lot/LotArrivals.tsx");
   const homeScreen = read("../../components/shell/HomeScreen.tsx");
   const css = read("../../styles.css");
 
@@ -126,7 +127,8 @@ test("a lot unit with no photo shows the Raidho mark and a real photo stays", ()
   assert.match(css, /\.lot-mark-art[\s\S]*height:\s*45%/);
   assert.match(css, /\.lot-mark-art[\s\S]*object-fit:\s*contain/);
   assert.match(css, /\.lot-mark-art[\s\S]*opacity:\s*0\.36/);
-  assert.match(homeScreen, /<CoveredCoach variant=\{coverVariant\(unit\)\} \/>/);
+  assert.match(arrivals, /<CoveredCoach variant=\{coverVariant\(unit\)\} \/>/);
+  assert.doesNotMatch(homeScreen, /CoveredCoach|showroom-arrival/);
   assert.match(cover, /className="h-20 w-full"/);
   assert.doesNotMatch(cover, /preserveAspectRatio|className\?:/);
 });
