@@ -10,13 +10,13 @@ function read(rel: string) {
   return readFileSync(join(root, rel), "utf8");
 }
 
-test("light theme is a white Tesla canvas and a tight Raidho crop", () => {
+test("light theme uses the shipped Raidho plate and a three-color type palette", () => {
   const css = read("../styles.css");
   const brand = read("../components/shell/SuiteBrand.tsx");
   const more = read("../components/more/MoreApp.tsx");
   const rootDoc = read("../routes/__root.tsx");
   const theme = read("./theme.ts");
-  const mark = join(root, "../../public/assets/brand/raidho-r-mark-light.png");
+  const mark = join(root, "../../public/assets/brand/raidho-r-mark-light.jpg");
 
   assert.ok(existsSync(mark), "light mark");
   assert.match(theme, /localStorage\.setItem\("rvfox-theme", next\)/);
@@ -29,7 +29,7 @@ test("light theme is a white Tesla canvas and a tight Raidho crop", () => {
   assert.match(css, /\[data-tools-menu\] \.text-sky-200/);
   assert.match(css, /\[data-tools-menu\] \.glass-prestige/);
   assert.match(brand, /raidho-shell-mark\.png/);
-  assert.match(brand, /raidho-r-mark-light\.png/);
+  assert.match(brand, /raidho-r-mark-light\.jpg/);
   assert.match(brand, /theme === "light" \? RAIDHO_SHELL_MARK_LIGHT : RAIDHO_SHELL_MARK/);
   assert.match(brand, /useSyncExternalStore\(subscribeTheme, readTheme, serverTheme\)/);
   assert.match(brand, /data-mark-light=\{RAIDHO_SHELL_MARK_LIGHT\}/);
@@ -41,12 +41,13 @@ test("light theme is a white Tesla canvas and a tight Raidho crop", () => {
   assert.doesNotMatch(css, /\.showroom-mark \{[^}]*(invert|brightness|saturate|hue-rotate|drop-shadow|sepia|contrast)\(/);
   assert.doesNotMatch(css, /\.showroom-mark\[data-suite-mark/);
   assert.match(css, /html\[data-theme="light"\]/);
-  assert.match(css, /--color-fg:\s*#171a20/);
-  assert.match(css, /--color-muted:\s*#5c5e62/);
+  assert.match(css, /--color-fg:\s*#000000/);
+  assert.match(css, /--color-muted:\s*#3d4d68/);
   assert.match(css, /--color-border:\s*#eeeeee/);
   assert.match(css, /--color-sapphire:\s*#1648c8/);
   assert.match(css, /--dock-surface:\s*#ffffff/);
-  assert.match(css, /#3e6ae1/);
+  assert.match(css, /#3d4d68/);
+  assert.match(css, /\[data-lot-scene="photo"\]/);
   assert.match(css, /html\[data-theme="light"\] \.sapphire-header-inner/);
   assert.match(
     css,

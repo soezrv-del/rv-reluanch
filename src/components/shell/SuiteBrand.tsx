@@ -5,7 +5,7 @@ import { PremiumMenuButton } from "./PremiumMenuButton";
 
 export const RAIDHO_SHELL_MARK = "/assets/brand/raidho-shell-mark.png";
 /** Light-ground Raidho file, shown as shipped. Dark file stays the dark header mark. */
-export const RAIDHO_SHELL_MARK_LIGHT = "/assets/brand/raidho-r-mark-light.png";
+export const RAIDHO_SHELL_MARK_LIGHT = "/assets/brand/raidho-r-mark-light.jpg";
 
 export function SuiteBrand({
   onHome,
