@@ -3304,18 +3304,17 @@ html:not([data-theme="blue"]) {
   box-shadow: none;
   text-shadow: none;
 }
-.app-shell :is(.glass-prestige, .glass-prestige-gold, .glass-panel, .tesla-tile, .grok-composer-pill, .showroom-ask) :is(input, textarea, select, .glass-field) {
-  background: transparent;
-  background-image: none;
-  border-color: transparent;
-  box-shadow: none;
+.app-shell :is(.glass-prestige, .glass-prestige-gold, .glass-panel, .tesla-tile) :is(input, textarea, select, .glass-field) {
+  background: #ffffff !important;
+  background-image: none !important;
+  border: 1px solid rgba(11, 29, 69, 0.14) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(16, 24, 40, 0.07) !important;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
   color: #0b1d45;
-}
-.app-shell :is(.glass-prestige, .glass-panel) :is(.glass-surface, [class~="bg-black/30"], [class~="bg-black/40"], [class~="bg-white/10"], [class~="bg-white/8"]) {
-  background: transparent;
-  box-shadow: none;
+  color-scheme: light;
 }
 .app-shell .exclusive-lender-row {
   background: transparent;
@@ -3344,16 +3343,6 @@ html:not([data-theme="blue"]) {
   opacity: 1;
 }
 [data-nda-gate] .glass-prestige {
-  background: linear-gradient(
-    155deg,
-    rgba(240, 215, 140, 0.14) 0%,
-    rgba(255, 255, 255, 0.08) 36%,
-    rgba(10, 8, 6, 0.18) 100%
-  );
-  -webkit-backdrop-filter: blur(28px) saturate(1.7);
-  backdrop-filter: blur(28px) saturate(1.7);
-  border: 1px solid var(--color-gold-border);
-  box-shadow: var(--shadow-glow-gold), var(--shadow-glass);
   color: #0b1d45;
 }
 .report-band {
@@ -3361,10 +3350,7 @@ html:not([data-theme="blue"]) {
   color: #0b1d45;
   border-bottom: 1px solid rgba(11, 29, 69, 0.08);
 }
-.app-shell .glass-prestige button:not([data-tone="main"]):not(.tesla-main):not(.tesla-secondary):not(.grok-mic-btn):not(.showroom-mic):not(.suite-hero-menu):not(.showroom-menu):not(.metal-seg):not(.lot-chip),
-.app-shell .glass-prestige-gold button:not([data-tone="main"]):not(.tesla-main):not(.tesla-secondary):not(.grok-mic-btn):not(.showroom-mic):not(.showroom-menu):not(.metal-seg):not(.lot-chip),
-.app-shell .glass-surface button:not([data-tone="main"]):not(.tesla-main):not(.tesla-secondary):not(.grok-mic-btn):not(.showroom-mic):not(.showroom-menu):not(.metal-seg):not(.lot-chip),
-.app-shell .tesla-tile button:not([data-tone="main"]):not(.tesla-main):not(.grok-mic-btn):not(.showroom-mic):not(.metal-seg),
+.app-shell .glass-prestige > button:not(.tesla-main):not(.tesla-secondary):not(.glass-field):not(.metal-seg):not(.lot-chip),
 .app-shell .grok-composer-pill button:not(.grok-mic-btn) {
   background: transparent !important;
   border-color: transparent !important;
@@ -3664,7 +3650,7 @@ html[data-theme="blue"] [data-nda-gate] [data-nda-agree-row] {
   border-color: rgba(150, 112, 48, 0.4) !important;
 }
 
-/* Light page frost — translucent fill, blur, hairline, layered shadow. */
+/* Light page frost — cool translucent fill, blur, hairline, stacked shadow. */
 html:not([data-theme="blue"]) :is(
   .glass-prestige,
   .glass-prestige-deep,
@@ -3676,22 +3662,24 @@ html:not([data-theme="blue"]) :is(
   .showroom-float,
   .showroom-ask,
   .showroom-tab,
-  .showroom-menu
+  .showroom-menu,
+  .lot-search,
+  .tesla-tile
 ) {
   background: linear-gradient(
-    165deg,
-    rgba(255, 252, 246, 0.86) 0%,
-    rgba(255, 255, 255, 0.66) 46%,
-    rgba(232, 226, 214, 0.8) 100%
+    180deg,
+    rgba(255, 255, 255, 0.8) 0%,
+    rgba(244, 247, 252, 0.72) 100%
   ) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(1.7);
-  backdrop-filter: blur(28px) saturate(1.7);
-  border: 1px solid rgba(255, 255, 255, 0.72) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(1.35);
+  backdrop-filter: blur(28px) saturate(1.35);
+  border: 1px solid rgba(255, 255, 255, 0.92) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.88),
-    inset 0 -1px 0 rgba(40, 32, 16, 0.08),
-    0 12px 28px rgba(16, 20, 32, 0.1),
-    0 2px 6px rgba(16, 20, 32, 0.06) !important;
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 0 0 1px rgba(11, 29, 69, 0.07),
+    0 2px 4px rgba(16, 24, 40, 0.06),
+    0 12px 28px rgba(16, 24, 40, 0.1),
+    0 28px 56px rgba(16, 24, 40, 0.14) !important;
   color: #111111;
 }
 
@@ -3708,4 +3696,135 @@ html:not([data-theme="blue"]) .app-shell .text-emerald-400 {
 }
 html:not([data-theme="blue"]) .app-shell .text-blue {
   color: #1648c8;
+}
+
+/* White only — track + raised pill, ink labels, control surfaces, dock clearance. */
+html:not([data-theme="blue"]) .app-shell .tesla-segment {
+  gap: 0.2rem;
+  width: 100%;
+  padding: 0.2rem;
+  border-radius: 999px;
+  background: rgba(11, 29, 69, 0.06) !important;
+  border: 1px solid rgba(11, 29, 69, 0.08) !important;
+  box-shadow: inset 0 1px 2px rgba(16, 24, 40, 0.04) !important;
+}
+html:not([data-theme="blue"]) .app-shell :is(.tesla-segment > button, .metal-seg) {
+  flex: 1 1 0;
+  background: transparent !important;
+  color: #3d4d68 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+html:not([data-theme="blue"]) .app-shell :is(
+  .tesla-segment > button[data-tone="main"],
+  .tesla-segment > button[aria-pressed="true"],
+  .metal-seg[data-tone="main"],
+  .metal-seg[aria-pressed="true"]
+) {
+  background: #ffffff !important;
+  color: #0b1d45 !important;
+  border: 0 !important;
+  box-shadow:
+    0 1px 2px rgba(16, 24, 40, 0.1),
+    0 4px 12px rgba(16, 24, 40, 0.08) !important;
+}
+html:not([data-theme="blue"]) [data-cal-screen] .flex-col:has(> .tesla-segment) {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+html:not([data-theme="blue"]) [data-cal-screen] .tesla-segment {
+  flex: 0 0 auto;
+  width: auto;
+  margin-left: auto;
+}
+html:not([data-theme="blue"]) [data-cal-screen] .tesla-segment > .metal-seg {
+  flex: 0 0 auto;
+  min-height: 2.25rem;
+  padding-inline: 0.85rem;
+}
+html:not([data-theme="blue"]) .app-shell .lot-chip {
+  background: #ffffff !important;
+  color: #0b1d45 !important;
+  border: 1px solid rgba(11, 29, 69, 0.12) !important;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06) !important;
+}
+html:not([data-theme="blue"]) .app-shell .lot-chip.is-on,
+html:not([data-theme="blue"]) .app-shell .lot-chip[aria-pressed="true"] {
+  background: #1648c8 !important;
+  color: #ffffff !important;
+  border-color: #1648c8 !important;
+  box-shadow: 0 1px 2px rgba(22, 72, 200, 0.28) !important;
+}
+html:not([data-theme="blue"]) .app-shell .lot-chip-rail {
+  gap: 0.75rem;
+  padding: 0.15rem 0.1rem 0.7rem;
+}
+html:not([data-theme="blue"]) .app-shell .home-hero-actions {
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+html:not([data-theme="blue"]) .app-shell [data-grok-top-chrome],
+html:not([data-theme="blue"]) .app-shell [data-grok-thread-chrome] > .flex {
+  gap: 0.55rem;
+}
+html:not([data-theme="blue"]) .app-shell [data-tow-truck] > div:first-child {
+  gap: 0.75rem;
+  margin-bottom: 0.55rem;
+}
+html:not([data-theme="blue"]) .app-shell [data-tow-landing] section.glass-surface {
+  padding: 0.85rem;
+}
+html:not([data-theme="blue"]) .app-shell [data-premium-screen] .grid.grid-cols-3 {
+  gap: 0.75rem;
+}
+html:not([data-theme="blue"]) .app-shell :is(
+  [data-grok-top-chrome] > button,
+  [data-grok-thread-chrome] button,
+  [data-tow-truck] button:not(.metal-seg),
+  [data-tow-details]
+) {
+  background: #ffffff !important;
+  border: 1px solid rgba(11, 29, 69, 0.14) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(16, 24, 40, 0.07) !important;
+  color: #0b1d45 !important;
+}
+html:not([data-theme="blue"]) :is(.app-shell, [data-nda-gate]) :is(.text-gold, .text-gold-bright) {
+  color: #3d4d68 !important;
+}
+html:not([data-theme="blue"]) .app-shell :is(
+  .tracking-\[0\.1em\].text-amber,
+  .tracking-\[0\.12em\].text-amber,
+  .tracking-\[0\.14em\].text-amber,
+  .tracking-\[0\.16em\].text-amber,
+  .tracking-\[0\.18em\].text-amber
+) {
+  color: #3d4d68 !important;
+}
+html:not([data-theme="blue"]) [data-tools-menu] :is(.text-sky-200, .text-sky-300),
+html:not([data-theme="blue"]) [data-premium-screen] .text-sky-200 {
+  color: #3d4d68 !important;
+}
+html:not([data-theme="blue"]) .suite-verified {
+  color: #1648c8 !important;
+}
+html:not([data-theme="blue"]) :is(.tesla-page-title, .showroom-word) {
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111;
+}
+html:not([data-theme="blue"]) .app-shell [data-app-scroll],
+html:not([data-theme="blue"]) .app-shell .showroom-home {
+  padding-bottom: calc(8.75rem + env(safe-area-inset-bottom, 0px));
+}
+html:not([data-theme="blue"]) .app-shell [data-rvgrok-wingman] [data-app-scroll] {
+  padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+}
+html:not([data-theme="blue"]),
+html:not([data-theme="blue"]) body,
+html:not([data-theme="blue"]) #root {
+  background: #f2f2f2 !important;
+  background-image: none !important;
 }
