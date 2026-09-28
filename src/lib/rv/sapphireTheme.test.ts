@@ -10,6 +10,23 @@ function read(rel: string) {
   return readFileSync(join(root, rel), "utf8");
 }
 
+test("blue is the default scheme; a stored white choice stays light", () => {
+  const theme = read("../theme.ts");
+  const root = read("../../routes/__root.tsx");
+  const more = read("../../components/more/MoreApp.tsx");
+
+  assert.match(theme, /=== "white" \? "white" : "blue"/);
+  assert.match(theme, /return "blue"/);
+  assert.match(theme, /blue: "#061228"/);
+  assert.match(theme, /white: "#f2f2f2"/);
+  assert.match(root, /var t="blue"/);
+  assert.match(root, /stored==="white"\|\|stored==="blue"/);
+  assert.match(root, /t==="white"\?"#f2f2f2":"#061228"/);
+  assert.match(root, /content: "#061228"/);
+  assert.match(more, /useState<ColorScheme>\("blue"\)/);
+  assert.match(more, /chooseScheme\(scheme === "white" \? "blue" : "white"\)/);
+});
+
 test("theme tokens are sapphire / cobalt — not Tiimo lavender", () => {
   const css = read("../../styles.css");
 
@@ -19,6 +36,10 @@ test("theme tokens are sapphire / cobalt — not Tiimo lavender", () => {
   assert.match(css, /--color-sapphire-deep:\s*#0a2a8a/);
   assert.match(css, /--color-sapphire-glow:\s*#3d6ee0/);
   assert.match(css, /--color-bg:\s*#f2f2f2/);
+  assert.match(css, /html\[data-theme="blue"\][\s\S]*--color-bg:\s*#061228/);
+  assert.match(css, /html\[data-theme="blue"\][\s\S]*--color-fg:\s*#f4f7fb/);
+  assert.match(css, /html\[data-theme="blue"\][\s\S]*--color-showroom:\s*#05070b/);
+  assert.match(css, /html\[data-theme="blue"\][\s\S]*--color-showroom-ink:\s*#eef2f8/);
   assert.match(css, /--color-accent:\s*var\(--color-sapphire\)/);
   assert.match(css, /--color-tiimo-lavender:\s*var\(--color-sapphire\)/);
   assert.match(css, /--dock-surface:\s*#000000/);

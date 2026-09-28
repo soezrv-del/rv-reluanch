@@ -107,7 +107,7 @@ export function MoreApp({
   const [liveVoice, setLiveVoice] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [previewingId, setPreviewingId] = useState<string | null>(null);
-  const [scheme, setScheme] = useState<ColorScheme>("white");
+  const [scheme, setScheme] = useState<ColorScheme>("blue");
 
   useEffect(() => {
     setScheme(readStoredTheme());

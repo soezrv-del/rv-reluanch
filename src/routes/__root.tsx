@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import {
   Outlet,
   createRootRoute,
@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-router";
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
+import { THEME_BG, readStoredTheme } from "@/lib/theme";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "RvFOX · Know before you buy.";
@@ -26,8 +27,8 @@ export const Route = createRootRoute({
         content:
           "RvGrok — professional RV intelligence powered by xAI Grok. Specs, pricing, recalls, financing, and multi-step Agent research.",
       },
-      { name: "theme-color", content: "#f2f2f2" },
-      { name: "color-scheme", content: "light" },
+      { name: "theme-color", content: "#061228" },
+      { name: "color-scheme", content: "dark" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       {
@@ -56,9 +57,27 @@ function RootComponent() {
 
 /**
  * Runs in the document head before the body is painted.
- * Default is white. A saved "blue" choice paints navy on the first frame.
+ * Unset or blue paints the original sapphire navy (#061228).
+ * A saved "white" choice paints #f2f2f2 on the first frame.
  */
-const THEME_BOOT = `(function(){var t="white";try{if(localStorage.getItem("rvfox-theme")==="blue")t="blue";}catch(e){}var bg=t==="blue"?"#061228":"#f2f2f2";var h=document.documentElement;h.setAttribute("data-theme",t);h.style.backgroundColor=bg;h.style.colorScheme=t==="blue"?"dark":"light";var s=document.createElement("style");s.id="theme-boot";s.textContent="html,body{background-color:"+bg+" !important}";(document.head||h).appendChild(s);})();`;
+const THEME_BOOT = `(function(){var t="blue";try{var stored=localStorage.getItem("rvfox-theme");if(stored==="white"||stored==="blue")t=stored;}catch(e){}var bg=t==="white"?"#f2f2f2":"#061228";var h=document.documentElement;h.setAttribute("data-theme",t);h.style.backgroundColor=bg;h.style.colorScheme=t==="white"?"light":"dark";var s=document.createElement("style");s.id="theme-boot";s.textContent="html,body{background-color:"+bg+" !important}";(document.head||h).appendChild(s);var m=document.querySelector('meta[name="theme-color"]');if(!m){m=document.createElement("meta");m.setAttribute("name","theme-color");(document.head||h).appendChild(m);}m.setAttribute("content",bg);})();`;
+
+/** Re-apply after hydration so the head meta matches the stored scheme. */
+function ThemeChromeSync() {
+  useEffect(() => {
+    const theme = readStoredTheme();
+    const bg = THEME_BG[theme];
+    const root = document.documentElement;
+    root.setAttribute("data-theme", theme);
+    root.style.backgroundColor = bg;
+    root.style.colorScheme = theme === "white" ? "light" : "dark";
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", bg);
+    const boot = document.getElementById("theme-boot");
+    if (boot) boot.textContent = `html,body{background-color:${bg} !important}`;
+  }, []);
+  return null;
+}
 
 function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
   return (
@@ -68,6 +87,7 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
         <HeadContent />
       </head>
       <body className="bg-bg text-fg antialiased">
+        <ThemeChromeSync />
         <PreviewHostBridge />
         <AuthProvider>{children}</AuthProvider>
         <Scripts />

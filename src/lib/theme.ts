@@ -1,4 +1,9 @@
-/** Stored color scheme. White is the default. Auth stays off — localStorage only. */
+/**
+ * Stored color scheme. Blue (original sapphire navy) is the default.
+ * White is the saved second choice. Auth stays off — localStorage only.
+ *
+ * Blue page color is `--color-bg` from e76a8cb83fd59b8c76992045684ae0895385f56e.
+ */
 export const THEME_STORAGE_KEY = "rvfox-theme";
 
 export type ColorScheme = "white" | "blue";
@@ -10,15 +15,15 @@ export const THEME_BG: Record<ColorScheme, string> = {
 
 export function readStoredTheme(): ColorScheme {
   try {
-    return localStorage.getItem(THEME_STORAGE_KEY) === "blue" ? "blue" : "white";
+    return localStorage.getItem(THEME_STORAGE_KEY) === "white" ? "white" : "blue";
   } catch {
-    return "white";
+    return "blue";
   }
 }
 
 /** Apply immediately so a toggle does not wait for a reload. */
 export function applyTheme(theme: ColorScheme) {
-  const next: ColorScheme = theme === "blue" ? "blue" : "white";
+  const next: ColorScheme = theme === "white" ? "white" : "blue";
   const bg = THEME_BG[next];
   try {
     localStorage.setItem(THEME_STORAGE_KEY, next);
@@ -28,8 +33,10 @@ export function applyTheme(theme: ColorScheme) {
   const root = document.documentElement;
   root.setAttribute("data-theme", next);
   root.style.backgroundColor = bg;
-  root.style.colorScheme = next === "blue" ? "dark" : "light";
+  root.style.colorScheme = next === "white" ? "light" : "dark";
   if (document.body) document.body.style.backgroundColor = bg;
   const boot = document.getElementById("theme-boot");
   if (boot) boot.textContent = `html,body{background-color:${bg} !important}`;
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute("content", bg);
 }

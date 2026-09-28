@@ -3418,37 +3418,50 @@ html:not([data-theme="blue"]) [data-nda-state="loading"] {
   box-sizing: border-box;
 }
 
-/* Blue scheme — the existing navy field. White stays the default above. */
+/* Blue scheme — original sapphire navy from e76a8cb.
+   White stays on html[data-theme="white"] via the :not([data-theme="blue"]) rules.
+   Frost recipe, Premium layout, metal segments, and the chip row are not restyled here. */
 html[data-theme="blue"] {
+  --color-ink-ink: #f4f7fb;
   --color-bg: #061228;
   --color-bg-elevated: #0a1834;
   --color-surface: #0c1c40;
   --color-surface-2: #12244e;
-  --color-fg: #e8eef8;
-  --color-muted: #c5d0e0;
-  --color-dim: #9aabc4;
-  --color-showroom: #061228;
-  --color-showroom-ink: #e8eef8;
-  --color-showroom-muted: #c5d0e0;
+  --color-fg: #f4f7fb;
+  --color-muted: color-mix(in srgb, #e8eef8 78%, transparent);
+  --color-dim: color-mix(in srgb, #e8eef8 52%, transparent);
+  --color-blue: #6aafff;
+  --color-showroom: #05070b;
+  --color-showroom-accent: #1e63d6;
+  --color-showroom-ink: #eef2f8;
+  --color-showroom-muted: #c5cedb;
+  --color-showroom-glass: rgba(11, 16, 28, 0.84);
+  --shadow-showroom: 0 18px 50px -12px rgba(0, 0, 0, 0.85), 0 2px 10px rgba(0, 0, 0, 0.45);
+  --dock-label-color: #f3f5f8;
+  --dock-label-color-active: #ffffff;
   color-scheme: dark;
   background-color: #061228;
 }
 html[data-theme="blue"] body,
 html[data-theme="blue"] .app-shell,
 html[data-theme="blue"] .showroom-app,
-html[data-theme="blue"] .showroom-header,
-html[data-theme="blue"] .showroom-dock,
-html[data-theme="blue"] .showroom-plain,
-html[data-theme="blue"] .showroom-stage,
 html[data-theme="blue"] [data-nda-gate],
 html[data-theme="blue"] [data-nda-state="loading"] {
   background-color: #061228 !important;
-  color: #e8eef8;
+  color: #f4f7fb;
   color-scheme: dark;
+}
+html[data-theme="blue"] .showroom-header,
+html[data-theme="blue"] .showroom-dock {
+  background-color: transparent !important;
+  color: #eef2f8;
+}
+html[data-theme="blue"] .showroom-plain,
+html[data-theme="blue"] .showroom-stage {
+  background: radial-gradient(120% 70% at 50% 0%, #0a0f18 0%, #05070b 55%, #000 100%) !important;
 }
 html[data-theme="blue"] :is(
   .tesla-page-title,
-  .tesla-page-line,
   .showroom-word,
   .showroom-kicker,
   .showroom-arrival,
@@ -3462,16 +3475,16 @@ html[data-theme="blue"] :is(
   .tesla-tile,
   .grok-frost
 ) {
-  color: #e8eef8;
+  color: #eef2f8;
 }
 html[data-theme="blue"] :is(.tesla-facts-word, .showroom-arrival-price, .tesla-stat, .suite-price) {
-  color: #e8eef8;
+  color: #eef2f8;
 }
 html[data-theme="blue"] .suite-verified {
   color: #1648c8;
 }
 html[data-theme="blue"] .showroom-word {
-  -webkit-text-fill-color: #e8eef8;
+  -webkit-text-fill-color: #eef2f8;
 }
 
 /* NDA follows the active theme. White is fully light. Continue is sapphire. */
@@ -3494,7 +3507,7 @@ html:not([data-theme="blue"]) [data-nda-gate] [data-nda-agree-row] {
 }
 html[data-theme="blue"] [data-nda-gate] .nda-accept-glyph {
   background-color: #0c1c40 !important;
-  border-color: #e8eef8 !important;
+  border-color: #eef2f8 !important;
 }
 [data-nda-gate] .nda-accept-glyph[data-checked="true"] {
   background-color: #1648c8 !important;
@@ -3524,7 +3537,7 @@ html[data-theme="blue"] [data-nda-gate] button.tesla-secondary {
 html[data-theme="blue"] [data-nda-gate] .text-fg,
 html[data-theme="blue"] [data-nda-gate] .text-muted,
 html[data-theme="blue"] [data-nda-gate] [data-nda-agree-row] {
-  color: #e8eef8 !important;
+  color: #eef2f8 !important;
 }
 
 .theme-switch {
@@ -3708,4 +3721,110 @@ html:not([data-theme="blue"]) .app-shell .text-emerald-400 {
 }
 html:not([data-theme="blue"]) .app-shell .text-blue {
   color: #1648c8;
+}
+
+/* Original sapphire type on blue (e76a8cb). Beats light-theme ink that is
+   hardcoded on frosted cards. Does not change the frost recipe. */
+html[data-theme="blue"] :is(
+  .app-shell,
+  [data-readable-cards],
+  .lot-stock-screen,
+  [data-nda-gate]
+) :is(
+  .glass-prestige,
+  .glass-prestige-deep,
+  .glass-prestige-gold,
+  .glass-panel,
+  .glass-surface,
+  .grok-frost,
+  .showroom-card,
+  .showroom-float,
+  .showroom-arrival,
+  .showroom-arrival-name,
+  .showroom-kicker,
+  .showroom-word,
+  .showroom-brand,
+  .showroom-tab,
+  .showroom-tab-icon,
+  .showroom-menu,
+  .showroom-menu-icon,
+  .showroom-ask,
+  .lot-search,
+  .lot-pill-value,
+  .tesla-page-title,
+  .tesla-facts-word,
+  .tesla-stat,
+  .suite-price,
+  .text-fg
+) {
+  color: #eef2f8;
+  -webkit-text-fill-color: #eef2f8;
+}
+html[data-theme="blue"] .suite-hero .tesla-page-line,
+html[data-theme="blue"] .suite-hero-eyebrow {
+  color: #c5cedb;
+  -webkit-text-fill-color: #c5cedb;
+}
+html[data-theme="blue"] .showroom-tab[aria-pressed="true"] {
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+}
+html[data-theme="blue"] .app-shell :is(
+  .text-white\/35,
+  .text-white\/40,
+  .text-white\/45,
+  .text-white\/50,
+  .text-white\/55,
+  .text-white\/60,
+  .text-white\/65,
+  .text-white\/70,
+  .text-white\/75,
+  .text-white\/80,
+  .text-white\/82,
+  .text-white\/85,
+  .text-white\/88,
+  .text-muted,
+  .text-dim
+) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff;
+}
+html[data-theme="blue"] .app-shell [data-picker] :is(
+  .text-white\/35,
+  .text-white\/40,
+  .text-white\/45,
+  .text-white\/50,
+  .text-white\/55
+) {
+  color: rgb(255 255 255 / 0.42) !important;
+  -webkit-text-fill-color: rgb(255 255 255 / 0.42);
+}
+html[data-theme="blue"] .app-shell [data-picker] .text-white {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff;
+}
+html[data-theme="blue"] :is(.glass-chip, .glass-field) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+}
+html[data-theme="blue"] .glass-field::placeholder,
+html[data-theme="blue"] .showroom-ask input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+  opacity: 1;
+}
+html[data-theme="blue"] .suite-back-chip {
+  background: #0c1c40;
+  color: #eef2f8;
+  border-color: rgba(255, 255, 255, 0.28);
+}
+html[data-theme="blue"] .showroom-arrival-photo {
+  background: #0c1c40;
+}
+html[data-theme="blue"] .app-shell a[href] {
+  color: #6aafff;
+}
+html[data-theme="blue"] .suite-verified {
+  color: #1648c8;
+  -webkit-text-fill-color: #1648c8;
 }
