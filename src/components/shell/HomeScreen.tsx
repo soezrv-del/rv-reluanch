@@ -104,6 +104,7 @@ export function HomeScreen({
       className="showroom-home absolute inset-0 z-30 flex flex-col overflow-x-hidden overflow-y-auto"
     >
       <div className="home-theme-white">
+        <div className="showroom-hero-beam" aria-hidden />
         <WhiteSpotlight
           model={model}
           price={specs?.price ?? ""}
@@ -167,7 +168,6 @@ function WhiteSpotlight({
 }) {
   const hero = (
     <>
-      <div className="showroom-hero-beam" aria-hidden />
       <img
         src={SHOWROOM_SPOTLIGHT.image}
         alt={SHOWROOM_SPOTLIGHT.alt}
