@@ -250,7 +250,7 @@ export function MoreApp({
               <RowLink
                 icon={<Sun className="size-4 text-blue" />}
                 title="Appearance"
-                sub={theme === "light" ? "Light · paper" : "Dark · night"}
+                sub={theme === "light" ? "Light" : "Dark · night"}
                 onClick={() => {
                   const next: SuiteTheme = theme === "light" ? "dark" : "light";
                   setTheme(next);

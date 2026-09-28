@@ -10,7 +10,7 @@ function read(rel: string) {
   return readFileSync(join(root, rel), "utf8");
 }
 
-test("light theme is paper, navy type, and a tight Raidho crop", () => {
+test("light theme is a white Tesla canvas and a tight Raidho crop", () => {
   const css = read("../styles.css");
   const brand = read("../components/shell/SuiteBrand.tsx");
   const more = read("../components/more/MoreApp.tsx");
@@ -38,11 +38,13 @@ test("light theme is paper, navy type, and a tight Raidho crop", () => {
   assert.doesNotMatch(css, /showroom-mark[\s\S]{0,80}filter:/);
   assert.doesNotMatch(css, /\.showroom-mark\[data-suite-mark/);
   assert.match(css, /html\[data-theme="light"\]/);
-  assert.match(css, /--color-fg:\s*#0b1730/);
-  assert.match(css, /--color-muted:\s*#3d4d68/);
-  assert.match(css, /--color-border:\s*rgba\(12, 28, 64, 0\.12\)/);
+  assert.match(css, /--color-fg:\s*#171a20/);
+  assert.match(css, /--color-muted:\s*#5c5e62/);
+  assert.match(css, /--color-border:\s*#eeeeee/);
   assert.match(css, /--color-sapphire:\s*#1648c8/);
-  assert.match(css, /--dock-surface:\s*#f4f6f8/);
+  assert.match(css, /--dock-surface:\s*#ffffff/);
+  assert.match(css, /#3e6ae1/);
+  assert.match(css, /html\[data-theme="light"\] \.sapphire-header-inner/);
   assert.match(css, /html:not\(\[data-theme="light"\]\) \.app-shell \.text-white\\\/35/);
   assert.match(theme, /dataset\.theme === "light"/);
   assert.match(css, /\[data-camera-well\]/);

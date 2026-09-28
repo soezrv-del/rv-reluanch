@@ -25,7 +25,7 @@ export function setTheme(next: SuiteTheme) {
     if (!light || !dark) return;
     img.src = next === "light" ? light : dark;
   });
-  const color = next === "light" ? "#f4f6f8" : "#050505";
+  const color = next === "light" ? "#ffffff" : "#050505";
   document
     .querySelector('meta[name="theme-color"]')
     ?.setAttribute("content", color);
@@ -35,4 +35,4 @@ export function setTheme(next: SuiteTheme) {
 }
 
 /** Read before first paint. Keep in sync with RootDocument. */
-export const THEME_BOOT_SCRIPT = `(function(){try{var t=localStorage.getItem("rvfox-theme");if(t==="light"||t==="dark"){document.documentElement.dataset.theme=t;var c=t==="light"?"#f4f6f8":"#050505";var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",c);var s=document.querySelector('meta[name="color-scheme"]');if(s)s.setAttribute("content",t);}}catch(e){}})();`;
+export const THEME_BOOT_SCRIPT = `(function(){try{var t=localStorage.getItem("rvfox-theme");if(t==="light"||t==="dark"){document.documentElement.dataset.theme=t;var c=t==="light"?"#ffffff":"#050505";var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",c);var s=document.querySelector('meta[name="color-scheme"]');if(s)s.setAttribute("content",t);}}catch(e){}})();`;
