@@ -8,10 +8,12 @@ import {
 import {
   buildUnitShareReport,
   findLotUnit,
+  reportShareIconLinks,
   type ShareReport,
 } from "@/lib/rv/shareReport";
 
 export const Route = createFileRoute("/report/unit/$id")({
+  head: () => ({ links: reportShareIconLinks() }),
   component: UnitReportRoute,
 });
 

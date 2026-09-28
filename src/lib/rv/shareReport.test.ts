@@ -1,15 +1,26 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import test from "node:test";
 import { PDFDocument } from "pdf-lib";
 import type { RVSpec } from "./rvTypes.ts";
 import type { LotUnit } from "../lot/ownLotPage.ts";
 import { buildShareReportPdf } from "./shareReportPdf.ts";
+import { defaultParseSearch, defaultStringifySearch } from "@tanstack/router-core";
 import {
   buildFactsShareReport,
   buildUnitShareReport,
   factsReportPath,
+  factsReportSearch,
   findLotUnit,
   isOmittedReportValue,
+  plainQueryText,
+  REPORT_ICON_URL,
+  REPORT_MARK_URL,
+  REPORT_TOUCH_ICON_URL,
+  reportShareIconLinks,
+  reportYear,
   unitReportPath,
 } from "./shareReport.ts";
 
@@ -241,6 +252,78 @@ test("lot unit with missing price and gvwr omits those lines", () => {
   assert.equal(findLotUnit([lotUnit()], "47516")?.stock_number, "47516");
   assert.equal(findLotUnit([lotUnit()], "1FDRU8PG5TKA51981")?.vin, "1FDRU8PG5TKA51981");
   assert.equal(findLotUnit([lotUnit()], "missing"), null);
+});
+
+test("facts year is a number so share URLs and titles are not JSON-quoted", () => {
+  assert.equal(plainQueryText('"2026"'), "2026");
+  assert.equal(plainQueryText('"\\"2026\\""'), "2026");
+  assert.equal(reportYear('"2026"'), 2026);
+  assert.equal(reportYear(2026), 2026);
+
+  const legacy = defaultParseSearch(
+    "?year=%222026%22&make=Entegra%20Coach&series=Cornerstone&floorplan=45B",
+  );
+  const search = factsReportSearch(legacy);
+  assert.equal(search.year, 2026);
+  const rewritten = defaultStringifySearch(search);
+  assert.match(rewritten, /(?:^|\?|&)year=2026(?:&|$)/);
+  assert.doesNotMatch(rewritten, /year=%22/);
+  assert.doesNotMatch(rewritten, /year="/);
+
+  const report = buildFactsShareReport({
+    year: '"2026"',
+    make: "Entegra Coach",
+    series: "Cornerstone",
+    floorplan: "45B",
+    spec: sampleSpec(),
+    now: NOW,
+  });
+  assert.equal(report.title.startsWith("2026 "), true);
+  assert.doesNotMatch(report.title, /"/);
+  assert.equal(report.path, factsReportPath({
+    year: 2026,
+    make: "Entegra Coach",
+    series: "Cornerstone",
+    floorplan: "45B",
+  }));
+  assert.match(report.path, /year=2026/);
+  assert.doesNotMatch(report.path, /%22/);
+  assert.equal(report.shareTitle, report.title);
+});
+
+test("share report surfaces use the chrome RvFAX mark", () => {
+  assert.equal(REPORT_MARK_URL, "/assets/brand/rvfax-mark.png");
+  const here = dirname(fileURLToPath(import.meta.url));
+  const root = join(here, "../../..");
+  const files = [
+    join(here, "shareReportPdf.ts"),
+    join(root, "src/components/report/ShareReportPage.tsx"),
+  ];
+  for (const file of files) {
+    const src = readFileSync(file, "utf8");
+    assert.match(src, /REPORT_MARK_URL/);
+    assert.doesNotMatch(src, /icon-rvfax\.png/);
+  }
+  const og = readFileSync(join(here, "reportOgImage.ts"), "utf8");
+  assert.match(og, /rvfax-mark-og\.png\?inline/);
+  assert.doesNotMatch(og, /REPORT_MARK_URL/);
+  assert.doesNotMatch(og, /icon-rvfax\.png/);
+  const lookup = readFileSync(join(here, "reportRequestMeta.ts"), "utf8");
+  assert.match(lookup, /own-lot-latest\.json/);
+  assert.doesNotMatch(lookup, /fetch\(new URL\(LOT_SNAPSHOT_URL/);
+  assert.equal(REPORT_ICON_URL, "/assets/brand/rvfax-mark-32.png");
+  assert.equal(REPORT_TOUCH_ICON_URL, "/assets/brand/rvfax-mark-180.png");
+  const links = reportShareIconLinks();
+  assert.equal(links[0]?.rel, "icon");
+  assert.equal(links[0]?.sizes, "32x32");
+  assert.equal(links[1]?.rel, "apple-touch-icon");
+  assert.equal(links[1]?.sizes, "180x180");
+  for (const file of [
+    join(root, "src/routes/report/facts.tsx"),
+    join(root, "src/routes/report/unit/$id.tsx"),
+  ]) {
+    assert.match(readFileSync(file, "utf8"), /reportShareIconLinks\(\)/);
+  }
 });
 
 test("a long share report still prints as one PDF page", async () => {

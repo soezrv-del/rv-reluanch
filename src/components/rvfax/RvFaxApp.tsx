@@ -247,7 +247,6 @@ export function RvFaxApp({
     setSaved(next);
     try {
       localStorage.setItem(SAVED_UNITS_KEY, JSON.stringify(next));
-      window.dispatchEvent(new Event("rvfax-saved-changed"));
     } catch {
       /* */
     }

@@ -5,8 +5,8 @@
 
 import { getSpec } from "./catalog.ts";
 import { ensureCatalogLoaded } from "./catalogLoad.ts";
+import lotSnapshotJson from "../../../public/inventory/own-lot-latest.json";
 import {
-  LOT_SNAPSHOT_URL,
   parseLotSnapshotJson,
   type LotSnapshotView,
 } from "../lot/ownLotPage.ts";
@@ -14,6 +14,7 @@ import {
   buildFactsShareReport,
   buildUnitShareReport,
   findLotUnit,
+  plainQueryText,
   reportDescription,
   type ShareReport,
 } from "./shareReport.ts";
@@ -28,48 +29,37 @@ export type ReportOgMeta = {
 
 let lotCache: LotSnapshotView | null = null;
 
-async function loadLot(origin: string): Promise<LotSnapshotView> {
-  if (lotCache) return lotCache;
-  try {
-    const { readFile } = await import("node:fs/promises");
-    const { join } = await import("node:path");
-    const raw = await readFile(
-      join(process.cwd(), "public/inventory/own-lot-latest.json"),
-      "utf8",
-    );
-    lotCache = parseLotSnapshotJson(JSON.parse(raw));
-    return lotCache;
-  } catch {
-    const res = await fetch(new URL(LOT_SNAPSHOT_URL, origin), {
-      signal: AbortSignal.timeout(4000),
-    });
-    if (!res.ok) throw new Error("lot snapshot");
-    lotCache = parseLotSnapshotJson(await res.json());
-    return lotCache;
-  }
+/** Bundled snapshot. A preview deploy is behind Vercel auth, so fetching this origin 500s. */
+function loadLot(): LotSnapshotView {
+  lotCache ??= parseLotSnapshotJson(lotSnapshotJson);
+  return lotCache;
 }
 
 export async function loadReportForUrl(url: URL): Promise<ShareReport | null> {
-  const kind = url.searchParams.get("kind");
-  if (url.pathname === "/report/facts" || kind === "facts") {
-    const year = url.searchParams.get("year") ?? "";
-    const make = url.searchParams.get("make") ?? "";
-    const series = url.searchParams.get("series") ?? "";
-    const floorplan = url.searchParams.get("floorplan") ?? "";
-    if (!year || !make || !series) return null;
-    await ensureCatalogLoaded();
-    const spec = getSpec(make, series);
-    if (!spec) return null;
-    return buildFactsShareReport({ year, make, series, floorplan, spec });
+  try {
+    const kind = url.searchParams.get("kind");
+    if (url.pathname === "/report/facts" || kind === "facts") {
+      const year = plainQueryText(url.searchParams.get("year"));
+      const make = plainQueryText(url.searchParams.get("make"));
+      const series = plainQueryText(url.searchParams.get("series"));
+      const floorplan = plainQueryText(url.searchParams.get("floorplan"));
+      if (!year || !make || !series) return null;
+      await ensureCatalogLoaded();
+      const spec = getSpec(make, series);
+      if (!spec) return null;
+      return buildFactsShareReport({ year, make, series, floorplan, spec });
+    }
+    const unitMatch = url.pathname.match(/^\/report\/unit\/([^/]+)\/?$/);
+    const id =
+      unitMatch?.[1] ?? (kind === "unit" ? url.searchParams.get("id") ?? "" : "");
+    if (!id) return null;
+    const unit = findLotUnit(loadLot().units, id);
+    if (!unit) return null;
+    return buildUnitShareReport(unit);
+  } catch (error) {
+    console.error("[report-og] lookup failed", error);
+    return null;
   }
-  const unitMatch = url.pathname.match(/^\/report\/unit\/([^/]+)\/?$/);
-  const id =
-    unitMatch?.[1] ?? (kind === "unit" ? url.searchParams.get("id") ?? "" : "");
-  if (!id) return null;
-  const snap = await loadLot(url.origin);
-  const unit = findLotUnit(snap.units, id);
-  if (!unit) return null;
-  return buildUnitShareReport(unit);
 }
 
 export function ogImagePath(report: ShareReport): string {

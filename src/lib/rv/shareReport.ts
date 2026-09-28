@@ -23,6 +23,24 @@ import {
 } from "../lot/ownLotPage.ts";
 
 export const REPORT_SITE_URL = "https://rvmax.app";
+/** Chrome sapphire R on a white rounded tile. Readable on the sapphire header. */
+export const REPORT_MARK_URL = "/assets/brand/rvfax-mark.png";
+/** 32×32 site icon for a shared /report link. */
+export const REPORT_ICON_URL = "/assets/brand/rvfax-mark-32.png";
+/** 180×180 apple touch icon for a shared /report link. */
+export const REPORT_TOUCH_ICON_URL = "/assets/brand/rvfax-mark-180.png";
+
+export function reportShareIconLinks(): Array<{
+  rel: "icon" | "apple-touch-icon";
+  href: string;
+  type?: string;
+  sizes: string;
+}> {
+  return [
+    { rel: "icon", type: "image/png", sizes: "32x32", href: REPORT_ICON_URL },
+    { rel: "apple-touch-icon", sizes: "180x180", href: REPORT_TOUCH_ICON_URL },
+  ];
+}
 export const REPORT_SITE_LABEL = "rvmax.app";
 export const REPORT_FOOTER_NOTE =
   "Specs should be confirmed on the unit sticker.";
@@ -129,17 +147,72 @@ export function formatReportDate(now: Date = new Date()): string {
   }).format(now);
 }
 
+/**
+ * TanStack Router JSON-encodes a numeric string, so year "2026" becomes
+ * the quoted query value `"2026"`. Unwrap that, and accept a real number.
+ */
+export function plainQueryText(value: unknown): string {
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  if (typeof value !== "string") return "";
+  let text = value.trim();
+  for (let i = 0; i < 2; i += 1) {
+    if (!(text.length >= 2 && text.startsWith('"') && text.endsWith('"'))) break;
+    try {
+      const parsed: unknown = JSON.parse(text);
+      if (typeof parsed === "number" && Number.isFinite(parsed)) {
+        text = String(parsed);
+        continue;
+      }
+      if (typeof parsed === "string") {
+        text = parsed.trim();
+        continue;
+      }
+    } catch {
+      text = text.slice(1, -1).trim();
+      continue;
+    }
+    break;
+  }
+  return text;
+}
+
+/** Four-digit model year, or null when the link did not include one. */
+export function reportYear(value: unknown): number | null {
+  const text = plainQueryText(value);
+  if (!/^\d{4}$/.test(text)) return null;
+  return Number(text);
+}
+
+export type FactsReportSearch = {
+  make: string;
+  series: string;
+  year?: number;
+  floorplan: string;
+};
+
+/** Route search for /report/facts. Year is a number so the URL stays year=2026. */
+export function factsReportSearch(search: Record<string, unknown>): FactsReportSearch {
+  const year = reportYear(search.year);
+  const next: FactsReportSearch = {
+    make: plainQueryText(search.make),
+    series: plainQueryText(search.series),
+    floorplan: plainQueryText(search.floorplan),
+  };
+  if (year != null) next.year = year;
+  return next;
+}
+
 export function factsReportPath(q: {
-  year: string;
+  year: string | number;
   make: string;
   series: string;
   floorplan?: string;
 }): string {
   const params = new URLSearchParams();
-  params.set("make", q.make.trim());
-  params.set("series", q.series.trim());
-  params.set("year", q.year.trim());
-  const floorplan = q.floorplan?.trim();
+  params.set("make", plainQueryText(q.make));
+  params.set("series", plainQueryText(q.series));
+  params.set("year", plainQueryText(q.year));
+  const floorplan = plainQueryText(q.floorplan);
   if (floorplan) params.set("floorplan", floorplan);
   return `/report/facts?${params.toString()}`;
 }
@@ -230,17 +303,17 @@ function factsSources(specs: BrochureSpecs): string | null {
 }
 
 export function buildFactsShareReport(input: {
-  year: string;
+  year: string | number;
   make: string;
   series: string;
   floorplan?: string;
   spec: RVSpec;
   now?: Date;
 }): ShareReport {
-  const year = input.year.trim();
-  const make = input.make.trim();
-  const series = input.series.trim();
-  const floorplan = (input.floorplan ?? "").trim();
+  const year = plainQueryText(input.year);
+  const make = plainQueryText(input.make);
+  const series = plainQueryText(input.series);
+  const floorplan = plainQueryText(input.floorplan);
   const specs = buildFactsBrochureSpecs(
     input.spec,
     year,
