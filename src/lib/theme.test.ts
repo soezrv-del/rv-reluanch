@@ -27,7 +27,13 @@ test("light theme is paper, navy type, and a tight Raidho crop", () => {
   assert.match(more, /title="Appearance"/);
   assert.match(brand, /raidho-shell-mark\.png/);
   assert.match(brand, /raidho-r-mark-light\.png/);
-  assert.match(brand, /data-suite-mark="light"/);
+  assert.match(brand, /theme === "light" \? RAIDHO_SHELL_MARK_LIGHT : RAIDHO_SHELL_MARK/);
+  assert.match(brand, /useSyncExternalStore\(subscribeTheme, readTheme, serverTheme\)/);
+  assert.match(brand, /data-mark-light=\{RAIDHO_SHELL_MARK_LIGHT\}/);
+  assert.match(theme, /querySelectorAll<HTMLImageElement>\("\[data-mark-light\]"\)/);
+  assert.doesNotMatch(brand, /data-suite-mark/);
+  assert.doesNotMatch(css, /showroom-mark[\s\S]{0,80}filter:/);
+  assert.doesNotMatch(css, /\.showroom-mark\[data-suite-mark/);
   assert.match(css, /html\[data-theme="light"\]/);
   assert.match(css, /--color-fg:\s*#0b1730/);
   assert.match(css, /--color-muted:\s*#3d4d68/);
@@ -35,7 +41,7 @@ test("light theme is paper, navy type, and a tight Raidho crop", () => {
   assert.match(css, /--color-sapphire:\s*#1648c8/);
   assert.match(css, /--dock-surface:\s*#f4f6f8/);
   assert.match(css, /html:not\(\[data-theme="light"\]\) \.app-shell \.text-white\\\/35/);
-  assert.match(css, /html\[data-theme="light"\] \.showroom-mark\[data-suite-mark="light"\]/);
+  assert.match(theme, /dataset\.theme === "light"/);
   assert.match(css, /\[data-camera-well\]/);
   assert.match(css, /\.bottom-tab-einstein/);
   assert.match(css, /\.lot-well/);

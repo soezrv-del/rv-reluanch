@@ -1,8 +1,30 @@
 export type SuiteTheme = "light" | "dark";
 
+export function serverTheme(): SuiteTheme {
+  return "dark";
+}
+
+export function readTheme(): SuiteTheme {
+  if (typeof document === "undefined") return "dark";
+  return document.documentElement.dataset.theme === "light" ? "light" : "dark";
+}
+
+export function subscribeTheme(onStoreChange: () => void) {
+  const node = document.documentElement;
+  const obs = new MutationObserver(onStoreChange);
+  obs.observe(node, { attributes: true, attributeFilter: ["data-theme"] });
+  return () => obs.disconnect();
+}
+
 export function setTheme(next: SuiteTheme) {
   document.documentElement.dataset.theme = next;
   localStorage.setItem("rvfox-theme", next);
+  document.querySelectorAll<HTMLImageElement>("[data-mark-light]").forEach((img) => {
+    const light = img.dataset.markLight;
+    const dark = img.dataset.markDark;
+    if (!light || !dark) return;
+    img.src = next === "light" ? light : dark;
+  });
   const color = next === "light" ? "#f4f6f8" : "#050505";
   document
     .querySelector('meta[name="theme-color"]')

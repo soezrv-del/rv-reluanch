@@ -2643,10 +2643,6 @@ html.kb-open [data-rvgrok-composer-dock] {
   height: 1.65rem;
   width: auto;
 }
-/* Light crop stays out of the black dock until data-theme flips. */
-.showroom-mark[data-suite-mark="light"] {
-  display: none;
-}
 .showroom-word {
   font-size: 1.125rem;
   font-weight: 700;
@@ -3360,13 +3356,6 @@ html[data-theme="light"] .ice-text-sapphire {
  * Coach photos, the lot well, the live camera, and the Einstein
  * medallion are not recolored.
  */
-html[data-theme="light"] .showroom-mark[data-suite-mark="dark"] {
-  display: none;
-}
-html[data-theme="light"] .showroom-mark[data-suite-mark="light"] {
-  display: inline;
-}
-
 html[data-theme="light"] body.text-white {
   color: #0b1730 !important;
 }
