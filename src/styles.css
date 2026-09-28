@@ -194,34 +194,35 @@
   }
 
   /*
-   * Suite-wide contrast: washed Tailwind whites → bright white.
+   * Dark only. Washed Tailwind whites → bright white.
+   * Light mode replaces these at the end of this file.
    * Picker wheels keep dim unselected rows (iOS drum).
    */
-  .app-shell .text-white\/35,
-  .app-shell .text-white\/40,
-  .app-shell .text-white\/45,
-  .app-shell .text-white\/50,
-  .app-shell .text-white\/55,
-  .app-shell .text-white\/60,
-  .app-shell .text-white\/65,
-  .app-shell .text-white\/70,
-  .app-shell .text-white\/75,
-  .app-shell .text-white\/80,
-  .app-shell .text-white\/82,
-  .app-shell .text-white\/85,
-  .app-shell .text-white\/88,
-  .app-shell .text-muted,
-  .app-shell .text-dim {
+  html:not([data-theme="light"]) .app-shell .text-white\/35,
+  html:not([data-theme="light"]) .app-shell .text-white\/40,
+  html:not([data-theme="light"]) .app-shell .text-white\/45,
+  html:not([data-theme="light"]) .app-shell .text-white\/50,
+  html:not([data-theme="light"]) .app-shell .text-white\/55,
+  html:not([data-theme="light"]) .app-shell .text-white\/60,
+  html:not([data-theme="light"]) .app-shell .text-white\/65,
+  html:not([data-theme="light"]) .app-shell .text-white\/70,
+  html:not([data-theme="light"]) .app-shell .text-white\/75,
+  html:not([data-theme="light"]) .app-shell .text-white\/80,
+  html:not([data-theme="light"]) .app-shell .text-white\/82,
+  html:not([data-theme="light"]) .app-shell .text-white\/85,
+  html:not([data-theme="light"]) .app-shell .text-white\/88,
+  html:not([data-theme="light"]) .app-shell .text-muted,
+  html:not([data-theme="light"]) .app-shell .text-dim {
     color: #ffffff !important;
   }
-  .app-shell [data-picker] .text-white\/35,
-  .app-shell [data-picker] .text-white\/40,
-  .app-shell [data-picker] .text-white\/45,
-  .app-shell [data-picker] .text-white\/50,
-  .app-shell [data-picker] .text-white\/55 {
+  html:not([data-theme="light"]) .app-shell [data-picker] .text-white\/35,
+  html:not([data-theme="light"]) .app-shell [data-picker] .text-white\/40,
+  html:not([data-theme="light"]) .app-shell [data-picker] .text-white\/45,
+  html:not([data-theme="light"]) .app-shell [data-picker] .text-white\/50,
+  html:not([data-theme="light"]) .app-shell [data-picker] .text-white\/55 {
     color: rgb(255 255 255 / 0.42) !important;
   }
-  .app-shell [data-picker] .text-white {
+  html:not([data-theme="light"]) .app-shell [data-picker] .text-white {
     color: #ffffff !important;
   }
 
@@ -1453,6 +1454,17 @@
   padding-top: 0.75rem;
 }
 
+/* Light mode paints this split title. Dark keeps the ice header. */
+.suite-title-flat {
+  display: none;
+}
+
+/* Year / place lines exist for the light hero. Dark placard stays model, price, stock. */
+.showroom-spotyear,
+.showroom-spotplace {
+  display: none;
+}
+
 /* Trips ⋯ sits in the page header, already below the showroom logo. */
 .premium-menu-corner {
   top: 0;
@@ -2639,8 +2651,15 @@ html.kb-open [data-rvgrok-composer-dock] {
   color: var(--color-showroom-ink);
 }
 .showroom-mark {
+  display: block;
   height: 1.65rem;
   width: auto;
+  aspect-ratio: auto;
+  object-fit: contain;
+  transform: none;
+  filter: none;
+  mix-blend-mode: normal;
+  opacity: 1;
 }
 .showroom-word {
   font-size: 1.125rem;
@@ -2658,6 +2677,9 @@ html.kb-open [data-rvgrok-composer-dock] {
 }
 .showroom-home {
   background: transparent;
+}
+.showroom-hero-actions {
+  display: none;
 }
 .showroom-hero {
   position: relative;
@@ -3265,4 +3287,781 @@ body:has(.report-page) {
   .report-headlines {
     break-inside: avoid;
   }
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+  --color-bg: #f2f2f2;
+  --color-bg-elevated: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-2: #ffffff;
+  --color-fg: #0b1d45;
+  --color-muted: #0b1d45;
+  /* Dim and foam still paint dots, borders, and button fills. Text overrides sit below. */
+  --color-dim: #5c5e62;
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-border-strong: rgba(0, 0, 0, 0.14);
+  --color-ink-foam: #5c5e62;
+  --color-ink-ink: #0b1d45;
+  --color-tide-bg: #f2f2f2;
+  --color-tide-surface: #ffffff;
+  --color-tide-ink: #0b1d45;
+  --color-tiimo-bg: #f2f2f2;
+  --color-tiimo-surface: #ffffff;
+  --color-tiimo-ink: #0b1d45;
+  --dock-surface: #ffffff;
+  --dock-label-color: #0b1d45;
+  --dock-label-color-active: #0b1d45;
+  --color-showroom: #f2f2f2;
+  --color-showroom-ink: #0b1d45;
+  /* Platinum is the chrome silver already on the wordmark gradient. */
+  --color-showroom-muted: #c5cedb;
+  --color-showroom-accent: #1648c8;
+  --color-showroom-glass: #ffffff;
+  /* Lift + recessed edge. Light mode only — dark chrome keeps its own shadows. */
+  --light-lift:
+    0 8px 22px rgba(15, 23, 42, 0.08),
+    0 1px 2px rgba(15, 23, 42, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 -1px 0 rgba(15, 23, 42, 0.06);
+  --shadow-panel: var(--light-lift);
+  --shadow-showroom: var(--light-lift);
+  --shadow-glass: var(--light-lift);
+  --shadow-glow-gold: none;
+  --shadow-glow-sapphire: none;
+  /* Recessed control fill. Cooler than the white card. Not sapphire. */
+  --light-shade: rgba(228, 234, 242, 0.96);
+  --light-hairline: rgba(15, 23, 42, 0.14);
+  /* Buttons and tabs sit above the card stack. */
+  --light-raise:
+    0 14px 30px rgba(15, 23, 42, 0.16),
+    0 4px 10px rgba(15, 23, 42, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.96);
+}
+
+html[data-theme="light"] .showroom-stage,
+html[data-theme="light"] .showroom-plain,
+html[data-theme="light"] .showroom-app {
+  background: #f2f2f2;
+}
+
+html[data-theme="light"] .showroom-ambient,
+html[data-theme="light"] .showroom-grain,
+html[data-theme="light"] .showroom-spot,
+html[data-theme="light"] .showroom-hero-beam,
+html[data-theme="light"] .showroom-hero-pool,
+html[data-theme="light"] .bottom-tabs-shine {
+  display: none;
+}
+
+/* Quiet sapphire R. The wordmark stays SF Pro 700 navy. */
+html[data-theme="light"] .showroom-brand {
+  align-items: center;
+  min-height: 0;
+}
+html[data-theme="light"] .showroom-mark {
+  height: 30px;
+  width: auto;
+  object-fit: contain;
+  transform: none;
+  filter: none;
+  mix-blend-mode: normal;
+}
+html[data-theme="light"] .showroom-word {
+  background: none !important;
+  background-image: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-text-fill-color: #0b1d45 !important;
+  color: #0b1d45 !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em;
+  filter: none !important;
+}
+
+/*
+ * Flat suite titles. Navy, one sapphire word, gray tagline.
+ * Decorative banner, glow, and the ice title stay in the DOM for dark mode
+ * and are taken out of the light layout.
+ */
+html[data-theme="light"] .sapphire-header-inner,
+html[data-theme="light"] [data-page-accent="gold"] .sapphire-header-inner,
+html[data-theme="light"] [data-premium-screen] .sapphire-header-inner {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 0.35rem 1.15rem 0.15rem !important;
+}
+html[data-theme="light"] .sapphire-banner-ambient,
+html[data-theme="light"] .sapphire-banner-edge,
+html[data-theme="light"] .sapphire-banner-shine,
+html[data-theme="light"] .sapphire-title-ambient,
+html[data-theme="light"] .sapphire-title-shine,
+html[data-theme="light"] .sapphire-title-sheen,
+html[data-theme="light"] .sapphire-header-inner > .pointer-events-none {
+  display: none !important;
+}
+html[data-theme="light"] .sapphire-header-title {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+html[data-theme="light"] .suite-title-flat {
+  display: block;
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 0.92;
+  color: #0b1d45;
+  -webkit-text-fill-color: #0b1d45;
+}
+html[data-theme="light"] .suite-title-accent {
+  color: #1648c8 !important;
+  -webkit-text-fill-color: #1648c8 !important;
+}
+html[data-theme="light"] .sapphire-header-inner .z-\[2\] {
+  align-items: flex-start;
+  text-align: left;
+  padding-right: 2.75rem;
+}
+html[data-theme="light"] .sapphire-header-badge {
+  margin: 0 0 0.35rem;
+  padding: 0;
+  border: 0 !important;
+  background: transparent !important;
+  color: #0b1d45 !important;
+  -webkit-text-fill-color: #0b1d45 !important;
+  letter-spacing: 0.14em;
+  font-weight: 600;
+}
+html[data-theme="light"] .metal-hammered-strike {
+  display: none;
+}
+html[data-theme="light"] .metal-hammered-face {
+  background: none !important;
+  background-image: none !important;
+  color: #0b1d45 !important;
+  -webkit-text-fill-color: #0b1d45 !important;
+  -webkit-text-stroke: 0;
+  filter: none;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  font-size: 0.68rem;
+}
+html[data-theme="light"] .sapphire-header-line {
+  margin-top: 0.45rem;
+  max-width: 28rem;
+  color: #0b1d45 !important;
+  -webkit-text-fill-color: #0b1d45 !important;
+  background: transparent !important;
+  font-weight: 400;
+  font-size: 0.95rem;
+  letter-spacing: 0;
+  line-height: 1.35;
+  text-shadow: none;
+}
+html[data-theme="light"] .premium-menu-btn {
+  background: var(--light-shade) !important;
+  color: #0b1d45 !important;
+  border: 1px solid var(--light-hairline) !important;
+  box-shadow: var(--light-raise) !important;
+  backdrop-filter: none !important;
+}
+
+/* White tiles on a gray page. Hairline only. */
+html[data-theme="light"] :is(
+  .glass-prestige,
+  .glass-prestige-deep,
+  .glass-prestige-gold,
+  .glass-panel,
+  .glass-surface,
+  .showroom-card,
+  .showroom-float,
+  .grok-frost,
+  .grok-landing-card,
+  .lot-card
+) {
+  background: #ffffff !important;
+  background-image: none !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  box-shadow: var(--light-lift) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-radius: 12px !important;
+  color: #0b1d45;
+}
+
+/* Recessed fields: soft cool gray, hairline, not a second white card. */
+html[data-theme="light"] .app-shell :is(
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="button"], [type="submit"], [type="hidden"]),
+  select,
+  textarea,
+  .glass-field:not(button)
+) {
+  background: var(--light-shade) !important;
+  background-image: none !important;
+  border: 1px solid var(--light-hairline) !important;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.06) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  color: #0b1d45 !important;
+  -webkit-text-fill-color: #0b1d45;
+}
+html[data-theme="light"] .lot-search,
+html[data-theme="light"] .showroom-ask,
+html[data-theme="light"] .grok-composer-pill {
+  background: var(--light-shade) !important;
+  background-image: none !important;
+  border: 1px solid var(--light-hairline) !important;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.06) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  color: #0b1d45;
+}
+/* The pill is the field. The text node stays clear so it does not double-box. */
+html[data-theme="light"] .app-shell .showroom-ask input,
+html[data-theme="light"] .app-shell .grok-composer-pill textarea,
+html[data-theme="light"] .app-shell .grok-composer-pill input {
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+html[data-theme="light"] .grok-composer-pill button,
+html[data-theme="light"] .showroom-ask button:not(.showroom-mic) {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="light"] [data-tools-menu] .glass-prestige {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: var(--light-lift) !important;
+  border-radius: 8px !important;
+}
+html[data-theme="light"] [data-tools-menu] button {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: #0b1d45 !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+html[data-theme="light"] [data-tools-menu] .glass-prestige > button:last-child,
+html[data-theme="light"] [data-tools-menu] button:last-child {
+  border-bottom: 0 !important;
+}
+html[data-theme="light"] [data-tow-kind-toggle],
+html[data-theme="light"] [aria-label="Price input mode"] {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0;
+  gap: 0.5rem;
+}
+
+html[data-theme="light"] .app-shell button:not(.showroom-brand):not(.bottom-tab-btn):not(.showroom-hero):not(.showroom-placard):not(.showroom-arrival):not(.lot-card):not(.grok-mic-btn):not(.showroom-mic):not(.showroom-hero-primary) {
+  background: var(--light-shade);
+  background-color: var(--light-shade);
+  color: #0b1d45;
+  border: 1px solid var(--light-hairline);
+  box-shadow: var(--light-raise);
+}
+html[data-theme="light"] .lot-chip.is-on,
+html[data-theme="light"] .showroom-mic,
+html[data-theme="light"] .grok-mic-btn,
+html[data-theme="light"] .showroom-hero-primary,
+html[data-theme="light"] .grok-send-btn.is-ready,
+html[data-theme="light"] button.bg-gold\/25,
+html[data-theme="light"] button.bg-blue\/30,
+html[data-theme="light"] [data-tow-kind-toggle] button[aria-pressed="true"] {
+  background: #1648c8 !important;
+  background-image: none !important;
+  color: #c5cedb !important;
+  -webkit-text-fill-color: #c5cedb !important;
+  border-color: #1648c8 !important;
+  box-shadow: var(--light-raise) !important;
+}
+html[data-theme="light"] .showroom-mic,
+html[data-theme="light"] .grok-mic-btn,
+html[data-theme="light"] .grok-send-btn.is-ready {
+  border: 0 !important;
+}
+html[data-theme="light"] :is(.showroom-mic, .grok-mic-btn, .grok-send-btn.is-ready) svg {
+  color: #ffffff;
+}
+html[data-theme="light"] [data-tow-kind-toggle] button[aria-pressed="false"] {
+  background: var(--light-shade) !important;
+  color: #0b1d45 !important;
+  border: 1px solid var(--light-hairline) !important;
+  box-shadow: var(--light-raise) !important;
+}
+html[data-theme="light"] .showroom-hero-secondary {
+  background: var(--light-shade) !important;
+  color: #0b1d45 !important;
+  border: 1px solid var(--light-hairline) !important;
+  box-shadow: var(--light-raise) !important;
+}
+html[data-theme="light"] [data-facts-search] {
+  background: var(--light-shade) !important;
+  background-image: none !important;
+  color: #0b1d45 !important;
+  -webkit-text-fill-color: #0b1d45 !important;
+  border: 1px solid var(--light-hairline) !important;
+  box-shadow: var(--light-raise) !important;
+}
+html[data-theme="light"] [data-facts-search]:disabled {
+  background: var(--light-shade) !important;
+  color: #0b1d45 !important;
+  -webkit-text-fill-color: #0b1d45 !important;
+  border: 1px solid var(--light-hairline) !important;
+  box-shadow: var(--light-raise) !important;
+}
+
+/* Home hero: full-bleed photo, white type on the bottom fade, actions under it. */
+html[data-theme="light"] .showroom-home {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  width: 100%;
+  max-width: 100%;
+  background: #f2f2f2;
+}
+html[data-theme="light"] .showroom-hero {
+  grid-column: 1;
+  grid-row: 1;
+  width: 100%;
+  margin: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: #e6e8ec;
+}
+html[data-theme="light"] .showroom-hero::after {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 64%;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(8, 14, 28, 0) 0%,
+    rgba(8, 14, 28, 0.08) 32%,
+    rgba(8, 14, 28, 0.78) 100%
+  );
+}
+html[data-theme="light"] .showroom-coach {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  max-height: 17.5rem;
+  object-fit: cover;
+  object-position: center 46%;
+  filter: none;
+}
+html[data-theme="light"] .showroom-coach[data-hero-kind="cutout"] {
+  object-fit: contain;
+  object-position: center bottom;
+  padding: 0.5rem 0.75rem 4.5rem;
+  background: #e6e8ec;
+}
+html[data-theme="light"] .showroom-placard {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: end;
+  z-index: 4;
+  width: 100%;
+  margin: 0;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  text-align: left;
+  padding: 0 1.15rem 4.55rem;
+  pointer-events: none;
+}
+html[data-theme="light"] .showroom-spotyear,
+html[data-theme="light"] .showroom-spotmodel,
+html[data-theme="light"] .showroom-spotprice,
+html[data-theme="light"] .showroom-spotplace {
+  color: #c5cedb !important;
+  -webkit-text-fill-color: #c5cedb !important;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.4);
+}
+html[data-theme="light"] .showroom-spotyear {
+  display: block;
+  margin: 0 0 0.12rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+html[data-theme="light"] .showroom-spotmodel {
+  font-size: 1.7rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+html[data-theme="light"] .showroom-spotprice {
+  font-size: 1.28rem;
+  font-weight: 600;
+}
+html[data-theme="light"] .showroom-spotstock {
+  display: none;
+}
+html[data-theme="light"] .showroom-spotplace {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+html[data-theme="light"] .showroom-hero-actions {
+  display: flex;
+  grid-column: 1;
+  grid-row: 1;
+  align-self: end;
+  z-index: 5;
+  box-sizing: border-box;
+  gap: 0.65rem;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0 1.15rem 0.85rem;
+  background: transparent;
+}
+html[data-theme="light"] .showroom-hero-primary,
+html[data-theme="light"] .showroom-hero-secondary {
+  min-height: 2.75rem;
+  flex: 1;
+  border-radius: 4px;
+  padding: 0 0.85rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+html[data-theme="light"] .showroom-arrivals {
+  grid-column: 1;
+  grid-row: 2;
+  min-width: 0;
+  max-width: 100%;
+  margin-top: 1.15rem;
+}
+html[data-theme="light"] .showroom-kicker-dot {
+  background: #5c5e62;
+}
+html[data-theme="light"] .showroom-kicker {
+  color: #0b1d45 !important;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+html[data-theme="light"] .showroom-arrival {
+  flex-direction: row;
+  width: 17.25rem;
+  flex-basis: 17.25rem;
+  align-items: stretch;
+  border-radius: 12px;
+  min-height: 5.6rem;
+}
+html[data-theme="light"] .showroom-arrival-photo {
+  width: 7.4rem;
+  height: auto;
+  min-height: 5.6rem;
+  flex: 0 0 7.4rem;
+  align-items: center;
+  background: #e6e8ec;
+}
+html[data-theme="light"] .showroom-arrival-photo img {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: cover;
+  object-position: center;
+}
+html[data-theme="light"] .showroom-arrival-meta {
+  border-top: 0;
+  min-height: 0;
+  justify-content: center;
+  padding: 0.7rem 0.8rem;
+}
+html[data-theme="light"] .showroom-arrival-name {
+  color: #0b1d45 !important;
+}
+html[data-theme="light"] .showroom-arrival-price {
+  color: #1648c8 !important;
+}
+html[data-theme="light"] .showroom-tab {
+  background: var(--light-shade) !important;
+  color: #0b1d45 !important;
+  border: 1px solid var(--light-hairline) !important;
+  box-shadow: var(--light-raise) !important;
+  font-weight: 600;
+}
+/* Ask bar and the chip row are separate controls. Dark mode stays at 0.55rem. */
+html[data-theme="light"] .showroom-dock {
+  gap: 1rem;
+}
+html[data-theme="light"] .showroom-tab-icon,
+html[data-theme="light"] .showroom-menu-icon {
+  color: #0b1730;
+}
+html[data-theme="light"] .showroom-ask input::placeholder,
+html[data-theme="light"] .app-shell input::placeholder,
+html[data-theme="light"] .app-shell textarea::placeholder {
+  color: #0b1d45 !important;
+  -webkit-text-fill-color: #0b1d45;
+}
+
+html[data-theme="light"] body,
+html[data-theme="light"] .app-shell {
+  color: #0b1d45;
+}
+html[data-theme="light"] .app-shell :is(
+  .text-white,
+  .text-body-bright,
+  .text-prestige,
+  .text-fg,
+  .text-sky-50,
+  .text-sky-100,
+  .text-sky-200
+) {
+  color: #0b1d45 !important;
+  -webkit-text-fill-color: #0b1d45;
+  text-shadow: none;
+}
+html[data-theme="light"] .app-shell :is(
+  .text-white\/35,
+  .text-white\/40,
+  .text-white\/45,
+  .text-white\/50,
+  .text-white\/55,
+  .text-white\/60,
+  .text-white\/65,
+  .text-white\/70,
+  .text-white\/75,
+  .text-white\/80,
+  .text-white\/85,
+  .text-white\/90,
+  .text-muted,
+  .text-dim,
+  .text-label,
+  .text-prestige-muted
+) {
+  color: #0b1d45 !important;
+  -webkit-text-fill-color: #0b1d45;
+  text-shadow: none;
+}
+html[data-theme="light"] .text-gold,
+html[data-theme="light"] .text-gold-bright {
+  color: #1648c8 !important;
+  -webkit-text-fill-color: #1648c8 !important;
+}
+html[data-theme="light"] .lot-pill {
+  background: transparent;
+  border: 0;
+}
+html[data-theme="light"] .lot-pill-value {
+  color: #0b1d45 !important;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+html[data-theme="light"] .lot-pill-label {
+  color: #0b1d45 !important;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+}
+html[data-theme="light"] .text-sapphire,
+html[data-theme="light"] .text-sapphire-glow {
+  color: #1648c8 !important;
+}
+
+/* Body-type badge on a coach photo keeps its sapphire fill. Type is platinum. */
+html[data-theme="light"] .app-shell [data-lot-scene="photo"] .bg-sapphire {
+  background: #1648c8 !important;
+  background-image: none !important;
+  color: #c5cedb !important;
+  -webkit-text-fill-color: #c5cedb !important;
+  box-shadow: none !important;
+}
+html[data-theme="light"] .app-shell [data-lot-scene="photo"] :is(
+  .text-white,
+  .text-prestige,
+  .text-sapphire-glow,
+  [class*="text-white"]
+) {
+  color: #c5cedb !important;
+  -webkit-text-fill-color: #c5cedb !important;
+}
+html[data-theme="light"] .app-shell [data-camera-well] .absolute,
+html[data-theme="light"] .app-shell [data-camera-well] .absolute :is(span, button, p, .text-white) {
+  color: #c5cedb !important;
+  -webkit-text-fill-color: #c5cedb !important;
+}
+html[data-theme="light"] [data-camera-well] .bg-black {
+  background-color: #000000 !important;
+}
+html[data-theme="light"] .app-shell select,
+html[data-theme="light"] .app-shell input,
+html[data-theme="light"] .app-shell textarea {
+  color-scheme: light;
+  caret-color: #0b1d45;
+}
+html[data-theme="light"] .bottom-tab-einstein,
+html[data-theme="light"] .showroom-coach,
+html[data-theme="light"] .lot-well img {
+  filter: none;
+}
+
+/* Premium rows that are buttons sit above the card. */
+html[data-theme="light"] :is(
+  .glass-prestige,
+  .glass-prestige-gold,
+  .glass-prestige-deep,
+  .tow-hero-panel,
+  .exclusive-card,
+  .grok-landing-card
+) button:not(.rounded-full):not([aria-pressed="true"]):not([data-catalog-field]):not(.grok-chip):not(.grok-starter):not(.grok-lot-chip):not(.lot-chip):not(.underline):not([data-tow-details]) {
+  background: var(--light-shade) !important;
+  background-color: var(--light-shade) !important;
+  color: #0b1d45 !important;
+  border: 1px solid var(--light-hairline) !important;
+  box-shadow: var(--light-raise) !important;
+}
+html[data-theme="light"] [data-tools-menu] button > span:first-child,
+html[data-theme="light"] [data-tow-truck] :is(.bg-black\/30, .bg-black\/40):not(button),
+html[data-theme="light"] .tow-hero-panel :is(.bg-black\/30, .bg-black\/40):not(button) {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+html[data-theme="light"] [aria-label="Clear vehicle selection"],
+html[data-theme="light"] [aria-label="Reset to defaults"] {
+  background: var(--light-shade) !important;
+  background-color: var(--light-shade) !important;
+  color: #0b1d45 !important;
+  border: 1px solid var(--light-hairline) !important;
+  box-shadow: var(--light-raise) !important;
+}
+html[data-theme="light"] .exclusive-card-shine,
+html[data-theme="light"] .exclusive-card-shine-glow,
+html[data-theme="light"] .exclusive-card-shine-blade {
+  display: none !important;
+}
+html[data-theme="light"] .grok-chip,
+html[data-theme="light"] .grok-starter,
+html[data-theme="light"] .grok-lot-chip,
+html[data-theme="light"] .lot-chip:not(.is-on) {
+  background: var(--light-shade) !important;
+  border: 1px solid var(--light-hairline) !important;
+  box-shadow: var(--light-raise) !important;
+  color: #0b1d45 !important;
+}
+html[data-theme="light"] .text-blue {
+  color: #6aafff !important;
+  -webkit-text-fill-color: #6aafff !important;
+}
+html[data-theme="light"] .text-green,
+html[data-theme="light"] .text-emerald-100,
+html[data-theme="light"] .text-emerald-200,
+html[data-theme="light"] .text-emerald-300,
+html[data-theme="light"] .text-emerald-400,
+html[data-theme="light"] .text-emerald-500,
+html[data-theme="light"] .text-red-500,
+html[data-theme="light"] .text-red-800,
+html[data-theme="light"] .text-red-900 {
+  color: #1648c8 !important;
+  -webkit-text-fill-color: #1648c8 !important;
+}
+html[data-theme="light"] .text-amber,
+html[data-theme="light"] .text-sky-300,
+html[data-theme="light"] .text-sky-400,
+html[data-theme="light"] .text-sky-500 {
+  color: #6aafff !important;
+  -webkit-text-fill-color: #6aafff !important;
+}
+html[data-theme="light"] .text-ruby {
+  color: #1648c8 !important;
+  -webkit-text-fill-color: #1648c8 !important;
+}
+html[data-theme="light"] .glass-prestige button[data-catalog-field]:not(.rounded-full),
+html[data-theme="light"] [data-tow-truck] button:not(.rounded-full):not([data-tow-kind]),
+html[data-theme="light"] [data-tow-details] {
+  background: var(--light-shade) !important;
+  background-color: var(--light-shade) !important;
+  color: #0b1d45 !important;
+  border: 1px solid var(--light-hairline) !important;
+  border-radius: 8px !important;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.06) !important;
+}
+html[data-theme="light"] [data-tools-menu] button {
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+html[data-theme="light"] [data-tools-menu] .glass-prestige > button:last-child {
+  border-bottom: 0 !important;
+}
+html[data-theme="light"] .app-shell :is(
+  .lot-chip.is-on,
+  .showroom-mic,
+  .grok-mic-btn,
+  .showroom-hero-primary,
+  .grok-send-btn.is-ready,
+  button.bg-gold\/25,
+  button.bg-blue\/30,
+  [data-tow-kind-toggle] button[aria-pressed="true"],
+  [data-lot-scene="photo"] .bg-sapphire
+) {
+  color: #c5cedb !important;
+  -webkit-text-fill-color: #c5cedb !important;
+}
+html[data-theme="light"] .app-shell :is(
+  .text-slate-500,
+  .text-slate-600,
+  .text-slate-700,
+  .text-slate-800,
+  .text-slate-900,
+  .text-zinc-400,
+  .text-zinc-500,
+  .text-zinc-900,
+  .text-gray-500,
+  .text-neutral-500
+) {
+  color: #0b1d45 !important;
+  -webkit-text-fill-color: #0b1d45 !important;
+}
+/* Opacity utilities (text-sky-200/90) do not match the bare class. Text only. */
+html[data-theme="light"] .app-shell [class*="text-sky-"] {
+  color: #0b1d45 !important;
+  -webkit-text-fill-color: #0b1d45 !important;
+}
+html[data-theme="light"] .app-shell [class*="text-amber"] {
+  color: #1648c8 !important;
+  -webkit-text-fill-color: #1648c8 !important;
+}
+html[data-theme="light"] .text-sky-300,
+html[data-theme="light"] .text-sky-400,
+html[data-theme="light"] .text-sky-500,
+html[data-theme="light"] .text-blue,
+html[data-theme="light"] .text-amber {
+  color: #6aafff !important;
+  -webkit-text-fill-color: #6aafff !important;
 }

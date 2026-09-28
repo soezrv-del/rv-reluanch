@@ -1028,6 +1028,7 @@ export function RvFaxApp({
             ) : (
               <button
                 type="button"
+                data-facts-search
                 onClick={runSearch}
                 disabled={!searchEnabled}
                 className={cn(

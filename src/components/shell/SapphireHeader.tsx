@@ -4,6 +4,28 @@ import { PremiumMenuButton } from "./PremiumMenuButton";
 import { MetalVerifiedTrue } from "./Launchpad";
 import { PAGE_ACCENT, PAGE_COPY } from "./shellConstants";
 
+/** Navy lead + one sapphire word. Light mode only paints this split. */
+function splitSuiteTitle(title: string): { lead: string; accent: string } {
+  const known: Record<string, readonly [string, string]> = {
+    RvFACTS: ["Rv", "FACTS"],
+    RvCAL: ["Rv", "CAL"],
+    RvTOW: ["Rv", "TOW"],
+    RvGROK: ["Rv", "GROK"],
+    RvSHARE: ["Rv", "SHARE"],
+    "RV GPS": ["RV ", "GPS"],
+    LOT: ["", "LOT"],
+    PREMIUM: ["", "PREMIUM"],
+    SOLD: ["", "SOLD"],
+  };
+  const hit = known[title];
+  if (hit) return { lead: hit[0], accent: hit[1] };
+  const parts = title.trim().split(/\s+/);
+  if (parts.length > 1) {
+    return { lead: `${parts.slice(0, -1).join(" ")} `, accent: parts.at(-1) ?? title };
+  }
+  return { lead: "", accent: title };
+}
+
 /** Suite tools that share sapphire shell + forged mark */
 const VERIFIED_TABS = new Set<AppTab>([
   "rvfax",
@@ -19,6 +41,7 @@ const VERIFIED_TABS = new Set<AppTab>([
 
 export function SapphireHeader({ tab }: { tab: AppTab }) {
   const copy = PAGE_COPY[tab] ?? PAGE_COPY.rvgrok;
+  const flatTitle = splitSuiteTitle(copy.title);
   const showVerified = VERIFIED_TABS.has(tab);
   // Suite tools + Sold + Premium share the sapphire shell
   const accent = showVerified ? "sapphire" : (PAGE_ACCENT[tab] ?? "sapphire");
@@ -132,6 +155,27 @@ export function SapphireHeader({ tab }: { tab: AppTab }) {
               >
                 {copy.title}
               </span>
+              <p
+                className={cn(
+                  "suite-title-flat",
+                  copy.title.length <= 8
+                    ? "text-[clamp(3rem,13vw,4.1rem)]"
+                    : "text-[clamp(2.35rem,10.5vw,3.35rem)]",
+                )}
+                aria-hidden
+              >
+                {flatTitle.accent === "FACTS" ? (
+                  <>
+                    {flatTitle.lead ? <span>{flatTitle.lead}</span> : null}
+                    <span className="suite-title-accent">{flatTitle.accent}</span>
+                  </>
+                ) : (
+                  <span>
+                    {flatTitle.lead}
+                    {flatTitle.accent}
+                  </span>
+                )}
+              </p>
             </div>
 
             {showVerified ? (
