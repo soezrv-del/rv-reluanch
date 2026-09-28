@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -24,6 +24,7 @@ test("light theme is a flat Tesla canvas and dark chrome is unchanged", () => {
   const light = css.slice(lightAt);
 
   assert.ok(existsSync(mark), "transparent light mark");
+  assert.ok(statSync(mark).size < 40_000, "light mark is a small web asset");
   assert.equal(existsSync(jpg), false, "gray-plate jpg removed");
   assert.match(theme, /localStorage\.setItem\("rvfox-theme", next\)/);
   assert.match(theme, /document\.documentElement\.dataset\.theme = next/);
@@ -40,10 +41,10 @@ test("light theme is a flat Tesla canvas and dark chrome is unchanged", () => {
   assert.match(css, /\.showroom-mark \{[^}]*transform:\s*none/);
   assert.doesNotMatch(css, /\.showroom-mark \{[^}]*(invert|brightness|saturate|hue-rotate|drop-shadow|sepia|contrast)\(/);
   assert.match(header, /suite-title-flat/);
-  assert.match(light, /--color-bg:\s*#f4f4f4/);
+  assert.match(light, /--color-bg:\s*#f2f2f2/);
   assert.match(light, /--color-fg:\s*#0b1730/);
   assert.match(light, /--color-muted:\s*#5c5e62/);
-  assert.match(light, /height:\s*26px/);
+  assert.match(light, /height:\s*28px/);
   assert.match(light, /font-weight:\s*700 !important/);
   assert.match(light, /\.suite-title-accent[\s\S]*?#1648c8/);
   assert.match(light, /background:\s*#1648c8 !important/);

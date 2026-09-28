@@ -3285,7 +3285,7 @@ body:has(.report-page) {
 
 html[data-theme="light"] {
   color-scheme: light;
-  --color-bg: #f4f4f4;
+  --color-bg: #f2f2f2;
   --color-bg-elevated: #ffffff;
   --color-surface: #ffffff;
   --color-surface-2: #ffffff;
@@ -3296,16 +3296,16 @@ html[data-theme="light"] {
   --color-border-strong: rgba(0, 0, 0, 0.14);
   --color-ink-foam: #5c5e62;
   --color-ink-ink: #0b1730;
-  --color-tide-bg: #f4f4f4;
+  --color-tide-bg: #f2f2f2;
   --color-tide-surface: #ffffff;
   --color-tide-ink: #0b1730;
-  --color-tiimo-bg: #f4f4f4;
+  --color-tiimo-bg: #f2f2f2;
   --color-tiimo-surface: #ffffff;
   --color-tiimo-ink: #0b1730;
   --dock-surface: #ffffff;
   --dock-label-color: #5c5e62;
   --dock-label-color-active: #0b1730;
-  --color-showroom: #f4f4f4;
+  --color-showroom: #f2f2f2;
   --color-showroom-ink: #0b1730;
   --color-showroom-muted: #5c5e62;
   --color-showroom-accent: #1648c8;
@@ -3320,7 +3320,7 @@ html[data-theme="light"] {
 html[data-theme="light"] .showroom-stage,
 html[data-theme="light"] .showroom-plain,
 html[data-theme="light"] .showroom-app {
-  background: #f4f4f4;
+  background: #f2f2f2;
 }
 
 html[data-theme="light"] .showroom-ambient,
@@ -3338,7 +3338,7 @@ html[data-theme="light"] .showroom-brand {
   min-height: 0;
 }
 html[data-theme="light"] .showroom-mark {
-  height: 26px;
+  height: 28px;
   width: auto;
   object-fit: contain;
   transform: none;
@@ -3599,7 +3599,7 @@ html[data-theme="light"] .showroom-home {
   display: grid;
   grid-template-columns: 1fr;
   align-content: start;
-  background: #f4f4f4;
+  background: #f2f2f2;
 }
 html[data-theme="light"] .showroom-hero {
   grid-column: 1;
