@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { readTheme, serverTheme, subscribeTheme } from "@/lib/theme";
 import { fetchLotSnapshot, lotUnitPhoto, type LotUnit } from "@/lib/lot/ownLotPage";
 import { CoveredCoach } from "@/components/shell/CoveredCoach";
 import {
@@ -24,12 +25,21 @@ import {
 function SpotlightPhoto({
   className,
   alt,
+  src,
+  kind,
 }: {
   className: string;
   alt: string;
+  src: string;
+  kind: "photo" | "cutout";
 }) {
   return (
-    <img src={SHOWROOM_SPOTLIGHT.image} alt={alt} className={className} />
+    <img
+      src={src}
+      alt={alt}
+      className={className}
+      data-hero-kind={kind}
+    />
   );
 }
 
@@ -59,6 +69,11 @@ export function HomeScreen({
   const spotUnit = useMemo(() => spotlightLotUnit(listed), [listed]);
   const specs = spotUnit ? spotlightSpecs(spotUnit) : null;
   const model = specs?.model || SHOWROOM_SPOTLIGHT.series;
+  const theme = useSyncExternalStore(subscribeTheme, readTheme, serverTheme);
+  const spotPhoto = spotUnit ? lotUnitPhoto(spotUnit) : null;
+  const heroSrc =
+    theme === "light" && spotPhoto ? spotPhoto : SHOWROOM_SPOTLIGHT.image;
+  const heroKind = theme === "light" && spotPhoto ? "photo" : "cutout";
   const openSpot = () => {
     if (!spotUnit) return;
     requestLotUnit(lotArrivalQuery(spotUnit));
@@ -68,7 +83,12 @@ export function HomeScreen({
   const hero = (
     <>
       <div className="showroom-hero-beam" aria-hidden />
-      <SpotlightPhoto className="showroom-coach" alt={SHOWROOM_SPOTLIGHT.alt} />
+      <SpotlightPhoto
+        className="showroom-coach"
+        alt={SHOWROOM_SPOTLIGHT.alt}
+        src={heroSrc}
+        kind={heroKind}
+      />
       <div className="showroom-hero-pool" aria-hidden />
     </>
   );
@@ -112,6 +132,29 @@ export function HomeScreen({
           {placard}
         </section>
       )}
+
+      {spotUnit ? (
+        <div className="showroom-hero-actions">
+          <button
+            type="button"
+            className="showroom-hero-primary"
+            onClick={openSpot}
+          >
+            View coach
+          </button>
+          <button
+            type="button"
+            className="showroom-hero-secondary"
+            onClick={() => {
+              document
+                .querySelector("[data-home-arrivals]")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+          >
+            Learn more
+          </button>
+        </div>
+      ) : null}
 
       {arrivals.length > 0 ? (
         <NewestArrivals

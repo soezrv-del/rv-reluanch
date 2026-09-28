@@ -10,53 +10,48 @@ function read(rel: string) {
   return readFileSync(join(root, rel), "utf8");
 }
 
-test("light theme uses the shipped Raidho plate and a three-color type palette", () => {
+test("light theme is a flat Tesla canvas and dark chrome is unchanged", () => {
   const css = read("../styles.css");
   const brand = read("../components/shell/SuiteBrand.tsx");
+  const header = read("../components/shell/SapphireHeader.tsx");
   const more = read("../components/more/MoreApp.tsx");
   const rootDoc = read("../routes/__root.tsx");
   const theme = read("./theme.ts");
-  const mark = join(root, "../../public/assets/brand/raidho-r-mark-light.jpg");
+  const mark = join(root, "../../public/assets/brand/raidho-r-mark-light.png");
+  const jpg = join(root, "../../public/assets/brand/raidho-r-mark-light.jpg");
+  const lightAt = css.indexOf('html[data-theme="light"]');
+  assert.ok(lightAt > 0, "light block");
+  const light = css.slice(lightAt);
 
-  assert.ok(existsSync(mark), "light mark");
+  assert.ok(existsSync(mark), "transparent light mark");
+  assert.equal(existsSync(jpg), false, "gray-plate jpg removed");
   assert.match(theme, /localStorage\.setItem\("rvfox-theme", next\)/);
   assert.match(theme, /document\.documentElement\.dataset\.theme = next/);
   assert.match(rootDoc, /THEME_BOOT_SCRIPT/);
-  assert.match(theme, /rvfox-theme/);
   assert.match(more, /setTheme\(next\)/);
-  assert.match(more, /title="Appearance"/);
   assert.match(more, /data-tools-menu/);
-  assert.match(css, /\[data-tools-menu\] \.text-sky-200/);
-  assert.match(css, /\[data-tools-menu\] \.glass-prestige/);
   assert.match(brand, /raidho-shell-mark\.png/);
-  assert.match(brand, /raidho-r-mark-light\.jpg/);
+  assert.match(brand, /raidho-r-mark-light\.png/);
+  assert.doesNotMatch(brand, /raidho-r-mark-light\.jpg/);
   assert.match(brand, /theme === "light" \? RAIDHO_SHELL_MARK_LIGHT : RAIDHO_SHELL_MARK/);
-  assert.match(brand, /useSyncExternalStore\(subscribeTheme, readTheme, serverTheme\)/);
   assert.match(brand, /data-mark-light=\{RAIDHO_SHELL_MARK_LIGHT\}/);
   assert.match(theme, /querySelectorAll<HTMLImageElement>\("\[data-mark-light\]"\)/);
-  assert.doesNotMatch(brand, /data-suite-mark/);
-  assert.doesNotMatch(brand, /width=\{19\}|height=\{32\}|filter:|transform:|mix-blend|invert\(/);
   assert.match(css, /\.showroom-mark \{[^}]*filter:\s*none/);
   assert.match(css, /\.showroom-mark \{[^}]*transform:\s*none/);
   assert.doesNotMatch(css, /\.showroom-mark \{[^}]*(invert|brightness|saturate|hue-rotate|drop-shadow|sepia|contrast)\(/);
-  assert.doesNotMatch(css, /\.showroom-mark\[data-suite-mark/);
-  assert.match(css, /html\[data-theme="light"\]/);
-  assert.match(css, /--color-fg:\s*#000000/);
-  assert.match(css, /--color-muted:\s*#3d4d68/);
-  assert.match(css, /--color-border:\s*#eeeeee/);
-  assert.match(css, /--color-sapphire:\s*#1648c8/);
-  assert.match(css, /--dock-surface:\s*#ffffff/);
-  assert.match(css, /#3d4d68/);
-  assert.match(css, /\[data-lot-scene="photo"\]/);
-  assert.match(css, /html\[data-theme="light"\] \.sapphire-header-inner/);
-  assert.match(
-    css,
-    /html\[data-theme="light"\] \.glass-prestige[\s\S]*?rgba\(240, 215, 140, 0\.14\)[\s\S]*?blur\(28px\) saturate\(1\.7\)[\s\S]*?var\(--color-gold-border\)/,
-  );
-  assert.match(css, /html:not\(\[data-theme="light"\]\) \.app-shell \.text-white\\\/35/);
-  assert.match(theme, /dataset\.theme === "light"/);
-  assert.match(css, /\[data-camera-well\]/);
-  assert.match(css, /\.bottom-tab-einstein/);
-  assert.match(css, /\.lot-well/);
-  assert.doesNotMatch(css, /html\[data-theme="light"\][^{]*filter:\s*invert/);
+  assert.match(header, /suite-title-flat/);
+  assert.match(light, /--color-bg:\s*#f4f4f4/);
+  assert.match(light, /--color-fg:\s*#0b1730/);
+  assert.match(light, /--color-muted:\s*#5c5e62/);
+  assert.match(light, /height:\s*26px/);
+  assert.match(light, /font-weight:\s*700 !important/);
+  assert.match(light, /\.suite-title-accent[\s\S]*?#1648c8/);
+  assert.match(light, /background:\s*#1648c8 !important/);
+  assert.doesNotMatch(light, /Figtree/);
+  assert.doesNotMatch(light, /rgba\(10,\s*8,\s*6/);
+  assert.doesNotMatch(light, /\[class\*=text-gold\]/);
+  assert.doesNotMatch(light, /\.lot-mark-art/);
+  assert.doesNotMatch(light, /raidho-r-mark-light\.jpg/);
+  assert.match(css, /\.suite-title-flat \{\s*display:\s*none/);
+  assert.match(css, /\.showroom-hero-actions \{\s*display:\s*none/);
 });

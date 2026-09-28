@@ -4,8 +4,8 @@ import { readTheme, serverTheme, subscribeTheme } from "@/lib/theme";
 import { PremiumMenuButton } from "./PremiumMenuButton";
 
 export const RAIDHO_SHELL_MARK = "/assets/brand/raidho-shell-mark.png";
-/** Light-ground Raidho file, shown as shipped. Dark file stays the dark header mark. */
-export const RAIDHO_SHELL_MARK_LIGHT = "/assets/brand/raidho-r-mark-light.jpg";
+/** Transparent sapphire R for light mode. Dark mode keeps the dark header file. */
+export const RAIDHO_SHELL_MARK_LIGHT = "/assets/brand/raidho-r-mark-light.png";
 
 export function SuiteBrand({
   onHome,
