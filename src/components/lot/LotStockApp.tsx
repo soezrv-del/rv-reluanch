@@ -17,7 +17,8 @@ import {
   type LotSnapshotView,
   type LotUnit,
 } from "@/lib/lot/ownLotPage";
-import { LOT_UNIT_OPEN_EVENT, takePendingLotQuery } from "@/lib/home/homeCoach";
+import { LOT_UNIT_OPEN_EVENT, lotArrivalQuery, takePendingLotQuery } from "@/lib/home/homeCoach";
+import { LotArrivals } from "@/components/lot/LotArrivals";
 import { ReportShareButton } from "@/components/report/ReportShareButton";
 import { buildUnitShareReport } from "@/lib/rv/shareReport";
 
@@ -175,6 +176,18 @@ export function LotStockApp() {
             ) : null}
           </span>
         </label>
+
+        {!query.trim() && !type ? (
+          <LotArrivals
+            units={snap?.units ?? []}
+            onOpenUnit={(unit) => {
+              const next = lotArrivalQuery(unit);
+              wantOpen.current = next;
+              setType("");
+              setQuery(next);
+            }}
+          />
+        ) : null}
 
         {chips.length ? (
           <div className="lot-chip-rail" data-lot-chips>
