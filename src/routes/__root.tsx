@@ -54,10 +54,17 @@ function RootComponent() {
   );
 }
 
+/**
+ * Runs in the document head before the body is painted.
+ * Default is white. A saved "blue" choice paints navy on the first frame.
+ */
+const THEME_BOOT = `(function(){var t="white";try{if(localStorage.getItem("rvfox-theme")==="blue")t="blue";}catch(e){}var bg=t==="blue"?"#061228":"#f2f2f2";var h=document.documentElement;h.setAttribute("data-theme",t);h.style.backgroundColor=bg;h.style.colorScheme=t==="blue"?"dark":"light";})();`;
+
 function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
         <HeadContent />
       </head>
       <body className="bg-bg text-fg antialiased">

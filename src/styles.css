@@ -153,6 +153,7 @@
 
   html {
     color-scheme: light;
+    background-color: #f2f2f2;
     overscroll-behavior: none;
     overscroll-behavior-y: none;
     height: 100%;
@@ -3245,13 +3246,14 @@ body:has(.report-page) {
   color: #1648c8;
 }
 
-.app-shell,
-[data-nda-gate],
-[data-nda-state="loading"] {
+html:not([data-theme="blue"]) .app-shell,
+html:not([data-theme="blue"]) [data-nda-gate],
+html:not([data-theme="blue"]) [data-nda-state="loading"] {
   background: #f2f2f2;
   color: #0b1d45;
   color-scheme: light;
 }
+html:not([data-theme="blue"]) {
 .app-shell .text-white,
 .app-shell .text-fg,
 .app-shell .text-prestige,
@@ -3285,7 +3287,7 @@ body:has(.report-page) {
   color: #fff;
   border-color: #1648c8;
 }
-.app-shell button:not(.showroom-brand):not(.tesla-main):not(.tesla-secondary):not(.showroom-mic):not(.showroom-menu):not(.grok-mic-btn):not(.lot-chip.is-on):not([data-tone="main"]):not(.home-hero-dots button):not(.glass-prestige):not(.glass-prestige-deep):not(.glass-prestige-gold):not(.glass-panel):not(.showroom-card):not(.showroom-arrival):not(.showroom-tab):not(.tesla-tile):not(.grok-frost):not(.lot-card):not(.grok-chip):not(.grok-lot-chip):not(.grok-starter),
+.app-shell button:not(.showroom-brand):not(.tesla-main):not(.tesla-secondary):not(.showroom-mic):not(.showroom-menu):not(.grok-mic-btn):not(.lot-chip.is-on):not([data-tone="main"]):not(.home-hero-dots button):not(.glass-prestige):not(.glass-prestige-deep):not(.glass-prestige-gold):not(.glass-panel):not(.showroom-card):not(.showroom-arrival):not(.showroom-tab):not(.tesla-tile):not(.grok-frost):not(.lot-card):not(.grok-chip):not(.grok-lot-chip):not(.grok-starter):not(.theme-choice),
 .app-shell [role="button"]:not(.tesla-main):not([data-tone="main"]):not(.glass-prestige):not(.showroom-card):not(.showroom-arrival),
 [data-nda-gate] button:not(.tesla-main):not(.tesla-secondary) {
   background: #fff;
@@ -3393,4 +3395,129 @@ body:has(.report-page) {
   background: transparent !important;
   border: 0 !important;
   box-shadow: none !important;
+}
+}
+
+/* Blue scheme — the existing navy field. White stays the default above. */
+html[data-theme="blue"] {
+  --color-bg: #061228;
+  --color-bg-elevated: #0a1834;
+  --color-surface: #0c1c40;
+  --color-surface-2: #12244e;
+  --color-fg: #e8eef8;
+  --color-muted: #c5d0e0;
+  --color-dim: #9aabc4;
+  --color-showroom: #061228;
+  --color-showroom-ink: #e8eef8;
+  --color-showroom-muted: #c5d0e0;
+  color-scheme: dark;
+  background-color: #061228;
+}
+html[data-theme="blue"] body,
+html[data-theme="blue"] .app-shell,
+html[data-theme="blue"] .showroom-app,
+html[data-theme="blue"] .showroom-plain,
+html[data-theme="blue"] .showroom-stage,
+html[data-theme="blue"] [data-nda-gate],
+html[data-theme="blue"] [data-nda-state="loading"] {
+  background-color: #061228;
+  color: #e8eef8;
+  color-scheme: dark;
+}
+html[data-theme="blue"] :is(
+  .tesla-page-title,
+  .tesla-page-line,
+  .showroom-word,
+  .showroom-kicker,
+  .showroom-arrival,
+  .showroom-arrival-name,
+  .showroom-tab,
+  .showroom-ask,
+  .showroom-menu,
+  .lot-pill-value,
+  .lot-search,
+  .glass-prestige,
+  .tesla-tile,
+  .grok-frost
+) {
+  color: #e8eef8;
+}
+html[data-theme="blue"] :is(.tesla-facts-word, .showroom-arrival-price, .tesla-stat) {
+  color: var(--color-sapphire-glow);
+}
+html[data-theme="blue"] .showroom-word {
+  -webkit-text-fill-color: #e8eef8;
+}
+
+/* NDA follows the active theme. White is fully light. Continue is sapphire. */
+html:not([data-theme="blue"]) [data-nda-gate],
+html:not([data-theme="blue"]) [data-nda-state="loading"],
+html:not([data-theme="blue"]) [data-nda-gate] .showroom-plain,
+html:not([data-theme="blue"]) [data-nda-gate] .nda-accept-bar {
+  background: #f2f2f2 !important;
+  background-image: none !important;
+  color: #0b1d45;
+}
+html:not([data-theme="blue"]) [data-nda-gate] .text-muted,
+html:not([data-theme="blue"]) [data-nda-gate] .text-fg,
+html:not([data-theme="blue"]) [data-nda-gate] [data-nda-agree-row] {
+  color: #0b1d45 !important;
+}
+[data-nda-gate] .nda-accept-glyph {
+  background-color: #fff !important;
+  border-color: #0b1d45 !important;
+}
+html[data-theme="blue"] [data-nda-gate] .nda-accept-glyph {
+  background-color: #0c1c40 !important;
+  border-color: #e8eef8 !important;
+}
+[data-nda-gate] .nda-accept-glyph[data-checked="true"] {
+  background-color: #1648c8 !important;
+  border-color: #1648c8 !important;
+}
+[data-nda-gate] .nda-accept-glyph[data-checked="true"] svg {
+  color: #fff !important;
+}
+[data-nda-gate] .tesla-main,
+[data-nda-gate] button.tesla-main {
+  background: #1648c8 !important;
+  color: #fff !important;
+  border-color: #1648c8 !important;
+}
+html:not([data-theme="blue"]) [data-nda-gate] button.tesla-secondary {
+  background: #fff !important;
+  color: #0b1d45 !important;
+  border: 1px solid rgba(11, 29, 69, 0.28) !important;
+  opacity: 1;
+}
+html[data-theme="blue"] [data-nda-gate] button.tesla-secondary {
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, 0.45) !important;
+  opacity: 1;
+}
+html[data-theme="blue"] [data-nda-gate] .text-fg,
+html[data-theme="blue"] [data-nda-gate] .text-muted,
+html[data-theme="blue"] [data-nda-gate] [data-nda-agree-row] {
+  color: #e8eef8 !important;
+}
+
+.theme-switch {
+  display: flex;
+  gap: 0.4rem;
+}
+.theme-choice {
+  min-height: 44px;
+  border-radius: 999px;
+  padding: 0 1rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  background: transparent;
+  color: inherit;
+  border: 1px solid var(--color-gold-border);
+}
+.theme-choice[aria-pressed="true"] {
+  background: #1648c8;
+  color: #fff;
+  border-color: #1648c8;
 }

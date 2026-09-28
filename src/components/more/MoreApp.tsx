@@ -46,6 +46,7 @@ import {
   speakWithBrowserTts,
   stopBrowserTts,
 } from "@/lib/rvgrok/voice";
+import { applyTheme, readStoredTheme, type ColorScheme } from "@/lib/theme";
 
 const VinDecoder = lazy(() =>
   import("@/components/rvfax/VinDecoder").then((m) => ({ default: m.VinDecoder })),
@@ -105,6 +106,16 @@ export function MoreApp({
   const [liveVoice, setLiveVoice] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [previewingId, setPreviewingId] = useState<string | null>(null);
+  const [scheme, setScheme] = useState<ColorScheme>("white");
+
+  useEffect(() => {
+    setScheme(readStoredTheme());
+  }, []);
+
+  const chooseScheme = (next: ColorScheme) => {
+    setScheme(next);
+    applyTheme(next);
+  };
 
   useEffect(() => {
     try {
@@ -185,6 +196,31 @@ export function MoreApp({
       pullLabel="Release to refresh Premium"
     >
         <div className="mx-auto w-full max-w-lg space-y-5 px-3 pb-12 pt-3 sm:px-4">
+          <section data-theme-toggle aria-label="Color scheme">
+            <p className="mb-2 px-0.5 text-[10px] font-bold tracking-[0.16em] text-muted">
+              APPEARANCE
+            </p>
+            <div className="theme-switch" role="group" aria-label="Color scheme">
+              <button
+                type="button"
+                className="theme-choice"
+                data-theme-choice="white"
+                aria-pressed={scheme === "white"}
+                onClick={() => chooseScheme("white")}
+              >
+                White
+              </button>
+              <button
+                type="button"
+                className="theme-choice"
+                data-theme-choice="blue"
+                aria-pressed={scheme === "blue"}
+                onClick={() => chooseScheme("blue")}
+              >
+                Blue
+              </button>
+            </div>
+          </section>
           <header className="flex items-center justify-between gap-3">
             {onNavigate ? (
               <button
