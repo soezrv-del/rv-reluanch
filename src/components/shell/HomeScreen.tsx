@@ -9,6 +9,8 @@ import {
 } from "@/lib/home/seamlessLoop";
 
 const EMPTY_UNITS: LotUnit[] = [];
+/** Dealer lot photo for the light hero. Stable asset — not the studio cutout. */
+const LIGHT_LOT_HERO = "/assets/showroom/spotlight-lot.jpg";
 import {
   SHOWROOM_SPOTLIGHT,
   arrivalsForHome,
@@ -77,8 +79,6 @@ export function HomeScreen({
   const spotWhere = [specs?.stock, spotUnit?.location.trim() ?? ""]
     .filter(Boolean)
     .join(" · ");
-  const heroSrc = SHOWROOM_SPOTLIGHT.image;
-  const heroKind = "cutout" as const;
   const openSpot = () => {
     if (!spotUnit) return;
     requestLotUnit(lotArrivalQuery(spotUnit));
@@ -91,8 +91,16 @@ export function HomeScreen({
       <SpotlightPhoto
         className="showroom-coach"
         alt={SHOWROOM_SPOTLIGHT.alt}
-        src={heroSrc}
-        kind={heroKind}
+        src={SHOWROOM_SPOTLIGHT.image}
+        kind="cutout"
+      />
+      {/* Light mode shows this lot photo and hides the studio cutout in CSS.
+          The src is static so it does not swap after the snapshot loads. */}
+      <SpotlightPhoto
+        className="showroom-coach showroom-coach-lot"
+        alt={SHOWROOM_SPOTLIGHT.alt}
+        src={LIGHT_LOT_HERO}
+        kind="photo"
       />
       <div className="showroom-hero-pool" aria-hidden />
     </>

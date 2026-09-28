@@ -2735,6 +2735,10 @@ button.showroom-placard {
   background: transparent;
   border: 0;
 }
+/* Lot photo is the light hero only. Hidden here so the dark spotlight stays the cutout. */
+.showroom-coach-lot {
+  display: none;
+}
 /* Floor pool where the cone lands. Horizontal radius matches the cone's
    base (center ±38%). The rim is transparent, so the ellipse has no edge. */
 .showroom-hero-pool {
@@ -3318,12 +3322,8 @@ html[data-theme="light"] {
   --color-showroom-muted: #c5cedb;
   --color-showroom-accent: #1648c8;
   --color-showroom-glass: #ffffff;
-  /* Lift + recessed edge. Light mode only — dark chrome keeps its own shadows. */
-  --light-lift:
-    0 8px 22px rgba(15, 23, 42, 0.08),
-    0 1px 2px rgba(15, 23, 42, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.85),
-    inset 0 -1px 0 rgba(15, 23, 42, 0.06);
+  /* Faint drop on white cards. Light mode only — dark chrome keeps its own shadows. */
+  --light-lift: 0 1px 2px rgba(11, 29, 69, 0.04), 0 8px 20px rgba(11, 29, 69, 0.06);
   --shadow-panel: var(--light-lift);
   --shadow-showroom: var(--light-lift);
   --shadow-glass: var(--light-lift);
@@ -3334,9 +3334,8 @@ html[data-theme="light"] {
   --light-hairline: rgba(15, 23, 42, 0.14);
   /* Buttons and tabs sit above the card stack. */
   --light-raise:
-    0 14px 30px rgba(15, 23, 42, 0.16),
-    0 4px 10px rgba(15, 23, 42, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.96);
+    0 8px 18px rgba(15, 23, 42, 0.12),
+    0 2px 4px rgba(15, 23, 42, 0.08);
 }
 
 html[data-theme="light"] .showroom-stage,
@@ -3374,6 +3373,7 @@ html[data-theme="light"] .showroom-word {
   background-clip: border-box !important;
   -webkit-text-fill-color: #0b1d45 !important;
   color: #0b1d45 !important;
+  font-family: var(--font-sans);
   font-weight: 700 !important;
   letter-spacing: -0.02em;
   filter: none !important;
@@ -3672,16 +3672,16 @@ html[data-theme="light"] .showroom-coach {
   width: 100%;
   height: auto;
   aspect-ratio: 4 / 3;
-  max-height: 17.5rem;
+  max-height: 16.5rem;
   object-fit: cover;
-  object-position: center 46%;
+  object-position: center 62%;
   filter: none;
 }
 html[data-theme="light"] .showroom-coach[data-hero-kind="cutout"] {
-  object-fit: contain;
-  object-position: center bottom;
-  padding: 0.5rem 0.75rem 4.5rem;
-  background: #e6e8ec;
+  display: none;
+}
+html[data-theme="light"] .showroom-coach-lot {
+  display: block;
 }
 html[data-theme="light"] .showroom-placard {
   grid-column: 1;
