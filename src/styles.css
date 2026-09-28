@@ -3316,9 +3316,15 @@ html[data-theme="light"] {
   --color-showroom-muted: #5c5e62;
   --color-showroom-accent: #1648c8;
   --color-showroom-glass: #ffffff;
-  --shadow-panel: 0 1px 1px rgba(0, 0, 0, 0.04);
-  --shadow-showroom: none;
-  --shadow-glass: none;
+  /* Lift + recessed edge. Light mode only — dark chrome keeps its own shadows. */
+  --light-lift:
+    0 8px 22px rgba(15, 23, 42, 0.08),
+    0 1px 2px rgba(15, 23, 42, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 -1px 0 rgba(15, 23, 42, 0.06);
+  --shadow-panel: var(--light-lift);
+  --shadow-showroom: var(--light-lift);
+  --shadow-glass: var(--light-lift);
   --shadow-glow-gold: none;
   --shadow-glow-sapphire: none;
 }
@@ -3460,7 +3466,7 @@ html[data-theme="light"] .premium-menu-btn {
   background: #ffffff !important;
   color: #0b1730 !important;
   border: 1px solid rgba(0, 0, 0, 0.12) !important;
-  box-shadow: none !important;
+  box-shadow: var(--light-lift) !important;
   backdrop-filter: none !important;
 }
 
@@ -3480,7 +3486,7 @@ html[data-theme="light"] :is(
   background: #ffffff !important;
   background-image: none !important;
   border: 1px solid rgba(0, 0, 0, 0.06) !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 8px 18px rgba(0, 0, 0, 0.04) !important;
+  box-shadow: var(--light-lift) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   border-radius: 12px !important;
@@ -3512,7 +3518,7 @@ html[data-theme="light"] .grok-composer-pill {
   background: #ffffff !important;
   background-image: none !important;
   border: 1px solid rgba(0, 0, 0, 0.12) !important;
-  box-shadow: none !important;
+  box-shadow: var(--light-lift) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   color: #0b1730;
@@ -3536,7 +3542,7 @@ html[data-theme="light"] .showroom-ask button:not(.showroom-mic) {
 html[data-theme="light"] [data-tools-menu] .glass-prestige {
   background: #ffffff !important;
   border: 1px solid rgba(0, 0, 0, 0.08) !important;
-  box-shadow: none !important;
+  box-shadow: var(--light-lift) !important;
   border-radius: 8px !important;
 }
 html[data-theme="light"] [data-tools-menu] button {
@@ -3564,7 +3570,7 @@ html[data-theme="light"] .app-shell button:not(.showroom-brand):not(.bottom-tab-
   background-color: #ffffff;
   color: #0b1730;
   border: 1px solid rgba(0, 0, 0, 0.12);
-  box-shadow: none;
+  box-shadow: var(--light-lift);
 }
 html[data-theme="light"] .lot-chip.is-on,
 html[data-theme="light"] .showroom-mic,
@@ -3579,7 +3585,7 @@ html[data-theme="light"] [data-tow-kind-toggle] button[aria-pressed="true"] {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   border-color: #1648c8 !important;
-  box-shadow: none !important;
+  box-shadow: var(--light-lift) !important;
 }
 html[data-theme="light"] .showroom-mic,
 html[data-theme="light"] .grok-mic-btn,
@@ -3593,13 +3599,13 @@ html[data-theme="light"] [data-tow-kind-toggle] button[aria-pressed="false"] {
   background: #ffffff !important;
   color: #0b1730 !important;
   border: 1px solid rgba(0, 0, 0, 0.12) !important;
-  box-shadow: none !important;
+  box-shadow: var(--light-lift) !important;
 }
 html[data-theme="light"] .showroom-hero-secondary {
   background: #ffffff !important;
   color: #0b1730 !important;
   border: 1px solid rgba(0, 0, 0, 0.14) !important;
-  box-shadow: none !important;
+  box-shadow: var(--light-lift) !important;
 }
 html[data-theme="light"] [data-facts-search]:not(:disabled) {
   background: #1648c8 !important;
@@ -3607,14 +3613,14 @@ html[data-theme="light"] [data-facts-search]:not(:disabled) {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   border-color: #1648c8 !important;
-  box-shadow: none !important;
+  box-shadow: var(--light-lift) !important;
 }
 html[data-theme="light"] [data-facts-search]:disabled {
   background: #ffffff !important;
   color: #8e9199 !important;
   -webkit-text-fill-color: #8e9199 !important;
   border: 1px solid rgba(0, 0, 0, 0.12) !important;
-  box-shadow: none !important;
+  box-shadow: var(--light-lift) !important;
 }
 
 /* Home hero: full-bleed photo, white type on the bottom fade, actions under it. */
@@ -3793,8 +3799,12 @@ html[data-theme="light"] .showroom-tab {
   background: #ffffff !important;
   color: #0b1730 !important;
   border: 1px solid rgba(0, 0, 0, 0.12) !important;
-  box-shadow: none !important;
+  box-shadow: var(--light-lift) !important;
   font-weight: 600;
+}
+/* Ask bar and the chip row are separate controls. Dark mode stays at 0.55rem. */
+html[data-theme="light"] .showroom-dock {
+  gap: 1rem;
 }
 html[data-theme="light"] .showroom-tab-icon,
 html[data-theme="light"] .showroom-menu-icon {
@@ -3915,7 +3925,7 @@ html[data-theme="light"] :is(
   .tow-hero-panel,
   .exclusive-card,
   .grok-landing-card
-) button:not(.rounded-full):not([aria-pressed="true"]) {
+) button:not(.rounded-full):not([aria-pressed="true"]):not(.showroom-mic):not(.grok-mic-btn):not(.showroom-hero-primary):not(.showroom-hero-secondary):not(.showroom-tab):not(.lot-chip):not(.grok-chip):not(.grok-starter):not(.grok-lot-chip):not([data-facts-search]) {
   background: transparent !important;
   background-color: transparent !important;
   border-color: transparent !important;
@@ -3936,10 +3946,12 @@ html[data-theme="light"] .exclusive-card-shine-blade {
   display: none !important;
 }
 html[data-theme="light"] .grok-chip,
-html[data-theme="light"] .grok-starter {
+html[data-theme="light"] .grok-starter,
+html[data-theme="light"] .grok-lot-chip,
+html[data-theme="light"] .lot-chip:not(.is-on) {
   background: #ffffff !important;
   border: 1px solid rgba(0, 0, 0, 0.12) !important;
-  box-shadow: none !important;
+  box-shadow: var(--light-lift) !important;
   color: #0b1730 !important;
 }
 html[data-theme="light"] .text-blue {
@@ -3964,7 +3976,7 @@ html[data-theme="light"] [data-tow-truck] button:not(.rounded-full):not([data-to
   background: transparent !important;
   border: 1px solid rgba(0, 0, 0, 0.12) !important;
   border-radius: 8px !important;
-  box-shadow: none !important;
+  box-shadow: var(--light-lift) !important;
 }
 html[data-theme="light"] [data-tools-menu] button {
   background: transparent !important;
