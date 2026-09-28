@@ -7,15 +7,32 @@ import { formatScreenContext, stripScreenContext } from "./screenGuides.ts";
 
 const TAB_SCREEN: Record<string, string> = {
   rvfax: "Facts",
-  rvcal: "Cal",
-  rvtow: "Tow",
-  rvlot: "Lot",
+  rvcal: "CAL",
+  rvtow: "TOW",
+  rvlot: "LOT",
   rvtrips: "RV GPS",
   rvgrok: "Grok",
   more: "Premium",
   rvsold: "Sold",
   rvshare: "Share",
 };
+
+/**
+ * Rooms whose name is pushed into chat context on navigation.
+ * RVFACTS → Facts. Calculator → CAL. Tow Guide → TOW. Lot Inventory → LOT.
+ * Those are context names, not the pill labels.
+ */
+export const ROUTED_CHAT_SCREENS = ["Facts", "CAL", "TOW", "LOT"] as const;
+
+export function isRoutedChatScreen(name: string): boolean {
+  return (ROUTED_CHAT_SCREENS as readonly string[]).includes(name.trim());
+}
+
+/** One line for the Live Voice thread. The next reply reads it; it is not a question. */
+export function routeScreenChatNote(name: string): string {
+  const screen = name.trim();
+  return `ACTIVE SCREEN: ${screen}. He just opened this screen. Use it for the next reply. Do not answer this note.`;
+}
 
 let activeScreen = "";
 let askBarGrokEntry = false;
@@ -51,6 +68,15 @@ export function setActiveScreen(name: string): void {
 
 export function readActiveScreen(): string {
   return activeScreen;
+}
+
+/**
+ * Route-change hook. The shell calls this on every navigation.
+ * Facts, CAL, TOW, and LOT become the active screen before the next reply.
+ * Opening Grok from the ask bar is still not a room change.
+ */
+export function onRouteChange(tab: string, homeOpen: boolean): void {
+  setActiveScreen(screenNameForTab(tab, homeOpen));
 }
 
 /**

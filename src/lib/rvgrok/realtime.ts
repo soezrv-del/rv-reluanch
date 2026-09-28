@@ -29,7 +29,11 @@ import {
   type DeskSheetPayload,
 } from "./deskSheet";
 import { buildChatGrounding, namedCoachConflictsLock } from "./grounding";
-import { onActiveScreenChange } from "./screenContext";
+import {
+  isRoutedChatScreen,
+  onActiveScreenChange,
+  routeScreenChatNote,
+} from "./screenContext";
 import {
   SCREEN_CALLOUT_DEBOUNCE_MS,
   initialScreenCalloutState,
@@ -138,6 +142,8 @@ export class GrokRealtimeSession {
   private catalogContext: string;
   /** Screen captured at mic press. A later room chip replaces it. */
   private screenAtAsk: string;
+  /** Screen note waiting for the socket, so it lands before the next reply. */
+  private pendingRouteNote = "";
   private unsubScreen: (() => void) | null = null;
   private callout: ScreenCalloutState = initialScreenCalloutState();
   private calloutTimer: ReturnType<typeof setTimeout> | null = null;
@@ -221,6 +227,8 @@ export class GrokRealtimeSession {
     this.unsubScreen = onActiveScreenChange((name) => {
       if (!name || name === this.screenAtAsk) return;
       this.screenAtAsk = name;
+      if (isRoutedChatScreen(name)) this.sendRouteScreenItem(name);
+      else this.pendingRouteNote = "";
       this.sendSessionUpdate();
       this.pushCallout({ type: "navigate", screen: name, now: Date.now() });
     });
@@ -285,6 +293,7 @@ export class GrokRealtimeSession {
     });
 
     ws.binaryType = "arraybuffer";
+    this.sendRouteScreenItem(this.pendingRouteNote || this.screenAtAsk);
     this.sendSessionUpdate(this.catalogContext);
     if (this.catalogContext) {
       try {
@@ -1956,6 +1965,36 @@ export class GrokRealtimeSession {
     } catch {
       this.researchPhase = "idle";
       this.suppressMic = false;
+    }
+  }
+
+  /**
+   * Push Facts, CAL, TOW, or LOT into the Live Voice thread before the next
+   * reply. Does not request a response. The shell's onRouteChange is what
+   * fires this, via onActiveScreenChange.
+   */
+  private sendRouteScreenItem(name: string) {
+    const screen = name.trim();
+    if (!isRoutedChatScreen(screen)) return;
+    const ws = this.ws;
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      this.pendingRouteNote = screen;
+      return;
+    }
+    this.pendingRouteNote = "";
+    try {
+      ws.send(
+        JSON.stringify({
+          type: "conversation.item.create",
+          item: {
+            type: "message",
+            role: "user",
+            content: [{ type: "input_text", text: routeScreenChatNote(screen) }],
+          },
+        }),
+      );
+    } catch {
+      this.pendingRouteNote = screen;
     }
   }
 
