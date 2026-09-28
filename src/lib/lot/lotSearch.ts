@@ -54,6 +54,24 @@ export function normalizeLotSearchToken(token: string): string {
   return t;
 }
 
+/**
+ * Spoken plurals for lot questions. Plain words of 4+ letters drop a
+ * trailing s ("lineages" → "lineage"). Class-letter plurals drop s too
+ * ("cs" → "c") so "super cs" is "super c". Floorplans stay intact.
+ */
+export function singularizeLotToken(token: string): string {
+  const t = normalizeLotSearchToken(token);
+  if (!t) return "";
+  if (isFloorplanLikeToken(t) || /\d/.test(t)) return t;
+  if (/^[abc]s$/.test(t)) return t[0] || t;
+  if (t.length < 4 || !/^[a-z]+$/.test(t)) return t;
+  if (t.endsWith("ss")) return t;
+  if (t.endsWith("ies") && t.length > 4) return `${t.slice(0, -3)}y`;
+  if (/(?:ch|sh|x|z)es$/.test(t)) return t.slice(0, -2);
+  if (t.endsWith("s")) return t.slice(0, -1);
+  return t;
+}
+
 export function isFloorplanLikeToken(token: string): boolean {
   return FLOORPLAN_LIKE_TOKEN_RE.test(normalizeLotSearchToken(token));
 }

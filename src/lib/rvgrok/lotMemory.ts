@@ -7,18 +7,18 @@
  */
 
 import {
-  aggregateOwnLot,
   filterLabel,
-  formatOwnLotBlock,
   ownLotIsUnavailable,
-  ownLotUnitsMissingLength,
   parseOwnLotAsk,
-  queryOwnLotUnits,
-  resolvedUnitLength,
   type OwnLotFilter,
   type OwnLotSnapshot,
   type OwnLotUnit,
 } from "./ownLotInventory.ts";
+import {
+  lotQueryHasSubject,
+  searchLot,
+  type LotQueryCounts,
+} from "../lot/lotQuery.ts";
 import {
   looksLikeOwnLotFollowUp,
   parseLotRank,
@@ -162,21 +162,6 @@ export function resolveLotTurn(
   };
 }
 
-const BODY_ALIASES: Record<string, string> = {
-  "class a": "Class A",
-  "class a gas": "Class A Gas",
-  "class a diesel": "Class A Diesel",
-  "class b": "Class B",
-  "class c": "Class C",
-  "class super c": "Class Super C",
-  "super c": "Class Super C",
-  "fifth wheel": "Fifth Wheel",
-  "fifth wheel toy hauler": "Fifth Wheel Toy Hauler",
-  "travel trailer": "Travel Trailer",
-  "travel trailer toy hauler": "Travel Trailer Toy Hauler",
-  "toy hauler": "Travel Trailer Toy Hauler",
-};
-
 function str(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
 }
@@ -193,9 +178,7 @@ function num(value: unknown): number | undefined {
 export function filterFromToolArgs(args: Record<string, unknown>): OwnLotFilter {
   const filter: OwnLotFilter = {};
   const body = str(args.body_type);
-  if (body) {
-    filter.bodyType = BODY_ALIASES[body.toLowerCase()] || body;
-  }
+  if (body) filter.bodyType = body;
   const make = str(args.make);
   if (make) filter.make = make;
   const model = str(args.model);
@@ -273,6 +256,8 @@ export type QueryLotUnit = {
   model: string;
   trim: string;
   body_type: string;
+  condition: string;
+  lot_status: string;
   location: string;
   stock_number: string;
   price: number | null;
@@ -287,26 +272,28 @@ export type QueryLotAnswer = {
   reason?: string;
   matched: number;
   filter_label: string;
+  counts?: LotQueryCounts;
   units: QueryLotUnit[];
   no_length: QueryLotUnit[];
+  summary?: string;
+  did_you_mean?: string;
   speech: string;
   lotMemory: LotMemory | null;
 };
 
-function compactUnit(unit: OwnLotUnit): QueryLotUnit {
-  const length = resolvedUnitLength(unit);
-  return {
-    year: unit.year,
-    make: unit.make,
-    model: unit.model,
-    trim: unit.trim,
-    body_type: unit.body_type,
-    location: unit.location,
-    stock_number: unit.stock_number,
-    price: unit.price,
-    length_ft: length.ft,
-    length_source: length.source,
-  };
+function structuredSubject(args: Record<string, unknown>): boolean {
+  return Boolean(
+    str(args.make) ||
+      str(args.model) ||
+      str(args.body_type) ||
+      str(args.condition) ||
+      str(args.status) ||
+      str(args.location) ||
+      num(args.year_min) != null ||
+      num(args.year_max) != null ||
+      num(args.price_min) != null ||
+      num(args.price_max) != null,
+  );
 }
 
 export function answerQueryLotFromSnapshot(
@@ -329,37 +316,67 @@ export function answerQueryLotFromSnapshot(
       lotMemory: previous,
     };
   }
-  const turn = mergeToolCall(args, previous);
+  const query = str(args.query);
+  const fresh = lotQueryHasSubject(query) || structuredSubject(args);
+  const turn = fresh
+    ? {
+        filter: filterFromToolArgs(args),
+        ...rankFromToolArgs(args),
+        carried: false,
+        replaced: Boolean(previous),
+      }
+    : mergeToolCall(args, previous);
   const limit = turn.limit ?? 12;
   const memory: LotMemory = {
     filter: turn.filter,
     sort: turn.sort,
     limit,
   };
-  const counts = aggregateOwnLot(snapshot.units, turn.filter);
-  const rows = queryOwnLotUnits(snapshot.units, turn.filter, limit, turn.sort);
-  const lengthAsk =
-    turn.sort?.by === "length" ||
-    turn.filter.lengthFtMin != null ||
-    turn.filter.lengthFtMax != null ||
-    turn.filter.aroundLengthFt != null ||
-    turn.filter.minLengthFt != null ||
-    turn.filter.maxLengthFt != null;
-  const noLength = lengthAsk
-    ? ownLotUnitsMissingLength(snapshot.units, turn.filter)
-    : [];
-  const speech = formatOwnLotBlock(snapshot, "", {
-    filter: turn.filter,
-    sort: turn.sort,
+  const found = searchLot(snapshot.units, {
+    query: fresh ? query : "",
+    make: turn.filter.make,
+    model: [turn.filter.model, turn.filter.trim].filter(Boolean).join(" "),
+    body_type: turn.filter.bodyType,
+    condition: str(args.condition),
+    status: str(args.status),
+    location: turn.filter.location,
+    year_min: turn.filter.yearMin ?? (turn.filter.year ? Number(turn.filter.year) : undefined),
+    year_max: turn.filter.yearMax ?? (turn.filter.year ? Number(turn.filter.year) : undefined),
+    price_min: turn.filter.minPrice,
+    price_max: turn.filter.maxPrice,
+    length_ft_min:
+      turn.filter.lengthFtMin ??
+      (turn.filter.aroundLengthFt != null
+        ? turn.filter.aroundLengthFt - 2
+        : turn.filter.minLengthFt),
+    length_ft_max:
+      turn.filter.lengthFtMax ??
+      (turn.filter.aroundLengthFt != null
+        ? turn.filter.aroundLengthFt + 2
+        : turn.filter.maxLengthFt),
+    sort: turn.sort?.by,
+    order: turn.sort?.dir,
     limit,
   });
+  let speech = found.summary;
+  if (found.no_length.length) {
+    const stocks = found.no_length.map((unit) => `stk ${unit.stock_number}`).join(", ");
+    speech = `${speech} No length on file (not guessed): ${stocks}.`;
+  }
   return {
     ok: true,
-    none: counts.matched === 0,
-    matched: counts.matched,
+    none: found.matched === 0,
+    matched: found.matched,
     filter_label: filterLabel(turn.filter),
-    units: rows.map(compactUnit),
-    no_length: noLength.map(compactUnit),
+    counts: found.counts,
+    units: found.units.map((unit) => ({
+      ...unit,
+      length_ft: unit.length_ft,
+      length_source: unit.length_source,
+    })),
+    no_length: found.no_length,
+    summary: found.summary,
+    ...(found.did_you_mean ? { did_you_mean: found.did_you_mean } : {}),
     speech,
     lotMemory: memory,
   };

@@ -72,7 +72,6 @@ import {
   withVoiceSpecExtras,
 } from "./voiceSpecTurn";
 import {
-  looksLikeLotQuestion,
   looksLikeOwnLotFollowUp,
   looksLikeOwnLotStockQuestion,
   ownLotVoiceCoachLock,
@@ -677,20 +676,6 @@ export class GrokRealtimeSession {
       });
       return;
     }
-    if (!looksLikeLotQuestion(this.lastUserTranscript, this.lotMemory)) {
-      this.sendToolOutput(
-        callId,
-        {
-          ok: true,
-          none: false,
-          skipped: true,
-          speech:
-            "Not a lot question. Answer from the catalog pin and web search.",
-        },
-        "This is not a lot question. Answer from the closest saved pin and web search. Do not say the lot has none.",
-      );
-      return;
-    }
     let args: Record<string, unknown> = {};
     const raw = nested.arguments ?? msg.arguments ?? "{}";
     try {
@@ -742,7 +727,7 @@ export class GrokRealtimeSession {
           modalities: ["text", "audio"],
           instructions:
             instructions ||
-            "Speak only units in the query_lot result. If none is true, say none. Do not invent a unit, price, stock number, or store.",
+            "Speak the query_lot summary. Say none only when matched is 0. If did_you_mean is set, offer that name. Do not invent a unit, price, stock number, or store.",
         },
       }),
     );

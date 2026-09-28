@@ -22,7 +22,6 @@ import {
   looksLikeOwnLotSearchAsk,
   looksLikeOwnLotStockQuestion,
   lotSearchQueryFromAsk,
-  OWN_LOT_MODEL,
   OWN_LOT_PUBLIC_URL_PATH,
   ownLotHasHit,
   ownLotIsUnavailable,
@@ -503,10 +502,8 @@ test("own-lot hit short-circuits research; miss falls through to web", async () 
     profile: "chat",
     ownLotSnapshot: hit,
   });
-  assert.equal(researched.ok, true);
-  assert.equal(researched.kind, "success");
-  assert.equal(researched.ok && "model" in researched ? researched.model : "", OWN_LOT_MODEL);
-  assert.match(researched.ok ? researched.notes : "", /Diesel \(Class A Diesel \+ Class Super C\): 3/);
+  assert.equal(researched.ok, false);
+  assert.equal(researched.kind, "missing_key");
 
   const miss = await executeWebResearch({
     query: "how many diesels do we have in stock?",
@@ -534,13 +531,13 @@ test("in-app chat and voice research are wired; DialaBot stays out", () => {
   const telemetry = src(".", "webResearchTelemetry.ts");
   const prompts = src(".", "prompts.ts");
   assert.match(api, /loadOwnLotSnapshot/);
-  assert.match(api, /formatOwnLotBlock/);
+  assert.match(api, /searchLot/);
   assert.doesNotMatch(api, /formatOwnLotSidecar/);
   assert.match(api, /looksLikeOwnLotStockQuestion/);
   assert.match(api, /shouldSkipWebForOwnLot/);
   assert.match(api, /OWN-LOT INVENTORY \(RV Country\)/);
-  assert.match(telemetry, /shouldSkipWebForOwnLot/);
-  assert.match(telemetry, /OWN_LOT_MODEL/);
+  assert.doesNotMatch(telemetry, /resolveLotTurn/);
+  assert.doesNotMatch(telemetry, /formatOwnLotBlock/);
   assert.doesNotMatch(prompts, /OWN-LOT STOCK/);
   assert.doesNotMatch(prompts, /Never say the snapshot has no price data/);
   assert.match(src(".", "ownLotInventory.ts"), /DEFAULT_OWN_LOT_JSON_PATH/);
@@ -2426,7 +2423,8 @@ test("a stock ask speaks every printed scrape field and does not invent blanks",
   const voice = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "realtime.ts"), "utf8");
   assert.doesNotMatch(voice, /OWN_LOT_SCRAPE_IN_FRONT/);
   assert.doesNotMatch(voice, /SCRAPE ROW WINS/);
-  assert.match(voice, /looksLikeLotQuestion/);
+  assert.doesNotMatch(voice, /Not a lot question/);
+  assert.match(voice, /\/api\/rvgrok\/query-lot/);
   assert.doesNotMatch(voice, /year, make, model, stock, location, price/);
   assert.doesNotMatch(voice, /Every printed field on that unit line is yours to answer from/);
 });

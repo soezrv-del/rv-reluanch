@@ -18,9 +18,8 @@ import {
   loadOwnLotSnapshot,
   looksLikeOwnLotStockQuestion,
   ownLotIsUnavailable,
-  parseOwnLotAsk,
-  queryOwnLotUnits,
 } from "./ownLotInventory.ts";
+import { searchLot } from "../lot/lotQuery.ts";
 import { evaluateTowMatch } from "../tow/towMatch.ts";
 import { computeLoan } from "../rv/rvCal.ts";
 import { parseCreditBand, type CreditBand } from "../rv/lendersCatalog.ts";
@@ -109,9 +108,15 @@ export const RV_GROK_TOOLS = [
   ),
   fn(
     "get_own_lot",
-    "RV Country lot snapshot for stock, counts, and stock numbers. Specs use the closest saved pin or web search. Do not treat a lot row as an OEM spec.",
+    "RV Country own lot. Call for any count or availability question, including a follow-up that changes type or condition. Put their words in query. Say none only when matched is 0. If did_you_mean is set, offer that name. Specs use the closest saved pin or web search. Do not treat a lot row as an OEM spec.",
     {
       query: { type: "string" },
+      make: { type: "string" },
+      model: { type: "string" },
+      body_type: { type: "string" },
+      condition: { type: "string" },
+      status: { type: "string" },
+      location: { type: "string" },
     },
   ),
 ];
@@ -478,19 +483,25 @@ async function getOwnLot(
     };
   }
   const query = str(args.query) || userText;
-  const filter = parseOwnLotAsk(
+  const found = searchLot(snapshot.units, {
     query,
-    snapshot.units.map((u) => u.location),
-    snapshot.units,
-  );
-  const rows = queryOwnLotUnits(snapshot.units, filter, 8);
+    make: str(args.make),
+    model: str(args.model),
+    body_type: str(args.body_type),
+    condition: str(args.condition),
+    status: str(args.status),
+    location: str(args.location),
+  });
   return {
     ok: true,
     source: "own",
     dealer: snapshot.dealer || "RV Country",
     lot_total: snapshot.units.length,
-    matched: rows.length,
-    units: rows.map((u) => ({
+    matched: found.matched,
+    summary: found.summary,
+    counts: found.counts,
+    ...(found.did_you_mean ? { did_you_mean: found.did_you_mean } : {}),
+    units: found.units.map((u) => ({
       year: u.year,
       make: u.make,
       model: u.model,
@@ -499,6 +510,8 @@ async function getOwnLot(
       price: u.price,
       location: u.location,
       body_type: u.body_type,
+      condition: u.condition,
+      lot_status: u.lot_status,
     })),
   };
 }
