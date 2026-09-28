@@ -170,6 +170,16 @@ export function looksLikeInventoryOrCountQuestion(text: string): boolean {
 export function looksLikeMarketValueQuestion(text: string): boolean {
   const t = normalizeAskText(text);
   if (!t.trim()) return false;
+  // Our-lot rank and "prices on those" stay on the lot snapshot.
+  if (
+    /\b(?:cheapest|lowest|least\s+expensive|priciest|most\s+expensive)\b/i.test(t) &&
+    !/\b(?:worth|market\s+value|comps?\b|book\s+value|trade[- ]?in|nationwide)\b/i.test(t)
+  ) {
+    return false;
+  }
+  if (/\bprices?\s+on\s+(?:those|these|them|the ones|ours?)\b/i.test(t)) {
+    return false;
+  }
   const pricingText = t.replace(/\bworth\s+it\b/gi, " ");
   if (MARKET_VALUE_RE.test(pricingText)) return true;
   if (

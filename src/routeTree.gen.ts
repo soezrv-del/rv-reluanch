@@ -39,6 +39,7 @@ import { Route as ApiRvfaxPublicCompsRouteImport } from './routes/api/rvfax.publ
 import { Route as ApiRvfaxSpecFallbackRouteImport } from './routes/api/rvfax.spec-fallback'
 import { Route as ApiRvgrokMemoryRouteImport } from './routes/api/rvgrok.memory'
 import { Route as ApiRvgrokTokenRouteImport } from './routes/api/rvgrok.token'
+import { Route as ApiRvgrokQueryLotRouteImport } from './routes/api/rvgrok.query-lot'
 import { Route as ApiRvgrokWebResearchRouteImport } from './routes/api/rvgrok.web-research'
 import { Route as ReportUnitIdRouteImport } from './routes/report/unit/$id'
 
@@ -193,6 +194,11 @@ const ApiRvgrokTokenRoute = ApiRvgrokTokenRouteImport.update({
   path: '/token',
   getParentRoute: () => ApiRvgrokRoute,
 } as any)
+const ApiRvgrokQueryLotRoute = ApiRvgrokQueryLotRouteImport.update({
+  id: '/query-lot',
+  path: '/query-lot',
+  getParentRoute: () => ApiRvgrokRoute,
+} as any)
 const ApiRvgrokWebResearchRoute = ApiRvgrokWebResearchRouteImport.update({
   id: '/web-research',
   path: '/web-research',
@@ -235,6 +241,7 @@ export interface FileRoutesByFullPath {
   '/api/rvfax/spec-fallback': typeof ApiRvfaxSpecFallbackRoute
   '/api/rvgrok/memory': typeof ApiRvgrokMemoryRoute
   '/api/rvgrok/token': typeof ApiRvgrokTokenRoute
+  '/api/rvgrok/query-lot': typeof ApiRvgrokQueryLotRoute
   '/api/rvgrok/web-research': typeof ApiRvgrokWebResearchRoute
   '/report/unit/$id': typeof ReportUnitIdRoute
 }
@@ -269,6 +276,7 @@ export interface FileRoutesByTo {
   '/api/rvfax/spec-fallback': typeof ApiRvfaxSpecFallbackRoute
   '/api/rvgrok/memory': typeof ApiRvgrokMemoryRoute
   '/api/rvgrok/token': typeof ApiRvgrokTokenRoute
+  '/api/rvgrok/query-lot': typeof ApiRvgrokQueryLotRoute
   '/api/rvgrok/web-research': typeof ApiRvgrokWebResearchRoute
   '/report/unit/$id': typeof ReportUnitIdRoute
 }
@@ -304,6 +312,7 @@ export interface FileRoutesById {
   '/api/rvfax/spec-fallback': typeof ApiRvfaxSpecFallbackRoute
   '/api/rvgrok/memory': typeof ApiRvgrokMemoryRoute
   '/api/rvgrok/token': typeof ApiRvgrokTokenRoute
+  '/api/rvgrok/query-lot': typeof ApiRvgrokQueryLotRoute
   '/api/rvgrok/web-research': typeof ApiRvgrokWebResearchRoute
   '/report/unit/$id': typeof ReportUnitIdRoute
 }
@@ -340,6 +349,7 @@ export interface FileRouteTypes {
     | '/api/rvfax/spec-fallback'
     | '/api/rvgrok/memory'
     | '/api/rvgrok/token'
+    | '/api/rvgrok/query-lot'
     | '/api/rvgrok/web-research'
     | '/report/unit/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -374,6 +384,7 @@ export interface FileRouteTypes {
     | '/api/rvfax/spec-fallback'
     | '/api/rvgrok/memory'
     | '/api/rvgrok/token'
+    | '/api/rvgrok/query-lot'
     | '/api/rvgrok/web-research'
     | '/report/unit/$id'
   id:
@@ -408,6 +419,7 @@ export interface FileRouteTypes {
     | '/api/rvfax/spec-fallback'
     | '/api/rvgrok/memory'
     | '/api/rvgrok/token'
+    | '/api/rvgrok/query-lot'
     | '/api/rvgrok/web-research'
     | '/report/unit/$id'
   fileRoutesById: FileRoutesById
@@ -632,6 +644,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRvgrokTokenRouteImport
       parentRoute: typeof ApiRvgrokRoute
     }
+    '/api/rvgrok/query-lot': {
+      id: '/api/rvgrok/query-lot'
+      path: '/query-lot'
+      fullPath: '/api/rvgrok/query-lot'
+      preLoaderRoute: typeof ApiRvgrokQueryLotRouteImport
+      parentRoute: typeof ApiRvgrokRoute
+    }
     '/api/rvgrok/web-research': {
       id: '/api/rvgrok/web-research'
       path: '/web-research'
@@ -651,12 +670,14 @@ declare module '@tanstack/react-router' {
 
 interface ApiRvgrokRouteChildren {
   ApiRvgrokMemoryRoute: typeof ApiRvgrokMemoryRoute
+  ApiRvgrokQueryLotRoute: typeof ApiRvgrokQueryLotRoute
   ApiRvgrokTokenRoute: typeof ApiRvgrokTokenRoute
   ApiRvgrokWebResearchRoute: typeof ApiRvgrokWebResearchRoute
 }
 
 const ApiRvgrokRouteChildren: ApiRvgrokRouteChildren = {
   ApiRvgrokMemoryRoute: ApiRvgrokMemoryRoute,
+  ApiRvgrokQueryLotRoute: ApiRvgrokQueryLotRoute,
   ApiRvgrokTokenRoute: ApiRvgrokTokenRoute,
   ApiRvgrokWebResearchRoute: ApiRvgrokWebResearchRoute,
 }

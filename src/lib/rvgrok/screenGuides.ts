@@ -186,18 +186,34 @@ For sold comps, open the coach in Rv Facts, then Market value.`,
 Close it with the x to go back to Premium.`,
 };
 
-export function spokenScreenName(screen: string): string {
+/**
+ * Chat-context names for Calculator, Tow Guide, and Lot Inventory.
+ * Guide text stays keyed by Cal / Tow / Lot. Chip labels stay as written.
+ */
+const CHAT_SCREEN_ALIAS: Record<string, string> = {
+  CAL: "Cal",
+  TOW: "Tow",
+  LOT: "Lot",
+};
+
+/** Guide id for a chat-context screen name. Facts stays Facts. */
+export function canonicalScreenId(screen: string): string {
   const name = screen.trim();
+  return CHAT_SCREEN_ALIAS[name] || name;
+}
+
+export function spokenScreenName(screen: string): string {
+  const name = canonicalScreenId(screen);
   return SPOKEN_NAME[name] || name;
 }
 
 export function screenGuideFor(screen: string): string | null {
-  const guide = GUIDES[screen.trim()];
+  const guide = GUIDES[canonicalScreenId(screen)];
   return guide ?? null;
 }
 
 export function screenCalloutLine(screen: string): string | null {
-  const line = SCREEN_CALLOUT[screen.trim()];
+  const line = SCREEN_CALLOUT[canonicalScreenId(screen)];
   return line ?? null;
 }
 

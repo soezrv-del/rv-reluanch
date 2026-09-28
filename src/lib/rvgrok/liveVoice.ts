@@ -170,13 +170,58 @@ export function releaseLiveCapture() {
 }
 
 /**
- * Native xAI Realtime tools. Voice docs require this on session.update —
- * without it Grok connects but cannot browse, so it hedges EST / low
- * confidence on coach specs. Server-side: xAI runs the search; the
- * client does not submit tool outputs.
+ * Native xAI Realtime tools. Voice docs require web_search on
+ * session.update — without it Grok connects but cannot browse, so it
+ * hedges EST / low confidence on coach specs. xAI runs web_search.
+ * query_lot is ours: the client posts function_call_output.
  * https://docs.x.ai/developers/model-capabilities/audio/voice
  */
-export const REALTIME_SESSION_TOOLS = [{ type: "web_search" }] as const;
+/**
+ * Lot lookup. The model already has the conversation, so it fills
+ * filters from earlier turns. Omitted filters keep the session's last
+ * lot filter. A named body type, make, model, or store replaces it.
+ * "around N foot" is length_ft_min N-2 and length_ft_max N+2.
+ */
+export const QUERY_LOT_TOOL = {
+  type: "function",
+  name: "query_lot",
+  description:
+    "Query RV Country's own lot. Use this for inventory, counts, prices, cheapest, lowest, priciest, shortest, longest, newest, oldest, and follow-ups like 'the ones around 30 foot'. Fill filters from the conversation. If the user names no new filter, omit it and the server keeps the last one. A newly named body type, make, model, location, year, price, or length replaces that previous filter. For 'around N foot', set length_ft_min to N-2 and length_ft_max to N+2. Speak only units this tool returns. If it returns none, say none. Never invent a unit.",
+  parameters: {
+    type: "object",
+    properties: {
+      body_type: {
+        type: "string",
+        description:
+          "Class A, Class A Gas, Class A Diesel, Class B, Class C, Class Super C, Fifth Wheel, Travel Trailer, or a toy-hauler label.",
+      },
+      make: { type: "string" },
+      model: { type: "string" },
+      location: { type: "string" },
+      year_min: { type: "integer" },
+      year_max: { type: "integer" },
+      price_min: { type: "number" },
+      price_max: { type: "number" },
+      length_ft_min: {
+        type: "number",
+        description: "Inclusive length in feet. Around 30 foot is 28.",
+      },
+      length_ft_max: {
+        type: "number",
+        description: "Inclusive length in feet. Around 30 foot is 32.",
+      },
+      sort: { type: "string", enum: ["price", "length", "year"] },
+      order: { type: "string", enum: ["asc", "desc"] },
+      limit: { type: "integer", description: "Top N. Default 12. Max 24." },
+    },
+    additionalProperties: false,
+  },
+} as const;
+
+export const REALTIME_SESSION_TOOLS = [
+  { type: "web_search" },
+  QUERY_LOT_TOOL,
+] as const;
 
 export function buildRealtimeSessionUpdate(
   voiceId: string,
@@ -204,7 +249,7 @@ export function buildRealtimeSessionUpdate(
   const screenSection = screen
     ? `${SCREEN_GUIDE_PREAMBLE}\n\n${formatScreenContext(screen)}`
     : SCREEN_GUIDE_PREAMBLE;
-  const instructions = `${core}\n\n${personalBlock}${memoryBlock}${catalogBlock}When a turn injects a lot snapshot, speak that total. Never replace it with a website count. This session has native web_search. A saved pin is the best available answer. Use the closest saved pin when one exists, and otherwise answer from web search. Never refuse, stall, or skip answering because the match is not perfect. Do not use that search to override an injected lot snapshot. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${intro} Then listen. Never repeat this intro.\n\n${VOICE_MIC_RULES}\n\n${screenSection}`;
+  const instructions = `${core}\n\n${personalBlock}${memoryBlock}${catalogBlock}When a turn injects a lot snapshot, speak that total. Never replace it with a website count. This session has native web_search and query_lot. For a GVWR or other spec pin, a saved pin is the best available answer. Use the closest saved pin when one exists, and otherwise answer from web search. Never refuse, stall, or skip a spec pin because the match is not perfect. Lot inventory is exact. Call query_lot and name only units it returns. If it returns none, say none. Do not invent a coach, a price, or a store. Do not use web search for our lot prices or to override an injected lot snapshot or a query_lot result. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${intro} Then listen. Never repeat this intro.\n\n${VOICE_MIC_RULES}\n\n${screenSection}`;
   return {
     type: "session.update",
     session: {
@@ -225,7 +270,7 @@ export function buildRealtimeSessionUpdate(
           speed: clamped,
         },
       },
-      tools: [{ type: "web_search" }],
+      tools: REALTIME_SESSION_TOOLS,
     },
   };
 }

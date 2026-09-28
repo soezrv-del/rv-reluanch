@@ -29,7 +29,11 @@ import {
   type DeskSheetPayload,
 } from "./deskSheet";
 import { buildChatGrounding, namedCoachConflictsLock } from "./grounding";
-import { onActiveScreenChange } from "./screenContext";
+import {
+  isRoutedChatScreen,
+  onActiveScreenChange,
+  routeScreenChatNote,
+} from "./screenContext";
 import {
   SCREEN_CALLOUT_DEBOUNCE_MS,
   initialScreenCalloutState,
@@ -68,11 +72,13 @@ import {
   withVoiceSpecExtras,
 } from "./voiceSpecTurn";
 import {
+  looksLikeOwnLotFollowUp,
   looksLikeOwnLotStockQuestion,
-  lotQueryForFollowUp,
   OWN_LOT_SCRAPE_IN_FRONT,
   ownLotVoiceCoachLock,
 } from "./ownLotAsk";
+import type { LotMemory } from "./lotMemory";
+import { researchAccessHeaders } from "../access/researchUnlock";
 import { GROK_EXTRA_PROMPTS, type GrokExtraKind } from "./grokExtras";
 import {
   coachKnowledgeKeyEquals,
@@ -138,6 +144,8 @@ export class GrokRealtimeSession {
   private catalogContext: string;
   /** Screen captured at mic press. A later room chip replaces it. */
   private screenAtAsk: string;
+  /** Screen note waiting for the socket, so it lands before the next reply. */
+  private pendingRouteNote = "";
   private unsubScreen: (() => void) | null = null;
   private callout: ScreenCalloutState = initialScreenCalloutState();
   private calloutTimer: ReturnType<typeof setTimeout> | null = null;
@@ -155,6 +163,9 @@ export class GrokRealtimeSession {
   private lastResearchTranscript = "";
   /** Lot snapshot from the last voice answer, so a correction can see the row. */
   private lastLessonLotNotes = "";
+  /** Last own-lot filter. Follow-ups that name no new filter keep it. */
+  private lotMemory: LotMemory | null = null;
+  private handledToolCallIds = new Set<string>();
   private introSpoken = false;
   private lastDeskQuery = "";
   private lastDeskIdentity: import("./coachIdentity").CoachIdentity | null =
@@ -188,6 +199,7 @@ export class GrokRealtimeSession {
    * quiet when a real report was asked. Leave it off.
    */
   private readonly voiceSpecReport = false;
+  private voiceDeliver: "full" | "quick" | null = null;
   /** Completed user lines, so "full specs" can find the coach already named. */
   private recentUserTurns: string[] = [];
   /** Coach she already spoke, when he never repeated the year/make/model. */
@@ -221,6 +233,8 @@ export class GrokRealtimeSession {
     this.unsubScreen = onActiveScreenChange((name) => {
       if (!name || name === this.screenAtAsk) return;
       this.screenAtAsk = name;
+      if (isRoutedChatScreen(name)) this.sendRouteScreenItem(name);
+      else this.pendingRouteNote = "";
       this.sendSessionUpdate();
       this.pushCallout({ type: "navigate", screen: name, now: Date.now() });
     });
@@ -285,6 +299,7 @@ export class GrokRealtimeSession {
     });
 
     ws.binaryType = "arraybuffer";
+    this.sendRouteScreenItem(this.pendingRouteNote || this.screenAtAsk);
     this.sendSessionUpdate(this.catalogContext);
     if (this.catalogContext) {
       try {
@@ -556,7 +571,30 @@ export class GrokRealtimeSession {
         break;
       }
 
-      case "response.done":
+      case "response.function_call_arguments.done":
+        void this.handleQueryLotCall(msg);
+        break;
+
+      case "response.output_item.done": {
+        const item = (msg as { item?: { type?: string } }).item;
+        if (item?.type === "function_call") void this.handleQueryLotCall(msg);
+        break;
+      }
+
+      case "response.done": {
+        const output = (msg as { response?: { output?: unknown[] } }).response
+          ?.output;
+        if (Array.isArray(output)) {
+          for (const item of output) {
+            if (
+              item &&
+              typeof item === "object" &&
+              (item as { type?: string }).type === "function_call"
+            ) {
+              void this.handleQueryLotCall(item as Record<string, unknown>);
+            }
+          }
+        }
         if (this.finishResearchHoldIfNeeded()) break;
         if (this.assistantText) {
           this.emitAssistantDone(this.assistantText);
@@ -575,6 +613,7 @@ export class GrokRealtimeSession {
         this.assistantText = "";
         this.finishedAssistantOnce = false;
         break;
+      }
 
       case "response.cancelled":
       case "response.cancel":
@@ -616,6 +655,80 @@ export class GrokRealtimeSession {
       default:
         break;
     }
+  }
+
+  /** query_lot. The model fills filters from the conversation; the server keeps the last lot filter. */
+  private async handleQueryLotCall(msg: Record<string, unknown>) {
+    const nested =
+      msg.item && typeof msg.item === "object"
+        ? (msg.item as Record<string, unknown>)
+        : msg;
+    const name = String(nested.name || msg.name || "");
+    const callId = String(nested.call_id || msg.call_id || "");
+    if (!callId || this.handledToolCallIds.has(callId)) return;
+    this.handledToolCallIds.add(callId);
+    if (name && name !== "query_lot") {
+      this.sendToolOutput(callId, {
+        ok: false,
+        none: true,
+        speech: "None. Unknown tool.",
+      });
+      return;
+    }
+    let args: Record<string, unknown> = {};
+    const raw = nested.arguments ?? msg.arguments ?? "{}";
+    try {
+      const parsed = JSON.parse(String(raw));
+      if (parsed && typeof parsed === "object") {
+        args = parsed as Record<string, unknown>;
+      }
+    } catch {
+      args = {};
+    }
+    try {
+      const res = await fetch("/api/rvgrok/query-lot", {
+        method: "POST",
+        headers: researchAccessHeaders(
+          { "Content-Type": "application/json", Accept: "application/json" },
+          this.accessPhone,
+        ),
+        body: JSON.stringify({ args, lotMemory: this.lotMemory }),
+      });
+      const data = (await res.json()) as { lotMemory?: LotMemory | null };
+      if (data?.lotMemory) this.lotMemory = data.lotMemory;
+      this.sendToolOutput(callId, data);
+    } catch {
+      this.sendToolOutput(callId, {
+        ok: false,
+        none: true,
+        speech: "None. The lot lookup failed. Do not invent a unit.",
+      });
+    }
+  }
+
+  private sendToolOutput(callId: string, data: unknown) {
+    const ws = this.ws;
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    ws.send(
+      JSON.stringify({
+        type: "conversation.item.create",
+        item: {
+          type: "function_call_output",
+          call_id: callId,
+          output: JSON.stringify(data),
+        },
+      }),
+    );
+    ws.send(
+      JSON.stringify({
+        type: "response.create",
+        response: {
+          modalities: ["text", "audio"],
+          instructions:
+            "Speak only units in the query_lot result. If none is true or the speech says None, say none. Do not invent a unit, price, stock number, or store.",
+        },
+      }),
+    );
   }
 
   private emitAssistantDone(text: string) {
@@ -1116,8 +1229,6 @@ export class GrokRealtimeSession {
       this.facts,
       this.recentCoachMentions,
     );
-    const lotFollow = lotQueryForFollowUp(spoken, priorTurns);
-    if (lotFollow) transcript = lotFollow;
     this.noteCoachMention(spoken);
     const searchFollow =
       /\b(search(?:\s+for)?\s+it|look\s+(?:it|that)\s+up|you need to search)\b/i.test(
@@ -1229,6 +1340,7 @@ export class GrokRealtimeSession {
       specs: grounded.specs,
       catalogBlock: grounded.block || this.catalogContext,
       screen: this.screenAtAsk,
+      lotFollowUp: Boolean(this.lotMemory && looksLikeOwnLotFollowUp(spoken)),
     });
     const catalogReady =
       grounded.identity || decision.action === "research"
@@ -1284,6 +1396,7 @@ export class GrokRealtimeSession {
       signal: this.researchAbort.signal,
       accessPhone: this.accessPhone,
       screen: this.screenAtAsk,
+      lotMemory: this.lotMemory,
     });
 
     if (catalogReady) {
@@ -1308,6 +1421,7 @@ export class GrokRealtimeSession {
     }
 
     const result = await searchReady;
+    if (result.lotMemory) this.lotMemory = result.lotMemory;
 
     if (this.closed || this.intentionalStop) return;
     if (this.researchAbort.signal.aborted) return;
@@ -1439,7 +1553,7 @@ export class GrokRealtimeSession {
           response: {
             modalities: ["text", "audio"],
             instructions: inventoryTurn
-              ? `${OWN_LOT_SCRAPE_IN_FRONT}\n\n${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}\n\nThis turn is OWN-LOT inventory. Speak the Lot total and any listed unit. Every printed field on that unit line is yours to answer from. That unit is on our lot. Do not say a smaller count. Do not web-search over this snapshot. If a floorplan breakdown is printed, say it once and do not recount. Do not keep a store from an earlier turn unless that store is on a unit line.`
+              ? `${OWN_LOT_SCRAPE_IN_FRONT}\n\n${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}\n\nThis turn is OWN-LOT inventory. Speak the Lot total and any listed unit. Every printed field on that unit line is yours to answer from. Name only a unit printed on a line. If the block says none, say none. Do not invent a coach, price, or store. Do not say a smaller count. Do not web-search over this snapshot. If a floorplan breakdown is printed, say it once and do not recount. Do not keep a store from an earlier turn unless that store is on a unit line.`
               : plantTurn
                 ? `${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}\n\nThis is a factory or company question, not a coach. Answer it in full. Do not stop after the factory's name. Do not ask for a year, make, model, or floorplan.`
                 : looksLikeRepairQuestion(this.lastResearchTranscript)
@@ -1956,6 +2070,36 @@ export class GrokRealtimeSession {
     } catch {
       this.researchPhase = "idle";
       this.suppressMic = false;
+    }
+  }
+
+  /**
+   * Push Facts, CAL, TOW, or LOT into the Live Voice thread before the next
+   * reply. Does not request a response. The shell's onRouteChange is what
+   * fires this, via onActiveScreenChange.
+   */
+  private sendRouteScreenItem(name: string) {
+    const screen = name.trim();
+    if (!isRoutedChatScreen(screen)) return;
+    const ws = this.ws;
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      this.pendingRouteNote = screen;
+      return;
+    }
+    this.pendingRouteNote = "";
+    try {
+      ws.send(
+        JSON.stringify({
+          type: "conversation.item.create",
+          item: {
+            type: "message",
+            role: "user",
+            content: [{ type: "input_text", text: routeScreenChatNote(screen) }],
+          },
+        }),
+      );
+    } catch {
+      this.pendingRouteNote = screen;
     }
   }
 

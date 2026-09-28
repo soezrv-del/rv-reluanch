@@ -50,7 +50,8 @@ import {
 } from "./ownLotInventory.ts";
 import { searchLotUnits } from "../lot/lotSearch.ts";
 import { ownLotNotesForSpeech } from "./voiceWeb.ts";
-import { lotQueryForFollowUp, ownLotVoiceCoachLock } from "./ownLotAsk.ts";
+import { ownLotVoiceCoachLock } from "./ownLotAsk.ts";
+import { resolveLotTurn, type LotMemory } from "./lotMemory.ts";
 import { resolveCoachIdentity } from "./coachIdentity.ts";
 import {
   COACH_BRANDS,
@@ -1157,7 +1158,7 @@ test("bundled snapshot: stock 45282, Entegra Fresno, and $50k fifth-wheel toy ha
   assert.doesNotMatch(phaeton, /Matched: 0/);
 
   const diesels = formatOwnLotBlock(snap, "How many Class A diesels are in inventory?");
-  assert.match(diesels, /Class A Diesel: 49/);
+  assert.match(diesels, /Class A Diesel: 48/);
 
   const loc = formatOwnLotBlock(snap, "How many Entegra coaches do we have in Fresno?");
   assert.match(loc, /Filter: Entegra Coach · Fresno CA/);
@@ -2158,27 +2159,25 @@ test("around 30-foot Class A gas is 28–32, including a blank floorplan foot", 
   assert.doesNotMatch(block, /stk BIG/);
 });
 
+function carryLot(texts: string[], snap: OwnLotSnapshot) {
+  const locations = [
+    ...new Set(snap.units.map((u) => u.location).filter(Boolean)),
+  ];
+  let memory: LotMemory | null = null;
+  let last = resolveLotTurn(texts[0] || "", null, locations, snap.units);
+  for (const text of texts) {
+    last = resolveLotTurn(text, memory, locations, snap.units);
+    memory = { filter: last.filter, sort: last.sort, limit: last.limit };
+  }
+  return last;
+}
+
 test("what about the 29S Vision searches the full lot, and yeah does not stay on Carson", () => {
   const about = "What about the 29S uh Entegra Vision?";
   assert.equal(looksLikeOwnLotStockQuestion(about), true);
   assert.equal(
     looksLikeOwnLotStockQuestion("tell me about the Entegra Vision SE"),
     false,
-  );
-  const prior = [
-    "if we have any 30-foot Class As in at the Carson show",
-    about,
-  ];
-  assert.equal(
-    lotQueryForFollowUp("Yeah.", prior),
-    "do we have Entegra Vision 29S in stock",
-  );
-  assert.equal(
-    lotQueryForFollowUp("What are the models of those twelve?", [
-      ...prior,
-      "How many Entegra Visions do we have in stock?",
-    ]),
-    "How many Entegra Visions do we have in stock?",
   );
 
   const snap = snapshotFromJson(
@@ -2190,11 +2189,44 @@ test("what about the 29S Vision searches the full lot, and yeah does not stay on
   assert.match(block, /stk 47593/);
   assert.match(block, /stk 47591/);
   assert.match(block, /stk 47592/);
-  assert.doesNotMatch(block, /Carson RV Show/);
+  assert.match(block, /Filter: Entegra · vision · 29S/);
+  assert.doesNotMatch(block, /Filter:.*Carson/);
   const spoken = ownLotNotesForSpeech(block);
   assert.match(spoken, /Vision 29S × 4/);
   assert.match(spoken, /Do not keep a store from an earlier turn/);
   assert.match(spoken, /say that count once/);
+
+  const yeah = carryLot(
+    [
+      "if we have any 30-foot Class As in at the Carson show",
+      about,
+      "Yeah.",
+    ],
+    snap,
+  );
+  assert.equal(yeah.carried, true);
+  assert.equal(yeah.filter.location, undefined);
+  assert.match(yeah.filter.model || "", /vision/i);
+  assert.equal(yeah.filter.trim, "29S");
+  const yeahBlock = formatOwnLotBlock(snap, "Yeah.", { filter: yeah.filter });
+  assert.match(yeahBlock, /stk UPD9835/);
+  assert.match(yeahBlock, /Fresno CA/);
+  assert.match(yeahBlock, /Fife WA/);
+  assert.doesNotMatch(yeahBlock, /Filter:.*Carson/);
+
+  const models = carryLot(
+    [
+      "if we have any 30-foot Class As in at the Carson show",
+      about,
+      "How many Entegra Visions do we have in stock?",
+      "What are the models of those twelve?",
+    ],
+    snap,
+  );
+  assert.equal(models.carried, true);
+  assert.equal(models.filter.location, undefined);
+  assert.equal(models.filter.trim, undefined);
+  assert.match(models.filter.model || "", /vision/i);
 
   const all = formatOwnLotBlock(snap, "How many Entegra Visions do we have in stock?");
   assert.match(all, /Vision 29S × 4/);
@@ -2207,40 +2239,41 @@ test("what about the 29S Vision searches the full lot, and yeah does not stay on
 test("how many of them at Carson keeps the 30-foot Class A filter", () => {
   const first = "I'm looking to see if we have any 30-foot Class As.";
   const second = "How many of them are at the Carson RV show?";
-  const expanded = lotQueryForFollowUp(second, [first]);
-  assert.ok(expanded);
-  assert.match(expanded || "", /30-foot Class As/);
-  assert.match(expanded || "", /Carson RV show/i);
   const snap = snapshotFromJson(
     JSON.parse(readFileSync(join(process.cwd(), "public/inventory/own-lot-latest.json"), "utf8")),
   );
-  const locations = [...new Set(snap.units.map((u) => u.location).filter(Boolean))];
-  const filter = parseOwnLotAsk(expanded || "", locations, snap.units);
-  assert.equal(filter.location, "Carson RV Show");
-  assert.equal(filter.bodyType, "Class A");
-  assert.equal(filter.aroundLengthFt, 30);
-  const rows = queryOwnLotUnits(snap.units, filter, 10);
+  const kept = carryLot([first, second], snap);
+  assert.equal(kept.carried, true);
+  assert.equal(kept.filter.location, "Carson RV Show");
+  assert.equal(kept.filter.bodyType, "Class A");
+  assert.equal(kept.filter.aroundLengthFt, 30);
+  const rows = queryOwnLotUnits(snap.units, kept.filter, 10);
   assert.deepEqual(
     rows.map((u) => u.stock_number).sort(),
-    ["47033", "URD9710"],
+    ["47033", "47591", "URD9710"],
   );
 
-  const there = lotQueryForFollowUp(
-    "No, but I'm just wondering why you're missing the 29S. That's Integra Vision that's there.",
-    [first, second],
+  const there = carryLot(
+    [
+      first,
+      second,
+      "No, but I'm just wondering why you're missing the 29S. That's Integra Vision that's there.",
+    ],
+    snap,
   );
-  assert.match(there || "", /29S/);
-  assert.match(there || "", /Carson/i);
-  const miss = formatOwnLotBlock(snap, there || "");
-  assert.match(miss, /No 29S at Carson RV Show/);
-  assert.match(miss, /27ASE/);
-  assert.match(miss, /stk 47033/);
-  assert.match(miss, /Fresno CA stk UPD9835|stk UPD9835/);
-  assert.doesNotMatch(miss, /do not have that coach on the lot/i);
-  const spokenMiss = ownLotNotesForSpeech(miss);
-  assert.match(spokenMiss, /No 29S at Carson RV Show/);
-  assert.match(spokenMiss, /27ASE/);
-  assert.match(spokenMiss, /stk 47033/);
+  assert.equal(there.filter.trim, "29S");
+  assert.equal(there.filter.location, "Carson RV Show");
+  assert.match(there.filter.model || "", /vision/i);
+  const hit = formatOwnLotBlock(snap, "That's Integra Vision that's there.", {
+    filter: there.filter,
+  });
+  assert.match(hit, /stk 47591/);
+  assert.match(hit, /Carson RV Show/);
+  assert.doesNotMatch(hit, /No 29S at Carson/);
+  assert.doesNotMatch(hit, /do not have that coach on the lot/i);
+  const spokenHit = ownLotNotesForSpeech(hit);
+  assert.match(spokenHit, /stk 47591/);
+  assert.match(spokenHit, /Carson RV Show/);
 });
 
 test("30-foot Class As at the Carson RV show is a lot ask for the two coaches", () => {
@@ -2260,16 +2293,17 @@ test("30-foot Class As at the Carson RV show is a lot ask for the two coaches", 
   assert.equal(direct.aroundLengthFt, 30);
   assert.deepEqual(
     queryOwnLotUnits(snap.units, direct, 10).map((u) => u.stock_number).sort(),
-    ["47033", "URD9710"],
+    ["47033", "47591", "URD9710"],
   );
-  const expanded = lotQueryForFollowUp(second, [first]);
-  assert.match(expanded || "", /Class As/);
-  assert.match(expanded || "", /30-foots/);
-  const kept = parseOwnLotAsk(expanded || "", locations, snap.units);
-  assert.equal(kept.bodyType, "Class A");
-  assert.equal(kept.aroundLengthFt, 30);
-  assert.equal(kept.location, "Carson RV Show");
-  assert.equal(queryOwnLotUnits(snap.units, kept, 10).length, 2);
+  const keptTurn = carryLot([first, second], snap);
+  assert.equal(keptTurn.carried, true);
+  assert.equal(keptTurn.filter.bodyType, "Class A");
+  assert.equal(keptTurn.filter.aroundLengthFt, 30);
+  assert.equal(keptTurn.filter.location, "Carson RV Show");
+  assert.deepEqual(
+    queryOwnLotUnits(snap.units, keptTurn.filter, 10).map((u) => u.stock_number).sort(),
+    ["47033", "47591", "URD9710"],
+  );
 });
 
 test("a stock ask speaks every printed scrape field and does not invent blanks", () => {
@@ -2337,10 +2371,12 @@ test("a stock ask speaks every printed scrape field and does not invent blanks",
     looksLikeOwnLotStockQuestion("How many slides does a 2023 Dream have?"),
     false,
   );
-  assert.equal(
-    lotQueryForFollowUp("how many miles does it have", ["stock number UPF9963"]),
-    "stock number UPF9963. how many miles does it have",
+  const miles = carryLot(
+    ["stock number UPF9963", "how many miles does it have"],
+    snapshotFromJson({ source: "own", dealer: "RV Country", units: [row] }),
   );
+  assert.equal(miles.carried, true);
+  assert.equal(miles.filter.stockNumber, "UPF9963");
 
   const block = formatOwnLotBlock(
     snapshotFromJson({ source: "own", dealer: "RV Country", units: [row] }),
