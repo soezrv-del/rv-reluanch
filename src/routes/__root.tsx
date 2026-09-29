@@ -8,12 +8,16 @@ import {
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme";
+import { resolveShareHost } from "@/lib/og/shareHost";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "RvFOX · Know before you buy.";
 
 export const Route = createRootRoute({
-  head: () => ({
+  head: () => {
+    const host = resolveShareHost();
+    const xBanner = host ? `https://${host}/x-banner.jpg` : "";
+    return {
     meta: [
       { charSet: "utf-8" },
       {
@@ -35,6 +39,7 @@ export const Route = createRootRoute({
         name: "apple-mobile-web-app-status-bar-style",
         content: "black-translucent",
       },
+      ...(xBanner ? [{ property: "x:game:image", content: xBanner }] : []),
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -43,7 +48,8 @@ export const Route = createRootRoute({
       { rel: "apple-touch-icon", href: "/assets/brand/icon-rvfax.png" },
       { rel: "manifest", href: "/__grok/manifest.webmanifest" },
     ],
-  }),
+    };
+  },
   component: RootComponent,
 });
 
