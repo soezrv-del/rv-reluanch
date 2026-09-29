@@ -3526,8 +3526,8 @@ html[data-theme="light"] {
   --color-showroom-muted: #c5cedb;
   --color-showroom-accent: var(--light-link);
   --color-showroom-glass: #ffffff;
-  /* Faint drop on white cards. Light mode only — dark chrome keeps its own shadows. */
-  --light-lift: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 20px rgba(0, 0, 0, 0.06);
+  /* One soft drop. Strong enough to read on the gray page, still quiet. */
+  --light-lift: 0 1px 2px rgba(0, 0, 0, 0.06), 0 12px 28px rgba(0, 0, 0, 0.14);
   --shadow-panel: var(--light-lift);
   --shadow-showroom: var(--light-lift);
   --shadow-glass: var(--light-lift);
@@ -3542,10 +3542,13 @@ html[data-theme="light"] {
     0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
+html[data-theme="light"] body,
+html[data-theme="light"] .app-shell,
 html[data-theme="light"] .showroom-stage,
 html[data-theme="light"] .showroom-plain,
-html[data-theme="light"] .showroom-app {
-  background: #ffffff;
+html[data-theme="light"] .showroom-app,
+html[data-theme="light"] [data-rvgrok-wingman] {
+  background: #f2f2f2;
 }
 
 html[data-theme="light"] .bottom-tabs-shine {
@@ -3731,8 +3734,11 @@ html[data-theme="light"] :is(
   box-shadow: var(--light-lift) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  border-radius: 12px !important;
   color: #111111;
+}
+html[data-theme="light"] .grok-landing-card {
+  border-radius: 2rem !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 20px 48px rgba(0, 0, 0, 0.16) !important;
 }
 
 /* Recessed fields: soft cool gray, hairline, not a second white card. */
