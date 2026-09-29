@@ -11,14 +11,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
-        // Create the Capacitor bridge window programmatically so we never
-        // depend on UIMainStoryboardFile (mis-set Main Interface → LaunchScreen
-        // causes: "Failed to instantiate … UIMainStoryboardFile 'LaunchScreen'").
-        let window = UIWindow(frame: UIScreen.main.bounds)
-        window.rootViewController = CAPBridgeViewController()
-        window.makeKeyAndVisible()
-        self.window = window
-
+        // SceneDelegate owns the window and the single CAPBridgeViewController.
         // Live Grok Voice needs mic + speaker at the same time. WKWebView
         // defaults to playback-only, so getUserMedia succeeds but Grok is
         // silent or the earpiece is used. playAndRecord + voiceChat is the
@@ -39,33 +32,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func applicationWillEnterForeground(_ application: UIApplication) {}
 
-    func applicationDidBecomeActive(_ application: UIApplication) {
-        configureVoiceAudioSession()
-    }
-
     func applicationWillTerminate(_ application: UIApplication) {}
 
     func application(
-        _ app: UIApplication,
-        open url: URL,
-        options: [UIApplication.OpenURLOptionsKey: Any] = [:]
-    ) -> Bool {
-        return ApplicationDelegateProxy.shared.application(app, open: url, options: options)
-    }
-
-    func application(
         _ application: UIApplication,
-        continue userActivity: NSUserActivity,
-        restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void
-    ) -> Bool {
-        return ApplicationDelegateProxy.shared.application(
-            application,
-            continue: userActivity,
-            restorationHandler: restorationHandler
+        configurationForConnecting connectingSceneSession: UISceneSession,
+        options: UIScene.ConnectionOptions
+    ) -> UISceneConfiguration {
+        let config = UISceneConfiguration(
+            name: "Default Configuration",
+            sessionRole: connectingSceneSession.role
         )
+        config.delegateClass = SceneDelegate.self
+        return config
     }
 
-    private func configureVoiceAudioSession() {
+    func configureVoiceAudioSession() {
         let session = AVAudioSession.sharedInstance()
         do {
             try session.setCategory(
