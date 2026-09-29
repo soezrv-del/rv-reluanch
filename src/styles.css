@@ -2944,7 +2944,7 @@ button.showroom-hero {
 .showroom-coach-reflect {
   position: absolute;
   left: 0;
-  bottom: calc(100% - var(--floor-pull));
+  bottom: calc(100% - var(--floor-pull) + 0.55rem);
   transform: scaleY(-1);
   transform-origin: center bottom;
   opacity: 0.88;
