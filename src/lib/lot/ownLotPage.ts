@@ -658,6 +658,26 @@ const LOT_MONTHS = [
   "Dec",
 ] as const;
 
+/** Dealer listing only. Photos and video live on this page. */
+export function lotListingHref(raw: string): string {
+  const text = raw.trim();
+  if (!text) return "";
+  try {
+    const url = new URL(text);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return "";
+    return url.href;
+  } catch {
+    return "";
+  }
+}
+
+/** Card line for a real odometer. A stored 0 is a blank scrape, not a reading. */
+export function lotCardMiles(unit: LotUnit): string {
+  const printed = (unit.printed?.mileage ?? "").trim();
+  if (!printed || /^0(?:\.0+)?\s*mi$/i.test(printed)) return "";
+  return printed;
+}
+
 /** "2026-09-28T19:23:55-07:00" → "Updated Sep 28". Blank when the stamp is missing. */
 export function formatLotUpdated(asOf: string): string {
   const match = asOf.trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -670,13 +690,19 @@ export function formatLotUpdated(asOf: string): string {
 
 export function filterLotBrowse(
   units: LotUnit[],
-  opts: { query?: string; type?: string } = {},
+  opts: { query?: string; type?: string; condition?: string } = {},
 ): LotUnit[] {
   let rows = searchLotUnits(units, opts.query ?? "");
   const type = (opts.type ?? "").trim();
   if (type) {
     const types = new Set(type.split("|"));
     rows = rows.filter((unit) => types.has(unit.body_type));
+  }
+  const condition = (opts.condition ?? "").trim().toLowerCase();
+  if (condition) {
+    rows = rows.filter(
+      (unit) => unit.condition.trim().toLowerCase() === condition,
+    );
   }
   return rows;
 }

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, Search, X } from "lucide-react";
+import { Calculator, ChevronLeft, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RAIDHO_R_MARK } from "@/assets/prestige";
 import { SuitePage } from "@/components/shell/SuitePage";
@@ -9,6 +9,8 @@ import {
   filterLotBrowse,
   formatLotUpdated,
   lotLengthOrGap,
+  lotCardMiles,
+  lotListingHref,
   lotLbsOrGap,
   lotPriceOrGap,
   lotTextOrGap,
@@ -44,6 +46,7 @@ export function LotStockApp({
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [type, setType] = useState("");
+  const [condition, setCondition] = useState<"" | "New" | "Used">("");
   const chipRailRef = useRef<HTMLDivElement>(null);
   useCenterSelectedTab(chipRailRef, type);
   const [openKey, setOpenKey] = useState<string | null>(null);
@@ -76,6 +79,7 @@ export function LotStockApp({
       if (!query) return;
       wantOpen.current = query;
       setType("");
+      setCondition("");
       setQuery(query);
     };
     pull();
@@ -85,8 +89,8 @@ export function LotStockApp({
 
   const chips = useMemo(() => lotTypeChips(snap?.units ?? []), [snap]);
   const filtered = useMemo(
-    () => filterLotBrowse(snap?.units ?? [], { query, type }),
-    [snap, query, type],
+    () => filterLotBrowse(snap?.units ?? [], { query, type, condition }),
+    [snap, query, type, condition],
   );
 
   useEffect(() => {
@@ -94,7 +98,7 @@ export function LotStockApp({
     if (!wantOpen.current) setOpenKey(null);
     const scroller = sentinelRef.current?.closest("[data-app-scroll]");
     if (scroller instanceof HTMLElement) scroller.scrollTop = 0;
-  }, [query, type]);
+  }, [query, type, condition]);
 
   useEffect(() => {
     const wanted = wantOpen.current;
@@ -132,7 +136,7 @@ export function LotStockApp({
     ? error
     : !snap
       ? "Loading lot…"
-      : query.trim() || type
+      : query.trim() || type || condition
         ? `${shown} of ${total} shown`
         : `${total} shown`;
 
@@ -195,17 +199,38 @@ export function LotStockApp({
           </span>
         </label>
 
-        {!query.trim() && !type ? (
+        {!query.trim() && !type && !condition ? (
           <LotArrivals
             units={snap?.units ?? []}
             onOpenUnit={(unit) => {
               const next = lotArrivalQuery(unit);
               wantOpen.current = next;
               setType("");
+              setCondition("");
               setQuery(next);
             }}
           />
         ) : null}
+
+        <div className="lot-condition" role="group" aria-label="New or used">
+          {(["New", "Used"] as const).map((label) => (
+            <button
+              key={label}
+              type="button"
+              data-lot-condition={label}
+              aria-pressed={condition === label}
+              onClick={() =>
+                setCondition((cur) => (cur === label ? "" : label))
+              }
+              className={cn(
+                "lot-chip lot-condition-tab shrink-0 rounded-full px-3 text-[12px] font-semibold",
+                condition === label && "is-on",
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
 
         {chips.length ? (
           <div className="lot-chip-rail" data-lot-chips ref={chipRailRef}>
@@ -417,10 +442,12 @@ function LotUnitCard({
 }) {
   const headline = showroomUnitLabel(unit).trim() || "GAP";
   const price = lotPriceOrGap(unit.price);
+  const miles = lotCardMiles(unit);
   const meta = [
     lotTextOrGap(unit.stock_number),
     lotTextOrGap(unit.location),
     lotTextOrGap(unit.condition),
+    ...(miles ? [miles] : []),
   ].join(" · ");
   const photoUrl = lotUnitPhoto(unit);
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
@@ -509,8 +536,38 @@ function LotDetail({
 }) {
   const stats = lotGlance(unit);
   const sections = lotOpenSections(unit);
+  const nav = useShellNavOptional();
+  const listing = lotListingHref(unit.url);
+  const price = unit.price != null && unit.price > 0 ? unit.price : 0;
   return (
     <div className="lot-detail" data-lot-detail>
+      <div className="lot-share-dock">
+        {price > 0 ? (
+          <button
+            type="button"
+            className="lot-cal-tab"
+            data-lot-cal
+            aria-label="Calculate payment"
+            onClick={() =>
+              nav?.openCalWithPrice(price, showroomUnitLabel(unit))
+            }
+          >
+            <Calculator className="size-4" aria-hidden />
+          </button>
+        ) : null}
+        <ReportShareButton report={buildUnitShareReport(unit)} />
+      </div>
+      {listing ? (
+        <a
+          className="lot-listing"
+          href={listing}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-lot-listing
+        >
+          {listing}
+        </a>
+      ) : null}
       {stats.length ? (
         <div className="lot-detail-stats">
           {stats.map((stat) => (
@@ -540,9 +597,6 @@ function LotDetail({
           </dl>
         </section>
       ))}
-      <div className="lot-share-dock">
-        <ReportShareButton report={buildUnitShareReport(unit)} />
-      </div>
     </div>
   );
 }

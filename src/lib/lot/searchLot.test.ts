@@ -5,6 +5,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   filterLotBrowse,
+  lotCardMiles,
+  lotListingHref,
   lotPriceOrGap,
   lotTextOrGap,
   lotTypeChips,
@@ -200,6 +202,19 @@ test("lot lookup shows every printed scrape field and does not invent blanks", (
 
   assert.equal(snap.units[1]?.printed.mileage, undefined);
   assert.equal(snap.units[2]?.printed.mileage, "0 mi");
+  assert.equal(lotCardMiles(unit), "6,870 mi");
+  assert.equal(lotCardMiles(snap.units[1]!), "");
+  assert.equal(lotCardMiles(snap.units[2]!), "");
+  assert.equal(
+    lotListingHref("https://rvcountry.com/inventory/2026-entegra-coach-cornerstone-45282"),
+    "https://rvcountry.com/inventory/2026-entegra-coach-cornerstone-45282",
+  );
+  assert.equal(lotListingHref("javascript:alert(1)"), "");
+  assert.equal(lotListingHref(""), "");
+  assert.equal(
+    lotOpenSections(unit).flatMap((part) => part.rows).find((row) => row.label === "Miles")?.value,
+    "6,870 mi",
+  );
 });
 
 test("lot details drop source and website and do not repeat header facts", () => {
@@ -461,6 +476,22 @@ test("type chips come from the lot snapshot and filter without catalog bleed", (
   const diesel = filterLotBrowse(snap.units, { type: "Class A Diesel" });
   assert.ok(diesel.length > 0);
   assert.ok(diesel.every((u) => u.body_type === "Class A Diesel"));
+  const used = filterLotBrowse(snap.units, { condition: "used" });
+  const fresh = filterLotBrowse(snap.units, { condition: "New" });
+  assert.ok(used.length > 0 && fresh.length > 0);
+  assert.ok(used.every((unit) => unit.condition === "Used"));
+  assert.ok(fresh.every((unit) => unit.condition === "New"));
+  assert.equal(used.length + fresh.length, snap.units.length);
+  const usedDiesel = filterLotBrowse(snap.units, {
+    condition: "Used",
+    type: "Class A Diesel",
+  });
+  assert.ok(usedDiesel.length > 0);
+  assert.ok(
+    usedDiesel.every(
+      (unit) => unit.condition === "Used" && unit.body_type === "Class A Diesel",
+    ),
+  );
   assert.equal(lotTypeFamily("Class A Diesel"), "a");
   assert.equal(lotTypeFamily("Class Super C"), "c");
   assert.equal(lotTypeFamily("Fifth Wheel Toy Hauler"), "toy");

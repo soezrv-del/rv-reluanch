@@ -2,9 +2,10 @@
  * Cal / payment tab entry.
  *
  * Plain dock / swipe / launch into RvCAL is always a clean calculator.
- * The only pre-fill is an explicit Facts "Check payment" handoff:
- * price + optional unit label. Never invent catalog data. Never read
- * Facts / Tow / Trips / Grok activeCoach or other shared session.
+ * The only pre-fill is an explicit handoff: Facts "Check payment"
+ * or the lot calculator icon. Price plus an optional unit label.
+ * Never invent catalog data. Never read Facts / Tow / Trips / Grok
+ * activeCoach or other shared session.
  */
 
 export type CalHandoffPayload = {
