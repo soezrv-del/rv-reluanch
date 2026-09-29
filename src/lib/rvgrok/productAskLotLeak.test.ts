@@ -110,7 +110,10 @@ test("standing prompts have no pasted lot card; lean core only names the tool", 
     .replace(/export const RV_GROK_LEAN_CORE = `[\s\S]*?`;/, "")
     .replace(/isForbiddenLotFirstDeflection[\s\S]*?^}/m, "");
   const grounding = src("grounding.ts");
-  const live = src("liveVoice.ts");
+  const live = src("liveVoice.ts").replace(
+    /export const QUERY_LOT_TOOL = \{[\s\S]*?\n\} as const;/,
+    "",
+  );
   const voiceWeb = src("voiceWeb.ts");
   const api = src("../../routes/api/rvgrok.ts");
 

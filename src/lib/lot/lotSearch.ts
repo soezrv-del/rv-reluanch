@@ -20,6 +20,12 @@ export type LotSearchable = {
   condition?: string;
   lot_status?: string;
   dealer?: string;
+  fuel_type?: string;
+  engine?: string;
+  chassis?: string;
+  chassis_brand?: string;
+  transmission?: string;
+  features?: string;
 };
 
 export type LotSearchUnit = LotSearchable;
@@ -40,6 +46,12 @@ const SEARCH_FIELDS = [
   "condition",
   "lot_status",
   "dealer",
+  "fuel_type",
+  "engine",
+  "chassis",
+  "chassis_brand",
+  "transmission",
+  "features",
 ] as const;
 
 const FLOORPLAN_FIELDS = ["year", "make", "model", "trim", "title"] as const;
@@ -54,16 +66,51 @@ export function normalizeLotSearchToken(token: string): string {
   return t;
 }
 
+/**
+ * Spoken plurals for lot questions. Plain words of 4+ letters drop a
+ * trailing s ("lineages" → "lineage"). Class-letter plurals drop s too
+ * ("cs" → "c") so "super cs" is "super c". Floorplans stay intact.
+ */
+export function singularizeLotToken(token: string): string {
+  const t = normalizeLotSearchToken(token);
+  if (!t) return "";
+  if (isFloorplanLikeToken(t) || /\d/.test(t)) return t;
+  if (/^[abc]s$/.test(t)) return t[0] || t;
+  if (t.length < 4 || !/^[a-z]+$/.test(t)) return t;
+  if (t.endsWith("ss")) return t;
+  if (t.endsWith("ies") && t.length > 4) return `${t.slice(0, -3)}y`;
+  if (/(?:ch|sh|x|z)es$/.test(t)) return t.slice(0, -2);
+  if (t.endsWith("s")) return t.slice(0, -1);
+  return t;
+}
+
 export function isFloorplanLikeToken(token: string): boolean {
   return FLOORPLAN_LIKE_TOKEN_RE.test(normalizeLotSearchToken(token));
 }
 
-export function tokenizeLotQuery(query: string): string[] {
-  return query
-    .toLowerCase()
+/**
+ * Shared query normalizer for the Lot page bar and searchLot.
+ * Lowercase, drop possessives and punctuation, glue "29 V" / "29-V" into
+ * 29V, then singularize (lineages → lineage, super cs → super c).
+ */
+export function normalizeLotSearchQuery(raw: string): string {
+  let s = (raw || "").toLowerCase();
+  s = s.replace(/['’]s\b/g, "").replace(/['’]/g, "");
+  s = s.replace(/[?!.,;:()]+/g, " ");
+  s = s.replace(/\b(\d{2,3})\s*-\s*([a-z]{1,4})\b/g, "$1$2");
+  s = s.replace(/\b(\d{2,3})\s+([a-z]{1,4})\b/g, "$1$2");
+  s = s.replace(/-/g, " ");
+  s = s.replace(/\s+/g, " ").trim();
+  return s
     .split(/[\s,/|]+/)
-    .map((t) => normalizeLotSearchToken(t))
-    .filter(Boolean);
+    .map((token) => singularizeLotToken(token))
+    .filter(Boolean)
+    .join(" ");
+}
+
+export function tokenizeLotQuery(query: string): string[] {
+  const normalized = normalizeLotSearchQuery(query);
+  return normalized ? normalized.split(" ") : [];
 }
 
 function fieldText(
@@ -85,21 +132,57 @@ export function lotUnitFloorplanText(unit: LotSearchable): string {
 }
 
 /**
- * 27A ↔ 27ASE: ask is a prefix of the unit trim (or the reverse) and the
- * leftover is trailing series letters only (SE, XL). Do not invent plans.
+ * 27A ↔ 27ASE, 31Z ↔ 31ZW / 31ZW5. The ask is a prefix of the unit code,
+ * or the unit code is a prefix of the ask with only series letters left.
  */
 export function floorplanTokensAlign(ask: string, unitToken: string): boolean {
   const a = normalizeLotSearchToken(ask).replace(/[\s-]+/g, "");
   const u = normalizeLotSearchToken(unitToken).replace(/[\s-]+/g, "");
   if (!a || !u) return false;
   if (a === u) return true;
-  if (u.startsWith(a) && /^[a-z]+$/.test(u.slice(a.length))) return true;
+  if (u.startsWith(a)) return true;
   if (a.startsWith(u) && /^[a-z]+$/.test(a.slice(u.length))) return true;
   return false;
 }
 
+const TYPEAHEAD_FIELDS = [
+  "year",
+  "make",
+  "model",
+  "trim",
+  "stock_number",
+  "title",
+  "body_type",
+  "location",
+  "condition",
+  "lot_status",
+  "dealer",
+  "fuel_type",
+  "engine",
+  "chassis",
+  "chassis_brand",
+  "transmission",
+  "features",
+] as const satisfies readonly (keyof LotSearchable)[];
+
 function compactId(value: string | undefined): string {
   return (value || "").toLowerCase().replace(/^#/, "").trim();
+}
+
+function typeaheadWords(unit: LotSearchable): string[] {
+  const words: string[] = [];
+  for (const key of TYPEAHEAD_FIELDS) {
+    for (const word of String(unit[key] ?? "").toLowerCase().split(/[^a-z0-9]+/)) {
+      if (word) words.push(word);
+    }
+  }
+  return words;
+}
+
+function typeaheadBlob(unit: LotSearchable): string {
+  return TYPEAHEAD_FIELDS.map((key) => String(unit[key] ?? ""))
+    .join(" ")
+    .toLowerCase();
 }
 
 function tokenMatchesFloorplanFields(unit: LotSearchable, token: string): boolean {
@@ -109,11 +192,17 @@ function tokenMatchesFloorplanFields(unit: LotSearchable, token: string): boolea
   return lotUnitFloorplanText(unit).includes(token);
 }
 
+/**
+ * Type-ahead token. After singularize: a prefix of any word in make, model,
+ * trim, stock, year, title, or body, or a substring when the token is long
+ * enough ("Linea" in Lineage, "31Z" in 31ZW / 31ZW5). A floorplan token
+ * matches the floorplan fields only, so 27A does not hitch stock UCO9527A.
+ */
 export function lotTokenMatchesUnit(
   unit: LotSearchable,
   token: string,
 ): boolean {
-  const t = normalizeLotSearchToken(token);
+  const t = singularizeLotToken(token);
   if (!t) return true;
   const stock = compactId(unit.stock_number);
   const vin = compactId(unit.vin);
@@ -121,7 +210,10 @@ export function lotTokenMatchesUnit(
   if (isFloorplanLikeToken(t)) {
     return tokenMatchesFloorplanFields(unit, t);
   }
-  return lotUnitSearchText(unit).includes(t);
+  if (stock.startsWith(t)) return true;
+  if (typeaheadWords(unit).some((word) => word.startsWith(t))) return true;
+  if (t.length >= 4 || /\d/.test(t)) return typeaheadBlob(unit).includes(t);
+  return false;
 }
 
 /** Empty search returns the full lot. Tokens are AND-matched. */

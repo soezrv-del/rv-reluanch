@@ -105,6 +105,10 @@ export type OwnLotUnit = {
   dealer: string;
   /** Dealer listing price from the scrape. Null when every price field is missing or ≤ 0. */
   price: number | null;
+  /** Scrape `condition` (New / Used). Empty when the row left it blank. */
+  condition?: string;
+  /** Scrape `lot_status` (Available, Sale Pending, …). */
+  lot_status?: string;
   /** Printed length in feet. Null when the sheet has no length. Never a floorplan. */
   lengthFt: number | null;
   /**
@@ -648,6 +652,8 @@ export function rowToUnit(row: Record<string, unknown>): OwnLotUnit {
     dealer: pickStr(row, "dealer") || "RV Country",
     price: pickOwnLotPrice(row),
     lengthFt: pickPrintedLengthFt(row),
+    condition: pickStr(row, "condition"),
+    lot_status: pickStr(row, "lot_status", "status"),
     printed,
   };
 }

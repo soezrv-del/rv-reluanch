@@ -302,7 +302,7 @@ export function looksLikeOwnLotSearchAsk(text: string): boolean {
   return false;
 }
 
-export type OwnLotSortBy = "price" | "length" | "year";
+export type OwnLotSortBy = "price" | "length" | "year" | "type";
 export type OwnLotSortDir = "asc" | "desc";
 
 export type OwnLotSort = {
@@ -351,6 +351,35 @@ export function looksLikeOwnLotRankQuestion(text: string): boolean {
     return false;
   }
   return Boolean(parseLotRank(t).sort) || /\b(?:top|first)\s+\d{1,2}\b/i.test(t);
+}
+
+/**
+ * A count, cheapest, availability, or stock question about OUR lot.
+ * These never go to web research. A market-value ask is not one of these.
+ */
+export function looksLikeOwnLotCountOrRankAsk(text: string): boolean {
+  const t = normalizeAskText(text);
+  if (!t.trim()) return false;
+  if (/\b(?:market\s+value|nationwide|book\s+value|trade[- ]?in|\bworth\b)\b/i.test(t)) {
+    return false;
+  }
+  if (looksLikeLotInventoryPhrase(t)) return true;
+  if (parseOwnLotStockNumber(t)) return true;
+  if (looksLikeOwnLotRankQuestion(t)) return true;
+  if (
+    /\bhow many\b/i.test(t) &&
+    /\b(?:diesel|deisel|gas|gasoline|coaches?|units?|class|super|inventory|stock|lot|freightliner|we have)\b/i.test(t)
+  ) {
+    return true;
+  }
+  if (/\b(?:on our lot|in our inventory|our inventory|entire inventory)\b/i.test(t)) return true;
+  if (
+    /\b(?:diesel|diesels|deisel|gasoline)\b/i.test(t) &&
+    /\b(?:around|about|roughly|under|over|between|cheapest|lowest|priciest)\b/i.test(t)
+  ) {
+    return true;
+  }
+  return false;
 }
 
 /** "prices on those" is the lot list, not a nationwide asking-price search. */

@@ -12,15 +12,8 @@ import {
   isFactsScreen,
   activeScreenFromContext,
 } from "./factsScreenPolicy.ts";
-import {
-  formatOwnLotBlock,
-  loadOwnLotSnapshot,
-  OWN_LOT_MODEL,
-  shouldSkipWebForOwnLot,
-  type OwnLotSnapshot,
-} from "./ownLotInventory.ts";
-import { looksLikeLotQuestion } from "./ownLotAsk.ts";
-import { resolveLotTurn, type LotMemory } from "./lotMemory.ts";
+import { type OwnLotSnapshot } from "./ownLotInventory.ts";
+import { type LotMemory } from "./lotMemory.ts";
 import {
   fetchWebSearchNotes,
   isTimeoutFailureReason,
@@ -300,59 +293,6 @@ export async function executeWebResearch(
   ).trim();
   const factsSpec =
     isFactsScreen(screen) && factsSpecRequestsWebSearch(screen, query);
-
-  const lotish = looksLikeLotQuestion(query, opts.lotMemory ?? null);
-  const lotFollow =
-    Boolean(opts.lotMemory) &&
-    lotish &&
-    !looksLikeLotQuestion(query, null);
-  let ownLotSnapshot = opts.ownLotSnapshot;
-  if (!factsSpec && !ownLotSnapshot && lotish) {
-    ownLotSnapshot = await loadOwnLotSnapshot({
-      requestOrigin: opts.requestOrigin,
-    });
-  }
-  if (
-    !factsSpec &&
-    ownLotSnapshot &&
-    lotish &&
-    (shouldSkipWebForOwnLot(query, ownLotSnapshot) || lotFollow)
-  ) {
-    const locations = [
-      ...new Set(ownLotSnapshot.units.map((unit) => unit.location).filter(Boolean)),
-    ];
-    const turn = resolveLotTurn(
-      query,
-      opts.lotMemory ?? null,
-      locations,
-      ownLotSnapshot.units,
-    );
-    const notes = formatOwnLotBlock(ownLotSnapshot, query, {
-      filter: turn.filter,
-      sort: turn.sort,
-      limit: turn.limit,
-    });
-    const lotMemory: LotMemory = {
-      filter: turn.filter,
-      sort: turn.sort,
-      limit: turn.limit,
-    };
-    const durationMs = Date.now() - t0;
-    const body = toApiBody(
-      { ok: true, notes, model: OWN_LOT_MODEL },
-      { kind: "success", durationMs },
-    );
-    body.lotMemory = lotMemory;
-    logWebResearchEvent({
-      kind: "success",
-      profile: opts.profile,
-      durationMs,
-      ok: true,
-      query,
-      model: OWN_LOT_MODEL,
-    });
-    return body;
-  }
 
   if (!factsSpec && !opts.skipGate && !needsWebFallback(null, query)) {
     const durationMs = Date.now() - t0;

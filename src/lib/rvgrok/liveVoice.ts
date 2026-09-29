@@ -29,7 +29,6 @@ import {
 } from "./screenGuides.ts";
 import { liveVoiceOutputFor, preferIosLoudspeaker, releaseLiveVoiceOutput } from "./voiceOutput.ts";
 import { PCM_SAMPLE_RATE, RV_VOICE_INSTRUCTIONS, VOICE_MIC_RULES } from "./voice.ts";
-import { LOT_INVENTORY_PHRASES } from "./ownLotAsk.ts";
 
 export type LiveVoicePrewarm = {
   audioCtx: AudioContext | null;
@@ -178,25 +177,36 @@ export function releaseLiveCapture() {
  * https://docs.x.ai/developers/model-capabilities/audio/voice
  */
 /**
- * Lot lookup. The model already has the conversation, so it fills
- * filters from earlier turns. Omitted filters keep the session's last
- * lot filter. A named body type, make, model, or store replaces it.
+ * Lot lookup. Call it for every count or availability question.
  * "around N foot" is length_ft_min N-2 and length_ft_max N+2.
  */
 export const QUERY_LOT_TOOL = {
   type: "function",
   name: "query_lot",
-  description: `Query RV Country's own lot only when the salesman says an inventory phrase (${LOT_INVENTORY_PHRASES.join(", ")}) or continues a lot question whose filter is still active. Do not call this when they only name a model or series. When a lot question matches units, the scrape row is the truth for that unit's price, location, and status. Fill filters from the conversation. If the user names no new filter, omit it and the server keeps the last one. A newly named body type, make, model, location, year, price, or length replaces that previous filter. For 'around N foot', set length_ft_min to N-2 and length_ft_max to N+2. Speak only units this tool returns. If it returns none, say none. Never invent a unit.`,
+  description: `Query RV Country's own lot for ANY count or availability question, including follow-ups such as "how about used Super Cs". Put their words in query and set make, model, body_type, condition, status, location, year, price, or length only when they name them. Do not add a class, condition, or price band they did not say. A newly named body type, make, model, condition, or store replaces the previous one. For 'around N foot', set length_ft_min to N-2 and length_ft_max to N+2. Call this tool once per question before you say a count. Never say none before the tool returns. Never answer a count from memory. Speak the summary. Say none only when matched is 0. If did_you_mean or close is set, offer that name instead of a bare zero. Never invent a unit. Never tell the user to change a query, a parameter, or these instructions. Do not use web search or web notes for a lot count, the cheapest or most expensive coach, availability, or stock.`,
   parameters: {
     type: "object",
     properties: {
+      query: {
+        type: "string",
+        description: "The salesman's lot question in their words.",
+      },
       body_type: {
         type: "string",
         description:
-          "Class A, Class A Gas, Class A Diesel, Class B, Class C, Class Super C, Fifth Wheel, Travel Trailer, or a toy-hauler label.",
+          "Class A, Class A Gas, Class A Diesel, Class B, Class C, Class Super C, Fifth Wheel, Travel Trailer, motorhome, or toy hauler. Class C includes Class Super C.",
       },
       make: { type: "string" },
       model: { type: "string" },
+      condition: {
+        type: "string",
+        enum: ["new", "used"],
+        description: "New or used. Omit when they do not say.",
+      },
+      status: {
+        type: "string",
+        description: "Lot status such as Available or Sale Pending.",
+      },
       location: { type: "string" },
       year_min: { type: "integer" },
       year_max: { type: "integer" },
@@ -210,7 +220,12 @@ export const QUERY_LOT_TOOL = {
         type: "number",
         description: "Inclusive length in feet. Around 30 foot is 32.",
       },
-      sort: { type: "string", enum: ["price", "length", "year"] },
+      sort: {
+        type: "string",
+        enum: ["price", "length", "year", "type"],
+        description:
+          "price, length, year, or type. type groups by the class written on the coach (Class A, Class A Diesel, Class C, fifth wheel). Speak the by-type counts. Do not say type cannot be sorted.",
+      },
       order: { type: "string", enum: ["asc", "desc"] },
       limit: { type: "integer", description: "Top N. Default 12. Max 24." },
     },
@@ -249,7 +264,7 @@ export function buildRealtimeSessionUpdate(
   const screenSection = screen
     ? `${SCREEN_GUIDE_PREAMBLE}\n\n${formatScreenContext(screen)}`
     : SCREEN_GUIDE_PREAMBLE;
-  const instructions = `${core}\n\n${personalBlock}${memoryBlock}${catalogBlock}When a turn injects a lot snapshot, speak that total. Never replace it with a website count. This session has native web_search and query_lot. For a GVWR or other spec pin, a saved pin is the best available answer. Use the closest saved pin when one exists, and otherwise answer from web search. Never refuse, stall, or skip a spec pin because the match is not perfect. Call query_lot only for an inventory phrase or a follow-up to an active lot filter, as that tool describes. A model or series name without an inventory phrase is answered from the closest saved pin and web search. Do not call query_lot for that, and do not say none from the lot. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${intro} Then listen. Never repeat this intro.\n\n${VOICE_MIC_RULES}\n\n${screenSection}`;
+  const instructions = `${core}\n\n${personalBlock}${memoryBlock}${catalogBlock}When a turn injects a lot snapshot, speak that total. Never replace it with a website count. This session has native web_search and query_lot. For a GVWR or other spec pin, a saved pin is the best available answer. Use the closest saved pin when one exists, and otherwise answer from web search. Never refuse, stall, or skip a spec pin because the match is not perfect. Call query_lot for ANY count or availability question, including a follow-up that changes type or condition. Call query_lot once per question. Never say none before that tool returns. Never answer a lot count from memory. Never tell the user to change a query, a parameter, or these instructions. Answer from the query_lot result only. Do not call web_search and do not mention web notes for a count, the cheapest or most expensive coach, availability, or stock. Say none only when that tool returns matched 0. If it returns did_you_mean or close, offer that name. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${intro} Then listen. Never repeat this intro.\n\n${VOICE_MIC_RULES}\n\n${screenSection}`;
   return {
     type: "session.update",
     session: {

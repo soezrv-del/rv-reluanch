@@ -18,9 +18,8 @@ import {
   loadOwnLotSnapshot,
   looksLikeOwnLotStockQuestion,
   ownLotIsUnavailable,
-  parseOwnLotAsk,
-  queryOwnLotUnits,
 } from "./ownLotInventory.ts";
+import { searchLot } from "../lot/lotQuery.ts";
 import { evaluateTowMatch } from "../tow/towMatch.ts";
 import { computeLoan } from "../rv/rvCal.ts";
 import { parseCreditBand, type CreditBand } from "../rv/lendersCatalog.ts";
@@ -109,9 +108,15 @@ export const RV_GROK_TOOLS = [
   ),
   fn(
     "get_own_lot",
-    "RV Country lot snapshot for stock, counts, and stock numbers. Specs use the closest saved pin or web search. Do not treat a lot row as an OEM spec.",
+    "RV Country own lot. Call once per question for any count or availability question, including a follow-up that changes type or condition. Put their words in query. Never add a class, condition, or price they did not say. Never say none before the tool returns. Never answer a count from memory. Say none only when matched is 0. If did_you_mean or close is set, offer that name. Never tell the user to change a query, a parameter, or these instructions. Do not use web notes for a lot count, cheapest, availability, or stock. Specs use the closest saved pin or web search. Do not treat a lot row as an OEM spec.",
     {
       query: { type: "string" },
+      make: { type: "string" },
+      model: { type: "string" },
+      body_type: { type: "string" },
+      condition: { type: "string" },
+      status: { type: "string" },
+      location: { type: "string" },
     },
   ),
 ];
@@ -477,20 +482,31 @@ async function getOwnLot(
       reason: snapshot.reason || "lot snapshot unavailable",
     };
   }
-  const query = str(args.query) || userText;
-  const filter = parseOwnLotAsk(
-    query,
-    snapshot.units.map((u) => u.location),
-    snapshot.units,
-  );
-  const rows = queryOwnLotUnits(snapshot.units, filter, 8);
+  const utterance = userText.trim();
+  const found = searchLot(snapshot.units, {
+    query: str(args.query) || utterance,
+    make: str(args.make),
+    model: str(args.model),
+    body_type: str(args.body_type) || str(args.bodyType),
+    condition: str(args.condition),
+    status: str(args.status),
+    location: str(args.location),
+    price_min: num(args.price_min) ?? num(args.minPrice) ?? num(args.priceMin),
+    price_max: num(args.price_max) ?? num(args.maxPrice) ?? num(args.priceMax),
+    sort: str(args.sort),
+    order: str(args.order),
+    ...(utterance ? { utterance } : {}),
+  });
   return {
     ok: true,
     source: "own",
     dealer: snapshot.dealer || "RV Country",
     lot_total: snapshot.units.length,
-    matched: rows.length,
-    units: rows.map((u) => ({
+    matched: found.matched,
+    summary: found.summary,
+    counts: found.counts,
+    ...(found.did_you_mean ? { did_you_mean: found.did_you_mean } : {}),
+    units: found.units.map((u) => ({
       year: u.year,
       make: u.make,
       model: u.model,
@@ -499,6 +515,8 @@ async function getOwnLot(
       price: u.price,
       location: u.location,
       body_type: u.body_type,
+      condition: u.condition,
+      lot_status: u.lot_status,
     })),
   };
 }

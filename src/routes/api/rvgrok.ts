@@ -27,17 +27,17 @@ import {
 } from "@/lib/rvgrok/coachReport";
 import {
   looksLikeMarketValueQuestion,
+  looksLikeInventoryOrCountQuestion,
   looksLikeSpecQuestion,
 } from "@/lib/rvgrok/webIntent";
 import {
-  formatOwnLotBlock,
   loadOwnLotSnapshot,
   looksLikeOwnLotStockQuestion,
   ownLotIsUnavailable,
-  parseOwnLotAsk,
-  queryOwnLotUnits,
   shouldSkipWebForOwnLot,
 } from "@/lib/rvgrok/ownLotInventory";
+import { looksLikeOwnLotCountOrRankAsk } from "@/lib/rvgrok/ownLotAsk";
+import { formatLotQueryNotes, searchLot } from "@/lib/lot/lotQuery";
 import {
   activeScreenFromContext,
   factsSpecRequestsWebSearch,
@@ -376,8 +376,16 @@ const XAI_CHAT_TOOLS = [
   ),
   toolFn(
     "get_own_lot",
-    "RV Country lot snapshot for stock, counts, and stock numbers. Specs use the closest saved pin or web search. Do not treat a lot row as an OEM spec.",
-    { query: { type: "string" } },
+    "RV Country own lot. Call for any count or availability question, including a follow-up that changes type or condition. Put their words in query. Say none only when matched is 0. If did_you_mean is set, offer that name. Specs use the closest saved pin or web search. Do not treat a lot row as an OEM spec.",
+    {
+      query: { type: "string" },
+      make: { type: "string" },
+      model: { type: "string" },
+      body_type: { type: "string" },
+      condition: { type: "string" },
+      status: { type: "string" },
+      location: { type: "string" },
+    },
   ),
 ];
 
@@ -597,20 +605,38 @@ async function runRegisteredTool(
         error: snapshot.reason || "lot snapshot unavailable",
       };
     }
-    const query = toolStr(args.query) || ctx.userText;
-    const filter = parseOwnLotAsk(
-      query,
-      snapshot.units.map((u) => u.location),
-      snapshot.units,
-    );
-    const rows = queryOwnLotUnits(snapshot.units, filter, 8);
+    const found = searchLot(snapshot.units, {
+      query: toolStr(args.query) || ctx.userText,
+      utterance: ctx.userText,
+      make: toolStr(args.make),
+      model: toolStr(args.model),
+      body_type: toolStr(args.body_type) || toolStr(args.bodyType),
+      condition: toolStr(args.condition),
+      status: toolStr(args.status),
+      location: toolStr(args.location),
+      price_min:
+        toolNum(args.price_min) ??
+        toolNum(args.minPrice) ??
+        toolNum(args.priceMin) ??
+        undefined,
+      price_max:
+        toolNum(args.price_max) ??
+        toolNum(args.maxPrice) ??
+        toolNum(args.priceMax) ??
+        undefined,
+      sort: toolStr(args.sort),
+      order: toolStr(args.order),
+    });
     return {
       ok: true,
       source: "own",
       dealer: snapshot.dealer || "RV Country",
       lot_total: snapshot.units.length,
-      matched: rows.length,
-      units: rows.map((u) => ({
+      matched: found.matched,
+      summary: found.summary,
+      counts: found.counts,
+      ...(found.did_you_mean ? { did_you_mean: found.did_you_mean } : {}),
+      units: found.units.map((u) => ({
         year: u.year,
         make: u.make,
         model: u.model,
@@ -619,6 +645,8 @@ async function runRegisteredTool(
         price: u.price,
         location: u.location,
         body_type: u.body_type,
+        condition: u.condition,
+        lot_status: u.lot_status,
       })),
     };
   }
@@ -1230,13 +1258,29 @@ export const Route = createFileRoute("/api/rvgrok")({
 
         let ownLotNotes: string | undefined;
         let skipWebForLot = false;
-        if (looksLikeOwnLotStockQuestion(lastPlain)) {
-          const snapshot = await loadOwnLotSnapshot({ requestOrigin });
-          ownLotNotes = formatOwnLotBlock(snapshot, lastPlain);
-          // A Facts spec still searches the web. The lot block stays in context.
-          skipWebForLot = factsSpec
-            ? false
-            : shouldSkipWebForOwnLot(lastPlain, snapshot);
+        const lotCountOrRank = looksLikeOwnLotCountOrRankAsk(lastPlain);
+        if (looksLikeOwnLotStockQuestion(lastPlain) || lotCountOrRank) {
+          if (looksLikeOwnLotStockQuestion(lastPlain)) {
+            const snapshot = await loadOwnLotSnapshot({ requestOrigin });
+            ownLotNotes =
+              snapshot.ok && !ownLotIsUnavailable(snapshot)
+                ? formatLotQueryNotes(searchLot(snapshot.units, { query: lastPlain, utterance: lastPlain }))
+                : snapshot.reason || "OWN-LOT INVENTORY UNAVAILABLE.";
+            // A Facts spec still searches the web. The lot block stays in context.
+            skipWebForLot = factsSpec
+              ? false
+              : shouldSkipWebForOwnLot(lastPlain, snapshot);
+          }
+          // A count or a cheapest is the lot tool only. No web notes.
+          if (lotCountOrRank && !factsSpec) skipWebForLot = true;
+        }
+        if (
+          looksLikeInventoryOrCountQuestion(lastPlain) &&
+          !factsSpec &&
+          !looksLikeMarketValueQuestion(lastPlain) &&
+          !looksLikeSpecQuestion(lastPlain)
+        ) {
+          skipWebForLot = true;
         }
 
         // Memory first on other screens. Rv Facts spec turns always search.

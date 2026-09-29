@@ -89,8 +89,8 @@ test("Facts spec research is not replaced by the lot snapshot", async () => {
     screen: "Facts",
     ownLotSnapshot: snap,
   });
-  assert.equal(stock.ok, true);
-  assert.match(stock.notes || "", /N2401/);
+  assert.equal(stock.ok, false);
+  assert.equal(stock.kind, "missing_key");
 });
 
 test("Facts voice searches for specs; the session prompt matches the other screens", () => {
@@ -112,8 +112,10 @@ test("Facts voice searches for specs; the session prompt matches the other scree
     "",
     "Lot",
   ).session as { instructions: string };
-  assert.match(facts.instructions, /Do not call query_lot for that/);
-  assert.match(lot.instructions, /Do not call query_lot for that/);
+  assert.match(facts.instructions, /Call query_lot for ANY count or availability question/);
+  assert.match(lot.instructions, /Call query_lot for ANY count or availability question/);
+  assert.match(facts.instructions, /Say none only when that tool returns matched 0/);
+  assert.doesNotMatch(facts.instructions, /Do not call query_lot for that/);
   assert.doesNotMatch(facts.instructions, /SCRAPE ROW WINS/);
   assert.doesNotMatch(facts.instructions, /override an injected lot snapshot/);
   assert.doesNotMatch(lot.instructions, /override an injected lot snapshot/);
@@ -132,8 +134,7 @@ test("Facts voice searches for specs; the session prompt matches the other scree
     transcript: STOCK,
     screen: "Facts",
   });
-  assert.equal(stock.action, "research");
-  assert.equal(stock.speakHold, false);
+  assert.equal(stock.action, "pass");
   const yes = decideVoiceWebResearch({
     transcript: "yes",
     screen: "Facts",
@@ -151,7 +152,7 @@ test("Facts spec wiring searches and keeps the lot tool; core prompt and model i
   assert.match(api, /factsSpecRequestsWebSearch/);
   assert.match(api, /skipWebForLot = factsSpec/);
   assert.match(api, /looksLikeOwnLotStockQuestion/);
-  assert.match(api, /formatOwnLotBlock/);
+  assert.match(api, /searchLot/);
   assert.match(
     api,
     /toolFn\(\s*"get_own_lot"/,

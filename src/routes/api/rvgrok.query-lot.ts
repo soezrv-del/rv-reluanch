@@ -15,6 +15,7 @@ import { loadOwnLotSnapshot } from "@/lib/rvgrok/ownLotInventory";
 type Body = {
   args?: Record<string, unknown>;
   lotMemory?: LotMemory | null;
+  utterance?: string;
 };
 
 function readMemory(value: unknown): LotMemory | null {
@@ -44,11 +45,13 @@ export const Route = createFileRoute("/api/rvgrok/query-lot")({
         }
         const args =
           body.args && typeof body.args === "object" ? body.args : {};
+        const utterance = typeof body.utterance === "string" ? body.utterance : "";
         const snapshot = await loadOwnLotSnapshot({ requestOrigin });
         const answer = answerQueryLotFromSnapshot(
           snapshot,
           args,
           readMemory(body.lotMemory),
+          utterance,
         );
         return Response.json(answer);
       },

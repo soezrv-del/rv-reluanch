@@ -1,10 +1,10 @@
 /**
  * Live Voice rendering of the shared chat web-research path.
  *
- * Detection follows `needsWebFallback` plus own-lot stock asks. "Do we
- * have a 2012 Phaeton?" is stock but not an inventory-count phrase, so
- * the lot snapshot must still load. The spoken hold is narrower than
- * browse: repair / market / live conditions / unpinned OEM specs speak
+ * Detection follows `needsWebFallback`. A count, a cheapest, an
+ * availability, or a stock question is our lot: query_lot answers it
+ * and this function returns pass so no web notes are injected. A spec
+ * pin still researches. The spoken hold is narrower than browse.
  * VOICE_RESEARCH_HOLD_PHRASE ("give me one second") while live search
  * runs. A catalog pin and memory-answerable coach talk stay offline.
  */
@@ -14,6 +14,7 @@ import {
   looksLikeCatalogAnswerableCoachCompare,
   looksLikeCasualNonResearch,
   looksLikeImageOnlyAsk,
+  looksLikeInventoryOrCountQuestion,
   looksLikeLiveResearchQuestion,
   looksLikeCarfaxQuestion,
   looksLikeOriginQuestion,
@@ -28,6 +29,8 @@ import {
 import {
   isOwnLotResearchNotes,
   looksLikeLotInventoryPhrase,
+  looksLikeOwnLotCountOrRankAsk,
+  looksLikeOwnLotStockQuestion,
   ownLotNotesForSpeech,
 } from "./ownLotAsk.ts";
 
@@ -154,12 +157,18 @@ export function decideVoiceWebResearch(opts: {
       speakHold: shouldSpeakVoiceResearchHold(transcript, opts.specs),
     };
   }
-  // An inventory phrase loads the lot snapshot. A model or series name
-  // does not. A follow-up keeps the lot only while a lot filter is active.
-  // A Facts spec ask already returned above, so the lot does not replace it.
-  const ownLot =
-    looksLikeLotInventoryPhrase(transcript) || Boolean(opts.lotFollowUp);
-  if (!ownLot && !needsWebFallback(opts.specs ?? null, transcript)) {
+  // Our lot. The query_lot tool answers a count, a cheapest, availability,
+  // or a stock number. Web notes are not added. A spec question still
+  // researches. A Facts spec that also asks stock already returned above.
+  const lotOnly =
+    looksLikeOwnLotCountOrRankAsk(transcript) ||
+    looksLikeOwnLotStockQuestion(transcript) ||
+    looksLikeInventoryOrCountQuestion(transcript) ||
+    Boolean(opts.lotFollowUp);
+  if (lotOnly && !looksLikeSpecQuestion(transcript)) {
+    return { action: "pass" };
+  }
+  if (!needsWebFallback(opts.specs ?? null, transcript)) {
     return { action: "pass" };
   }
   const speakHold = shouldSpeakVoiceResearchHold(transcript, opts.specs);
