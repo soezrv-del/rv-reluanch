@@ -496,7 +496,7 @@ export function AppShell({
                     ) : id === "rvtrips" ? (
                       <RvTripsApp />
                     ) : id === "rvlot" ? (
-                      <LotStockApp />
+                      <LotStockApp onAsk={openGrok} />
                     ) : null}
                   </SuiteErrorBoundary>
                 </Suspense>

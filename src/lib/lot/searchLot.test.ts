@@ -6,7 +6,6 @@ import { fileURLToPath } from "node:url";
 import {
   filterLotBrowse,
   lotPriceOrGap,
-  lotLookupRows,
   lotTextOrGap,
   lotTypeChips,
   lotTypeFamily,
@@ -16,6 +15,7 @@ import {
   searchLotUnits,
   tokenizeLotQuery,
 } from "./ownLotPage.ts";
+import { lotOpenSections } from "./lotDetail.ts";
 import {
   floorplanTokensAlign,
   isFloorplanLikeToken,
@@ -198,22 +198,7 @@ test("lot lookup shows every printed scrape field and does not invent blanks", (
   assert.equal(unit.printed.hitch_weight, undefined);
   assert.equal(unit.printed.photo, undefined);
 
-  const rows = Object.fromEntries(
-    lotLookupRows(unit).map((row) => [row.key, row.value]),
-  );
-  assert.equal(rows.mileage, "6,870 mi");
-  assert.equal(rows.wheelbase, "16.5 ft | 198 in");
-  assert.equal(rows.gvwr, "37320 lbs");
-  assert.equal(rows.engine, "Cummins / I6 Diesel Pusher");
-  assert.equal(rows.chassis_brand, "Freightliner");
-  assert.equal(rows.lot_status, "Available");
-  assert.equal(rows.year, undefined);
-  assert.equal(rows.make, undefined);
-  assert.equal(rows.price, undefined);
-  assert.equal(rows.payload, undefined);
-
   assert.equal(snap.units[1]?.printed.mileage, undefined);
-  assert.ok(!lotLookupRows(snap.units[1]!).some((row) => row.key === "mileage"));
   assert.equal(snap.units[2]?.printed.mileage, "0 mi");
 });
 
@@ -268,49 +253,31 @@ test("lot details drop source and website and do not repeat header facts", () =>
     },
   ]);
 
-  const corner = lotLookupRows(snap.units[0]!);
-  const keys = new Set(corner.map((row) => row.key));
-  const labels = new Set(corner.map((row) => row.label));
-  for (const gone of [
-    "source",
-    "source_page",
-    "url",
-    "website",
-    "year",
-    "make",
-    "model",
-    "trim",
-    "price",
-    "price_current",
-    "price_lowest",
-    "location_city",
-    "location_state",
-    "vin",
-    "stock_number",
-    "heater_(btu)",
+  const labels = new Set(
+    lotOpenSections(snap.units[0]!).flatMap((part) => part.rows.map((row) => row.label)),
+  );
+  for (const label of [
+    "Source",
+    "Website",
+    "Source Page",
+    "Listing",
+    "Heater Btu",
+    "Price Current",
+    "Price Lowest",
+    "Location City",
   ]) {
-    assert.equal(keys.has(gone), false, gone);
-  }
-  for (const label of ["Source", "Website", "Source Page", "Listing"]) {
     assert.equal(labels.has(label), false, label);
   }
-  assert.equal(keys.has("price_msrp"), true);
-  assert.equal(keys.has("gvwr"), true);
-  assert.equal(keys.has("vehicle_body_length"), true);
-  assert.equal(keys.has("engine"), true);
-  assert.equal(keys.has("chassis_brand"), true);
-  assert.equal(keys.has("heater_btu"), true);
+  assert.equal(labels.has("MSRP"), true);
+  assert.equal(labels.has("Price"), true);
+  assert.equal(labels.has("Chassis"), true);
 
-  const other = lotLookupRows(snap.units[1]!);
-  const otherKeys = new Set(other.map((row) => row.key));
-  assert.equal(otherKeys.has("price_lowest"), true);
-  assert.equal(otherKeys.has("price_msrp"), true);
-  assert.equal(otherKeys.has("hitch_weight"), true);
-  assert.equal(otherKeys.has("tongue_weight"), true);
-  assert.equal(otherKeys.has("propane_lbs"), true);
-  assert.equal(otherKeys.has("propane_gal"), true);
-  assert.equal(otherKeys.has("engine"), true);
-  assert.equal(otherKeys.has("engine_type"), true);
+  const other = new Set(
+    lotOpenSections(snap.units[1]!).flatMap((part) => part.rows.map((row) => row.label)),
+  );
+  assert.equal([...other].filter((label) => label === "Propane").length, 1);
+  assert.equal(other.has("Price Lowest"), false);
+  assert.equal(other.has("Hitch"), false);
 });
 
 test("back-office scrape fields stay on the unit and stay off the details grid", () => {
@@ -346,22 +313,7 @@ test("back-office scrape fields stay on the unit and stay off the details grid",
   assert.equal(unit.printed.paint_swatch_file_name, "cornerstone-red.png");
   assert.equal(unit.printed.gvwr, "54,000");
 
-  const rows = lotLookupRows(unit);
-  const keys = rows.map((row) => row.key);
-  const labels = rows.map((row) => row.label);
-  for (const gone of [
-    "scraped_at",
-    "id",
-    "detail_fetched",
-    "image_count",
-    "lot_code",
-    "received_date",
-    "location_phone",
-    "on_special",
-    "paint_swatch_file_name",
-  ]) {
-    assert.equal(keys.includes(gone), false, gone);
-  }
+  const labels = lotOpenSections(unit).flatMap((part) => part.rows.map((row) => row.label));
   for (const label of [
     "Scraped At",
     "Id",
@@ -375,7 +327,6 @@ test("back-office scrape fields stay on the unit and stay off the details grid",
   ]) {
     assert.equal(labels.includes(label), false, label);
   }
-  assert.equal(keys.includes("gvwr"), true);
 
   const live = parseLotSnapshotJson(
     JSON.parse(
@@ -389,7 +340,9 @@ test("back-office scrape fields stay on the unit and stay off the details grid",
   assert.ok(stock);
   assert.ok(stock.printed.received_date);
   assert.ok(stock.printed.id);
-  const liveLabels = new Set(lotLookupRows(stock).map((row) => row.label));
+  const liveLabels = new Set(
+    lotOpenSections(stock).flatMap((part) => part.rows.map((row) => row.label)),
+  );
   for (const label of [
     "Scraped At",
     "Id",
@@ -403,8 +356,7 @@ test("back-office scrape fields stay on the unit and stay off the details grid",
   ]) {
     assert.equal(liveLabels.has(label), false, label);
   }
-  assert.equal(liveLabels.has("GVWR"), true);
-  assert.equal(liveLabels.has("Length"), true);
+  assert.equal(liveLabels.has("Price"), true);
 });
 
 test("missing fields stay GAP — never invent a price or stock", () => {
@@ -492,8 +444,20 @@ test("type chips come from the lot snapshot and filter without catalog bleed", (
     ),
   );
   const lotChips = lotTypeChips(snap.units);
+  assert.equal(lotChips.filter((chip) => chip.label === "Popup").length, 1);
+  const popup = lotChips.find((chip) => chip.label === "Popup");
+  assert.ok(popup);
+  assert.equal(popup.type, "Popup|Popup Trailer");
+  const popupUnits = filterLotBrowse(snap.units, { type: popup.type });
+  assert.ok(popupUnits.some((unit) => unit.body_type === "Popup"));
+  assert.ok(popupUnits.some((unit) => unit.body_type === "Popup Trailer"));
+  assert.equal(popupUnits.length, popup.count);
   assert.ok(lotChips.some((c) => c.type === "Travel Trailer"));
-  assert.ok(lotChips.every((c) => snap.units.some((u) => u.body_type === c.type)));
+  assert.ok(
+    lotChips.every((c) =>
+      c.type.split("|").every((type) => snap.units.some((u) => u.body_type === type)),
+    ),
+  );
   const diesel = filterLotBrowse(snap.units, { type: "Class A Diesel" });
   assert.ok(diesel.length > 0);
   assert.ok(diesel.every((u) => u.body_type === "Class A Diesel"));

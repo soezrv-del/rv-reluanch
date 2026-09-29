@@ -2416,6 +2416,101 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   line-height: 1.35;
   color: rgba(255, 255, 255, 0.75);
 }
+.lot-detail {
+  padding: 0 1rem 0.85rem;
+}
+.lot-detail-stats {
+  display: flex;
+  gap: 1.25rem;
+  padding: 0.15rem 0 0.85rem;
+}
+.lot-detail-stat {
+  margin: 0;
+  min-width: 0;
+}
+.lot-detail-stat b {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.lot-detail-stat span {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.62);
+}
+.lot-detail-ask {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: #1648c8;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+}
+.lot-detail-rows,
+.lot-detail-section dl {
+  margin: 0;
+}
+.lot-detail-section {
+  margin-top: 1.15rem;
+}
+.lot-detail-section h3 {
+  margin: 0;
+  padding: 0.15rem 0 0.2rem;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+.lot-detail-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+.lot-detail-row dt {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.6);
+}
+.lot-detail-row dd {
+  margin: 0;
+  text-align: right;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+}
+.lot-detail-row.is-list {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+}
+.lot-detail-row.is-list dd {
+  text-align: left;
+}
+.lot-detail-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.85rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+}
 @media (prefers-reduced-motion: reduce) {
   .lot-card,
   .lot-chip {
@@ -3717,7 +3812,7 @@ html[data-theme="light"] [aria-label="Price input mode"] {
   gap: 0.5rem;
 }
 
-html[data-theme="light"] .app-shell button:not(.showroom-brand):not(.bottom-tab-btn):not(.showroom-hero):not(.showroom-placard):not(.showroom-arrival):not(.lot-card):not(.grok-mic-btn):not(.showroom-mic):not(.showroom-hero-primary):not(.theme-switch):not(.home-jump):not(.grok-followup):not(.appearance-choice):not(.grok-landing-pill):not([data-on-dark]):not([data-voice-panel] *) {
+html[data-theme="light"] .app-shell button:not(.showroom-brand):not(.bottom-tab-btn):not(.showroom-hero):not(.showroom-placard):not(.showroom-arrival):not(.lot-card):not(.lot-card-hit):not(.grok-mic-btn):not(.showroom-mic):not(.showroom-hero-primary):not(.theme-switch):not(.home-jump):not(.grok-followup):not(.appearance-choice):not(.grok-landing-pill):not(.lot-detail-ask):not([data-on-dark]):not([data-voice-panel] *) {
   background: var(--light-shade);
   background-color: var(--light-shade);
   color: #111111;
@@ -4057,6 +4152,23 @@ html[data-theme="light"] .showroom-arrival-sub {
   color: #3d4d68 !important;
   -webkit-text-fill-color: #3d4d68 !important;
 }
+html[data-theme="light"] .lot-detail-stat b,
+html[data-theme="light"] .lot-detail-row dd,
+html[data-theme="light"] .lot-detail-list {
+  color: #111111;
+}
+html[data-theme="light"] .lot-detail-stat span,
+html[data-theme="light"] .lot-detail-row dt,
+html[data-theme="light"] .lot-detail-section h3 {
+  color: #3d4d68;
+}
+html[data-theme="light"] .lot-detail-row {
+  border-top-color: rgba(0, 0, 0, 0.08);
+}
+html[data-theme="light"] .lot-detail-ask {
+  background: #1648c8;
+  color: #ffffff;
+}
 html[data-theme="light"] .text-sapphire,
 html[data-theme="light"] .text-sapphire-glow {
   color: #1648c8 !important;
@@ -4107,7 +4219,7 @@ html[data-theme="light"] :is(
   .tow-hero-panel,
   .exclusive-card,
   .grok-landing-card
-):not([data-tools-menu]):not([data-tools-menu] *) button:not(.rounded-full):not([aria-pressed="true"]):not([data-catalog-field]):not(.grok-chip):not(.grok-starter):not(.grok-lot-chip):not(.lot-chip):not(.underline):not([data-tow-details]):not(.grok-followup):not(.appearance-choice):not(.grok-landing-pill):not([data-on-dark]) {
+):not([data-tools-menu]):not([data-tools-menu] *) button:not(.rounded-full):not([aria-pressed="true"]):not([data-catalog-field]):not(.grok-chip):not(.grok-starter):not(.grok-lot-chip):not(.lot-chip):not(.underline):not([data-tow-details]):not(.grok-followup):not(.appearance-choice):not(.grok-landing-pill):not(.lot-card-hit):not(.lot-detail-ask):not(.report-share-main):not([data-share-link]):not([data-share-pdf]):not([data-on-dark]) {
   background: var(--light-shade) !important;
   background-color: var(--light-shade) !important;
   color: #111111 !important;

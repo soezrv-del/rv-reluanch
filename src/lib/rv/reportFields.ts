@@ -1,7 +1,6 @@
 /**
  * Buyer-facing RvFAX vehicle report rows.
- * Page, PDF, and share/OG text all read this list — one formatter.
- * Lot-card lookup stays on the full scrape; this allowlist does not.
+ * Page, PDF, share text, and the open lot card all read this list.
  */
 
 import {

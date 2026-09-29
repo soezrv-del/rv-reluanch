@@ -544,230 +544,6 @@ export function lotSpecLine(unit: LotUnit): string {
   return parts.join(" · ");
 }
 
-/** Already painted on the card. The open lookup shows the rest once. */
-const LOT_CARD_HEAD_KEYS = new Set([
-  "year",
-  "make",
-  "model",
-  "trim",
-  "body_type",
-  "location",
-  "stock_number",
-  "stock",
-  "price",
-  "condition",
-  "vin",
-  "title",
-  "photo",
-  "dealer",
-]);
-
-/**
- * Scrape provenance and the dealer website. Not coach facts.
- * `url` paints as Listing; `source_page` paints as Source Page.
- */
-const LOT_PROVENANCE_KEYS = new Set([
-  "source",
-  "source_page",
-  "url",
-  "website",
-  "listing_url",
-  "vdp_url",
-]);
-
-const LOT_PROVENANCE_LABELS = new Set([
-  "source",
-  "website",
-  "source page",
-  "listing",
-]);
-
-/**
- * Back-office bookkeeping. Hidden from the details grid in any spelling.
- * The printed values stay on the unit for search, arrivals, and voice.
- */
-const LOT_BACK_OFFICE_KEYS = new Set([
-  "scrapedat",
-  "id",
-  "detailfetched",
-  "imagecount",
-  "lotcode",
-  "receiveddate",
-  "locationphone",
-  "onspecial",
-  "paintswatchfilename",
-]);
-
-function isBackOfficeKey(key: string): boolean {
-  return LOT_BACK_OFFICE_KEYS.has(key.toLowerCase().replace(/[^a-z0-9]/g, ""));
-}
-
-/** City and state restate the Location pill when that pill already has text. */
-const LOT_LOCATION_SPLIT_KEYS = new Set(["location_city", "location_state"]);
-
-/** Extra price columns that often reprint the photo price. */
-const LOT_ASKING_PRICE_KEYS = new Set([
-  "price_current",
-  "price_lowest",
-  "price_hidden",
-]);
-
-/**
- * Same measurement stored under two scrape keys. The first key wins when
- * the printed values are the same fact. Different values both stay.
- */
-const LOT_SAME_FACT_GROUPS: readonly (readonly string[])[] = [
-  ["air_conditioning_btu", "air_conditioning_(btu)"],
-  ["heater_btu", "heater_(btu)"],
-  ["payload", "standard_payload", "max_payload"],
-  ["dry_weight", "unloaded_vehicle_weight"],
-  ["total_fresh_water_tank_capacity", "fresh_water_tank_capacity", "fresh_gal"],
-  ["total_gray_water_tank_capacity", "gray_gal"],
-  ["total_black_water_tank_capacity", "black_gal"],
-  ["wheelbase", "wheel_base"],
-  ["chassis", "chassis_brand"],
-  ["engine", "engine_type"],
-  ["hitch_weight", "tongue_weight", "dry_hitch_weight"],
-  ["transmission", "transmission_type"],
-];
-
-const FACT_UNIT_WORDS = new Set([
-  "lb",
-  "lbs",
-  "gal",
-  "gals",
-  "btu",
-  "btus",
-  "mi",
-  "in",
-  "ft",
-  "gpm",
-  "amp",
-  "amps",
-  "hp",
-  "rpm",
-  "psi",
-]);
-
-/** Same number and words, ignoring commas and unit words like lb or gal. */
-function samePrintedFact(a: string, b: string): boolean {
-  const signature = (value: string) => {
-    const cleaned = value.toLowerCase().replace(/,/g, "");
-    const nums = cleaned.match(/\d+(?:\.\d+)?/g) ?? [];
-    const words = cleaned
-      .replace(/[^a-z]+/g, " ")
-      .trim()
-      .split(/\s+/)
-      .filter((word) => word && !FACT_UNIT_WORDS.has(word));
-    if (!nums.length && !words.length) return "";
-    return `${nums.join(",")}|${words.join(" ")}`;
-  };
-  const left = signature(a);
-  const right = signature(b);
-  return Boolean(left) && left === right;
-}
-
-const LOT_FIELD_LABELS: Record<string, string> = {
-  mileage: "Mileage",
-  lot_status: "Status",
-  gvwr: "GVWR",
-  dry_weight: "Dry weight",
-  hitch_weight: "Hitch",
-  payload: "Payload",
-  vehicle_body_length: "Length",
-  vehicle_body_height: "Height",
-  vehicle_body_width: "Width",
-  length_ft: "Length",
-  height_ft: "Height",
-  width_ft: "Width",
-  max_sleeping_count: "Sleeps",
-  sleeps: "Sleeps",
-  number_of_slideouts: "Slides",
-  slides: "Slides",
-  total_fresh_water_tank_capacity: "Fresh",
-  fresh_gal: "Fresh",
-  total_gray_water_tank_capacity: "Gray",
-  gray_gal: "Gray",
-  total_black_water_tank_capacity: "Black",
-  black_gal: "Black",
-  propane_lbs: "Propane",
-  propane_gal: "Propane",
-  engine: "Engine",
-  chassis: "Chassis",
-  chassis_brand: "Chassis",
-  fuel_type: "Fuel",
-  horsepower: "Horsepower",
-  torque: "Torque",
-  wheelbase: "Wheelbase",
-  transmission: "Transmission",
-  fuel_tank_capacity: "Fuel tank",
-  air_conditioning_btu: "A/C",
-  towing_capacity: "Towing",
-  price_msrp: "MSRP",
-  price_current: "Current price",
-  price_hidden: "Hidden price",
-  price_lowest: "Lowest price",
-  flags: "Flags",
-};
-
-function lotFieldLabel(key: string): string {
-  const known = LOT_FIELD_LABELS[key];
-  if (known) return known;
-  return key
-    .replace(/[_]+/g, " ")
-    .replace(/\b[a-z]/g, (ch) => ch.toUpperCase());
-}
-
-type LotLookupRow = { key: string; label: string; value: string };
-
-function isProvenanceRow(key: string, label: string): boolean {
-  if (LOT_PROVENANCE_KEYS.has(key)) return true;
-  return LOT_PROVENANCE_LABELS.has(label.trim().toLowerCase());
-}
-
-function dropSameFactDuplicates(rows: LotLookupRow[]): LotLookupRow[] {
-  const byKey = new Map(rows.map((row) => [row.key, row]));
-  const drop = new Set<string>();
-  for (const group of LOT_SAME_FACT_GROUPS) {
-    const present = group
-      .map((key) => byKey.get(key))
-      .filter((row): row is LotLookupRow => Boolean(row));
-    const keeper = present[0];
-    if (!keeper) continue;
-    for (const row of present.slice(1)) {
-      if (samePrintedFact(keeper.value, row.value)) drop.add(row.key);
-    }
-  }
-  if (!drop.size) return rows;
-  return rows.filter((row) => !drop.has(row.key));
-}
-
-/**
- * Printed scrape fields for the open lot card.
- * Header facts stay on the card. Source and the dealer website stay off.
- * A second scrape key for the same fact is dropped; a different value stays.
- */
-export function lotLookupRows(unit: LotUnit): LotLookupRow[] {
-  const asking = lotPriceOrGap(unit.price);
-  const locationShown = unit.location.trim().length > 0;
-  const rows: LotLookupRow[] = [];
-  for (const [key, value] of Object.entries(unit.printed ?? {})) {
-    if (!value || LOT_CARD_HEAD_KEYS.has(key) || isBackOfficeKey(key)) continue;
-    const label = lotFieldLabel(key);
-    if (isProvenanceRow(key, label)) continue;
-    if (locationShown && LOT_LOCATION_SPLIT_KEYS.has(key)) continue;
-    if (
-      LOT_ASKING_PRICE_KEYS.has(key) &&
-      asking !== LOT_GAP &&
-      value === asking
-    ) {
-      continue;
-    }
-    rows.push({ key, label, value });
-  }
-  return dropSameFactDuplicates(rows);
-}
-
 /** Snapshot photo only — listing page URLs are not images. */
 export function lotUnitPhoto(unit: LotUnit): string | null {
   const raw = unit.photo.trim();
@@ -844,19 +620,52 @@ export function lotTypeFamily(type: string): LotTypeFamily {
 
 /** Type chips from the snapshot only — never a brochure class list. */
 export function lotTypeChips(units: LotUnit[]): LotTypeChip[] {
-  const counts = new Map<string, number>();
+  const byType = new Map<string, number>();
   for (const unit of units) {
     const type = unit.body_type.trim();
     if (!type) continue;
-    counts.set(type, (counts.get(type) ?? 0) + 1);
+    byType.set(type, (byType.get(type) ?? 0) + 1);
   }
-  return [...counts.entries()]
-    .map(([type, count]) => ({
-      type,
-      label: shortLotTypeLabel(type),
-      count,
+  const byLabel = new Map<string, { types: string[]; count: number }>();
+  for (const [type, count] of byType) {
+    const label = shortLotTypeLabel(type);
+    const group = byLabel.get(label) ?? { types: [], count: 0 };
+    group.types.push(type);
+    group.count += count;
+    byLabel.set(label, group);
+  }
+  return [...byLabel.entries()]
+    .map(([label, group]) => ({
+      type: group.types.length === 1 ? group.types[0]! : group.types.slice().sort().join("|"),
+      label,
+      count: group.count,
     }))
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+}
+
+const LOT_MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+] as const;
+
+/** "2026-09-28T19:23:55-07:00" → "Updated Sep 28". Blank when the stamp is missing. */
+export function formatLotUpdated(asOf: string): string {
+  const match = asOf.trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return "";
+  const month = LOT_MONTHS[Number(match[2]) - 1];
+  const day = Number(match[3]);
+  if (!month || !day) return "";
+  return `Updated ${month} ${day}`;
 }
 
 export function filterLotBrowse(
@@ -866,7 +675,8 @@ export function filterLotBrowse(
   let rows = searchLotUnits(units, opts.query ?? "");
   const type = (opts.type ?? "").trim();
   if (type) {
-    rows = rows.filter((unit) => unit.body_type === type);
+    const types = new Set(type.split("|"));
+    rows = rows.filter((unit) => types.has(unit.body_type));
   }
   return rows;
 }
