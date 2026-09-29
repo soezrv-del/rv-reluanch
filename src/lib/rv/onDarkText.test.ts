@@ -47,7 +47,7 @@ test("light mode does not paint dark text on a sapphire bubble", () => {
     const src = read(file);
     assert.doesNotMatch(src, /text-gold|bg-gold|border-gold|text-amber|bg-amber|border-amber/);
   }
-  assert.match(read("../../components/rvgrok/GrokLanding.tsx"), /How many diesels on the lot\?/);
+  assert.doesNotMatch(read("../../components/rvgrok/GrokLanding.tsx"), /grok-landing-pill|How many diesels on the lot\?/);
   assert.match(css, /\.grok-mic-btn\.is-armed/);
   assert.match(css, /\.grok-mic-btn\.is-live/);
   assert.doesNotMatch(more, /Dark · night/);

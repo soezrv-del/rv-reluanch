@@ -18,6 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCenterSelectedTab } from "@/lib/hooks/useCenterSelectedTab";
 import {
   SAMPLE_CAMPS,
   formatDrive,
@@ -250,6 +251,8 @@ export function RvTripsApp() {
   const [saferNote, setSaferNote] = useState<string | null>(null);
   const [dumpQuery, setDumpQuery] = useState("");
   const [dumpState, setDumpState] = useState<string | null>(null);
+  const dumpStripRef = useRef<HTMLDivElement>(null);
+  useCenterSelectedTab(dumpStripRef, dumpState ?? "");
   const [dumpFocusId, setDumpFocusId] = useState<string | null>(null);
   const [fuel, setFuel] = useState<FuelSearchResult | null>(null);
   const [fuelStatus, setFuelStatus] = useState<
@@ -2215,17 +2218,18 @@ export function RvTripsApp() {
               </div>
 
               <div
+                ref={dumpStripRef}
+                data-slider-tabs=""
                 className="flex gap-1.5 overflow-x-auto pb-0.5"
                 style={{ scrollbarWidth: "none" }}
               >
                 <button
                   type="button"
+                  aria-pressed={!dumpState}
                   onClick={() => setDumpState(null)}
                   className={cn(
-                    "shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-bold",
-                    !dumpState
-                      ? "border-gold-border/60 bg-gold-dim text-gold-bright"
-                      : "border-white/20 bg-black/30 text-white/85",
+                    "slider-tab shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-bold",
+                    !dumpState && "is-on",
                   )}
                 >
                   All
@@ -2234,12 +2238,11 @@ export function RvTripsApp() {
                   <button
                     key={st}
                     type="button"
+                    aria-pressed={dumpState === st}
                     onClick={() => setDumpState((cur) => (cur === st ? null : st))}
                     className={cn(
-                      "shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-bold",
-                      dumpState === st
-                        ? "border-gold-border/60 bg-gold-dim text-gold-bright"
-                        : "border-white/20 bg-black/30 text-white/85",
+                      "slider-tab shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-bold",
+                      dumpState === st && "is-on",
                     )}
                   >
                     {st}
