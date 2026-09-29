@@ -39,10 +39,11 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SplashScreen: {
-      // Keep native splash until Launchpad calls SplashScreen.hide()
-      // (avoids black gap while remote WebView JS + video buffer).
-      launchShowDuration: 0,
-      launchAutoHide: false,
+      // Auto-hide after 2s so a missed SplashScreen.hide() cannot trap
+      // the iOS app on a black splash (seen on the iOS 27 simulator).
+      // AppShell still calls SplashScreen.hide() as soon as the web app is up.
+      launchShowDuration: 2000,
+      launchAutoHide: true,
       backgroundColor: "#050508",
       showSpinner: false,
       androidSplashResourceName: "splash",
