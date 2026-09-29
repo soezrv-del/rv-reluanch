@@ -2317,6 +2317,9 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   background: color-mix(in srgb, var(--color-sapphire-glow) 35%, transparent);
   border-radius: 99px;
 }
+.lot-chip {
+  transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
+}
 .lot-chip.is-on {
   background: var(--color-sapphire);
   border-color: color-mix(in srgb, var(--color-sapphire-glow) 55%, transparent);
@@ -3824,7 +3827,6 @@ html[data-theme="light"] .app-shell button:not(.showroom-brand):not(.bottom-tab-
   border: 1px solid var(--light-hairline);
   box-shadow: var(--light-raise);
 }
-html[data-theme="light"] .lot-chip.is-on,
 html[data-theme="light"] .showroom-mic,
 html[data-theme="light"] .grok-mic-btn.is-live,
 html[data-theme="light"] .grok-mic-btn.is-rec,
@@ -4253,12 +4255,39 @@ html[data-theme="light"] .exclusive-card-shine-blade {
 }
 html[data-theme="light"] .grok-chip,
 html[data-theme="light"] .grok-starter,
-html[data-theme="light"] .grok-lot-chip,
-html[data-theme="light"] .lot-chip:not(.is-on) {
+html[data-theme="light"] .grok-lot-chip {
   background: var(--light-shade) !important;
   border: 1px solid var(--light-hairline) !important;
   box-shadow: var(--light-raise) !important;
   color: #111111 !important;
+}
+html[data-theme="light"] .lot-chip,
+html[data-theme="light"] .slider-tab {
+  background: transparent !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  box-shadow: none !important;
+  color: #5c5e62 !important;
+  -webkit-text-fill-color: #5c5e62 !important;
+}
+html[data-theme="light"] .lot-chip.is-on,
+html[data-theme="light"] .slider-tab.is-on,
+html[data-theme="light"] .slider-tab[aria-pressed="true"] {
+  background: #171a20 !important;
+  border-color: #171a20 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: none !important;
+}
+.slider-tab {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.3);
+  color: rgba(255, 255, 255, 0.85);
+  transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
+}
+.slider-tab.is-on {
+  background: #1648c8;
+  border-color: #1648c8;
+  color: #ffffff;
 }
 html[data-theme="light"] .text-blue {
   color: #1648c8 !important;

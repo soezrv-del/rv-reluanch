@@ -1,10 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { cn } from "@/lib/utils";
 import { hapticLight } from "@/lib/haptics";
 import {
   isAndroidNativeWebView,
   isStationaryDockTap,
 } from "@/lib/hooks/nativeWebView";
+import { useCenterSelectedTab } from "@/lib/hooks/useCenterSelectedTab";
 import "./dock.css";
 
 export type AppTab =
@@ -98,14 +99,7 @@ function DockGlyph({ id }: { id: (typeof TABS)[number]["id"] }) {
   );
 }
 
-/** Facts, Lot, and Grok stay in the first screen. The rest slide in. */
-const PINNED: ReadonlySet<string> = new Set(["rvfax", "rvlot", "rvgrok"]);
-
-/**
- * Sliding rooms. Facts, Lot, and Grok stay on screen.
- * Tow, Cal, and RV GPS snap to center when opened.
- * Android WebView: do NOT put pointer-events-none on this nav.
- */
+/** Sliding rooms. The selected tab centers in the strip. */
 export function BottomTabs({
   tab,
   onChange,
@@ -118,6 +112,7 @@ export function BottomTabs({
   const lastFire = useRef({ id: "" as AppTab | "", at: 0 });
   const press = useRef<{ id: AppTab; x: number; y: number } | null>(null);
   const dockRef = useRef<HTMLDivElement>(null);
+  useCenterSelectedTab(dockRef, homeOpen ? "home" : tab);
 
   const fire = (id: AppTab) => {
     const now = performance.now();
@@ -126,18 +121,6 @@ export function BottomTabs({
     void hapticLight();
     onChange(id);
   };
-
-  useEffect(() => {
-    const dock = dockRef.current;
-    if (!dock || homeOpen) return;
-    const active = dock.querySelector<HTMLElement>(".is-active");
-    if (!active) return;
-    const pinFirst = PINNED.has(tab);
-    const left = pinFirst
-      ? 0
-      : active.offsetLeft - (dock.clientWidth - active.clientWidth) / 2;
-    dock.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
-  }, [tab, homeOpen]);
 
   return (
     <nav

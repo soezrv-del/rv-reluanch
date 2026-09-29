@@ -27,6 +27,7 @@ import {
   showroomUnitLabel,
   takePendingLotQuery,
 } from "@/lib/home/homeCoach";
+import { useCenterSelectedTab } from "@/lib/hooks/useCenterSelectedTab";
 import { LotArrivals } from "@/components/lot/LotArrivals";
 import { ReportShareButton } from "@/components/report/ReportShareButton";
 import { buildUnitShareReport } from "@/lib/rv/shareReport";
@@ -43,6 +44,8 @@ export function LotStockApp({
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [type, setType] = useState("");
+  const chipRailRef = useRef<HTMLDivElement>(null);
+  useCenterSelectedTab(chipRailRef, type);
   const [openKey, setOpenKey] = useState<string | null>(null);
   const [limit, setLimit] = useState(PAGE_SIZE);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -205,7 +208,7 @@ export function LotStockApp({
         ) : null}
 
         {chips.length ? (
-          <div className="lot-chip-rail" data-lot-chips>
+          <div className="lot-chip-rail" data-lot-chips ref={chipRailRef}>
             <Chip
               label="All"
               on={type === ""}
@@ -331,7 +334,7 @@ function Chip({
       aria-pressed={on}
       onClick={onClick}
       className={cn(
-        "lot-chip glass-chip shrink-0 rounded-full px-3.5 py-2 text-[13px] font-semibold transition duration-200",
+        "lot-chip glass-chip shrink-0 rounded-full px-3.5 py-2 text-[13px] font-semibold",
         "min-h-11",
         on && "is-on",
       )}

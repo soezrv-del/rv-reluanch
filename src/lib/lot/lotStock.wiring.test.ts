@@ -21,7 +21,7 @@ test("Lot stock is the last dock tab and not RV Grok", () => {
 
   assert.match(tabs, /\| "rvlot"/);
   assert.match(tabs, /id: "rvlot", label: "Lot", short: "Lot"/);
-  assert.match(tabs, /const PINNED/);
+  assert.match(tabs, /useCenterSelectedTab/);
   assert.match(
     tabs,
     /Exclude<AppTab, "more" \| "rvshare" \| "rvsold">/,
