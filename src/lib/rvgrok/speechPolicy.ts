@@ -103,7 +103,7 @@ export function visitorPersonalizationBlock(firstName?: string): string {
   const name = normalizeFirstName(firstName || "");
   if (!name) return "";
   const hello = sessionIntroLine(name);
-  return `VISITOR: Their first name is ${name}. Welcome them back by that first name once — separate from the one-time ${RV_GROK_SESSION_INTRO} intro. The cued session line is exactly: ${hello}. After that, address them by ${name} in chat and Live Voice. Do not invent a different name. Never append the name onto ${RV_GROK_SESSION_INTRO}.`;
+  return `VISITOR: Their first name is ${name}. Welcome them back by that first name once — separate from the one-time ${RV_GROK_SESSION_INTRO} intro. The cued session line is exactly: ${hello}. After that, address them by ${name} in chat and Live Voice. Now and then, about once every several replies, use ${name} naturally mid-sentence, the way a friend would; never in back-to-back replies and never to open every answer. Do not invent a different name. Never append the name onto ${RV_GROK_SESSION_INTRO}.`;
 }
 
 export function isForbiddenResearchHold(text: string): boolean {
