@@ -74,7 +74,7 @@ function DockGlyph({ id }: { id: (typeof TABS)[number]["id"] }) {
   return (
     <svg viewBox="0 0 24 24" className="bottom-tab-glyph" aria-hidden>
       <path
-        d="M2.75 16.25V10.1c0-.6.45-1.1 1.05-1.1H11l2.35-3.15h6.15c.7 0 1.25.55 1.25 1.25v9.15"
+        d="M3.4 16.2V8.5C3.4 6.4 5.1 5.1 7.2 5.1h12.6c.9 0 1.7.8 1.7 1.7v9.4"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.75"
@@ -82,21 +82,21 @@ function DockGlyph({ id }: { id: (typeof TABS)[number]["id"] }) {
         strokeLinejoin="round"
       />
       <path
-        d="M2.75 16.25h18.5"
+        d="M5.1 13.8V8.7c.45-1.35 1.7-2.05 2.9-1.55V13.8Z"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
       />
       <path
-        d="M13.6 6.55v3.35"
+        d="M10.4 7.6h8.5v2.3h-8.5z"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
       />
-      <circle cx="7.1" cy="16.25" r="1.35" fill="none" stroke="currentColor" strokeWidth="1.5" />
-      <circle cx="16.1" cy="16.25" r="1.35" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="7.6" cy="16.9" r="1.55" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="17.8" cy="16.9" r="1.55" fill="none" stroke="currentColor" strokeWidth="1.5" />
     </svg>
   );
 }
