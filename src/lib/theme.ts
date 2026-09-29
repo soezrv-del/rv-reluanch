@@ -1,12 +1,12 @@
 export type SuiteTheme = "light" | "dark";
 
 export function serverTheme(): SuiteTheme {
-  return "dark";
+  return "light";
 }
 
 export function readTheme(): SuiteTheme {
-  if (typeof document === "undefined") return "dark";
-  return document.documentElement.dataset.theme === "light" ? "light" : "dark";
+  if (typeof document === "undefined") return "light";
+  return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
 }
 
 export function subscribeTheme(onStoreChange: () => void) {
@@ -40,4 +40,4 @@ export function setTheme(next: SuiteTheme) {
 }
 
 /** Read before first paint. Keep in sync with RootDocument. */
-export const THEME_BOOT_SCRIPT = `(function(){try{var t=localStorage.getItem("rvfox-theme");if(t==="light"||t==="dark"){var r=document.documentElement;r.dataset.theme=t;r.classList.toggle("dark",t==="dark");var c=t==="light"?"#ffffff":"#050505";var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",c);var s=document.querySelector('meta[name="color-scheme"]');if(s)s.setAttribute("content",t);}}catch(e){}})();`;
+export const THEME_BOOT_SCRIPT = `(function(){try{var t=localStorage.getItem("rvfox-theme");if(t!=="light"&&t!=="dark")t="light";var r=document.documentElement;r.dataset.theme=t;r.classList.toggle("dark",t==="dark");var c=t==="light"?"#ffffff":"#050505";var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",c);var s=document.querySelector('meta[name="color-scheme"]');if(s)s.setAttribute("content",t);}catch(e){}})();`;

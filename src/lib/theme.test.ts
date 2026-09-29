@@ -32,7 +32,10 @@ test("light theme is a flat Tesla canvas and dark chrome is unchanged", () => {
   assert.ok(statSync(mark).size < 40_000, "light mark is a small web asset");
   assert.equal(existsSync(jpg), false, "gray-plate jpg removed");
   assert.equal(existsSync(oldPng), false, "old light png removed");
-  assert.match(theme, /localStorage\.setItem\(\"rvfox-theme\", next\)/);
+  assert.match(theme, /if\(t!=="light"&&t!=="dark"\)t="light"/);
+  assert.match(theme, /return "light"/);
+  assert.match(rootDoc, /data-theme="light"/);
+  assert.doesNotMatch(rootDoc, /data-theme="dark"/);
   assert.match(theme, /root\.dataset\.theme = next/);
   assert.match(rootDoc, /THEME_BOOT_SCRIPT/);
   assert.match(more, /setTheme\(next\)/);
