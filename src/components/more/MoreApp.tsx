@@ -248,7 +248,7 @@ export function MoreApp({
                 <span className="min-w-0 flex-1 text-[15px] font-bold text-white">
                   Appearance
                 </span>
-                <span className="flex shrink-0 rounded-full border border-white/15 p-0.5" role="group" aria-label="Appearance">
+                <span className="appearance-switch flex shrink-0 rounded-full border border-white/15 p-0.5" role="group" aria-label="Appearance">
                   <button
                     type="button"
                     className="appearance-choice"

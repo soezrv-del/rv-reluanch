@@ -29,6 +29,27 @@ test("light mode does not paint dark text on a sapphire bubble", () => {
   assert.match(theme, /classList\.toggle\("dark",t==="dark"\)/);
   assert.match(more, /useSyncExternalStore\(subscribeTheme, readTheme, serverTheme\)/);
   assert.match(more, /appearance-choice/);
+  assert.match(more, /appearance-switch/);
+  assert.doesNotMatch(css, /--on-dark-muted/);
+  assert.match(
+    css,
+    /button:not\(\.showroom-brand\)[\s\S]*?:not\(\[data-on-dark\]\)/,
+  );
+  assert.doesNotMatch(read("../../routes/__root.tsx"), /className="dark"/);
+  const grokFiles = [
+    "../../components/rvgrok/RvGrokApp.tsx",
+    "../../components/rvgrok/MessageBubble.tsx",
+    "../../components/rvgrok/GrokLanding.tsx",
+    "../../components/rvgrok/GrokComposer.tsx",
+    "../../components/rvgrok/DeskSpecSheet.tsx",
+  ];
+  for (const file of grokFiles) {
+    const src = read(file);
+    assert.doesNotMatch(src, /text-gold|bg-gold|border-gold|text-amber|bg-amber|border-amber/);
+  }
+  assert.match(read("../../components/rvgrok/GrokLanding.tsx"), /How many diesels on the lot\?/);
+  assert.match(css, /\.grok-mic-btn\.is-armed/);
+  assert.match(css, /\.grok-mic-btn\.is-live/);
   assert.doesNotMatch(more, /Dark · night/);
   assert.doesNotMatch(more, /setThemeState/);
 });
