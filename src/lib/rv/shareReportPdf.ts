@@ -7,9 +7,9 @@ const MARGIN = 36;
 const FOOTER_NOTE_Y = 42;
 const FOOTER_URL_Y = 26;
 const BODY_FLOOR = 72;
-const SAPPHIRE = { r: 10 / 255, g: 42 / 255, b: 138 / 255 };
-const INK = { r: 20 / 255, g: 32 / 255, b: 51 / 255 };
-const MUTED = { r: 90 / 255, g: 102 / 255, b: 120 / 255 };
+const SAPPHIRE = { r: 22 / 255, g: 72 / 255, b: 200 / 255 };
+const INK = { r: 0, g: 0, b: 0 };
+const MUTED = { r: 61 / 255, g: 77 / 255, b: 104 / 255 };
 
 type PdfFont = { widthOfTextAtSize: (text: string, size: number) => number };
 type Wrapped = { lines: string[]; size: number };
@@ -33,7 +33,7 @@ function absoluteAsset(path: string): string {
 }
 
 export async function buildShareReportPdf(report: ShareReport): Promise<Uint8Array> {
-  const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
+  const { PDFDocument, StandardFonts, rgb, pushGraphicsState, popGraphicsState, rectangle, clip: clipPath, endPath } = await import("pdf-lib");
   const pdf = await PDFDocument.create();
   const page = pdf.addPage([PAGE_W, PAGE_H]);
   const font = await pdf.embedFont(StandardFonts.Helvetica);
@@ -102,7 +102,15 @@ export async function buildShareReportPdf(report: ShareReport): Promise<Uint8Arr
     ? layoutWrapped(report.sources, font, 7, contentWidth, 2, 6)
     : null;
   const footer = sourceClearance(sourceLayout);
-  const fitted = fitOnePage(rows, Boolean(photo), headlineBlock, footer);
+  const fitted = fitOnePage(
+    rows,
+    Boolean(photo),
+    headlineBlock,
+    footer,
+    font,
+    bold,
+    contentWidth,
+  );
 
   const paintFooter = (target: typeof page) => {
     target.drawText(report.footerNote, {
@@ -239,11 +247,24 @@ export async function buildShareReportPdf(report: ShareReport): Promise<Uint8Arr
 
     if (photo && fitted.photoH > 0) {
       const maxW = PAGE_W - MARGIN * 2;
-      const scale = Math.min(maxW / photo.width, fitted.photoH / photo.height, 1);
+      const boxH = fitted.photoH;
+      const scale = Math.max(maxW / photo.width, boxH / photo.height);
       const w = photo.width * scale;
       const h = photo.height * scale;
-      target.drawImage(photo, { x: MARGIN, y: y - h, width: w, height: h });
-      y -= h + 8;
+      target.pushOperators(
+        pushGraphicsState(),
+        rectangle(MARGIN, y - boxH, maxW, boxH),
+        clipPath(),
+        endPath(),
+      );
+      target.drawImage(photo, {
+        x: MARGIN + (maxW - w) / 2,
+        y: y - boxH + (boxH - h) / 2,
+        width: w,
+        height: h,
+      });
+      target.pushOperators(popGraphicsState());
+      y -= boxH + 8;
     }
     return { target, y };
   };
@@ -308,23 +329,35 @@ function itemAdvance(kind: "head" | "row", rowH: number): { baselineDrop: number
   return { baselineDrop: 0, after: rowH };
 }
 
-type FitRow = { kind: "head" | "row" };
-
 /** Shrink the photo and type so a normal report stays on one page, above the footer. */
 function fitOnePage(
-  rows: readonly FitRow[],
+  rows: readonly { kind: "head" | "row"; label?: string; value?: string }[],
   hasPhoto: boolean,
   headlineBlock: number,
   footer: number,
+  font: PdfFont,
+  bold: PdfFont,
+  contentWidth: number,
 ): { size: number; photoH: number } {
   const fits = (size: number, photoH: number) => {
     let y = PAGE_H - 96 - 18 - headlineBlock;
     if (photoH > 0) y -= photoH + 8;
     const rowH = size + 3.2;
     for (const item of rows) {
-      const step = itemAdvance(item.kind, rowH);
-      if (y - step.baselineDrop < footer) return false;
-      y -= step.after;
+      const lineCount =
+        item.kind === "head"
+          ? 1
+          : wrapPdfValue(
+              item.value || "",
+              bold,
+              size,
+              Math.max(120, contentWidth - font.widthOfTextAtSize(item.label || "", size) - 18),
+            ).length;
+      for (let line = 0; line < lineCount; line += 1) {
+        const step = itemAdvance(item.kind, rowH);
+        if (y - step.baselineDrop < footer) return false;
+        y -= step.after;
+      }
     }
     return true;
   };
@@ -333,6 +366,7 @@ function fitOnePage(
   while (!fits(size, photoH) && photoH > 72) photoH -= 6;
   while (!fits(size, photoH) && size > 7) size -= 0.5;
   while (!fits(size, photoH) && photoH > 0) photoH -= 6;
+  while (!fits(size, photoH) && size > 6.5) size -= 0.25;
   return { size, photoH };
 }
 

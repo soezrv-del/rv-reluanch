@@ -140,13 +140,15 @@ test("propane and gvwr collapse to one row, and junk rows stay off the report", 
   );
   const rows = sectionRows(report);
   const labels = rows.map((row) => row.label);
-  assert.equal(labels.filter((label) => label === "GVWR").length, 1);
+  assert.equal(labels.filter((label) => label === "GVWR").length, 0);
+  assert.equal(report.headlines.filter((row) => row.label === "GVWR").length, 1);
   assert.equal(labels.filter((label) => label === "Propane").length, 1);
-  assert.equal(rows.find((row) => row.label === "GVWR")?.value, "32,700 lb");
+  assert.equal(report.headlines.find((row) => row.label === "GVWR")?.value, "32,700 lb");
   assert.equal(rows.find((row) => row.label === "Propane")?.value, "105 lb");
   assert.equal(rows.find((row) => row.label === "Engine Type")?.value, "Cummins B6.7L");
   assert.equal(rows.find((row) => row.label === "Transmission")?.value, "Allison 6-speed");
-  assert.equal(rows.find((row) => row.label === "Length")?.value, "39'10\"");
+  assert.equal(labels.filter((label) => label === "Length").length, 0);
+  assert.equal(report.headlines.find((row) => row.label === "Length")?.value, "39'10\"");
   assert.equal(rows.find((row) => row.label === "Horsepower")?.value, "360 HP");
   assert.equal(rows.find((row) => row.label === "Fuel")?.value, "Diesel");
   assert.equal(rows.find((row) => row.label === "Beds")?.value, "King");
@@ -235,36 +237,30 @@ test("2027 Thor Inception 38DX stock 47492 is a short buyer report", () => {
   const report = buildUnitShareReport(coach, NOW);
   const rows = sectionRows(report);
   const byLabel = new Map(rows.map((row) => [row.label, row.value]));
-  assert.equal(rows.length, 45);
+  assert.equal(rows.length, 33);
   assert.equal(report.title, "2027 Thor Motor Coach Inception 38DX");
   assert.equal(report.headlines.find((row) => row.label === "Price")?.value, "$305,995");
   assert.equal(report.headlines.find((row) => row.label === "Stock number")?.value, "47492");
+  assert.equal(report.headlines.find((row) => row.label === "GVWR")?.value, "32,700 lb");
+  assert.equal(report.headlines.find((row) => row.label === "Length")?.value, "39'10\"");
   assert.equal(byLabel.get("VIN"), "4UZADVFC7VCWZ8275");
   assert.equal(byLabel.get("Condition"), "New");
   assert.equal(byLabel.get("Location"), "Mesa AZ");
   assert.equal(byLabel.get("Type"), "Class Super C");
   assert.equal(byLabel.get("MSRP"), "$378,889");
-  assert.equal(byLabel.get("Price Monthly"), "$2,174");
-  assert.equal(byLabel.get("Length"), "39'10\"");
   assert.equal(byLabel.get("Height"), "13'3\"");
   assert.equal(byLabel.get("Width"), "8'5\"");
-  assert.equal(byLabel.get("Wheelbase"), "23'3\"");
-  assert.equal(byLabel.get("Interior height"), "7 ft");
   assert.equal(byLabel.get("Sleeps"), "4");
   assert.equal(byLabel.get("Slides"), "3");
   assert.equal(byLabel.get("Beds"), "King · Full · Sofa bed");
   assert.equal(byLabel.get("Chassis"), "Freightliner S2RV");
   assert.equal(byLabel.get("Engine Type"), "Cummins B6.7L");
-  assert.equal(byLabel.get("Displacement"), "6.7L");
   assert.equal(byLabel.get("Horsepower"), "360 HP");
   assert.equal(byLabel.get("Torque"), "800 lb-ft");
   assert.equal(byLabel.get("Transmission"), "Allison 6-speed");
-  assert.equal(byLabel.get("Driveline"), "4x2");
   assert.equal(byLabel.get("Fuel"), "Diesel");
-  assert.equal(byLabel.get("GVWR"), "32,700 lb");
   assert.equal(byLabel.get("GCWR"), "46,000 lb");
   assert.equal(byLabel.get("Towing"), "15,000 lb");
-  assert.equal(byLabel.get("Hitch"), "15,000 lb");
   assert.equal(byLabel.get("Fresh"), "100 gal");
   assert.equal(byLabel.get("Gray"), "40 gal front / 40 gal rear");
   assert.equal(byLabel.get("Black"), "40 gal front / 40 gal rear");
@@ -274,27 +270,24 @@ test("2027 Thor Inception 38DX stock 47492 is a short buyer report", () => {
   assert.equal(byLabel.get("Bathrooms"), "2");
   assert.equal(byLabel.get("TVs"), "3");
   assert.equal(byLabel.get("Water heater"), "Tankless");
-  assert.equal(byLabel.get("Furnace"), "35,000 BTU");
   assert.equal(byLabel.get("Awning"), "20 ft, power");
   assert.equal(byLabel.get("Leveling jacks"), "front and rear power");
   assert.equal(byLabel.get("Refrigerator"), "full-size, electric/propane");
   assert.equal(byLabel.get("Seatbelts"), "8");
-  assert.equal(byLabel.get("Generator"), "Diesel");
   assert.equal(
     byLabel.get("Floorplan"),
     "Two Baths · King Bed · Outdoor Kitchen · Fireplace · Washer/Dryer Prep · Pantry · Entertainment Center · Theater Seating · Outdoor Entertainment",
   );
   assert.equal(
-    byLabel.get("Style"),
-    "Rear Bath · Center Bath · Front Living · Center Bedroom",
+    byLabel.get("Options"),
+    "Power Retractable Awning · Power Retractable Slideout · Bluetooth Audio · Solar Prewiring · Wi-Fi Capable · Swivel Seats · Reclining Seats · Smart Device Integration",
   );
-  assert.match(byLabel.get("Lifestyle") ?? "", /Family Friendly/);
-  assert.match(byLabel.get("Included") ?? "", /Power Retractable Awning/);
-  assert.match(byLabel.get("Included") ?? "", /Bluetooth Audio/);
-  assert.equal((byLabel.get("Included") ?? "").includes("®"), false);
   assert.equal(byLabel.get("Status"), undefined);
   assert.equal(rows.filter((row) => row.label === "Propane").length, 1);
-  assert.equal(rows.filter((row) => row.label === "GVWR").length, 1);
+  assert.equal(rows.filter((row) => row.label === "GVWR").length, 0);
+  assert.equal(rows.filter((row) => row.label === "Length").length, 0);
+  assert.equal(rows.filter((row) => row.label === "Stock number").length, 0);
+  assert.equal(report.sections.some((section) => section.title === "Systems"), false);
   const blob = [
     ...report.headlines.map((row) => row.value),
     ...rows.map((row) => `${row.label} ${row.value}`),
@@ -302,6 +295,20 @@ test("2027 Thor Inception 38DX stock 47492 is a short buyer report", () => {
   assert.equal(blob.includes("|"), false);
   assert.equal(/Cummins\s*\/\s*In-?Line/i.test(blob), false);
   for (const banned of [
+    "Price Monthly",
+    "Wheelbase",
+    "Interior height",
+    "Displacement",
+    "Driveline",
+    "Hitch",
+    "Furnace",
+    "Generator",
+    "Style",
+    "Lifestyle",
+    "Included",
+    "Wallpaper",
+    "Seat Armrests",
+    "Washer/Dryer prewiring",
     "Sofa Material",
     "Number Of Sofas",
     "Number of Sofas",

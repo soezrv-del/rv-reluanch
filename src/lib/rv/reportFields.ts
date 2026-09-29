@@ -279,44 +279,6 @@ function formatReportTransmission(brand: string, type: string, speeds: string): 
   return named ?? null;
 }
 
-function formatDisplacement(raw: string): string | null {
-  const text = raw.trim();
-  if (isHiddenReportValue(text)) return null;
-  const n = firstNumber(text);
-  if (n == null || n <= 0 || n > 20) return null;
-  const shown = Number.isInteger(n) ? String(Math.round(n)) : String(Math.round(n * 10) / 10);
-  return `${shown}L`;
-}
-
-function formatDriveline(raw: string): string | null {
-  const text = raw.trim();
-  if (isHiddenReportValue(text)) return null;
-  const match = text.match(/(\d)\s*[x×]\s*(\d)/i);
-  if (!match) return null;
-  return `${match[1]}x${match[2]}`;
-}
-
-function formatBtu(raw: string): string | null {
-  const text = raw.trim();
-  if (isHiddenReportValue(text)) return null;
-  const n = firstNumber(text);
-  if (n == null || n <= 0) return null;
-  return `${Math.round(n).toLocaleString("en-US")} BTU`;
-}
-
-/** "7' | 84" → "7 ft". Leftover inches stay in the phrase: "6 ft 8 in". */
-function formatFeetWords(raw: string): string | null {
-  const quoted = formatReportFeetInches(raw);
-  if (!quoted) return null;
-  const match = quoted.match(/^(\d+)'(?:(\d+)")?$/);
-  if (!match) return null;
-  const feet = Number(match[1]);
-  const inch = match[2] ? Number(match[2]) : 0;
-  if (feet === 0 && inch === 0) return null;
-  if (inch === 0) return `${feet} ft`;
-  return `${feet} ft ${inch} in`;
-}
-
 function awningFeet(raw: string): number | null {
   const text = raw.trim();
   if (!text || isHiddenReportValue(text)) return null;
@@ -426,6 +388,36 @@ function listParts(raw: string): string[] {
 function formatFeatureList(raw: string): string | null {
   const parts = listParts(raw);
   return parts.length ? parts.join(" · ") : null;
+}
+
+/** Short Options line. Everything else in the flag dump is dropped. */
+const REPORT_OPTION_ALLOWLIST = [
+  "Power Retractable Awning",
+  "Power Retractable Slideout",
+  "Bluetooth Audio",
+  "Solar Prewiring",
+  "Wi-Fi Capable",
+  "Swivel Seats",
+  "Reclining Seats",
+  "Smart Device Integration",
+] as const;
+
+function compactOption(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+function formatReportOptions(flags: string, floorplan: string | null): string | null {
+  const parts = listParts(flags).map((part) => compactOption(part));
+  const kept: string[] = [];
+  for (const name of REPORT_OPTION_ALLOWLIST) {
+    const key = compactOption(name);
+    if (parts.some((part) => part === key || part.includes(key))) kept.push(name);
+  }
+  const floor = compactOption(floorplan || "");
+  if (!floor.includes("washerdryerprep") && parts.some((part) => part.includes("washerdryerprewir"))) {
+    kept.push("Washer/Dryer prewiring");
+  }
+  return kept.length ? kept.join(" · ") : null;
 }
 
 /** Prose fields keep their sentences. Pipes become the same separator as feature lists. */
@@ -594,14 +586,13 @@ export function buildBuyerUnitReport(unit: LotUnit): BuyerUnitReport {
 
   const priceRows: BuyerReportRow[] = [];
   pushRow(priceRows, "MSRP", formatMoney(pick(printed, "price_msrp")));
-  pushRow(priceRows, "Price Monthly", formatMoney(pick(printed, "price_monthly")));
+
+  const lengthValue = formatReportFeetInches(
+    pick(printed, "vehicle_body_length", "length_ft"),
+  );
+  const gvwrValue = formatReportPounds(pick(printed, "gvwr"));
 
   const dimensionRows: BuyerReportRow[] = [];
-  pushRow(
-    dimensionRows,
-    "Length",
-    formatReportFeetInches(pick(printed, "vehicle_body_length", "length_ft")),
-  );
   pushRow(
     dimensionRows,
     "Height",
@@ -612,12 +603,6 @@ export function buildBuyerUnitReport(unit: LotUnit): BuyerUnitReport {
     "Width",
     formatReportFeetInches(pick(printed, "vehicle_body_width", "width_ft")),
   );
-  pushRow(
-    dimensionRows,
-    "Wheelbase",
-    formatReportFeetInches(pick(printed, "wheelbase", "wheel_base")),
-  );
-  pushRow(dimensionRows, "Interior height", formatFeetWords(pick(printed, "interior_height")));
   pushRow(dimensionRows, "Sleeps", formatCount(pick(printed, "max_sleeping_count", "sleeps")));
   pushRow(dimensionRows, "Slides", formatCount(pick(printed, "number_of_slideouts", "slides")));
   pushRow(dimensionRows, "Beds", formatReportBeds(printed));
@@ -633,7 +618,6 @@ export function buildBuyerUnitReport(unit: LotUnit): BuyerUnitReport {
     "Engine Type",
     formatReportEngine(pick(printed, "engine_type"), pick(printed, "engine")),
   );
-  pushRow(chassisRows, "Displacement", formatDisplacement(pick(printed, "displacement")));
   pushRow(chassisRows, "Horsepower", formatReportHorsepower(pick(printed, "horsepower")));
   pushRow(chassisRows, "Torque", formatReportTorque(pick(printed, "torque")));
   pushRow(
@@ -647,18 +631,11 @@ export function buildBuyerUnitReport(unit: LotUnit): BuyerUnitReport {
         pick(printed, "transmission"),
     ),
   );
-  pushRow(chassisRows, "Driveline", formatDriveline(pick(printed, "driveline_type", "driveline")));
   pushRow(chassisRows, "Fuel", formatReportFuel(pick(printed, "fuel_type", "fuel")));
 
   const weightRows: BuyerReportRow[] = [];
-  pushRow(weightRows, "GVWR", formatReportPounds(pick(printed, "gvwr")));
   pushRow(weightRows, "GCWR", formatReportPounds(pick(printed, "gcwr")));
   pushRow(weightRows, "Towing", formatReportPounds(pick(printed, "towing_capacity", "towing")));
-  pushRow(
-    weightRows,
-    "Hitch",
-    formatReportPounds(pick(printed, "hitch_weight", "tongue_weight", "dry_hitch_weight", "hitch")),
-  );
   pushRow(
     weightRows,
     "Fresh",
@@ -708,11 +685,6 @@ export function buildBuyerUnitReport(unit: LotUnit): BuyerUnitReport {
   pushRow(livingRows, "Water heater", formatWaterHeater(pick(printed, "water_heater_type")));
   pushRow(
     livingRows,
-    "Furnace",
-    formatBtu(pick(printed, "furnace_btu") || pick(printed, "heater_btu") || pick(printed, "heater_(btu)")),
-  );
-  pushRow(
-    livingRows,
     "Awning",
     formatAwning(
       pick(printed, "awning_size"),
@@ -728,25 +700,16 @@ export function buildBuyerUnitReport(unit: LotUnit): BuyerUnitReport {
   );
   pushRow(livingRows, "Seatbelts", formatCount(pick(printed, "seatbelts")));
 
-  const systemRows: BuyerReportRow[] = [];
-  pushRow(
-    systemRows,
-    "Generator",
-    preferLonger(pick(printed, "generator"), pick(printed, "generator_type")),
-  );
-
   const featureRows: BuyerReportRow[] = [];
   const floorplan = formatFeatureList(pick(printed, "floorplan_feature"));
-  const included = formatFeatureList(pick(printed, "flags"));
+  const options = formatReportOptions(pick(printed, "flags"), floorplan);
   pushRow(featureRows, "Floorplan", floorplan);
-  pushRow(featureRows, "Style", formatFeatureList(pick(printed, "floorplan_style")));
-  pushRow(featureRows, "Lifestyle", formatFeatureList(pick(printed, "floorplan_lifestyle")));
-  pushRow(featureRows, "Included", included);
+  pushRow(featureRows, "Options", options);
   for (const field of NARRATIVE_FIELDS) {
+    if (field.label === "Options" && options) continue;
     const text = formatNarrative(pick(printed, ...field.keys));
     if (!text) continue;
     if (floorplan && text === floorplan) continue;
-    if (included && text === included) continue;
     pushRow(featureRows, field.label, text);
   }
 
@@ -757,7 +720,6 @@ export function buildBuyerUnitReport(unit: LotUnit): BuyerUnitReport {
     section("Chassis and Engine", chassisRows),
     section("Weights and Capacities", weightRows),
     section("Living", livingRows),
-    section("Systems", systemRows),
     section("Features", featureRows),
   ].filter((item): item is BuyerReportSection => item != null);
 
@@ -772,8 +734,8 @@ export function buildBuyerUnitReport(unit: LotUnit): BuyerUnitReport {
   };
   consider("Price", price === LOT_GAP ? "" : price);
   consider("Stock number", stock === LOT_GAP ? "" : stock);
-  consider("GVWR", byLabel.get("GVWR"));
-  consider("Length", byLabel.get("Length"));
+  consider("GVWR", gvwrValue);
+  consider("Length", lengthValue);
   consider("Horsepower", byLabel.get("Horsepower"));
   consider("Sleeps", byLabel.get("Sleeps"));
 
