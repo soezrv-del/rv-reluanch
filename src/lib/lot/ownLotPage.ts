@@ -658,6 +658,19 @@ const LOT_MONTHS = [
   "Dec",
 ] as const;
 
+/** Dealer listing only. Photos and video live on this page. */
+export function lotListingHref(raw: string): string {
+  const text = raw.trim();
+  if (!text) return "";
+  try {
+    const url = new URL(text);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return "";
+    return url.href;
+  } catch {
+    return "";
+  }
+}
+
 /** Card line for a real odometer. A stored 0 is a blank scrape, not a reading. */
 export function lotCardMiles(unit: LotUnit): string {
   const printed = (unit.printed?.mileage ?? "").trim();

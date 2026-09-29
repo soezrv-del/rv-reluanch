@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, Search, X } from "lucide-react";
+import { Calculator, ChevronLeft, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RAIDHO_R_MARK } from "@/assets/prestige";
 import { SuitePage } from "@/components/shell/SuitePage";
@@ -10,6 +10,7 @@ import {
   formatLotUpdated,
   lotLengthOrGap,
   lotCardMiles,
+  lotListingHref,
   lotLbsOrGap,
   lotPriceOrGap,
   lotTextOrGap,
@@ -535,8 +536,38 @@ function LotDetail({
 }) {
   const stats = lotGlance(unit);
   const sections = lotOpenSections(unit);
+  const nav = useShellNavOptional();
+  const listing = lotListingHref(unit.url);
+  const price = unit.price != null && unit.price > 0 ? unit.price : 0;
   return (
     <div className="lot-detail" data-lot-detail>
+      <div className="lot-share-dock">
+        {price > 0 ? (
+          <button
+            type="button"
+            className="lot-cal-tab"
+            data-lot-cal
+            aria-label="Calculate payment"
+            onClick={() =>
+              nav?.openCalWithPrice(price, showroomUnitLabel(unit))
+            }
+          >
+            <Calculator className="size-4" aria-hidden />
+          </button>
+        ) : null}
+        <ReportShareButton report={buildUnitShareReport(unit)} />
+      </div>
+      {listing ? (
+        <a
+          className="lot-listing"
+          href={listing}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-lot-listing
+        >
+          {listing}
+        </a>
+      ) : null}
       {stats.length ? (
         <div className="lot-detail-stats">
           {stats.map((stat) => (
@@ -566,9 +597,6 @@ function LotDetail({
           </dl>
         </section>
       ))}
-      <div className="lot-share-dock">
-        <ReportShareButton report={buildUnitShareReport(unit)} />
-      </div>
     </div>
   );
 }

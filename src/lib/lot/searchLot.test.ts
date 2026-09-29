@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import {
   filterLotBrowse,
   lotCardMiles,
+  lotListingHref,
   lotPriceOrGap,
   lotTextOrGap,
   lotTypeChips,
@@ -204,6 +205,12 @@ test("lot lookup shows every printed scrape field and does not invent blanks", (
   assert.equal(lotCardMiles(unit), "6,870 mi");
   assert.equal(lotCardMiles(snap.units[1]!), "");
   assert.equal(lotCardMiles(snap.units[2]!), "");
+  assert.equal(
+    lotListingHref("https://rvcountry.com/inventory/2026-entegra-coach-cornerstone-45282"),
+    "https://rvcountry.com/inventory/2026-entegra-coach-cornerstone-45282",
+  );
+  assert.equal(lotListingHref("javascript:alert(1)"), "");
+  assert.equal(lotListingHref(""), "");
   assert.equal(
     lotOpenSections(unit).flatMap((part) => part.rows).find((row) => row.label === "Miles")?.value,
     "6,870 mi",
