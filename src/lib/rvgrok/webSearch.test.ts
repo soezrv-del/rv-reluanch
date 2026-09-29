@@ -366,6 +366,77 @@ test("notesConfirmQueriedField requires a real fact, not a miss or EST", () => {
   );
 });
 
+test("dry weight, sleeps, and slides confirm only a single floorplan value", () => {
+  const dry = "what's the dry weight of a 2022 Newmar Dutch Star 4369";
+  const sleeps = "how many sleeps in a 2022 Newmar Dutch Star 4369";
+  const slides = "how many slides on a 2022 Newmar Dutch Star 4369";
+  assert.equal(
+    notesConfirmQueriedField("Dutch Star 4369 GVWR 32,000 lb.", dry),
+    false,
+  );
+  assert.equal(
+    notesConfirmQueriedField(
+      "2022 Newmar Dutch Star 4369 dry weight 12,450 lbs.",
+      dry,
+    ),
+    true,
+  );
+  assert.equal(
+    notesConfirmQueriedField(
+      "2022 Newmar Dutch Star 4369 dry weight 1,200 lbs.",
+      dry,
+    ),
+    false,
+  );
+  assert.equal(
+    notesConfirmQueriedField(
+      "2022 Newmar Dutch Star 4369 dry weight 80,000 lbs.",
+      dry,
+    ),
+    false,
+  );
+  assert.equal(
+    notesConfirmQueriedField("2022 Newmar Dutch Star 4369 sleeps 4.", sleeps),
+    true,
+  );
+  assert.equal(
+    notesConfirmQueriedField("2022 Newmar Dutch Star 4369 has 4.", sleeps),
+    false,
+  );
+  assert.equal(
+    notesConfirmQueriedField(
+      "2022 Newmar Dutch Star 4369 has three slide-outs.",
+      slides,
+    ),
+    true,
+  );
+  assert.equal(
+    notesConfirmQueriedField(
+      "2022 Newmar Dutch Star 4369 includes a slide topper.",
+      slides,
+    ),
+    false,
+  );
+  assert.equal(
+    notesConfirmQueriedField("dry weight 12,450 lbs.", dry),
+    false,
+  );
+  assert.equal(
+    notesConfirmQueriedField(
+      "Dutch Star 4369 dry weight 12,450 lbs and UVW 13,200 lbs.",
+      dry,
+    ),
+    false,
+  );
+  assert.equal(
+    notesConfirmQueriedField(
+      "Dutch Star 4369 sleeps 4 and sleeps 6.",
+      sleeps,
+    ),
+    false,
+  );
+});
+
 test("confirming first search does not retry", async () => {
   clearWebSearchCache();
   let calls = 0;
