@@ -21,7 +21,7 @@ test("Lot stock is the last dock tab and not RV Grok", () => {
 
   assert.match(tabs, /\| "rvlot"/);
   assert.match(tabs, /id: "rvlot", label: "Lot", short: "Lot"/);
-  assert.match(tabs, /grid-cols-6/);
+  assert.match(tabs, /const PINNED/);
   assert.match(
     tabs,
     /Exclude<AppTab, "more" \| "rvshare" \| "rvsold">/,
@@ -29,7 +29,7 @@ test("Lot stock is the last dock tab and not RV Grok", () => {
 
   assert.match(
     constants,
-    /TAB_ORDER = \[\s*"rvfax",\s*"rvcal",\s*"rvgrok",\s*"rvtow",\s*"rvtrips",\s*"rvlot",\s*\]/,
+    /TAB_ORDER = \[\s*"rvfax",\s*"rvlot",\s*"rvgrok",\s*"rvtow",\s*"rvcal",\s*"rvtrips",\s*\]/,
   );
   assert.match(constants, /title: "LOT"/);
 
@@ -40,13 +40,17 @@ test("Lot stock is the last dock tab and not RV Grok", () => {
   assert.match(shell, /LotStockApp/);
   assert.match(shell, /initialTab = "rvgrok"/);
   assert.match(shell, /id === "rvlot"/);
-  assert.match(shell, /<LotStockApp \/>/);
+  assert.match(shell, /<LotStockApp onAsk=\{openGrok\} \/>/);
 
   assert.match(route, /createFileRoute\("\/lot"\)/);
   assert.match(route, /initialTab="rvlot"/);
   assert.match(route, /NdaGate/);
 
+  assert.match(lot, /data-lot-detail/);
   assert.match(lot, /<SuitePage/);
+  assert.match(lot, /Ask about this coach/);
+  assert.match(lot, /lot-detail-source/);
+  assert.doesNotMatch(lot, /grid grid-cols-2 gap-x-3/);
   assert.match(lot, /tab="rvlot"/);
   assert.match(lot, /raidhoOnly/);
   assert.match(lot, /lot-stock-screen/);
@@ -80,7 +84,7 @@ test("Lot stock is the last dock tab and not RV Grok", () => {
   assert.doesNotMatch(lot, /ownLotInventory/);
   assert.doesNotMatch(lot, /DialaBot|dialabot/i);
   assert.doesNotMatch(lot, /onOpenGrok|setGrokSeed/);
-  assert.doesNotMatch(lot, /GVWR|Length|Slides|Sleeps|RvFAX/);
+  assert.doesNotMatch(lot, /RvFAX/);
   assert.doesNotMatch(lot, /brochure catalog bleed|catalog photo/i);
 
   const header = read("../../components/shell/SapphireHeader.tsx");

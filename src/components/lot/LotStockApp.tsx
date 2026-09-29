@@ -7,6 +7,8 @@ import { useShellNavOptional } from "@/components/shell/ShellNavContext";
 import {
   fetchLotSnapshot,
   filterLotBrowse,
+  lotLengthOrGap,
+  lotLbsOrGap,
   lotLookupRows,
   lotPriceOrGap,
   lotTextOrGap,
@@ -14,6 +16,7 @@ import {
   lotUnitKey,
   lotUnitPhoto,
   shortLotTypeLabel,
+  LOT_GAP,
   type LotSnapshotView,
   type LotUnit,
 } from "@/lib/lot/ownLotPage";
@@ -29,7 +32,11 @@ import { buildUnitShareReport } from "@/lib/rv/shareReport";
 
 const PAGE_SIZE = 40;
 
-export function LotStockApp() {
+export function LotStockApp({
+  onAsk,
+}: {
+  onAsk?: (prompt: string) => void;
+}) {
   const nav = useShellNavOptional();
   const [snap, setSnap] = useState<LotSnapshotView | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -255,6 +262,7 @@ export function LotStockApp() {
                   unit={featured}
                   featured
                   open={openKey === featuredKey}
+                  onAsk={onAsk}
                   onToggle={() =>
                     setOpenKey((cur) =>
                       cur === featuredKey ? null : featuredKey,
@@ -286,6 +294,7 @@ export function LotStockApp() {
                         <LotUnitCard
                           unit={unit}
                           open={openKey === key}
+                          onAsk={onAsk}
                           onToggle={() =>
                             setOpenKey((cur) =>
                               cur === key ? null : key,
@@ -366,16 +375,43 @@ function StatusCard({
   );
 }
 
+function lotGlance(unit: LotUnit): { label: string; value: string }[] {
+  const stats: { label: string; value: string }[] = [];
+  const length = lotLengthOrGap(unit.length_ft);
+  if (length !== LOT_GAP) stats.push({ label: "Length", value: length });
+  const gvwr = lotLbsOrGap(unit.gvwr);
+  if (gvwr !== LOT_GAP) stats.push({ label: "GVWR", value: gvwr });
+  if (unit.sleeps != null && unit.sleeps >= 0) {
+    stats.push({ label: "Sleeps", value: String(unit.sleeps) });
+  } else if (unit.slides != null && unit.slides >= 0) {
+    stats.push({ label: "Slides", value: String(unit.slides) });
+  }
+  return stats.slice(0, 3);
+}
+
+function lotAskPrompt(unit: LotUnit): string {
+  const name = [unit.year, unit.make, unit.model, unit.trim]
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join(" ");
+  const stock = unit.stock_number.trim();
+  return stock
+    ? `Tell me about stock ${stock}${name ? `, the ${name}` : ""}.`
+    : `Tell me about the ${name}.`;
+}
+
 function LotUnitCard({
   unit,
   featured,
   open,
   onToggle,
+  onAsk,
 }: {
   unit: LotUnit;
   featured?: boolean;
   open: boolean;
   onToggle: () => void;
+  onAsk?: (prompt: string) => void;
 }) {
   const headline = showroomUnitLabel(unit).trim() || "GAP";
   const price = lotPriceOrGap(unit.price);
@@ -389,14 +425,17 @@ function LotUnitCard({
   const photo = photoUrl && failedSrc !== photoUrl ? photoUrl : null;
 
   return (
-    <article>
+    <article
+      className="lot-card glass-prestige w-full overflow-hidden rounded-[var(--radius-2xl)]"
+      data-lot-open={open ? "" : undefined}
+    >
       <button
         type="button"
         onClick={onToggle}
         data-lot-card
         data-lot-featured-card={featured ? "" : undefined}
         aria-expanded={open}
-        className="lot-card glass-prestige w-full overflow-hidden rounded-[var(--radius-2xl)] text-left transition duration-200 ease-out active:scale-[0.995]"
+        className="lot-card-hit w-full text-left transition duration-200 ease-out active:scale-[0.995]"
       >
         <div
           className={cn(
@@ -450,38 +489,68 @@ function LotUnitCard({
           <p className="lot-unit-meta" data-lot-meta>
             {meta}
           </p>
-          {open ? (
-            <dl className="grid grid-cols-2 gap-x-3 gap-y-2 border-t border-white/15 pt-3 text-[12px]">
-              <Field label="VIN" value={lotTextOrGap(unit.vin)} />
-              {lotLookupRows(unit).map((row) => (
-                <Field key={row.key} label={row.label} value={row.value} />
-              ))}
-            </dl>
-          ) : null}
         </div>
       </button>
       {open ? (
-        <div className="lot-share-dock">
-          <ReportShareButton report={buildUnitShareReport(unit)} />
-        </div>
+        <LotDetail unit={unit} onAsk={onAsk} />
       ) : null}
     </article>
   );
 }
 
-function Field({ label, value }: { label: string; value: string }) {
+function LotDetail({
+  unit,
+  onAsk,
+}: {
+  unit: LotUnit;
+  onAsk?: (prompt: string) => void;
+}) {
+  const stats = lotGlance(unit);
+  const vin = unit.vin.trim();
+  const rows = lotLookupRows(unit);
   return (
-    <div>
-      <dt className="text-[10px] font-bold tracking-[0.14em] text-white/50">
-        {label}
-      </dt>
-      <dd
-        className={cn(
-          "mt-0.5 font-semibold text-white break-words",
-          value === "GAP" && "text-white/45",
-        )}
-      >
-        {value}
+    <div className="lot-detail" data-lot-detail>
+      {stats.length ? (
+        <div className="lot-detail-stats">
+          {stats.map((stat) => (
+            <p key={stat.label} className="lot-detail-stat">
+              <b>{stat.value}</b>
+              <span>{stat.label}</span>
+            </p>
+          ))}
+        </div>
+      ) : null}
+      {onAsk ? (
+        <button
+          type="button"
+          className="lot-detail-ask"
+          onClick={() => onAsk(lotAskPrompt(unit))}
+        >
+          Ask about this coach
+        </button>
+      ) : null}
+      {vin || rows.length ? (
+        <dl className="lot-detail-rows">
+          {vin ? <DetailRow label="VIN" value={vin} /> : null}
+          {rows.map((row) => (
+            <DetailRow key={row.key} label={row.label} value={row.value} />
+          ))}
+        </dl>
+      ) : null}
+      <div className="lot-share-dock">
+        <ReportShareButton report={buildUnitShareReport(unit)} />
+      </div>
+    </div>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="lot-detail-row">
+      <dt>{label}</dt>
+      <dd>
+        <span>{value}</span>
+        <span className="lot-detail-source">Live</span>
       </dd>
     </div>
   );
