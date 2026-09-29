@@ -26,6 +26,14 @@ export type LotQueryUnit = {
   condition?: string;
   lot_status?: string;
   title?: string;
+  fuel_type?: string;
+  engine?: string;
+  chassis?: string;
+  chassis_brand?: string;
+  transmission?: string;
+  features?: string;
+  /** Full printed scrape. Search reads fuel, engine, chassis, and features from here. */
+  printed?: Record<string, string>;
 };
 
 export type LotQueryArgs = {
@@ -79,6 +87,8 @@ export type LotQueryResult = {
   no_length: LotQueryRow[];
   summary: string;
   did_you_mean?: string;
+  /** Set when a one-edit fuel word (deisel → diesel) returned those units. */
+  close?: string;
 };
 
 type BodySpec =
@@ -403,6 +413,22 @@ export function lotUnitLength(unit: LotQueryUnit): {
 
 function asSearchable(unit: LotQueryUnit): LotSearchable {
   const series = unit.series || "";
+  const printed = unit.printed || {};
+  const pick = (...keys: string[]): string => {
+    for (const key of keys) {
+      const direct = (unit as Record<string, unknown>)[key];
+      if (typeof direct === "string" && direct.trim()) return direct.trim();
+      const fromPrinted = printed[key];
+      if (fromPrinted && fromPrinted.trim()) return fromPrinted.trim();
+    }
+    return "";
+  };
+  const fuel = pick("fuel_type", "fuel");
+  const engine = pick("engine");
+  const chassis = pick("chassis_brand", "chassis");
+  const transmission = pick("transmission");
+  const features = pick("features");
+  const title = pick("title");
   return {
     year: unit.year || "",
     make: unit.make || "",
@@ -414,6 +440,12 @@ function asSearchable(unit: LotQueryUnit): LotSearchable {
     vin: unit.vin || "",
     condition: unit.condition || "",
     lot_status: unit.lot_status || "",
+    fuel_type: fuel,
+    engine,
+    chassis,
+    chassis_brand: chassis,
+    transmission,
+    features,
     title: [
       unit.year,
       unit.make,
@@ -421,7 +453,12 @@ function asSearchable(unit: LotQueryUnit): LotSearchable {
       series,
       unit.trim,
       unit.body_type,
-      unit.title,
+      title,
+      fuel,
+      engine,
+      chassis,
+      transmission,
+      features,
     ]
       .filter(Boolean)
       .join(" "),
@@ -443,8 +480,22 @@ function editDistanceAtMost1(a: string, b: string): boolean {
   if (Math.abs(delta) > 1) return false;
   if (a.length === b.length) {
     let diffs = 0;
-    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) diffs++;
-    return diffs === 1;
+    let first = -1;
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) {
+        diffs += 1;
+        if (first < 0) first = i;
+      }
+    }
+    if (diffs === 1) return true;
+    // One adjacent swap: deisel → diesel.
+    return (
+      diffs === 2 &&
+      first >= 0 &&
+      first + 1 < a.length &&
+      a[first] === b[first + 1] &&
+      a[first + 1] === b[first]
+    );
   }
   const [shorter, longer] = a.length < b.length ? [a, b] : [b, a];
   let i = 0;
@@ -599,6 +650,270 @@ function oneLine(
   return `Matching units: ${matched.length}${label}${cond}.`;
 }
 
+const SMALL_NUMBER: Record<string, number> = {
+  a: 1,
+  an: 1,
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+  seven: 7,
+  eight: 8,
+  nine: 9,
+  ten: 10,
+  eleven: 11,
+  twelve: 12,
+  thirteen: 13,
+  fourteen: 14,
+  fifteen: 15,
+  sixteen: 16,
+  seventeen: 17,
+  eighteen: 18,
+  nineteen: 19,
+  twenty: 20,
+  thirty: 30,
+  forty: 40,
+  fifty: 50,
+  sixty: 60,
+  seventy: 70,
+  eighty: 80,
+  ninety: 90,
+};
+
+function tryReadMoney(
+  tokens: string[],
+  start: number,
+): { value: number; end: number } | null {
+  let value = 0;
+  let seen = false;
+  let j = start;
+  while (j < tokens.length) {
+    const token = tokens[j] || "";
+    const kMatch = /^(\d+(?:\.\d+)?)k$/.exec(token);
+    if (kMatch) {
+      value += Number(kMatch[1]) * 1000;
+      seen = true;
+      j += 1;
+      break;
+    }
+    if (/^\d+(?:\.\d+)?$/.test(token)) {
+      const n = Number(token);
+      const next = tokens[j + 1];
+      if (next === "grand" || next === "k") {
+        value += n * 1000;
+        seen = true;
+        j += 2;
+        break;
+      }
+      if (next === "thousand") {
+        value += n * 1000;
+        seen = true;
+        j += 2;
+        continue;
+      }
+      if (next === "hundred") {
+        value += n * 100;
+        seen = true;
+        j += 2;
+        continue;
+      }
+      if (n >= 1000) {
+        value += n;
+        seen = true;
+        j += 1;
+        break;
+      }
+      if (seen) {
+        value += n;
+        j += 1;
+        break;
+      }
+      return null;
+    }
+    const small = SMALL_NUMBER[token];
+    if (small != null) {
+      const next = tokens[j + 1];
+      const article = token === "a" || token === "an";
+      if (article && next !== "hundred") return null;
+      if (next === "hundred") {
+        value += small * 100;
+        seen = true;
+        j += 2;
+        continue;
+      }
+      if (next === "thousand" || next === "grand") {
+        value += small * 1000;
+        seen = true;
+        j += 2;
+        break;
+      }
+      if (seen && !article) {
+        value += small;
+        j += 1;
+        break;
+      }
+      return null;
+    }
+    if ((token === "thousand" || token === "grand") && seen) {
+      value *= 1000;
+      j += 1;
+      break;
+    }
+    break;
+  }
+  if (!seen || !Number.isFinite(value) || value <= 0) return null;
+  return { value, end: j };
+}
+
+function consumePrice(tokens: string[]): {
+  tokens: string[];
+  priceMin?: number;
+  priceMax?: number;
+} {
+  const kept: string[] = [];
+  let priceMin: number | undefined;
+  let priceMax: number | undefined;
+  for (let i = 0; i < tokens.length; ) {
+    const token = tokens[i] || "";
+    if (token === "between") {
+      const left = tryReadMoney(tokens, i + 1);
+      if (left && tokens[left.end] === "and") {
+        const right = tryReadMoney(tokens, left.end + 1);
+        if (right) {
+          priceMin = Math.min(left.value, right.value);
+          priceMax = Math.max(left.value, right.value);
+          i = right.end;
+          continue;
+        }
+      }
+    }
+    const under = token === "under" || token === "below" || token === "less";
+    const over = token === "over" || token === "above" || token === "more";
+    const around = token === "around" || token === "about";
+    if (under || over || around) {
+      let start = i + 1;
+      if ((token === "less" || token === "more") && tokens[start] === "than") start += 1;
+      const money = tryReadMoney(tokens, start);
+      if (money) {
+        if (under) priceMax = money.value;
+        else if (over) priceMin = money.value;
+        else {
+          priceMin = Math.round(money.value * 0.85);
+          priceMax = Math.round(money.value * 1.15);
+        }
+        i = money.end;
+        continue;
+      }
+    }
+    const bare = tryReadMoney(tokens, i);
+    const next = tokens[i + 1];
+    const explicitMoney =
+      /k$/.test(token) ||
+      next === "grand" ||
+      next === "thousand" ||
+      next === "hundred" ||
+      token === "hundred";
+    // A bare model year (2026) is not a price. 100k / 100 grand / 10000+ is.
+    if (
+      bare &&
+      bare.value >= 1000 &&
+      priceMin == null &&
+      priceMax == null &&
+      (explicitMoney || bare.value >= 10000)
+    ) {
+      priceMin = Math.round(bare.value * 0.85);
+      priceMax = Math.round(bare.value * 1.15);
+      i = bare.end;
+      continue;
+    }
+    kept.push(token);
+    i += 1;
+  }
+  return { tokens: kept, priceMin, priceMax };
+}
+
+function consumeSort(tokens: string[]): {
+  tokens: string[];
+  sort?: "price";
+  order?: "asc" | "desc";
+} {
+  const kept: string[] = [];
+  let sort: "price" | undefined;
+  let order: "asc" | "desc" | undefined;
+  for (let i = 0; i < tokens.length; ) {
+    const token = tokens[i] || "";
+    const next = tokens[i + 1];
+    if (token === "cheapest" || token === "priciest") {
+      sort = "price";
+      order = token === "priciest" ? "desc" : "asc";
+      i += 1;
+      continue;
+    }
+    if ((token === "least" || token === "most" || token === "lowest" || token === "highest") && (next === "expensive" || next === "price" || next === "priced")) {
+      sort = "price";
+      order = token === "most" || token === "highest" ? "desc" : "asc";
+      i += 2;
+      continue;
+    }
+    if (token === "expensive") {
+      i += 1;
+      continue;
+    }
+    kept.push(token);
+    i += 1;
+  }
+  return { tokens: kept, sort, order };
+}
+
+function fuelAlias(token: string): { fuel: "diesel" | "gas"; close?: string } | null {
+  const word = singularizeLotToken(token);
+  if (word === "diesel") return { fuel: "diesel" };
+  if (word === "gas" || word === "gasoline") return { fuel: "gas" };
+  if (word.length >= 5 && editDistanceAtMost1(word, "diesel")) {
+    return { fuel: "diesel", close: "diesel" };
+  }
+  return null;
+}
+
+function consumeFuel(tokens: string[]): {
+  tokens: string[];
+  fuel: "" | "diesel" | "gas";
+  close?: string;
+} {
+  const kept: string[] = [];
+  let fuel: "" | "diesel" | "gas" = "";
+  let close: string | undefined;
+  for (const token of tokens) {
+    const alias = fuelAlias(token);
+    if (!alias) {
+      kept.push(token);
+      continue;
+    }
+    fuel = alias.fuel;
+    if (alias.close) close = alias.close;
+  }
+  return { tokens: kept, fuel, close };
+}
+
+function fuelText(unit: LotQueryUnit, key: string): string {
+  const direct = (unit as Record<string, unknown>)[key];
+  if (typeof direct === "string" && direct.trim()) return direct.toLowerCase();
+  return (unit.printed?.[key] || "").toLowerCase();
+}
+
+function fuelMatches(unit: LotQueryUnit, fuel: "" | "diesel" | "gas"): boolean {
+  if (!fuel) return true;
+  const typed = `${fuelText(unit, "fuel_type")} ${fuelText(unit, "fuel")}`;
+  const engine = fuelText(unit, "engine");
+  if (fuel === "diesel") {
+    return /\bdiesel\b/.test(typed) || /\bdiesel\b/.test(engine);
+  }
+  if (/\bdiesel\b/.test(typed)) return false;
+  return /\bgas/.test(typed) || (/\bgas/.test(engine) && !/\bdiesel\b/.test(engine));
+}
+
 type Parsed = {
   body: BodySpec;
   condition: string;
@@ -612,6 +927,8 @@ type Parsed = {
   priceMax?: number;
   lengthMin?: number;
   lengthMax?: number;
+  fuel: "" | "diesel" | "gas";
+  close?: string;
   sort?: "price" | "length" | "year";
   order: "asc" | "desc";
   limit: number;
@@ -629,13 +946,21 @@ function parseArgs(units: LotQueryUnit[], args: LotQueryArgs): Parsed {
     normalizeLotQueryText(`${str(args.make)} ${str(args.model)}`),
     places,
   );
-  const queryTokens = identityTokens(statused.rest, places);
+  const priced = consumePrice(statused.rest.split(/\s+/).filter(Boolean));
+  const sortedWords = consumeSort(priced.tokens);
+  const fueled = consumeFuel(sortedWords.tokens);
+  const queryTokens = identityTokens(fueled.tokens.join(" "), places);
   const tokens = [...new Set([...queryTokens, ...fieldTokens])];
   const namedPlaces = mentionedPlaces(statused.rest, places);
-  const sortBy = str(args.sort);
+  const sortBy = str(args.sort) || sortedWords.sort || "";
   const sort = sortBy === "price" || sortBy === "length" || sortBy === "year" ? sortBy : undefined;
   const rawLimit = num(args.limit);
   const limit = rawLimit != null ? Math.min(24, Math.max(1, Math.round(rawLimit))) : 12;
+  const argOrder = str(args.order);
+  const order: "asc" | "desc" =
+    argOrder === "desc" || argOrder === "asc"
+      ? argOrder
+      : sortedWords.order || "asc";
   return {
     body,
     condition: conditioned.condition,
@@ -645,12 +970,14 @@ function parseArgs(units: LotQueryUnit[], args: LotQueryArgs): Parsed {
     tokens,
     yearMin: num(args.year_min),
     yearMax: num(args.year_max),
-    priceMin: num(args.price_min),
-    priceMax: num(args.price_max),
+    priceMin: num(args.price_min) ?? priced.priceMin,
+    priceMax: num(args.price_max) ?? priced.priceMax,
     lengthMin: num(args.length_ft_min),
     lengthMax: num(args.length_ft_max),
+    fuel: fueled.fuel,
+    close: fueled.close,
     sort,
-    order: str(args.order) === "desc" ? "desc" : "asc",
+    order,
     limit,
   };
 }
@@ -666,14 +993,14 @@ export function lotQueryHasSubject(query: string): boolean {
   );
 }
 
-function passes(unit: LotQueryUnit, parsed: Parsed, lengthRequired: boolean): boolean {
+function passesStructured(unit: LotQueryUnit, parsed: Parsed, lengthRequired: boolean): boolean {
   if (!bodyMatches(unit.body_type || "", parsed.body)) return false;
   if (!conditionMatches(unit, parsed.condition)) return false;
   if (!statusMatches(unit, parsed.status)) return false;
   if (!locationMatches(unit, parsed.location, parsed.places)) return false;
   if (!yearMatches(unit, parsed.yearMin, parsed.yearMax)) return false;
   if (!priceMatches(unit, parsed.priceMin, parsed.priceMax)) return false;
-  if (parsed.tokens.some((token) => !tokenHitsIdentity(unit, token))) return false;
+  if (!fuelMatches(unit, parsed.fuel)) return false;
   if (lengthRequired) {
     const length = lotUnitLength(unit).ft;
     if (length == null) return false;
@@ -681,6 +1008,26 @@ function passes(unit: LotQueryUnit, parsed: Parsed, lengthRequired: boolean): bo
     if (parsed.lengthMax != null && length > parsed.lengthMax) return false;
   }
   return true;
+}
+
+function passesTokens(unit: LotQueryUnit, tokens: string[]): boolean {
+  return tokens.every((token) => tokenHitsIdentity(unit, token));
+}
+
+function hasRecognizedFilter(parsed: Parsed, lengthRequired: boolean): boolean {
+  return (
+    parsed.body.kind !== "any" ||
+    Boolean(parsed.condition) ||
+    Boolean(parsed.status) ||
+    Boolean(parsed.location) ||
+    parsed.places.length > 0 ||
+    parsed.yearMin != null ||
+    parsed.yearMax != null ||
+    parsed.priceMin != null ||
+    parsed.priceMax != null ||
+    Boolean(parsed.fuel) ||
+    lengthRequired
+  );
 }
 
 function compareUnits(a: LotQueryUnit, b: LotQueryUnit, parsed: Parsed): number {
@@ -702,6 +1049,11 @@ function compareUnits(a: LotQueryUnit, b: LotQueryUnit, parsed: Parsed): number 
   return (av - bv) * dir;
 }
 
+function closeLine(summary: string, close: string | undefined, matched: number): string {
+  if (!close || !matched) return summary;
+  return `${summary} Close match: ${close}.`;
+}
+
 /**
  * Search the caller's own-lot units. `matched` is the full hit count.
  * `units` is the top N rows. A one-edit make/model miss sets `did_you_mean`
@@ -711,7 +1063,26 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
   const parsed = parseArgs(units, args);
   const lengthBounded = parsed.lengthMin != null || parsed.lengthMax != null;
   const lengthRequired = lengthBounded || parsed.sort === "length";
-  let matched = units.filter((unit) => passes(unit, parsed, lengthRequired));
+  const structured = units.filter((unit) => passesStructured(unit, parsed, lengthRequired));
+  let matched = parsed.tokens.length
+    ? structured.filter((unit) => passesTokens(unit, parsed.tokens))
+    : structured;
+  // A junk word must not wipe a search that already recognized fuel, price, or type.
+  if (
+    !matched.length &&
+    parsed.tokens.length &&
+    hasRecognizedFilter(parsed, lengthRequired)
+  ) {
+    const known = parsed.tokens.filter((token) =>
+      units.some((unit) => tokenHitsIdentity(unit, token)),
+    );
+    if (known.length < parsed.tokens.length) {
+      matched = known.length
+        ? structured.filter((unit) => passesTokens(unit, known))
+        : structured;
+    }
+  }
+  // Structured filters that find nothing still fall back to the plain type-ahead bar.
   if (!matched.length) {
     const plainTokens = plainTypeaheadTokens(
       [args.query, args.make, args.model].filter(Boolean).join(" "),
@@ -726,7 +1097,7 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
   const noLength = lengthRequired
     ? units.filter((unit) => {
         if (lotUnitLength(unit).ft != null) return false;
-        return passes(unit, { ...parsed, lengthMin: undefined, lengthMax: undefined }, false);
+        return passesStructured(unit, { ...parsed, lengthMin: undefined, lengthMax: undefined }, false);
       })
     : [];
   const didYouMean = matched.length ? undefined : suggestName(parsed.tokens, units);
@@ -745,14 +1116,18 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
     counts,
     units: sorted.slice(0, parsed.limit).map(toRow),
     no_length: noLength.map(toRow),
-    summary: oneLine(matched, counts, parsed.body, didYouMean),
+    summary: closeLine(oneLine(matched, counts, parsed.body, didYouMean), parsed.close, matched.length),
     ...(didYouMean ? { did_you_mean: didYouMean } : {}),
+    ...(parsed.close && matched.length ? { close: parsed.close } : {}),
   };
 }
 
 /** Chat context block. One summary line, then the top rows. */
 export function formatLotQueryNotes(result: LotQueryResult): string {
   const lines = [result.summary];
+  if (result.close) {
+    lines.push(`Close match: ${result.close}.`);
+  }
   if (result.did_you_mean) {
     lines.push(`Did you mean ${result.did_you_mean}? Say none only when matched is 0.`);
   }

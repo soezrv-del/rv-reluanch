@@ -727,7 +727,7 @@ export class GrokRealtimeSession {
           modalities: ["text", "audio"],
           instructions:
             instructions ||
-            "Speak the query_lot summary. Say none only when matched is 0. If did_you_mean is set, offer that name. Do not invent a unit, price, stock number, or store.",
+            "Speak the query_lot summary. Never say none before the tool returns. Never answer a count from memory. Say none only when matched is 0. If did_you_mean or close is set, offer that name. Do not invent a unit, price, stock number, or store.",
         },
       }),
     );

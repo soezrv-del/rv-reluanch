@@ -174,3 +174,49 @@ test("how about used Super Cs after a Lineage question still calls the tool and 
   assert.equal(follow.counts?.body_type["Class Super C"], 12);
   assert.equal(follow.counts?.condition.Used, 12);
 });
+
+test("fuel, spoken price, sort, and chassis match the lot sheet", () => {
+  const snap = units();
+  const around = searchLot(snap.units, { query: "diesel around a hundred thousand" });
+  assert.equal(around.matched, 11);
+  assert.ok(
+    around.units.every((unit) => (unit.price ?? 0) >= 85_000 && (unit.price ?? 0) <= 115_000),
+  );
+  assert.equal(
+    snap.units.filter((unit) => {
+      const fuel = `${unit.printed?.fuel_type || ""} ${unit.printed?.engine || ""}`.toLowerCase();
+      return (
+        /\bdiesel\b/.test(fuel) &&
+        unit.price != null &&
+        unit.price >= 85_000 &&
+        unit.price <= 115_000
+      );
+    }).length,
+    11,
+  );
+
+  const cheap = searchLot(snap.units, { query: "cheapest diesel" });
+  assert.equal(cheap.units[0]?.price, 29995);
+  assert.equal(cheap.units[1]?.price, 29995);
+  assert.deepEqual(
+    cheap.units.slice(0, 2).map((unit) => unit.stock_number).sort(),
+    ["28960E", "UPD9457A"],
+  );
+  const cheapNames = cheap.units.map((unit) => `${unit.year} ${unit.make} ${unit.model}`).join(" | ");
+  assert.match(cheapNames, /2003 Fleetwood Expedition/);
+  assert.match(cheapNames, /2001 Winnebago ULTIMATE ADVANTAGE/i);
+
+  assert.equal(searchLot(snap.units, { query: "diesels" }).matched, 161);
+  const typo = searchLot(snap.units, { query: "deisel" });
+  assert.equal(typo.matched, 161);
+  assert.equal(typo.close, "diesel");
+  assert.equal(searchLot(snap.units, { query: "freightliner" }).matched, 34);
+
+  const junk = searchLot(snap.units, { query: "diesel around a hundred thousand zzznomatch" });
+  assert.equal(junk.matched, 11);
+
+  const voice = readFileSync(join(process.cwd(), "src/lib/rvgrok/liveVoice.ts"), "utf8");
+  assert.match(voice, /Never say none before the tool returns/);
+  assert.match(voice, /Never answer a lot count from memory/);
+  assert.match(voice, /Call query_lot once/);
+});

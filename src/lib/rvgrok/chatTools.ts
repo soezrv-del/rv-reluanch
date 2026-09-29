@@ -108,7 +108,7 @@ export const RV_GROK_TOOLS = [
   ),
   fn(
     "get_own_lot",
-    "RV Country own lot. Call for any count or availability question, including a follow-up that changes type or condition. Put their words in query. Say none only when matched is 0. If did_you_mean is set, offer that name. Specs use the closest saved pin or web search. Do not treat a lot row as an OEM spec.",
+    "RV Country own lot. Call once per question for any count or availability question, including a follow-up that changes type or condition. Put their words in query. Never say none before the tool returns. Never answer a count from memory. Say none only when matched is 0. If did_you_mean or close is set, offer that name. Specs use the closest saved pin or web search. Do not treat a lot row as an OEM spec.",
     {
       query: { type: "string" },
       make: { type: "string" },

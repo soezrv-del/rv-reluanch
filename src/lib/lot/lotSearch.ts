@@ -20,6 +20,12 @@ export type LotSearchable = {
   condition?: string;
   lot_status?: string;
   dealer?: string;
+  fuel_type?: string;
+  engine?: string;
+  chassis?: string;
+  chassis_brand?: string;
+  transmission?: string;
+  features?: string;
 };
 
 export type LotSearchUnit = LotSearchable;
@@ -40,6 +46,12 @@ const SEARCH_FIELDS = [
   "condition",
   "lot_status",
   "dealer",
+  "fuel_type",
+  "engine",
+  "chassis",
+  "chassis_brand",
+  "transmission",
+  "features",
 ] as const;
 
 const FLOORPLAN_FIELDS = ["year", "make", "model", "trim", "title"] as const;
@@ -145,6 +157,12 @@ const TYPEAHEAD_FIELDS = [
   "condition",
   "lot_status",
   "dealer",
+  "fuel_type",
+  "engine",
+  "chassis",
+  "chassis_brand",
+  "transmission",
+  "features",
 ] as const satisfies readonly (keyof LotSearchable)[];
 
 function compactId(value: string | undefined): string {

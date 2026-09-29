@@ -277,6 +277,7 @@ export type QueryLotAnswer = {
   no_length: QueryLotUnit[];
   summary?: string;
   did_you_mean?: string;
+  close?: string;
   speech: string;
   lotMemory: LotMemory | null;
 };
@@ -377,6 +378,7 @@ export function answerQueryLotFromSnapshot(
     no_length: found.no_length,
     summary: found.summary,
     ...(found.did_you_mean ? { did_you_mean: found.did_you_mean } : {}),
+    ...(found.close ? { close: found.close } : {}),
     speech,
     lotMemory: memory,
   };
