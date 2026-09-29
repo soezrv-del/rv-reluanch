@@ -19,7 +19,7 @@ export type AppTab =
   | "rvlot"
   | "more";
 
-/** Six independent rooms. Platinum on each chip. The row slides. */
+/** Six rooms. The row slides. The active tab eases to the center. */
 const TABS: {
   id: Exclude<AppTab, "more" | "rvshare" | "rvsold">;
   label: string;
@@ -37,34 +37,34 @@ function DockGlyph({ id }: { id: (typeof TABS)[number]["id"] }) {
   const stroke = {
     fill: "none",
     stroke: "currentColor",
-    strokeWidth: 1.6,
+    strokeWidth: 2,
     strokeLinecap: "round" as const,
     strokeLinejoin: "round" as const,
   };
   if (id === "rvfax") {
     return (
       <svg viewBox="0 0 24 24" className="bottom-tab-glyph" aria-hidden>
-        <path d="M7 3.5h7.1L19 8.3V20.5H7z" {...stroke} />
-        <path d="M14 3.6V8.4h5" {...stroke} />
-        <path d="M9.5 12.2h5.2M9.5 15.4h5.2" {...stroke} />
+        <rect x="5" y="3" width="14" height="18" rx="1.5" {...stroke} />
+        <path d="M8 9.2h8M8 13h8" {...stroke} />
       </svg>
     );
   }
-  if (id === "rvcal") {
+  if (id === "rvlot") {
     return (
       <svg viewBox="0 0 24 24" className="bottom-tab-glyph" aria-hidden>
-        <rect x="4" y="5.5" width="16" height="14" rx="2" {...stroke} />
-        <path d="M4 9.5h16M8 3.5v3.5M16 3.5v3.5" {...stroke} />
+        <path d="M2.5 17.2V10.2h8.8l2.6-4.2h6.4a1.2 1.2 0 0 1 1.2 1.2v10" {...stroke} />
+        <path d="M2.5 17.2h19" {...stroke} />
+        <circle cx="7" cy="17.2" r="1.7" {...stroke} strokeWidth={1.6} />
+        <circle cx="16.2" cy="17.2" r="1.7" {...stroke} strokeWidth={1.6} />
       </svg>
     );
   }
   if (id === "rvgrok") {
     return (
-      <span className="bottom-tab-grok" aria-hidden>
+      <span className="bottom-tab-grok">
         <svg viewBox="0 0 24 24" className="bottom-tab-glyph" aria-hidden>
-          <circle cx="12" cy="12" r="2.1" {...stroke} />
           <path
-            d="M12 3.5v2.4M12 18.1v2.4M3.5 12h2.4M18.1 12h2.4M6 6l1.7 1.7M16.3 16.3 18 18M18 6l-1.7 1.7M7.7 16.3 6 18"
+            d="M12 3.2 13.15 10.15 20.8 12 13.15 13.85 12 20.8 10.85 13.85 3.2 12 10.85 10.15Z"
             {...stroke}
           />
         </svg>
@@ -74,32 +74,39 @@ function DockGlyph({ id }: { id: (typeof TABS)[number]["id"] }) {
   if (id === "rvtow") {
     return (
       <svg viewBox="0 0 24 24" className="bottom-tab-glyph" aria-hidden>
-        <path d="M5 20.5V5.5h2.2M7.2 6.2H17l-1.2 2.6H7.2" {...stroke} />
-        <path d="M15.2 8.8v4.4" {...stroke} />
-        <path d="M13.4 14.6h3.6" {...stroke} />
-        <circle cx="15.2" cy="17.6" r="1.35" {...stroke} />
+        <path d="M2.8 13h8.4" {...stroke} />
+        <path d="M11.2 9.2h3.2v7.6h-3.2" {...stroke} />
+        <circle cx="18.2" cy="13" r="2.7" {...stroke} strokeWidth={1.6} />
       </svg>
     );
   }
-  if (id === "rvtrips") {
+  if (id === "rvcal") {
     return (
       <svg viewBox="0 0 24 24" className="bottom-tab-glyph" aria-hidden>
+        <rect x="6" y="2.8" width="12" height="18.4" rx="2" {...stroke} />
+        <path d="M8.4 7h7.2" {...stroke} />
         <path
-          d="M12 21s6.2-5.4 6.2-10a6.2 6.2 0 1 0-12.4 0C5.8 15.6 12 21 12 21z"
+          d="M8.6 11.2h2.2M13.2 11.2h2.2M8.6 14.6h2.2M13.2 14.6h2.2"
           {...stroke}
         />
-        <circle cx="12" cy="11" r="2" {...stroke} />
       </svg>
     );
   }
   return (
     <svg viewBox="0 0 24 24" className="bottom-tab-glyph" aria-hidden>
-      <path d="M3.5 20.5V10L8 7.6V20.5M8 20.5V6.2L16 3.5v17M16 20.5V8.2l4.5 2.1v10.2M3.5 20.5h17" {...stroke} />
+      <path
+        d="M12 20.5s5.6-4.8 5.6-9.1a5.6 5.6 0 1 0-11.2 0c0 4.3 5.6 9.1 5.6 9.1z"
+        {...stroke}
+      />
+      <circle cx="12" cy="11.2" r="1.7" {...stroke} />
     </svg>
   );
 }
 
-/** Sliding rooms. The selected tab centers in the strip. */
+/**
+ * Sliding dock. Side padding lets Facts and RV GPS reach the middle.
+ * Android WebView: do NOT put pointer-events-none on this nav.
+ */
 export function BottomTabs({
   tab,
   onChange,
@@ -124,7 +131,7 @@ export function BottomTabs({
 
   return (
     <nav
-      className="bottom-tabs-nav pointer-events-auto relative z-[80] w-full px-3 pt-1"
+      className="bottom-tabs-nav pointer-events-auto relative z-[80] w-full px-0 pt-1"
       data-bottom-dock
       data-dock-icons="platinum"
       data-no-swipe
@@ -152,9 +159,7 @@ export function BottomTabs({
                 const p = press.current;
                 press.current = null;
                 if (!p || p.id !== id) return;
-                if (!isStationaryDockTap(e.clientX - p.x, e.clientY - p.y)) {
-                  return;
-                }
+                if (!isStationaryDockTap(e.clientX - p.x, e.clientY - p.y)) return;
                 fire(id);
               }}
               onPointerCancel={() => {
@@ -167,9 +172,9 @@ export function BottomTabs({
               aria-label={label}
               title={label}
               className={cn(
-                "bottom-tab-btn group relative z-[3] flex flex-col items-center justify-center px-3 py-2",
-                "transition-[transform,opacity] duration-200 ease-out",
-                "pointer-events-auto active:scale-[0.94] touch-manipulation select-none",
+                "bottom-tab-btn group relative z-[3] flex flex-col items-center justify-center",
+                "transition-[background-color,color,opacity] duration-200 ease-out",
+                "pointer-events-auto active:opacity-70 touch-manipulation select-none",
                 active && "is-active",
               )}
             >
