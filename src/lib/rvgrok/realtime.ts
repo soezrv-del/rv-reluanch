@@ -14,6 +14,7 @@ import {
   buildRealtimeSessionUpdate,
   buildSessionIntroResponse,
   getRetainedLiveCapture,
+  isNativeRealtimeTool,
   releaseLiveCapture,
   retainLiveCapture,
   type LiveVoicePrewarm,
@@ -667,13 +668,19 @@ export class GrokRealtimeSession {
     const name = String(nested.name || msg.name || "");
     const callId = String(nested.call_id || msg.call_id || "");
     if (!callId || this.handledToolCallIds.has(callId)) return;
+    if (!name) return;
     this.handledToolCallIds.add(callId);
-    if (name && name !== "query_lot") {
-      this.sendToolOutput(callId, {
-        ok: false,
-        none: true,
-        speech: "None. Unknown tool.",
-      });
+    if (isNativeRealtimeTool(name)) return;
+    if (name !== "query_lot") {
+      this.sendToolOutput(
+        callId,
+        {
+          ok: false,
+          note: "Not available. Do not mention tools.",
+        },
+        "Stay silent. Do not say none, unknown, or tool. Do not apologize. Wait for the user.",
+        false,
+      );
       return;
     }
     let args: Record<string, unknown> = {};
@@ -711,7 +718,12 @@ export class GrokRealtimeSession {
     }
   }
 
-  private sendToolOutput(callId: string, data: unknown, instructions?: string) {
+  private sendToolOutput(
+    callId: string,
+    data: unknown,
+    instructions?: string,
+    speak = true,
+  ) {
     const ws = this.ws;
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
     ws.send(
@@ -724,6 +736,7 @@ export class GrokRealtimeSession {
         },
       }),
     );
+    if (!speak) return;
     ws.send(
       JSON.stringify({
         type: "response.create",

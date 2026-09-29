@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import {
   buildRealtimeSessionUpdate,
   buildSessionIntroResponse,
+  isNativeRealtimeTool,
   REALTIME_SESSION_TOOLS,
 } from "./liveVoice.ts";
 import { buildVoiceGrounding } from "./grounding.ts";
@@ -171,6 +172,11 @@ test("onopen / lock-refresh path still calls buildRealtimeSessionUpdate", () => 
   assert.match(realtime, /response\.function_call_arguments\.done/);
   assert.match(realtime, /\/api\/rvgrok\/query-lot/);
   assert.match(realtime, /function_call_output/);
+  assert.doesNotMatch(realtime, /None\. Unknown tool/);
+  assert.match(realtime, /isNativeRealtimeTool/);
+  assert.equal(isNativeRealtimeTool("web_search"), true);
+  assert.equal(isNativeRealtimeTool("web_search_with_snippets"), true);
+  assert.equal(isNativeRealtimeTool("query_lot"), false);
 });
 
 test("session.update injects the active screen guide and forbids a blind-screen excuse", () => {

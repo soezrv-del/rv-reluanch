@@ -238,6 +238,18 @@ export const REALTIME_SESSION_TOOLS = [
   QUERY_LOT_TOOL,
 ] as const;
 
+/** xAI runs these. Answering them makes Live Voice say "None. Unknown tool." */
+export function isNativeRealtimeTool(name: string): boolean {
+  const n = name.trim().toLowerCase();
+  return (
+    n === "web_search" ||
+    n.startsWith("web_search") ||
+    n === "x_search" ||
+    n === "file_search" ||
+    n === "code_interpreter"
+  );
+}
+
 export function buildRealtimeSessionUpdate(
   voiceId: string,
   speed = 1,
