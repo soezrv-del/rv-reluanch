@@ -437,6 +437,7 @@ test("bundled own-lot snapshot: empty search is the lot; no catalog bleed", () =
   assert.equal(stock.length, 1);
   assert.equal(stock[0]?.make, "Entegra Coach");
   assert.equal(stock[0]?.location, "Fresno CA");
+  assert.equal(filterLotBrowse(snap.units, { query: "Lineage" }).length, 27);
 
   const impression = searchLotUnits(snap.units, "Impression");
   assert.ok(impression.length > 0);

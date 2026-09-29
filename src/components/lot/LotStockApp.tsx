@@ -27,7 +27,7 @@ import { LotArrivals } from "@/components/lot/LotArrivals";
 import { ReportShareButton } from "@/components/report/ReportShareButton";
 import { buildUnitShareReport } from "@/lib/rv/shareReport";
 
-const PAGE_SIZE = 48;
+const PAGE_SIZE = 40;
 
 export function LotStockApp() {
   const nav = useShellNavOptional();
@@ -81,6 +81,8 @@ export function LotStockApp() {
   useEffect(() => {
     setLimit(PAGE_SIZE);
     if (!wantOpen.current) setOpenKey(null);
+    const scroller = sentinelRef.current?.closest("[data-app-scroll]");
+    if (scroller instanceof HTMLElement) scroller.scrollTop = 0;
   }, [query, type]);
 
   useEffect(() => {
@@ -93,18 +95,19 @@ export function LotStockApp() {
 
   useEffect(() => {
     const el = sentinelRef.current;
-    if (!el) return;
+    if (!el || limit >= filtered.length) return;
+    const root = el.closest("[data-app-scroll]");
     const io = new IntersectionObserver(
       (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
+        if (entries.some((entry) => entry.isIntersecting)) {
           setLimit((n) => Math.min(filtered.length, n + PAGE_SIZE));
         }
       },
-      { rootMargin: "240px" },
+      { root: root instanceof Element ? root : null, rootMargin: "240px" },
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [filtered.length]);
+  }, [filtered.length, limit]);
 
   const featured = filtered[0] ?? null;
   const featuredKey = featured ? lotUnitKey(featured, 0) : "";
@@ -136,6 +139,7 @@ export function LotStockApp() {
       <div
         className="mx-auto w-full max-w-3xl space-y-3 px-4 pb-12 pt-2 sm:px-6"
         data-lot-stock
+        data-lot-rendered={snap ? rail.length + (featured ? 1 : 0) : 0}
       >
         <header className="flex items-center justify-between gap-3">
           <button
@@ -407,6 +411,8 @@ function LotUnitCard({
               alt=""
               className="lot-photo"
               data-lot-photo="unit"
+              loading={featured ? "eager" : "lazy"}
+              decoding="async"
               onError={() => setFailedSrc(photo)}
             />
           ) : (
