@@ -61,6 +61,13 @@ const FIELD_ALIASES: Record<
     "grey",
     "black",
   ],
+  dryWeight: ["dry weight", "dryweight"],
+  sleeps: ["sleeps", "sleeping", "sleeping capacity"],
+  slides: ["slides", "slideouts", "slide count"],
+  awning: ["awning"],
+  generator: ["generator"],
+  solar: ["solar"],
+  warranty: ["warranty"],
 };
 
 const PIN_MISS_RE =

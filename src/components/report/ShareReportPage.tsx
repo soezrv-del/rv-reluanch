@@ -1,13 +1,21 @@
 import { REPORT_MARK_URL, type ShareReport } from "@/lib/rv/shareReport";
+import { CoachKnowledgeFacts } from "@/components/rvfax/CoachKnowledgeFacts";
 
 export function ShareReportPage({
   report,
   pending,
   missing,
+  knowledge,
 }: {
   report: ShareReport | null;
   pending?: boolean;
   missing?: string;
+  knowledge?: {
+    year?: string | number | null;
+    make?: string | null;
+    model?: string | null;
+    floorplan?: string | null;
+  };
 }) {
   return (
     <main className="report-page" data-report-page data-report-ready={report ? "1" : undefined}>
@@ -56,6 +64,14 @@ export function ShareReportPage({
             </section>
           ))}
           {report.sources ? <p className="report-sources">{report.sources}</p> : null}
+          {knowledge ? (
+            <CoachKnowledgeFacts
+              year={knowledge.year}
+              make={knowledge.make}
+              model={knowledge.model}
+              floorplan={knowledge.floorplan}
+            />
+          ) : null}
           <footer className="report-foot">
             <p>{report.footerNote}</p>
             <a href={report.siteUrl}>{report.siteLabel}</a>

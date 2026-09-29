@@ -41,13 +41,9 @@ export {
   type CoachKnowledgeKey,
 };
 
-export const COACH_KNOWLEDGE_SCHEMA_VERSION = 1;
+export const COACH_KNOWLEDGE_SCHEMA_VERSION = 2;
 
-/** Asking-price band goes stale fast. */
-export const PRICE_FIELD_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-
-/** OEM-ish specs stay until TTL or a schema bump. */
-export const SPEC_FIELD_TTL_MS = 90 * 24 * 60 * 60 * 1000;
+export type CoachKnowledgeConfidence = "high" | "medium" | "low";
 
 export type CoachKnowledgeFieldKind = "spec" | "price";
 
@@ -55,6 +51,9 @@ export type CoachKnowledgeField = {
   value: string;
   kind: CoachKnowledgeFieldKind;
   researchedAt: string;
+  /** Missing means medium, so older rows still merge. */
+  confidence?: CoachKnowledgeConfidence;
+  sourceUrl?: string;
 };
 
 export type CoachKnowledgeFields = Record<string, CoachKnowledgeField>;
@@ -67,6 +66,8 @@ export type CoachKnowledgeRecord = {
   confidence: "high" | "medium" | "low";
   schemaVersion: number;
   updatedAt: string;
+  /** Admin promote. Official catalog trust — not a second brochure file. */
+  promoted?: boolean;
 };
 
 export type CoachKnowledgeReadPlan = {
@@ -106,6 +107,14 @@ const STOREABLE_FIELDS = new Set([
   "mpg",
   "tanks",
   "price",
+  "dryWeight",
+  "sleeps",
+  "slides",
+  "awning",
+  "generator",
+  "solar",
+  "warranty",
+  "notes",
 ]);
 
 const POWERTRAIN_FIELDS = [
@@ -137,38 +146,75 @@ function fieldKind(name: string): CoachKnowledgeFieldKind {
   return PRICE_FIELDS.has(name) ? "price" : "spec";
 }
 
-function fieldTtlMs(kind: CoachKnowledgeFieldKind): number {
-  return kind === "price" ? PRICE_FIELD_TTL_MS : SPEC_FIELD_TTL_MS;
+export function confidenceRank(
+  confidence: CoachKnowledgeConfidence | undefined,
+): number {
+  if (confidence === "high") return 2;
+  if (confidence === "low") return 0;
+  return 1;
 }
 
+/** Equal or higher confidence may replace. Medium never overwrites high. */
+export function confidenceAllowsReplace(
+  existing: CoachKnowledgeConfidence | undefined,
+  incoming: CoachKnowledgeConfidence | undefined,
+): boolean {
+  return confidenceRank(incoming) >= confidenceRank(existing);
+}
+
+/**
+ * Saved, non-rejected values stay. Age and schema version do not expire them.
+ * A schema bump migrates the row forward on the next write.
+ */
 export function isKnowledgeFieldFresh(
   field: CoachKnowledgeField,
-  now = Date.now(),
-  schemaVersion = COACH_KNOWLEDGE_SCHEMA_VERSION,
+  _now = Date.now(),
+  _schemaVersion = COACH_KNOWLEDGE_SCHEMA_VERSION,
 ): boolean {
-  if (schemaVersion !== COACH_KNOWLEDGE_SCHEMA_VERSION) return false;
-  if (isRejectedKnowledgeValue(field.value)) return false;
-  const at = Date.parse(field.researchedAt);
-  if (!Number.isFinite(at)) return false;
-  return now - at <= fieldTtlMs(field.kind);
+  return !isRejectedKnowledgeValue(field.value);
 }
 
 /** Merge incoming confirmed non-null fields onto the existing bag. */
 export function mergeConfirmedFields(
   existing: CoachKnowledgeFields | null | undefined,
   incoming: CoachKnowledgeFields | null | undefined,
+  opts?: {
+    incomingConfidence?: CoachKnowledgeConfidence;
+    existingConfidence?: CoachKnowledgeConfidence;
+  },
 ): CoachKnowledgeFields {
   const out: CoachKnowledgeFields = { ...(existing || {}) };
+  const incomingRank = opts?.incomingConfidence || "medium";
   for (const [name, field] of Object.entries(incoming || {})) {
     if (!STOREABLE_FIELDS.has(name)) continue;
     if (!field?.value || isRejectedKnowledgeValue(field.value)) continue;
+    const prev = out[name];
+    const prevConfidence = prev?.confidence || opts?.existingConfidence;
+    if (prev && !confidenceAllowsReplace(prevConfidence, field.confidence || incomingRank)) {
+      continue;
+    }
+    const value =
+      name === "notes" && prev?.value
+        ? unionNoteLines(prev.value, field.value)
+        : field.value.trim();
     out[name] = {
-      value: field.value.trim(),
+      value,
       kind: field.kind || fieldKind(name),
       researchedAt: field.researchedAt || new Date().toISOString(),
+      confidence: field.confidence || incomingRank,
+      ...(field.sourceUrl || prev?.sourceUrl
+        ? { sourceUrl: field.sourceUrl || prev?.sourceUrl }
+        : {}),
     };
   }
   return out;
+}
+
+function unionNoteLines(prev: string, next: string): string {
+  const lines = [...prev.split("\n"), ...next.split("\n")]
+    .map((line) => line.trim())
+    .filter(Boolean);
+  return [...new Set(lines)].slice(-12).join("\n");
 }
 
 export function splitFreshKnowledgeFields(
@@ -313,6 +359,22 @@ const EXTRACTORS: Array<{
     name: "price",
     re: /\b(?:low\s*\/\s*average\s*\/\s*high|asking(?:\s*price)?)\b[:\s]+([^\n]{6,80})/i,
   },
+  {
+    name: "dryWeight",
+    re: /\bdry\s*weight\b[^\d]{0,24}([\d,]{4,7})\s*(?:lb|lbs|pounds|#)?/i,
+  },
+  {
+    name: "sleeps",
+    re: /\b(?:sleeps|sleeping\s*capacity|sleep\s*capacity)\b[^\d]{0,16}(\d{1,2})\b/i,
+  },
+  {
+    name: "slides",
+    re: /\b(?:slideouts|slide-outs|slide\s*count|slides)\b[^\d]{0,16}(\d{1,2})\b/i,
+  },
+  { name: "awning", re: /\bawning\b[:\s]+([^\n.]{3,80})/i },
+  { name: "generator", re: /\bgenerator\b[:\s]+([^\n.]{3,80})/i },
+  { name: "solar", re: /\bsolar(?:\s+panels?)?\b[:\s]+([^\n.]{3,80})/i },
+  { name: "warranty", re: /\bwarranty\b[:\s]+([^\n.]{4,100})/i },
 ];
 
 function extractSources(notes: string): string[] {
@@ -362,21 +424,60 @@ export function parseConfirmedFieldsFromNotes(
       continue;
     }
     if (name === "horsepower" && parseHpNum(value) == null) continue;
+    if (name === "dryWeight" && parseLbNum(value) == null) continue;
     out[name] = {
       value,
       kind: fieldKind(name),
       researchedAt,
+      sourceUrl: firstSourceUrl(n),
     };
   }
 
   const queried = inferQueriedField(query);
-  if (queried !== "generic" && queried !== "repair" && out[queried]) {
-    return out;
+  const confirmed =
+    (queried !== "generic" && queried !== "repair" && Boolean(out[queried])) ||
+    notesConfirmQueriedField(n, query) ||
+    /\bconfirmed:\s*yes\b/i.test(n);
+  if (!confirmed) return {};
+  appendUnmappedNotes(n, out, researchedAt);
+  return out;
+}
+
+function firstSourceUrl(notes: string): string | undefined {
+  return extractSources(notes).find((source) => /^https?:\/\//i.test(source));
+}
+
+function appendUnmappedNotes(
+  notes: string,
+  out: CoachKnowledgeFields,
+  researchedAt: string,
+) {
+  const url = firstSourceUrl(notes) || "";
+  const day = researchedAt.slice(0, 10);
+  const facts: string[] = [];
+  for (const sentence of notes.split(/[.\n]+/)) {
+    const text = sentence.replace(/\s+/g, " ").trim();
+    if (text.length < 12 || text.length > 180) continue;
+    if (isRejectedKnowledgeValue(text)) continue;
+    if (/\bconfirmed:\s*yes\b/i.test(text) && text.length < 28) continue;
+    const alreadyStored = Object.values(out).some(
+      (field) => field.value && text.toLowerCase().includes(field.value.toLowerCase()),
+    );
+    if (alreadyStored) continue;
+    const named = EXTRACTORS.some(
+      (extractor) => out[extractor.name] && extractor.re.test(text),
+    );
+    if (named) continue;
+    facts.push(url ? `${day} — ${text} — ${url}` : `${day} — ${text}`);
+    if (facts.length >= 4) break;
   }
-  if (notesConfirmQueriedField(n, query) || /\bconfirmed:\s*yes\b/i.test(n)) {
-    return out;
-  }
-  return {};
+  if (!facts.length) return;
+  out.notes = {
+    value: facts.join("\n"),
+    kind: "spec",
+    researchedAt,
+    sourceUrl: url || undefined,
+  };
 }
 
 function dropPowertrain(fields: CoachKnowledgeFields): CoachKnowledgeFields {

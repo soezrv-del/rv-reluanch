@@ -11,6 +11,7 @@ import { formatPhoneDisplay } from "@/lib/access/phone";
 import { canRemoveWhitelistRow } from "@/lib/access/gate";
 import { PromptLessonsCard } from "./PromptLessonsCard";
 import { ResearchOrderCard } from "./ResearchOrderCard";
+import { PromoteCatalogCard } from "./PromoteCatalogCard";
 import { ResearchProviderCard } from "./ResearchProviderCard";
 
 type Entry = {
@@ -337,6 +338,7 @@ export function AdminWhitelistSheet({
             <>
               <ResearchProviderCard surface="sheet" />
               <ResearchOrderCard surface="sheet" />
+              <PromoteCatalogCard />
               <PromptLessonsCard surface="sheet" />
 
               <form

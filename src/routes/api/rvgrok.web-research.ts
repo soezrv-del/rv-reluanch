@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { denyUnlessWhitelisted } from "@/lib/access/httpGate";
+import { loadCoachKnowledge } from "@/lib/rvgrok/coachKnowledgeStore";
+import { knowledgeDisplayRows } from "@/lib/rvgrok/coachKnowledgeDisplay";
 import { getResearchOrderOverride } from "@/lib/rvgrok/researchOrderStore";
 import { getResearchProviderOverride } from "@/lib/rvgrok/researchProviderStore";
 import {
@@ -80,6 +82,24 @@ async function handleResearch(request: Request): Promise<Response> {
 export const Route = createFileRoute("/api/rvgrok/web-research")({
   server: {
     handlers: {
+      GET: async ({ request }) => {
+        const url = new URL(request.url);
+        if (url.searchParams.get("knowledge") !== "1") {
+          return Response.json({ error: "Use POST for research" }, { status: 405 });
+        }
+        const denied = await denyUnlessWhitelisted(request);
+        if (denied) return denied;
+        const record = await loadCoachKnowledge({
+          year: url.searchParams.get("year") || "",
+          make: url.searchParams.get("make") || "",
+          model: url.searchParams.get("model") || "",
+          floorplan: url.searchParams.get("floorplan") || "",
+        });
+        return Response.json({
+          rows: knowledgeDisplayRows(record),
+          promoted: record?.promoted === true,
+        });
+      },
       POST: async ({ request }) => {
         const denied = await denyUnlessWhitelisted(request);
         if (denied) return denied;

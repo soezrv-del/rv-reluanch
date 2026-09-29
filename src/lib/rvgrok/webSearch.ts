@@ -185,6 +185,13 @@ export type QueriedResearchField =
   | "tow"
   | "tanks"
   | "price"
+  | "dryWeight"
+  | "sleeps"
+  | "slides"
+  | "awning"
+  | "generator"
+  | "solar"
+  | "warranty"
   | "repair"
   | "generic";
 
@@ -324,6 +331,13 @@ const FIELD_PATTERNS: Array<[QueriedResearchField, RegExp]> = [
     "tanks",
     /\b(holding\s+tanks?|fresh\s+water|gr[ae]y\s+(?:water|tank)|black\s+(?:water|tank))\b/i,
   ],
+  ["dryWeight", /\b(dry\s*weight|dry\s*wt)\b/i],
+  ["sleeps", /\b(sleeps|sleeping\s*capacity|sleep\s*capacity)\b/i],
+  ["slides", /\b(slideouts|slide-outs|slide\s*count|number of slides|slides)\b/i],
+  ["awning", /\bawning\b/i],
+  ["generator", /\bgenerator\b/i],
+  ["solar", /\bsolar(?:\s+panels?)?\b/i],
+  ["warranty", /\bwarranty\b/i],
 ];
 
 /**
@@ -355,6 +369,13 @@ const FIELD_LABEL: Record<QueriedResearchField, string> = {
   tow: "tow rating",
   tanks: "holding tanks fresh gray black",
   price: "asking price Low / Average / High",
+  dryWeight: "dry weight",
+  sleeps: "sleeping capacity",
+  slides: "slide count",
+  awning: "awning",
+  generator: "generator",
+  solar: "solar",
+  warranty: "warranty",
   repair: "procedure or part location",
   generic: "the asked fact",
 };
@@ -440,8 +461,15 @@ export function notesConfirmQueriedField(notes: string, query: string): boolean 
       field === "ccc" ||
       field === "hitch" ||
       field === "payload" ||
-      field === "tow") &&
+      field === "tow" ||
+      field === "dryWeight") &&
     LB_RE.test(n)
+  ) {
+    return true;
+  }
+  if (
+    (field === "sleeps" || field === "slides") &&
+    NUMBER_RE.test(n)
   ) {
     return true;
   }
@@ -458,7 +486,11 @@ export function notesConfirmQueriedField(notes: string, query: string): boolean 
     field === "engine" ||
     field === "fuel" ||
     field === "chassis" ||
-    field === "transmission"
+    field === "transmission" ||
+    field === "awning" ||
+    field === "generator" ||
+    field === "solar" ||
+    field === "warranty"
   ) {
     if (MISS_NOTE_RE.test(n)) return false;
     return Boolean(fieldRe?.test(n) && n.length >= 20);
