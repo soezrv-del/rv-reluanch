@@ -45,3 +45,22 @@ test("arming Live Voice or Voice mode leaves the picker open", () => {
   assert.match(app, /selectedVoiceRef\.current = id/);
   assert.match(app, /VOICE_STORAGE_KEY/);
 });
+
+test("light voice sheet uses one shadow and no gradient", () => {
+  const css = read("../../styles.css");
+  const marker = "html[data-theme=\"light\"] [data-voice-panel] [data-voice-sheet]";
+  const start = css.indexOf(marker);
+  assert.ok(start >= 0);
+  const block = css.slice(start, css.indexOf("}", start));
+  assert.match(
+    block,
+    /box-shadow:\s*0 12px 40px rgba\(0, 0, 0, 0\.10\), 0 1px 3px rgba\(0, 0, 0, 0\.04\)/,
+  );
+  assert.equal((block.match(/box-shadow:/g) || []).length, 1);
+  assert.doesNotMatch(block, /gradient/i);
+  const light = css
+    .split("}")
+    .filter((rule) => rule.includes("[data-voice-panel]"))
+    .join("}");
+  assert.doesNotMatch(light, /\bgradient\b|\bgold\b|\baqua\b/i);
+});
