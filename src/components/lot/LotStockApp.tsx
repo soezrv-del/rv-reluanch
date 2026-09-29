@@ -7,9 +7,9 @@ import { useShellNavOptional } from "@/components/shell/ShellNavContext";
 import {
   fetchLotSnapshot,
   filterLotBrowse,
+  formatLotUpdated,
   lotLengthOrGap,
   lotLbsOrGap,
-  lotLookupRows,
   lotPriceOrGap,
   lotTextOrGap,
   lotTypeChips,
@@ -20,6 +20,7 @@ import {
   type LotSnapshotView,
   type LotUnit,
 } from "@/lib/lot/ownLotPage";
+import { lotOpenSections } from "@/lib/lot/lotDetail";
 import {
   LOT_UNIT_OPEN_EVENT,
   lotArrivalQuery,
@@ -121,9 +122,7 @@ export function LotStockApp({
   const rail = featured
     ? filtered.slice(1, Math.max(1, limit))
     : filtered.slice(0, limit);
-  const asOf = snap?.asOf
-    ? snap.asOf.replace("T", " ").replace(/-\d{2}:\d{2}$/, "")
-    : "";
+  const updated = snap?.asOf ? formatLotUpdated(snap.asOf) : "";
   const shown = filtered.length;
   const total = snap?.units.length ?? 0;
   const countLine = error
@@ -230,7 +229,7 @@ export function LotStockApp({
           data-lot-count
         >
           {countLine}
-          {asOf && !error ? ` · as of ${asOf}` : ""}
+          {updated && !error ? ` · ${updated}` : ""}
         </p>
 
         {error ? (
@@ -506,8 +505,7 @@ function LotDetail({
   onAsk?: (prompt: string) => void;
 }) {
   const stats = lotGlance(unit);
-  const vin = unit.vin.trim();
-  const rows = lotLookupRows(unit);
+  const sections = lotOpenSections(unit);
   return (
     <div className="lot-detail" data-lot-detail>
       {stats.length ? (
@@ -529,14 +527,16 @@ function LotDetail({
           Ask about this coach
         </button>
       ) : null}
-      {vin || rows.length ? (
-        <dl className="lot-detail-rows">
-          {vin ? <DetailRow label="VIN" value={vin} /> : null}
-          {rows.map((row) => (
-            <DetailRow key={row.key} label={row.label} value={row.value} />
-          ))}
-        </dl>
-      ) : null}
+      {sections.map((part) => (
+        <section key={part.title} className="lot-detail-section">
+          <h3>{part.title}</h3>
+          <dl>
+            {part.rows.map((row) => (
+              <DetailRow key={row.label} label={row.label} value={row.value} />
+            ))}
+          </dl>
+        </section>
+      ))}
       <div className="lot-share-dock">
         <ReportShareButton report={buildUnitShareReport(unit)} />
       </div>
@@ -544,14 +544,35 @@ function LotDetail({
   );
 }
 
+function detailParts(label: string, value: string): string[] {
+  const parts = value
+    .split(" · ")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (parts.length < 2) return [];
+  return label === "Options" ? parts.slice(0, 8) : parts;
+}
+
 function DetailRow({ label, value }: { label: string; value: string }) {
+  const parts = detailParts(label, value);
+  if (parts.length) {
+    return (
+      <div className="lot-detail-row is-list">
+        <dt>{label}</dt>
+        <dd>
+          <ul className="lot-detail-list">
+            {parts.map((part) => (
+              <li key={part}>{part}</li>
+            ))}
+          </ul>
+        </dd>
+      </div>
+    );
+  }
   return (
     <div className="lot-detail-row">
       <dt>{label}</dt>
-      <dd>
-        <span>{value}</span>
-        <span className="lot-detail-source">Live</span>
-      </dd>
+      <dd>{value}</dd>
     </div>
   );
 }

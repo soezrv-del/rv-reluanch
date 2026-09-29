@@ -2456,37 +2456,60 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   font-size: 14px;
   font-weight: 600;
 }
-.lot-detail-rows {
-  margin: 0.85rem 0 0;
+.lot-detail-rows,
+.lot-detail-section dl {
+  margin: 0;
+}
+.lot-detail-section {
+  margin-top: 1.15rem;
+}
+.lot-detail-section h3 {
+  margin: 0;
+  padding: 0.15rem 0 0.2rem;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
 }
 .lot-detail-row {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 1rem;
   padding: 0.7rem 0;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 .lot-detail-row dt {
   font-size: 13px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.62);
+  color: rgba(255, 255, 255, 0.6);
 }
 .lot-detail-row dd {
   margin: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.1rem;
   text-align: right;
   font-size: 14px;
   font-weight: 600;
+  color: #ffffff;
 }
-.lot-detail-source {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  color: rgba(255, 255, 255, 0.45);
+.lot-detail-row.is-list {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+}
+.lot-detail-row.is-list dd {
+  text-align: left;
+}
+.lot-detail-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.85rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
 }
 @media (prefers-reduced-motion: reduce) {
   .lot-card,
@@ -4091,12 +4114,13 @@ html[data-theme="light"] .showroom-arrival-sub {
   -webkit-text-fill-color: #3d4d68 !important;
 }
 html[data-theme="light"] .lot-detail-stat b,
-html[data-theme="light"] .lot-detail-row dd {
+html[data-theme="light"] .lot-detail-row dd,
+html[data-theme="light"] .lot-detail-list {
   color: #111111;
 }
 html[data-theme="light"] .lot-detail-stat span,
 html[data-theme="light"] .lot-detail-row dt,
-html[data-theme="light"] .lot-detail-source {
+html[data-theme="light"] .lot-detail-section h3 {
   color: #3d4d68;
 }
 html[data-theme="light"] .lot-detail-row {
