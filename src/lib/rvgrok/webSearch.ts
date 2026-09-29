@@ -415,16 +415,23 @@ export function inferQueriedField(query: string): QueriedResearchField {
  * field — a specific number, named powertrain, listing band, or procedure.
  * Empty notes, WEB SEARCH NOT AVAILABLE, miss language, or an EST in the
  * notes do not confirm.
+ * Dry weight, sleeps, and slides must name this floorplan and a single
+ * in-range value. A miss there is not saved; the live notes still return.
  */
 export function notesConfirmQueriedField(notes: string, query: string): boolean {
   const n = (notes || "").trim();
   if (!n) return false;
   if (/WEB SEARCH NOT AVAILABLE/i.test(n)) return false;
+
+  const field = inferQueriedField(query);
+  if (field === "dryWeight" || field === "sleeps" || field === "slides") {
+    if (EST_IN_NOTES_RE.test(n) && !CONFIRMED_YES_RE.test(n)) return false;
+    return layoutFieldNotesConfirm(field, n, query);
+  }
+
   if (CONFIRMED_YES_RE.test(n) && !MISS_NOTE_RE.test(n)) return true;
   if (EST_IN_NOTES_RE.test(n) && !CONFIRMED_YES_RE.test(n)) return false;
   if (MISS_NOTE_RE.test(n) && !NUMBER_RE.test(n) && !HP_RE.test(n)) return false;
-
-  const field = inferQueriedField(query);
 
   if (field === "repair") {
     if (MISS_NOTE_RE.test(n)) return false;
@@ -461,15 +468,8 @@ export function notesConfirmQueriedField(notes: string, query: string): boolean 
       field === "ccc" ||
       field === "hitch" ||
       field === "payload" ||
-      field === "tow" ||
-      field === "dryWeight") &&
+      field === "tow") &&
     LB_RE.test(n)
-  ) {
-    return true;
-  }
-  if (
-    (field === "sleeps" || field === "slides") &&
-    NUMBER_RE.test(n)
   ) {
     return true;
   }
@@ -496,6 +496,135 @@ export function notesConfirmQueriedField(notes: string, query: string): boolean 
     return Boolean(fieldRe?.test(n) && n.length >= 20);
   }
   return false;
+}
+
+const DRY_WEIGHT_LABEL_RE =
+  /\b(?:dry\s*weight|uvw|unloaded\s+vehicle\s+weight|base\s+weight)\b/gi;
+const OTHER_WEIGHT_LABEL_RE =
+  /\b(?:gvwr|gcwr|ccc|payload|towing|tow(?:ing)?(?:\s+(?:capacity|rating))?|hitch|cargo|(?:fresh|gr[ae]y|black|holding)\s+tanks?|tanks?)\b/gi;
+const DRY_LB_RE = /\b(\d{1,3}(?:,\d{3})+|\d{3,6})\s*(?:lb|lbs)\b/gi;
+const SLIDE_NUM = "(?:[0-6]|zero|one|two|three|four|five|six)";
+const SLIDE_WORD = "(?:slide-?outs?|slideouts?|slides?)";
+const SLIDE_LEAD_RE = new RegExp(
+  `\\b(${SLIDE_NUM})\\s+${SLIDE_WORD}\\b(?!\\s+(?:topper|awning))`,
+  "gi",
+);
+const SLIDE_TRAIL_RE = new RegExp(
+  `\\b${SLIDE_WORD}\\b(?!\\s+(?:topper|awning))\\s+(${SLIDE_NUM})\\b`,
+  "gi",
+);
+const SLIDE_WORDS: Record<string, number> = {
+  zero: 0,
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+};
+
+function wordIndexAt(text: string, charIndex: number): number {
+  const head = text.slice(0, Math.max(0, charIndex)).trim();
+  if (!head) return 0;
+  return head.split(/\s+/).length;
+}
+
+function notesNameThisFloorplan(notes: string, query: string): boolean {
+  const parsed = parseCoachFromText(query).floorplan?.trim() || "";
+  const resolved = resolveCoachIdentity(query, null, "")?.floorplan?.trim() || "";
+  const floorplan = parsed || resolved;
+  if (!floorplan) return false;
+  return new RegExp(`\\b${escapeRegExp(floorplan)}\\b`, "i").test(notes);
+}
+
+function uniqueNumbers(values: number[]): number[] {
+  return [...new Set(values)];
+}
+
+function dryWeightCandidates(notes: string): number[] {
+  const labels: Array<{ index: number; kind: "dry" | "other" }> = [];
+  for (const re of [DRY_WEIGHT_LABEL_RE, OTHER_WEIGHT_LABEL_RE]) {
+    const kind = re === DRY_WEIGHT_LABEL_RE ? "dry" : "other";
+    re.lastIndex = 0;
+    let label: RegExpExecArray | null;
+    while ((label = re.exec(notes))) {
+      labels.push({ index: wordIndexAt(notes, label.index), kind });
+    }
+  }
+  const values: number[] = [];
+  DRY_LB_RE.lastIndex = 0;
+  let hit: RegExpExecArray | null;
+  while ((hit = DRY_LB_RE.exec(notes))) {
+    const num = Number(hit[1]!.replace(/,/g, ""));
+    if (!Number.isFinite(num)) continue;
+    const at = wordIndexAt(notes, hit.index);
+    let nearest: { dist: number; kind: "dry" | "other" } | null = null;
+    for (const label of labels) {
+      const dist = Math.abs(at - label.index);
+      if (dist > 5) continue;
+      if (
+        !nearest ||
+        dist < nearest.dist ||
+        (dist === nearest.dist && label.kind === "other")
+      ) {
+        nearest = { dist, kind: label.kind };
+      }
+    }
+    if (nearest?.kind === "dry") values.push(num);
+  }
+  return values;
+}
+
+function sleepCounts(notes: string): number[] {
+  const values: number[] = [];
+  const patterns = [
+    /\bsleeps\s+(\d{1,2})\b/gi,
+    /\bsleeping\s+capacity\s+(\d{1,2})\b/gi,
+    /\b(\d{1,2})\s+sleeping\b/gi,
+  ];
+  for (const re of patterns) {
+    let hit: RegExpExecArray | null;
+    while ((hit = re.exec(notes))) {
+      const n = Number(hit[1]);
+      if (n >= 1 && n <= 12) values.push(n);
+    }
+  }
+  return values;
+}
+
+function slideCounts(notes: string): number[] {
+  const values: number[] = [];
+  for (const re of [SLIDE_LEAD_RE, SLIDE_TRAIL_RE]) {
+    re.lastIndex = 0;
+    let hit: RegExpExecArray | null;
+    while ((hit = re.exec(notes))) {
+      const raw = (hit[1] || "").toLowerCase();
+      const n = SLIDE_WORDS[raw] ?? Number(raw);
+      if (n >= 0 && n <= 6) values.push(n);
+    }
+  }
+  return values;
+}
+
+function layoutFieldNotesConfirm(
+  field: "dryWeight" | "sleeps" | "slides",
+  notes: string,
+  query: string,
+): boolean {
+  if (!notesNameThisFloorplan(notes, query)) return false;
+  const values =
+    field === "dryWeight"
+      ? dryWeightCandidates(notes)
+      : field === "sleeps"
+        ? sleepCounts(notes)
+        : slideCounts(notes);
+  const unique = uniqueNumbers(values);
+  if (unique.length !== 1) return false;
+  if (field === "dryWeight") {
+    const weight = unique[0]!;
+    return weight >= 2_000 && weight <= 60_000;
+  }
+  return true;
 }
 
 function escapeRegExp(s: string): string {
