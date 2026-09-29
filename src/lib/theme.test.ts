@@ -51,7 +51,7 @@ test("light theme is a flat Tesla canvas and dark chrome is unchanged", () => {
   assert.doesNotMatch(css, /\.showroom-mark \{[^}]*(invert|brightness|saturate|hue-rotate|drop-shadow|sepia|contrast)\(/);
   assert.match(header, /suite-title-flat/);
   assert.match(light, /--light-lift:/);
-  assert.match(light, /0 8px 20px rgba\(0, 0, 0, 0\.06\)/);
+  assert.match(light, /0 12px 28px rgba\(0, 0, 0, 0\.14\)/);
   assert.doesNotMatch(light, /inset 0 1px 0 rgba\(255, 255, 255, 0\.85\)/);
   assert.match(light, /\.showroom-tab \{[^}]*box-shadow:\s*var\(--light-raise\)/);
   assert.match(light, /\.showroom-dock \{\s*gap:\s*1rem/);
