@@ -30,6 +30,8 @@ export function GrokLanding({
   lotChip,
   onChip,
   toolbar,
+  history,
+  hasHistory = false,
   composer,
   hint,
   greeting = RV_GROK_SESSION_INTRO,
@@ -41,6 +43,8 @@ export function GrokLanding({
   lotChip: GrokStarter | null;
   onChip: (prompt: string) => void;
   toolbar?: ReactNode;
+  history?: ReactNode;
+  hasHistory?: boolean;
   composer: ReactNode;
   hint?: string;
   /** Session heading. Hello, {name} after sign-in; I'm RvGrok before a name. */
@@ -81,7 +85,7 @@ export function GrokLanding({
         </aside>
       ) : null}
 
-      <section className="grok-frost grok-landing-card relative flex flex-col items-center px-5 pb-5 pt-8 text-center sm:px-10 sm:pb-7 sm:pt-10">
+      <section className="grok-frost grok-landing-card relative flex flex-col items-center px-5 pb-5 pt-16 text-center sm:px-10 sm:pb-7">
         {toolbar ? (
           <div
             data-grok-top-chrome
@@ -92,6 +96,11 @@ export function GrokLanding({
         ) : null}
 
         <GrokAvatar size="lg" speaking={speaking} src={avatarSrc} />
+
+        {hasHistory ? (
+          <p className="grok-last-note">Continue where you left off</p>
+        ) : null}
+        {history}
 
         <div className="mt-5">
           <p className="grok-display text-[1.35rem] font-semibold leading-none text-fg">

@@ -1,6 +1,5 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import {
-  History,
   Plus,
   Radio,
   Sparkles,
@@ -1625,21 +1624,19 @@ export function RvGrokApp({
     />
   );
 
+  const historyTab = !embedded ? (
+    <button
+      type="button"
+      className="grok-last-chats"
+      data-grok-last-chats=""
+      onClick={() => setHistoryOpen(true)}
+    >
+      Last Chats
+    </button>
+  ) : null;
+
   const wingmanToolbar = !embedded ? (
     <>
-      <GrokToolbarButton
-        label="Chat history"
-        onClick={() => setHistoryOpen(true)}
-        badge={
-          sessions.length > 0
-            ? sessions.length > 9
-              ? "9+"
-              : String(sessions.length)
-            : undefined
-        }
-      >
-        <History className="size-4" />
-      </GrokToolbarButton>
       <GrokToolbarButton
         label="Agent"
         onClick={toggleAgentMode}
@@ -1773,6 +1770,8 @@ export function RvGrokApp({
       lotChip={null}
       onChip={(prompt) => void sendMessage(prompt)}
       toolbar={wingmanToolbar}
+      history={historyTab}
+      hasHistory={sessions.length > 0}
       composer={composer}
       hint={
         liveActive
@@ -1822,7 +1821,10 @@ export function RvGrokApp({
                     ? modelLabel
                     : "Ready"}
           </p>
-          <div className="flex shrink-0 items-center gap-1">{wingmanToolbar}</div>
+          <div className="flex shrink-0 items-center gap-1">
+            {historyTab}
+            {wingmanToolbar}
+          </div>
         </header>
       ) : null}
 

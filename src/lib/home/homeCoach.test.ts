@@ -316,10 +316,10 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
   );
   assert.doesNotMatch(css, /showroom-coach-fallback|showroom-reflect|showroom-contact|showroom-hero picture|showroom-hero-wash|showroom-hero-glint/);
   assert.doesNotMatch(home, /showroom-hero-wash|showroom-hero-glint|showroom-roof-glint|feMorphology|feFlood|preserveAspectRatio/);
-  assert.doesNotMatch(css, /\.showroom-hero-beam \{/);
+  assert.match(css, /\.showroom-hero-pool,/);
+  assert.match(css, /\.showroom-floor \{/);
   assert.doesNotMatch(css, /\.showroom-ambient \{/);
   assert.doesNotMatch(css, /\.showroom-grain \{/);
-  assert.match(css, /\.showroom-hero-pool \{/);
   assert.doesNotMatch(
     css,
     /\.showroom-count|\.showroom-onlot|\.showroom-coachline|\.showroom-spotfacts|\.showroom-spotmeta/,
@@ -330,7 +330,8 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
   assert.match(home, /SHOWROOM_SPOTLIGHT\.alt/);
   assert.match(home, /SHOWROOM_SPOTLIGHT\.image/);
   assert.doesNotMatch(home, /showroom-hero-beam/);
-  assert.match(home, /showroom-hero-pool/);
+  assert.match(home, /showroom-floor/);
+  assert.doesNotMatch(home, /showroom-hero-pool/);
   assert.doesNotMatch(home, /spotlightJpegPath|showroom-reflect|showroom-contact/);
   assert.doesNotMatch(coach, /spotlightJpegPath|2026-entegra-cornerstone\.jpg/);
   assert.match(home, /spotlightLotUnit\(listed\)/);

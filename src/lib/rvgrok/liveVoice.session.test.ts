@@ -10,6 +10,7 @@ import {
 } from "./liveVoice.ts";
 import { buildVoiceGrounding } from "./grounding.ts";
 import {
+  DEFAULT_VOICE,
   GROK_VOICES,
   PCM_SAMPLE_RATE,
   avatarForVoice,
@@ -205,6 +206,7 @@ test("Altair is a male voice and session.update sends that id", () => {
   assert.equal(GROK_VOICES.find((v) => v.id === "helix")?.gender, "male");
   const msg = buildRealtimeSessionUpdate("altair");
   assert.equal((msg.session as { voice: string }).voice, "altair");
+  assert.equal(DEFAULT_VOICE, "eve");
   assert.equal(avatarForVoice("ara"), "/assets/brand/icon-rvgrok-female.png");
   assert.equal(avatarForVoice("eve"), "/assets/brand/icon-rvgrok-female.png");
   for (const id of ["leo", "rex", "sal", "helix", "altair"]) {

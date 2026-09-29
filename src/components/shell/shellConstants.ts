@@ -67,7 +67,7 @@ export const PAGE_COPY: Record<
   },
   rvlot: {
     title: "LOT",
-    line: "RV Country in-stock — our lot snapshot, not the brochure catalog.",
+    line: "",
     badge: "STOCK",
   },
   more: {
