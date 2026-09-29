@@ -123,26 +123,26 @@ export function RequestAccessSheet({
               className="glass-prestige space-y-3 rounded-[1.25rem] p-4"
             >
               <label className="block">
-                <span className="mb-1 block text-[9px] font-bold tracking-wide text-white">
+                <span className="mb-1 block text-[11px] font-medium tracking-wide">
                   FIRST NAME
                 </span>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="glass-field w-full rounded-lg px-3 py-2.5 text-[15px] font-semibold text-white outline-none"
+                  className="glass-field w-full rounded-lg px-3 py-2.5 text-[15px] font-semibold outline-none"
                   autoComplete="given-name"
                   placeholder="First name"
                   required
                 />
               </label>
               <label className="block">
-                <span className="mb-1 block text-[9px] font-bold tracking-wide text-white">
+                <span className="mb-1 block text-[11px] font-medium tracking-wide">
                   PHONE
                 </span>
                 <input
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="glass-field w-full rounded-lg px-3 py-2.5 text-[15px] font-semibold text-white outline-none"
+                  className="glass-field w-full rounded-lg px-3 py-2.5 text-[15px] font-semibold outline-none"
                   inputMode="tel"
                   autoComplete="tel"
                   placeholder="702-555-0100"

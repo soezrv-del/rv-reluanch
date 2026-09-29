@@ -302,14 +302,14 @@ export function AdminWhitelistSheet({
                 app sign-in flag.
               </p>
               <label className="block">
-                <span className="mb-1 block text-[9px] font-bold tracking-wide text-white">
+                <span className="mb-1 block text-[11px] font-medium tracking-wide">
                   ADMIN PASSWORD
                 </span>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="glass-field w-full rounded-lg px-3 py-2.5 text-[15px] font-semibold text-white outline-none"
+                  className="glass-field w-full rounded-lg px-3 py-2.5 text-[15px] font-semibold outline-none"
                   autoComplete="current-password"
                   required
                 />
@@ -347,24 +347,24 @@ export function AdminWhitelistSheet({
                   ADD NUMBER
                 </p>
                 <label className="block">
-                  <span className="mb-1 block text-[9px] font-bold tracking-wide text-white">
+                  <span className="mb-1 block text-[11px] font-medium tracking-wide">
                     NAME
                   </span>
                   <input
                     value={addName}
                     onChange={(e) => setAddName(e.target.value)}
-                    className="glass-field w-full rounded-lg px-3 py-2.5 text-[15px] font-semibold text-white outline-none"
+                    className="glass-field w-full rounded-lg px-3 py-2.5 text-[15px] font-semibold outline-none"
                     placeholder="Name"
                   />
                 </label>
                 <label className="block">
-                  <span className="mb-1 block text-[9px] font-bold tracking-wide text-white">
+                  <span className="mb-1 block text-[11px] font-medium tracking-wide">
                     PHONE
                   </span>
                   <input
                     value={addPhone}
                     onChange={(e) => setAddPhone(e.target.value)}
-                    className="glass-field w-full rounded-lg px-3 py-2.5 text-[15px] font-semibold text-white outline-none"
+                    className="glass-field w-full rounded-lg px-3 py-2.5 text-[15px] font-semibold outline-none"
                     inputMode="tel"
                     placeholder="702-555-0100"
                     required

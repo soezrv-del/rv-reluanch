@@ -129,6 +129,11 @@ html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-ta
   background-image: none;
 }
 
+html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active,
+html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] {
+  background: var(--light-action) !important;
+  box-shadow: none !important;
+}
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active .bottom-tab-glyph,
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active .bottom-tab-caption,
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] .bottom-tab-glyph,
