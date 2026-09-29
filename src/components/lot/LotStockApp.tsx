@@ -9,6 +9,7 @@ import {
   filterLotBrowse,
   formatLotUpdated,
   lotLengthOrGap,
+  lotCardMiles,
   lotLbsOrGap,
   lotPriceOrGap,
   lotTextOrGap,
@@ -440,10 +441,12 @@ function LotUnitCard({
 }) {
   const headline = showroomUnitLabel(unit).trim() || "GAP";
   const price = lotPriceOrGap(unit.price);
+  const miles = lotCardMiles(unit);
   const meta = [
     lotTextOrGap(unit.stock_number),
     lotTextOrGap(unit.location),
     lotTextOrGap(unit.condition),
+    ...(miles ? [miles] : []),
   ].join(" · ");
   const photoUrl = lotUnitPhoto(unit);
   const [failedSrc, setFailedSrc] = useState<string | null>(null);

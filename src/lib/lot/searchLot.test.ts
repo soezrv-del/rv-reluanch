@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   filterLotBrowse,
+  lotCardMiles,
   lotPriceOrGap,
   lotTextOrGap,
   lotTypeChips,
@@ -200,6 +201,13 @@ test("lot lookup shows every printed scrape field and does not invent blanks", (
 
   assert.equal(snap.units[1]?.printed.mileage, undefined);
   assert.equal(snap.units[2]?.printed.mileage, "0 mi");
+  assert.equal(lotCardMiles(unit), "6,870 mi");
+  assert.equal(lotCardMiles(snap.units[1]!), "");
+  assert.equal(lotCardMiles(snap.units[2]!), "");
+  assert.equal(
+    lotOpenSections(unit).flatMap((part) => part.rows).find((row) => row.label === "Miles")?.value,
+    "6,870 mi",
+  );
 });
 
 test("lot details drop source and website and do not repeat header facts", () => {

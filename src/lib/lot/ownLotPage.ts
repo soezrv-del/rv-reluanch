@@ -658,6 +658,13 @@ const LOT_MONTHS = [
   "Dec",
 ] as const;
 
+/** Card line for a real odometer. A stored 0 is a blank scrape, not a reading. */
+export function lotCardMiles(unit: LotUnit): string {
+  const printed = (unit.printed?.mileage ?? "").trim();
+  if (!printed || /^0(?:\.0+)?\s*mi$/i.test(printed)) return "";
+  return printed;
+}
+
 /** "2026-09-28T19:23:55-07:00" → "Updated Sep 28". Blank when the stamp is missing. */
 export function formatLotUpdated(asOf: string): string {
   const match = asOf.trim().match(/^(\d{4})-(\d{2})-(\d{2})/);

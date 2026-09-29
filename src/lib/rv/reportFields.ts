@@ -582,6 +582,10 @@ export function buildBuyerUnitReport(unit: LotUnit): BuyerUnitReport {
   );
   pushRow(unitRows, "Type", unit.body_type.trim());
   pushRow(unitRows, "Status", formatReportStatus(pick(printed, "lot_status") || unit.lot_status));
+  const miles = pick(printed, "mileage");
+  if (miles && !/^0(?:\.0+)?\s*mi$/i.test(miles)) {
+    pushRow(unitRows, "Miles", miles);
+  }
 
   const priceRows: BuyerReportRow[] = [];
   pushRow(priceRows, "MSRP", formatMoney(pick(printed, "price_msrp")));

@@ -65,6 +65,7 @@ test("Lot stock is the last dock tab and not RV Grok", () => {
   assert.match(lot, /\["New", "Used"\]/);
   assert.match(lot, /data-lot-featured/);
   assert.match(lot, /data-lot-unit/);
+  assert.match(lot, /lotCardMiles/);
   assert.match(lot, /data-lot-meta/);
   assert.match(lot, /showroomUnitLabel/);
   assert.match(lot, /data-lot-count/);
