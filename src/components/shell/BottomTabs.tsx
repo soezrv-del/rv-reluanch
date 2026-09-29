@@ -98,8 +98,12 @@ function DockGlyph({ id }: { id: (typeof TABS)[number]["id"] }) {
   );
 }
 
+/** Facts, Lot, and Grok stay in the first screen. The rest slide in. */
+const PINNED: ReadonlySet<string> = new Set(["rvfax", "rvlot", "rvgrok"]);
+
 /**
- * Independent platinum chips. The row slides; page swipe stays on the suite.
+ * Sliding rooms. Facts, Lot, and Grok stay on screen.
+ * Tow, Cal, and RV GPS snap to center when opened.
  * Android WebView: do NOT put pointer-events-none on this nav.
  */
 export function BottomTabs({
@@ -128,7 +132,10 @@ export function BottomTabs({
     if (!dock || homeOpen) return;
     const active = dock.querySelector<HTMLElement>(".is-active");
     if (!active) return;
-    const left = active.offsetLeft - (dock.clientWidth - active.clientWidth) / 2;
+    const pinFirst = PINNED.has(tab);
+    const left = pinFirst
+      ? 0
+      : active.offsetLeft - (dock.clientWidth - active.clientWidth) / 2;
     dock.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
   }, [tab, homeOpen]);
 
