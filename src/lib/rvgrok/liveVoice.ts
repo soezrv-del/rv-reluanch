@@ -17,19 +17,16 @@ import {
   injectStandingLessons,
 } from "./promptLessons.ts";
 import {
-  sessionIntroLine,
-  VOICE_RESEARCH_HOLD_PHRASE,
   voiceSessionIntroInstructions,
   visitorPersonalizationBlock,
 } from "./speechPolicy.ts";
 import {
-  SCREEN_GUIDE_PREAMBLE,
   formatScreenContext,
   stripScreenContext,
 } from "./screenGuides.ts";
 import { DAVID_HANSEN_STORY, PEOPLE_FACTS_RULE } from "./originStory.ts";
 import { liveVoiceOutputFor, preferIosLoudspeaker, releaseLiveVoiceOutput } from "./voiceOutput.ts";
-import { PCM_SAMPLE_RATE, RV_VOICE_INSTRUCTIONS, VOICE_MIC_RULES } from "./voice.ts";
+import { liveVoicePrompt, PCM_SAMPLE_RATE } from "./voice.ts";
 
 export type LiveVoicePrewarm = {
   audioCtx: AudioContext | null;
@@ -251,6 +248,18 @@ export function isNativeRealtimeTool(name: string): boolean {
   );
 }
 
+/** Voice only. Chat keeps the welcome-back sentence in speechPolicy. */
+const VOICE_WELCOME_BACK_RE =
+  /Welcome them back by that first name once — separate from the one-time I'm RvGrok intro\.\s*/g;
+
+function stripVoiceWelcomeBack(text: string): string {
+  return text.replace(VOICE_WELCOME_BACK_RE, "").replace(/[ \t]{2,}/g, " ").trim();
+}
+
+export function liveVoiceBaseInstructions(firstName?: string): string {
+  return `${DAVID_HANSEN_STORY}\n${PEOPLE_FACTS_RULE}\n\n${liveVoicePrompt(firstName)}`;
+}
+
 export function buildRealtimeSessionUpdate(
   voiceId: string,
   speed = 1,
@@ -261,23 +270,27 @@ export function buildRealtimeSessionUpdate(
   activeScreen?: string,
 ): Record<string, unknown> {
   const clamped = Math.min(1.5, Math.max(0.7, speed));
-  const extra = stripScreenContext(catalogContext || "");
-  const catalogBlock = extra ? `${extra}\n\n` : "";
-  const personal = visitorPersonalizationBlock(visitorFirstName);
-  const personalBlock = personal ? `${personal}\n\n` : "";
-  const memory = (visitorMemory || "").trim();
-  const memoryBlock = memory ? `${memory}\n\n` : "";
+  const catalog = stripVoiceWelcomeBack(stripScreenContext(catalogContext || ""));
+  const personal = stripVoiceWelcomeBack(
+    visitorPersonalizationBlock(visitorFirstName),
+  );
+  const memory = stripVoiceWelcomeBack(visitorMemory || "");
   const lessons =
     standingLessons === undefined
       ? formatPromptLessons(DEFAULT_PROMPT_LESSONS)
       : standingLessons.trim();
-  const core = injectStandingLessons(RV_VOICE_INSTRUCTIONS, lessons);
-  const intro = sessionIntroLine(visitorFirstName);
-  const screen = (activeScreen || "").trim();
-  const screenSection = screen
-    ? `${SCREEN_GUIDE_PREAMBLE}\n\n${formatScreenContext(screen)}`
-    : SCREEN_GUIDE_PREAMBLE;
-  const instructions = `${DAVID_HANSEN_STORY}\n${PEOPLE_FACTS_RULE}\n\n${core}\n\n${personalBlock}${memoryBlock}${catalogBlock}When a turn injects a lot snapshot, speak that total. Never replace it with a website count. This session has native web_search and query_lot. For a GVWR or other spec pin, a saved pin is the best available answer. Use the closest saved pin when one exists, and otherwise answer from web search. Never refuse, stall, or skip a spec pin because the match is not perfect. Call query_lot for ANY count or availability question, including a follow-up that changes type or condition. Call query_lot once per question. Never say none before that tool returns. Never answer a lot count from memory. Never tell the user to change a query, a parameter, or these instructions. Answer from the query_lot result only. Do not call web_search and do not mention web notes for a count, the cheapest or most expensive coach, availability, or stock. Say none only when that tool returns matched 0. If it returns did_you_mean or close, offer that name. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${intro} Then listen. Never repeat this intro.\n\n${VOICE_MIC_RULES}\n\n${screenSection}`;
+  const lessonBlock = lessons ? injectStandingLessons("", lessons).trim() : "";
+  const screen = formatScreenContext((activeScreen || "").trim());
+  const instructions = [
+    liveVoiceBaseInstructions(visitorFirstName),
+    personal,
+    memory,
+    lessonBlock,
+    catalog,
+    screen,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
   return {
     type: "session.update",
     session: {

@@ -36,7 +36,8 @@ test("chat, agent, and voice share David's lean standing core", () => {
 
   assert.match(prompts, /RV_GROK_LEAN_CORE/);
   assert.match(voice, /RV_GROK_LEAN_CORE/);
-  assert.match(live, /RV_VOICE_INSTRUCTIONS/);
+  assert.match(live, /liveVoicePrompt/);
+  assert.doesNotMatch(live, /RV_VOICE_INSTRUCTIONS/);
   assert.match(speech, /RV_GROK_LEAN_CORE/);
 });
 
@@ -247,6 +248,6 @@ test("no Grok prompt string contains perfectly exact, exact pin, or exact live f
     }
   }
   assert.match(src("screenGuides.ts"), /exactly as written/);
-  assert.match(src("liveVoice.ts"), /Say exactly:/);
+  assert.match(src("voice.ts"), /say exactly "/);
   assert.match(src("webSearch.ts"), /spelled exactly as the OEM string/);
 });

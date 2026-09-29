@@ -471,7 +471,7 @@ test("hold string is exactly give me one second — never Let me check that", ()
 
   const live = src("liveVoice.ts");
   assert.match(live, /buildSessionIntroResponse/);
-  assert.match(live, /sessionIntroLine/);
+  assert.match(src("voice.ts"), /sessionIntroLine/);
   assert.match(VOICE_SESSION_INTRO_INSTRUCTIONS, new RegExp(
     RV_GROK_SESSION_INTRO.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
   ));

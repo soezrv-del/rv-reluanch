@@ -101,10 +101,9 @@ test("forbidden lot-first deflection matches the Seneca miss shape", () => {
 
 test("standing prompts have no pasted lot card; lean core only names the tool", () => {
   const prompts = src("prompts.ts");
-  const voice = src("voice.ts").replace(
-    /export const VOICE_MIC_RULES = `[\s\S]*?`;/,
-    "",
-  );
+  const voice = src("voice.ts")
+    .replace(/export const VOICE_MIC_RULES = `[\s\S]*?`;/, "")
+    .replace(/export const LIVE_VOICE_PROMPT = `[\s\S]*?`;/, "");
   const speechRaw = src("speechPolicy.ts");
   const speech = speechRaw
     .replace(/export const RV_GROK_LEAN_CORE = `[\s\S]*?`;/, "")
