@@ -44,17 +44,27 @@ function DockGlyph({ id }: { id: (typeof TABS)[number]["id"] }) {
   if (id === "rvfax") {
     return (
       <svg viewBox="0 0 24 24" className="bottom-tab-glyph" aria-hidden>
-        <path d="M7 3.5h7.1L19 8.3V20.5H7z" {...stroke} />
-        <path d="M14 3.6V8.4h5" {...stroke} />
-        <path d="M9.5 12.2h5.2M9.5 15.4h5.2" {...stroke} />
+        <circle cx="12" cy="12" r="8.25" {...stroke} />
+        <path d="M8 12.2 10.9 15.1 16.2 8.9" {...stroke} />
       </svg>
     );
   }
   if (id === "rvcal") {
     return (
       <svg viewBox="0 0 24 24" className="bottom-tab-glyph" aria-hidden>
-        <rect x="4" y="5.5" width="16" height="14" rx="2" {...stroke} />
-        <path d="M4 9.5h16M8 3.5v3.5M16 3.5v3.5" {...stroke} />
+        <rect x="5" y="2.8" width="14" height="18.4" rx="2.2" {...stroke} />
+        <rect x="7.3" y="5.1" width="9.4" height="3" rx="0.6" {...stroke} />
+        <g fill="currentColor" stroke="none">
+          <circle cx="8.4" cy="11.3" r="0.85" />
+          <circle cx="12" cy="11.3" r="0.85" />
+          <circle cx="15.6" cy="11.3" r="0.85" />
+          <circle cx="8.4" cy="14.5" r="0.85" />
+          <circle cx="12" cy="14.5" r="0.85" />
+          <circle cx="15.6" cy="14.5" r="0.85" />
+          <circle cx="8.4" cy="17.7" r="0.85" />
+          <circle cx="12" cy="17.7" r="0.85" />
+          <circle cx="15.6" cy="17.7" r="0.85" />
+        </g>
       </svg>
     );
   }
@@ -74,10 +84,13 @@ function DockGlyph({ id }: { id: (typeof TABS)[number]["id"] }) {
   if (id === "rvtow") {
     return (
       <svg viewBox="0 0 24 24" className="bottom-tab-glyph" aria-hidden>
-        <path d="M5 20.5V5.5h2.2M7.2 6.2H17l-1.2 2.6H7.2" {...stroke} />
-        <path d="M15.2 8.8v4.4" {...stroke} />
-        <path d="M13.4 14.6h3.6" {...stroke} />
-        <circle cx="15.2" cy="17.6" r="1.35" {...stroke} />
+        <path
+          d="M2.6 15.1h1.8M8.5 15.1h6.2M18.7 15.1h2.7M2.6 15.1V11.8h6.8V8.4h4.2l2.7 3.4h4.9v3.3"
+          {...stroke}
+        />
+        <path d="M10 12V9.2h2.9l1.7 2.8" {...stroke} />
+        <circle cx="6.4" cy="16.8" r="1.8" {...stroke} />
+        <circle cx="16.7" cy="16.8" r="1.8" {...stroke} />
       </svg>
     );
   }
