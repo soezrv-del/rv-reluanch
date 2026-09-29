@@ -16,7 +16,9 @@ import {
 } from "./ownLotInventory.ts";
 import {
   lotQueryHasSubject,
+  reconcileLotArgs,
   searchLot,
+  spokenLotBody,
   type LotQueryCounts,
 } from "../lot/lotQuery.ts";
 import {
@@ -29,6 +31,7 @@ export type LotMemory = {
   filter: OwnLotFilter;
   sort?: OwnLotSort;
   limit?: number;
+  condition?: string;
 };
 
 export type LotTurn = LotMemory & {
@@ -301,6 +304,7 @@ export function answerQueryLotFromSnapshot(
   snapshot: OwnLotSnapshot,
   args: Record<string, unknown>,
   previous: LotMemory | null,
+  utterance = "",
 ): QueryLotAnswer {
   if (ownLotIsUnavailable(snapshot)) {
     return {
@@ -317,6 +321,13 @@ export function answerQueryLotFromSnapshot(
       lotMemory: previous,
     };
   }
+  if (args.body_type == null && args.bodyType != null) args.body_type = args.bodyType;
+  if (args.price_min == null && (args.minPrice != null || args.priceMin != null)) {
+    args.price_min = args.minPrice ?? args.priceMin;
+  }
+  if (args.price_max == null && (args.maxPrice != null || args.priceMax != null)) {
+    args.price_max = args.maxPrice ?? args.priceMax;
+  }
   const query = str(args.query);
   const fresh = lotQueryHasSubject(query) || structuredSubject(args);
   const turn = fresh
@@ -328,13 +339,10 @@ export function answerQueryLotFromSnapshot(
       }
     : mergeToolCall(args, previous);
   const limit = turn.limit ?? 12;
-  const memory: LotMemory = {
-    filter: turn.filter,
-    sort: turn.sort,
-    limit,
-  };
-  const found = searchLot(snapshot.units, {
-    query: fresh ? query : "",
+  const spoken = str(utterance) || str(args.utterance);
+  const followUp = Boolean(spoken && previous && looksLikeOwnLotFollowUp(spoken));
+  const searchArgs = reconcileLotArgs({
+    query: fresh ? query : spoken || query,
     make: turn.filter.make,
     model: [turn.filter.model, turn.filter.trim].filter(Boolean).join(" "),
     body_type: turn.filter.bodyType,
@@ -343,8 +351,8 @@ export function answerQueryLotFromSnapshot(
     location: turn.filter.location,
     year_min: turn.filter.yearMin ?? (turn.filter.year ? Number(turn.filter.year) : undefined),
     year_max: turn.filter.yearMax ?? (turn.filter.year ? Number(turn.filter.year) : undefined),
-    price_min: turn.filter.minPrice,
-    price_max: turn.filter.maxPrice,
+    price_min: num(args.price_min) ?? turn.filter.minPrice,
+    price_max: num(args.price_max) ?? turn.filter.maxPrice,
     length_ft_min:
       turn.filter.lengthFtMin ??
       (turn.filter.aroundLengthFt != null
@@ -358,7 +366,46 @@ export function answerQueryLotFromSnapshot(
     sort: turn.sort?.by,
     order: turn.sort?.dir,
     limit,
+    ...(spoken
+      ? {
+          utterance: spoken,
+          follow_up: followUp,
+          carry_body_type: previous?.filter.bodyType,
+          carry_condition: previous?.condition,
+          carry_price_min: previous?.filter.minPrice,
+          carry_price_max: previous?.filter.maxPrice,
+          carry_make: previous?.filter.make,
+          carry_model: previous?.filter.model,
+        }
+      : {}),
   });
+  const saidBody = spokenLotBody(spoken);
+  const saidCondition = /\bused\b/i.test(spoken)
+    ? "used"
+    : /\bnew\b/i.test(spoken)
+      ? "new"
+      : "";
+  const memory: LotMemory = {
+    filter: {
+      ...turn.filter,
+      bodyType: saidBody || (followUp ? previous?.filter.bodyType : searchArgs.body_type) || undefined,
+      make: searchArgs.make || undefined,
+      model: searchArgs.model || undefined,
+      minPrice: searchArgs.price_min,
+      maxPrice: searchArgs.price_max,
+    },
+    sort:
+      searchArgs.sort === "price" || searchArgs.sort === "length" || searchArgs.sort === "year"
+        ? { by: searchArgs.sort, dir: searchArgs.order === "desc" ? "desc" : "asc" }
+        : turn.sort,
+    limit,
+    ...(saidCondition
+      ? { condition: saidCondition }
+      : followUp && previous?.condition
+        ? { condition: previous.condition }
+        : {}),
+  };
+  const found = searchLot(snapshot.units, searchArgs);
   let speech = found.summary;
   if (found.no_length.length) {
     const stocks = found.no_length.map((unit) => `stk ${unit.stock_number}`).join(", ");

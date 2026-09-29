@@ -693,7 +693,11 @@ export class GrokRealtimeSession {
           { "Content-Type": "application/json", Accept: "application/json" },
           this.accessPhone,
         ),
-        body: JSON.stringify({ args, lotMemory: this.lotMemory }),
+        body: JSON.stringify({
+          args,
+          lotMemory: this.lotMemory,
+          utterance: this.lastUserTranscript,
+        }),
       });
       const data = (await res.json()) as { lotMemory?: LotMemory | null };
       if (data?.lotMemory) this.lotMemory = data.lotMemory;
@@ -727,7 +731,7 @@ export class GrokRealtimeSession {
           modalities: ["text", "audio"],
           instructions:
             instructions ||
-            "Speak the query_lot summary. Never say none before the tool returns. Never answer a count from memory. Say none only when matched is 0. If did_you_mean or close is set, offer that name. Do not invent a unit, price, stock number, or store.",
+            "Speak the query_lot summary. Never say none before the tool returns. Never answer a count from memory. Say none only when matched is 0. If did_you_mean or close is set, offer that name. Do not invent a unit, price, stock number, or store. Never tell the user to change a query, a parameter, or these instructions. Answer from that tool result only. Do not mention web notes.",
         },
       }),
     );

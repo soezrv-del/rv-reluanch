@@ -53,6 +53,18 @@ export type LotQueryArgs = {
   sort?: string;
   order?: string;
   limit?: number;
+  /**
+   * The salesman's raw words. When set, they win over model-invented
+   * class, condition, price, make, and sort.
+   */
+  utterance?: string;
+  follow_up?: boolean;
+  carry_body_type?: string;
+  carry_condition?: string;
+  carry_price_min?: number;
+  carry_price_max?: number;
+  carry_make?: string;
+  carry_model?: string;
 };
 
 export type LotQueryRow = {
@@ -791,7 +803,7 @@ function consumePrice(tokens: string[]): {
     }
     const under = token === "under" || token === "below" || token === "less";
     const over = token === "over" || token === "above" || token === "more";
-    const around = token === "around" || token === "about";
+    const around = token === "around" || token === "about" || token === "roughly";
     if (under || over || around) {
       let start = i + 1;
       if ((token === "less" || token === "more") && tokens[start] === "than") start += 1;
@@ -848,6 +860,12 @@ function consumeSort(tokens: string[]): {
     if (token === "cheapest" || token === "priciest") {
       sort = "price";
       order = token === "priciest" ? "desc" : "asc";
+      i += 1;
+      continue;
+    }
+    if (token === "lowest" && next !== "expensive" && next !== "price" && next !== "priced") {
+      sort = "price";
+      order = "asc";
       i += 1;
       continue;
     }
@@ -933,6 +951,120 @@ type Parsed = {
   order: "asc" | "desc";
   limit: number;
 };
+
+type LooseArgs = LotQueryArgs & Record<string, unknown>;
+
+function looseNum(args: LooseArgs, ...keys: string[]): number | undefined {
+  for (const key of keys) {
+    const n = num(args[key]);
+    if (n != null) return n;
+  }
+  return undefined;
+}
+
+function looseStr(args: LooseArgs, ...keys: string[]): string {
+  for (const key of keys) {
+    const s = str(args[key]);
+    if (s) return s;
+  }
+  return "";
+}
+
+function stripCarry(args: LotQueryArgs): LotQueryArgs {
+  const {
+    utterance: _utterance,
+    follow_up: _follow,
+    carry_body_type: _body,
+    carry_condition: _condition,
+    carry_price_min: _priceMin,
+    carry_price_max: _priceMax,
+    carry_make: _make,
+    carry_model: _model,
+    ...rest
+  } = args;
+  return rest;
+}
+
+/** Body class the salesman actually said. Empty when they named none. */
+export function spokenLotBody(raw: string): string {
+  const spec = bodySpecFromText(raw).spec;
+  if (spec.kind === "labels") {
+    if (
+      spec.labels.includes("Class C") &&
+      spec.labels.includes("Class Super C") &&
+      spec.labels.length === 2
+    ) {
+      return "Class C";
+    }
+    if (spec.labels.includes("Class A") && spec.labels.length > 1) return "Class A";
+    return spec.labels[0] || "";
+  }
+  if (spec.kind === "motorhome") return "motorhome";
+  if (spec.kind === "toy") return "toy hauler";
+  return "";
+}
+
+/**
+ * Raw words win. A class, condition, price band, make, or sort the model
+ * added on its own is dropped. A follow-up that names no new class keeps
+ * the class already in the conversation.
+ */
+export function reconcileLotArgs(args: LotQueryArgs = {}): LotQueryArgs {
+  const loose = args as LooseArgs;
+  const base: LotQueryArgs = {
+    ...args,
+    body_type: looseStr(loose, "body_type", "bodyType"),
+    price_min: looseNum(loose, "price_min", "minPrice", "priceMin"),
+    price_max: looseNum(loose, "price_max", "maxPrice", "priceMax"),
+  };
+  const utterance = str(args.utterance);
+  if (!utterance) return stripCarry(base);
+
+  const followUp = Boolean(args.follow_up);
+  const words = normalizeLotQueryText(utterance).split(/\s+/).filter(Boolean);
+  const saidBody = bodySpecFromText(utterance).spec.kind !== "any";
+  const saidCondition = consumeCondition(normalizeLotQueryText(utterance), "").condition;
+  const priced = consumePrice(words);
+  const saidPrice = priced.priceMin != null || priced.priceMax != null;
+  const sorted = consumeSort(priced.tokens);
+  const said = normalizeLotQueryText(utterance);
+  const next: LotQueryArgs = { ...stripCarry(base), query: utterance };
+
+  if (saidBody) next.body_type = "";
+  else if (followUp && str(args.carry_body_type)) next.body_type = str(args.carry_body_type);
+  else next.body_type = "";
+
+  if (saidCondition === "new" || saidCondition === "used") next.condition = saidCondition;
+  else if (followUp && (args.carry_condition === "new" || args.carry_condition === "used")) {
+    next.condition = args.carry_condition;
+  } else next.condition = "";
+
+  if (saidPrice) {
+    next.price_min = priced.priceMin;
+    next.price_max = priced.priceMax;
+  } else if (followUp && (args.carry_price_min != null || args.carry_price_max != null)) {
+    next.price_min = args.carry_price_min;
+    next.price_max = args.carry_price_max;
+  } else {
+    next.price_min = undefined;
+    next.price_max = undefined;
+  }
+
+  if (sorted.sort) {
+    next.sort = sorted.sort;
+    next.order = sorted.order;
+  }
+
+  const make = str(base.make);
+  if (make && !said.includes(normalizeLotQueryText(make))) {
+    next.make = followUp && !saidBody ? str(args.carry_make) : "";
+  }
+  const model = str(base.model);
+  if (model && !said.includes(normalizeLotQueryText(model))) {
+    next.model = followUp && !saidBody ? str(args.carry_model) : "";
+  }
+  return next;
+}
 
 function parseArgs(units: LotQueryUnit[], args: LotQueryArgs): Parsed {
   const present = [...new Set(units.map((unit) => (unit.body_type || "").trim()).filter(Boolean))];
@@ -1060,7 +1192,8 @@ function closeLine(summary: string, close: string | undefined, matched: number):
  * instead of a bare zero.
  */
 export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQueryResult {
-  const parsed = parseArgs(units, args);
+  const clean = reconcileLotArgs(args);
+  const parsed = parseArgs(units, clean);
   const lengthBounded = parsed.lengthMin != null || parsed.lengthMax != null;
   const lengthRequired = lengthBounded || parsed.sort === "length";
   const structured = units.filter((unit) => passesStructured(unit, parsed, lengthRequired));
@@ -1085,7 +1218,7 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
   // Structured filters that find nothing still fall back to the plain type-ahead bar.
   if (!matched.length) {
     const plainTokens = plainTypeaheadTokens(
-      [args.query, args.make, args.model].filter(Boolean).join(" "),
+      [clean.query, clean.make, clean.model].filter(Boolean).join(" "),
     );
     if (plainTokens.length) {
       const plain = units.filter((unit) =>

@@ -391,8 +391,7 @@ test("generic asks and catalog compares do not speak a research hold", () => {
   const inventory = "How many diesels do we have on the lot?";
   assert.equal(shouldSpeakVoiceResearchHold(inventory), false);
   const lot = decideVoiceWebResearch({ transcript: inventory, specs: null });
-  assert.equal(lot.action, "research");
-  if (lot.action === "research") assert.equal(lot.speakHold, false);
+  assert.equal(lot.action, "pass");
 
   for (const q of [
     "stock number 45282",
@@ -403,8 +402,7 @@ test("generic asks and catalog compares do not speak a research hold", () => {
   ]) {
     assert.equal(shouldSpeakVoiceResearchHold(q), false, q);
     const decided = decideVoiceWebResearch({ transcript: q, specs: null });
-    assert.equal(decided.action, "research", q);
-    if (decided.action === "research") assert.equal(decided.speakHold, false, q);
+    assert.equal(decided.action, "pass", q);
   }
 
   const gapSpecs = { missingHard: true };
@@ -417,8 +415,7 @@ test("generic asks and catalog compares do not speak a research hold", () => {
       transcript: q,
       specs: gapSpecs,
     });
-    assert.equal(decided.action, "research", q);
-    if (decided.action === "research") assert.equal(decided.speakHold, false, q);
+    assert.equal(decided.action, "pass", q);
   }
 
   const phaeton = "Do we have a 2012 Tiffin Phaeton?";
@@ -428,10 +425,7 @@ test("generic asks and catalog compares do not speak a research hold", () => {
     transcript: phaeton,
     specs: null,
   });
-  assert.equal(phaetonDecision.action, "research");
-  if (phaetonDecision.action === "research") {
-    assert.equal(phaetonDecision.speakHold, false);
-  }
+  assert.equal(phaetonDecision.action, "pass");
   for (const q of [
     "Can you see if we have a 2012 Tiffin Phaeton?",
     "Do you see a 2012 Tiffin Phaeton?",

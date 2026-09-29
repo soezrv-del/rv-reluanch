@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { snapshotFromJson } from "../rvgrok/ownLotInventory.ts";
 import { answerQueryLotFromSnapshot } from "../rvgrok/lotMemory.ts";
 import { QUERY_LOT_TOOL } from "../rvgrok/liveVoice.ts";
+import { decideVoiceWebResearch } from "../rvgrok/voiceWeb.ts";
 import { searchLot } from "./lotQuery.ts";
 import { searchLotUnits, singularizeLotToken } from "./lotSearch.ts";
 
@@ -219,4 +220,69 @@ test("fuel, spoken price, sort, and chassis match the lot sheet", () => {
   assert.match(voice, /Never say none before the tool returns/);
   assert.match(voice, /Never answer a lot count from memory/);
   assert.match(voice, /Call query_lot once/);
+});
+
+test("the salesman's words beat a bad model filter on the first ask", () => {
+  const snap = units();
+  const diesels = answerQueryLotFromSnapshot(
+    snap,
+    { bodyType: "Class A" },
+    null,
+    "how many diesels do we have",
+  );
+  assert.equal(diesels.matched, 161);
+  assert.doesNotMatch(diesels.summary || "", /web notes/i);
+  assert.doesNotMatch(diesels.speech, /web notes/i);
+
+  const cheap = answerQueryLotFromSnapshot(
+    snap,
+    {},
+    null,
+    "cheapest diesel we have in inventory",
+  );
+  assert.equal(cheap.units[0]?.price, 29995);
+  assert.ok(
+    cheap.units[0]?.stock_number === "UPD9457A" ||
+      cheap.units[0]?.stock_number === "28960E",
+  );
+  assert.doesNotMatch(cheap.speech, /web notes/i);
+
+  const around = answerQueryLotFromSnapshot(
+    snap,
+    { minPrice: 90000, maxPrice: 110000 },
+    null,
+    "diesel around a hundred thousand",
+  );
+  assert.equal(around.matched, 11);
+  assert.doesNotMatch(around.speech, /web notes/i);
+
+  assert.equal(
+    searchLot(snap.units, { utterance: "deisel", body_type: "Class A" }).matched,
+    161,
+  );
+  assert.equal(searchLot(snap.units, { utterance: "freightliner" }).matched, 34);
+
+  const follow = answerQueryLotFromSnapshot(
+    snap,
+    { bodyType: "Class A" },
+    { filter: { make: "Grand Design", model: "Lineage" } },
+    "how about used Super Cs, how many?",
+  );
+  assert.equal(follow.matched, 12);
+
+  for (const said of [
+    "how many diesels do we have",
+    "cheapest diesel we have in inventory",
+    "diesel around a hundred thousand",
+  ]) {
+    assert.equal(decideVoiceWebResearch({ transcript: said }).action, "pass", said);
+  }
+
+  const voice = readFileSync(join(process.cwd(), "src/lib/rvgrok/liveVoice.ts"), "utf8");
+  const realtime = readFileSync(join(process.cwd(), "src/lib/rvgrok/realtime.ts"), "utf8");
+  const api = readFileSync(join(process.cwd(), "src/routes/api/rvgrok.ts"), "utf8");
+  assert.match(voice, /Never tell the user to change/);
+  assert.match(realtime, /Never tell the user to change/);
+  assert.match(api, /utterance: ctx\.userText/);
+  assert.match(api, /looksLikeOwnLotCountOrRankAsk/);
 });

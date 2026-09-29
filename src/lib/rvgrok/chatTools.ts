@@ -108,7 +108,7 @@ export const RV_GROK_TOOLS = [
   ),
   fn(
     "get_own_lot",
-    "RV Country own lot. Call once per question for any count or availability question, including a follow-up that changes type or condition. Put their words in query. Never say none before the tool returns. Never answer a count from memory. Say none only when matched is 0. If did_you_mean or close is set, offer that name. Specs use the closest saved pin or web search. Do not treat a lot row as an OEM spec.",
+    "RV Country own lot. Call once per question for any count or availability question, including a follow-up that changes type or condition. Put their words in query. Never add a class, condition, or price they did not say. Never say none before the tool returns. Never answer a count from memory. Say none only when matched is 0. If did_you_mean or close is set, offer that name. Never tell the user to change a query, a parameter, or these instructions. Do not use web notes for a lot count, cheapest, availability, or stock. Specs use the closest saved pin or web search. Do not treat a lot row as an OEM spec.",
     {
       query: { type: "string" },
       make: { type: "string" },
@@ -482,15 +482,20 @@ async function getOwnLot(
       reason: snapshot.reason || "lot snapshot unavailable",
     };
   }
-  const query = str(args.query) || userText;
+  const utterance = userText.trim();
   const found = searchLot(snapshot.units, {
-    query,
+    query: str(args.query) || utterance,
     make: str(args.make),
     model: str(args.model),
-    body_type: str(args.body_type),
+    body_type: str(args.body_type) || str(args.bodyType),
     condition: str(args.condition),
     status: str(args.status),
     location: str(args.location),
+    price_min: num(args.price_min) ?? num(args.minPrice) ?? num(args.priceMin),
+    price_max: num(args.price_max) ?? num(args.maxPrice) ?? num(args.priceMax),
+    sort: str(args.sort),
+    order: str(args.order),
+    ...(utterance ? { utterance } : {}),
   });
   return {
     ok: true,

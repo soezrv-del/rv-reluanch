@@ -134,8 +134,7 @@ test("Facts voice searches for specs; the session prompt matches the other scree
     transcript: STOCK,
     screen: "Facts",
   });
-  assert.equal(stock.action, "research");
-  assert.equal(stock.speakHold, false);
+  assert.equal(stock.action, "pass");
   const yes = decideVoiceWebResearch({
     transcript: "yes",
     screen: "Facts",
