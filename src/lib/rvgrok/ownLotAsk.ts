@@ -72,7 +72,14 @@ const STRONG_LOT_SEARCH_RE =
 const WEAK_LOT_SEARCH_RE = /\b(?:got|any)\b/i;
 
 const LOT_PLACE_CUE_RE =
-  /\b(?:on (?:the |our )?lot|inventor(?:y|ies)|in stock)\b/i;
+  /\b(?:on (?:the |our )?lot|in (?:the |our )?lot|inventor(?:y|ies)|in stock)\b/i;
+
+/** A number the lot sheet prints: horsepower, or a displacement such as 8.9. */
+export function mentionsPrintedLotSpec(text: string): boolean {
+  return /\b(?:\d{2,4}\s*(?:hp|horsepower)|(?:hp|horsepower)\s*\d{2,4}|\d{1,2}\.\d\s*(?:l|liters?|litres?)?|displacement)\b/i.test(
+    normalizeAskText(text),
+  );
+}
 
 const PRODUCT_ABOUT_OR_REPORT_RE =
   /\b((?:tell me |know |learn |hear )about|what about|how about|info(?:rmation)? (?:on|about|for)|details (?:on|about|for)|overview of|walk me through|break down|brief me on|give me a report|report on|looking (?:at|into|up))\b/i;
@@ -298,6 +305,7 @@ export function looksLikeOwnLotSearchAsk(text: string): boolean {
   if (STRONG_LOT_SEARCH_RE.test(t) && (hasFloorplanOrStock || hasCoach)) {
     return true;
   }
+  if (LOT_PLACE_CUE_RE.test(t) && mentionsPrintedLotSpec(t)) return true;
   if (WEAK_LOT_SEARCH_RE.test(t) && hasFloorplanOrStock) return true;
   return false;
 }
@@ -372,7 +380,9 @@ export function looksLikeOwnLotCountOrRankAsk(text: string): boolean {
   ) {
     return true;
   }
-  if (/\b(?:on our lot|in our inventory|our inventory|entire inventory)\b/i.test(t)) return true;
+  if (/\b(?:on our lot|in our lot|in our inventory|our inventory|entire inventory)\b/i.test(t)) {
+    return true;
+  }
   if (
     /\b(?:diesel|diesels|deisel|gasoline)\b/i.test(t) &&
     /\b(?:around|about|roughly|under|over|between|cheapest|lowest|priciest)\b/i.test(t)

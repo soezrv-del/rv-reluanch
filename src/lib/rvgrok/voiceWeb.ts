@@ -30,6 +30,7 @@ import {
   isOwnLotResearchNotes,
   looksLikeLotInventoryPhrase,
   looksLikeOwnLotCountOrRankAsk,
+  mentionsPrintedLotSpec,
   looksLikeOwnLotStockQuestion,
   ownLotNotesForSpeech,
 } from "./ownLotAsk.ts";
@@ -165,7 +166,10 @@ export function decideVoiceWebResearch(opts: {
     looksLikeOwnLotStockQuestion(transcript) ||
     looksLikeInventoryOrCountQuestion(transcript) ||
     Boolean(opts.lotFollowUp);
-  if (lotOnly && !looksLikeSpecQuestion(transcript)) {
+  if (
+    lotOnly &&
+    (!looksLikeSpecQuestion(transcript) || mentionsPrintedLotSpec(transcript))
+  ) {
     return { action: "pass" };
   }
   if (!needsWebFallback(opts.specs ?? null, transcript)) {
