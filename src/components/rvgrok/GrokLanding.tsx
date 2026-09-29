@@ -24,11 +24,17 @@ export function GrokStatusWord({
   );
 }
 
+const LANDING_PILLS = [
+  "How many diesels on the lot?",
+  "Cheapest Class C",
+  "Compare two coaches",
+  "Tow rating for my truck",
+] as const;
+
 export function GrokLanding({
   status,
   speaking,
   lotChip,
-  starters,
   onChip,
   toolbar,
   composer,
@@ -39,7 +45,6 @@ export function GrokLanding({
   status: string;
   speaking: boolean;
   lotChip: GrokStarter | null;
-  starters: GrokStarter[];
   onChip: (prompt: string) => void;
   toolbar?: ReactNode;
   composer: ReactNode;
@@ -52,8 +57,9 @@ export function GrokLanding({
   return (
     <div
       data-rvgrok-landing=""
-      className="grok-landing mx-auto flex w-full max-w-xl flex-col items-stretch px-1 pb-4 sm:max-w-2xl"
+      className="grok-landing mx-auto flex w-full max-w-xl flex-col items-stretch px-1 sm:max-w-2xl"
     >
+      <div className="grok-landing-glow" aria-hidden />
       {lotChip ? (
         <aside
           data-rvgrok-lot-rail=""
@@ -119,26 +125,22 @@ export function GrokLanding({
 
         {hint ? (
           <p className="mt-3 text-[12px] text-muted">{hint}</p>
-        ) : starters.length > 0 ? (
-          <div className="grok-starters mt-4 w-full">
-            <div className="grok-starters-list flex flex-wrap justify-center gap-2">
-              {starters.map((s) => (
-                <button
-                  key={s.title}
-                  type="button"
-                  data-rvgrok-chip={s.title}
-                  onClick={() => onChip(s.prompt)}
-                  className="grok-starter grok-chip flex min-h-11 items-center rounded-full px-3.5 py-2 text-left"
-                >
-                  <span className="grok-starter-title block text-[13px] font-semibold leading-snug text-fg">
-                    Try {s.title}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
         ) : null}
       </section>
+
+      <div className="grok-landing-pills" data-rvgrok-landing-pills>
+        {LANDING_PILLS.map((prompt) => (
+          <button
+            key={prompt}
+            type="button"
+            className="grok-landing-pill"
+            data-rvgrok-landing-pill={prompt}
+            onClick={() => onChip(prompt)}
+          >
+            {prompt}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -180,14 +182,14 @@ export function GrokToolbarButton({
       onClick={onClick}
       className={cn(
         "relative flex size-10 items-center justify-center rounded-full border border-white/15 bg-black/25 text-fg transition hover:bg-white/10",
-        active && "border-gold-border/60 bg-gold-dim text-gold-bright",
+        active && "border-[#1648c8]/70 bg-[#1648c8]/15 text-sapphire",
       )}
       aria-label={label}
       title={label}
     >
       {children}
       {badge ? (
-        <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-gold text-[9px] font-bold text-ink-black">
+        <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-sapphire text-[9px] font-bold text-white" data-on-dark="">
           {badge}
         </span>
       ) : null}

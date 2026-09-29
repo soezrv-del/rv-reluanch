@@ -74,7 +74,7 @@ export function DeskSpecSheet({
                 <p
                   className={cn(
                     "mt-1 inline-flex max-w-full items-center justify-center gap-1.5 truncate text-[13px] font-semibold",
-                    row.gap ? "text-amber" : "text-fg",
+                    row.gap ? "text-sapphire" : "text-fg",
                   )}
                 >
                   <span className="truncate">{row.value}</span>
@@ -97,7 +97,7 @@ export function DeskSpecSheet({
       </header>
 
       {sheet.presenceNote ? (
-        <p className="grok-frost grok-report-note rounded-[var(--radius-xl)] px-4 py-3 text-[12px] leading-snug text-amber">
+        <p className="grok-frost grok-report-note rounded-[var(--radius-xl)] px-4 py-3 text-[12px] leading-snug text-sapphire">
           {sheet.presenceNote}
         </p>
       ) : sheet.gaps.length ? (
@@ -124,7 +124,7 @@ export function DeskSpecSheet({
               <dd
                 className={cn(
                   "text-right text-[13px] font-semibold",
-                  row.gap ? "text-amber" : "text-fg",
+                  row.gap ? "text-sapphire" : "text-fg",
                 )}
               >
                 {row.value}
@@ -150,7 +150,7 @@ export function DeskSpecSheet({
               <dd
                 className={cn(
                   "min-w-0 text-right text-[13px] font-semibold",
-                  row.gap ? "text-amber" : "text-fg",
+                  row.gap ? "text-sapphire" : "text-fg",
                 )}
               >
                 <span className="inline-flex items-center justify-end gap-1.5">

@@ -158,7 +158,7 @@ export function MessageBubble({
             {message.generatedImages.map((src, i) => (
               <div
                 key={`${src.slice(0, 48)}-${i}`}
-                className="overflow-hidden rounded-lg border border-gold/35 bg-black/40"
+                className="overflow-hidden rounded-lg border border-[#1648c8]/40 bg-black/40"
               >
                 <img
                   src={src}
@@ -177,7 +177,7 @@ export function MessageBubble({
         ) : null}
 
         {message.streaming && !displayContent ? (
-          <p className="flex items-center gap-2 text-white/80">
+          <p className="grok-thinking flex items-center gap-2">
             <Loader2 className="size-3.5 animate-spin" />
             Thinking…
           </p>
