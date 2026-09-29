@@ -13,15 +13,6 @@ import {
   spotlightSpecs,
 } from "@/lib/home/homeCoach";
 
-const JUMPS: { id: AppTab; label: string; hint: string }[] = [
-  { id: "rvlot", label: "New arrivals", hint: "Lot" },
-  { id: "rvfax", label: "Facts", hint: "Specs" },
-  { id: "rvgrok", label: "Grok", hint: "Ask" },
-  { id: "rvtow", label: "Tow", hint: "Match" },
-  { id: "rvcal", label: "Cal", hint: "Payment" },
-  { id: "rvtrips", label: "RV GPS", hint: "Route" },
-];
-
 export function HomeScreen({
   onOpen,
 }: {
@@ -74,6 +65,7 @@ export function HomeScreen({
           {who ? <p className="showroom-spotyear">{who}</p> : null}
           <p className="showroom-spotmodel">{model}</p>
           {specs?.price ? <p className="showroom-spotprice">{specs.price}</p> : null}
+          {lotTotal ? <p className="showroom-lotcount">{lotTotal} in stock</p> : null}
           {specs?.stock ? (
             <p className="showroom-spotstock">
               Stock {specs.stock}
@@ -102,25 +94,6 @@ export function HomeScreen({
       <div className="home-truth">
         <MetalVerifiedTrue size="md" />
       </div>
-
-      <nav className="home-jumps" aria-label="Go to">
-        {JUMPS.map((jump) => (
-          <button
-            key={jump.id}
-            type="button"
-            className="home-jump"
-            onClick={() => onOpen(jump.id)}
-          >
-            <span className="home-jump-label">
-              {jump.label}
-              {jump.id === "rvlot" && lotTotal ? (
-                <span className="home-jump-sub">{lotTotal} in stock</span>
-              ) : null}
-            </span>
-            <span className="home-jump-hint">{jump.hint}</span>
-          </button>
-        ))}
-      </nav>
     </div>
   );
 }

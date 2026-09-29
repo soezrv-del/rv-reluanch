@@ -150,7 +150,8 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   assert.match(home, /SHOWROOM_SPOTLIGHT\.series/);
   assert.doesNotMatch(home, /resolveHomeCoach|pickShowroomStage|newestLotUnit/);
   assert.match(home, /MetalVerifiedTrue/);
-  assert.match(home, /New arrivals/);
+  assert.doesNotMatch(home, /New arrivals/);
+  assert.match(home, /showroom-lotcount/);
   assert.match(home, /onOpen\("rvlot"\)/);
   const arrivals = readFileSync(join(root, "../../components/lot/LotArrivals.tsx"), "utf8");
   assert.match(arrivals, /CoveredCoach/);
@@ -356,8 +357,9 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
   assert.doesNotMatch(home, /spotlight-lot\.jpg/);
   assert.match(home, /Open coach/);
   assert.doesNotMatch(home, /data-lot-whisper|showroom-lot-whisper/);
-  assert.match(home, /home-jump-sub/);
+  assert.match(home, /showroom-lotcount/);
   assert.match(home, /in stock/);
+  assert.doesNotMatch(home, /home-jump/);
   assert.doesNotMatch(home, /Learn more|showroom-coach-lot|data-arrival-set="duplicate"/);
   assert.doesNotMatch(css, /showroom-coach-lot/);
 });
