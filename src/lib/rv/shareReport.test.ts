@@ -9,6 +9,7 @@ import { PDFArray, PDFDocument, PDFRawStream, PDFStream, decodePDFRawStream } fr
 import { initWasm, Resvg } from "@resvg/resvg-wasm";
 import type { RVSpec } from "./rvTypes.ts";
 import type { LotUnit } from "../lot/ownLotPage.ts";
+import { parseLotSnapshotJson } from "../lot/ownLotPage.ts";
 import { buildShareReportPdf } from "./shareReportPdf.ts";
 import { defaultParseSearch, defaultStringifySearch } from "@tanstack/router-core";
 import {
@@ -20,6 +21,7 @@ import {
   isOmittedReportValue,
   plainQueryText,
   splitHeadlineNote,
+  formatReportDate,
   REPORT_ICON_URL,
   REPORT_MARK_URL,
   REPORT_TOUCH_ICON_URL,
@@ -333,6 +335,11 @@ test("share report surfaces use the chrome RvFAX mark", () => {
   ]) {
     assert.match(readFileSync(file, "utf8"), /reportShareIconLinks\(\)/);
   }
+});
+
+test("report date is the Pacific day, not the next UTC day", () => {
+  assert.equal(formatReportDate(new Date("2026-09-28T02:30:00Z")), "September 27, 2026");
+  assert.equal(formatReportDate(new Date("2026-09-28T07:30:00Z")), "September 28, 2026");
 });
 
 test("headline notes split off the figure", () => {
@@ -681,4 +688,23 @@ test("a long share report still prints as one PDF page", async () => {
   });
   const doc = await PDFDocument.load(bytes);
   assert.equal(doc.getPageCount(), 1);
+});
+
+test("stock 47492 RvFAX PDF is one page", async () => {
+  const here = dirname(fileURLToPath(import.meta.url));
+  const snap = parseLotSnapshotJson(
+    JSON.parse(readFileSync(join(here, "../../../public/inventory/own-lot-latest.json"), "utf8")),
+  );
+  const coach = snap.units.find((item) => item.stock_number === "47492");
+  assert.ok(coach);
+  const report = buildUnitShareReport(coach, NOW);
+  const bytes = await buildShareReportPdf(report);
+  const doc = await PDFDocument.load(bytes);
+  assert.equal(doc.getPageCount(), 1);
+  const text = pdfLiterals(doc);
+  assert.ok(text.includes("47492"));
+  assert.ok(text.includes("32,700"));
+  assert.equal(text.includes("Price Monthly"), false);
+  assert.equal(text.includes("Wallpaper"), false);
+  assert.equal(text.includes("Wheelbase"), false);
 });

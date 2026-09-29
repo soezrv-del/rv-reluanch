@@ -90,7 +90,7 @@ export function splitHeadlineNote(value: string): { value: string; note: string 
 
 export function formatReportDate(now: Date = new Date()): string {
   return new Intl.DateTimeFormat("en-US", {
-    timeZone: "UTC",
+    timeZone: "America/Los_Angeles",
     month: "long",
     day: "numeric",
     year: "numeric",

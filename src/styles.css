@@ -3220,7 +3220,7 @@ body:has(.report-page) {
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #6e7c8c;
+  color: #3d4d68;
 }
 
 .report-headlines dd {
@@ -3254,7 +3254,7 @@ body:has(.report-page) {
 }
 
 .report-section dt {
-  color: #6e7c8c;
+  color: #3d4d68;
   font-size: 0.92rem;
 }
 
