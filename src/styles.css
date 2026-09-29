@@ -2466,6 +2466,7 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   border-radius: 8px;
   background: #1648c8;
   color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
   font-size: 14px;
   font-weight: 600;
 }
@@ -3417,7 +3418,7 @@ body:has(.report-page) {
 .lot-share-dock {
   display: flex;
   justify-content: flex-end;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.4rem;
   padding: 0.7rem 0.85rem 0.15rem;
 }
@@ -3432,6 +3433,11 @@ body:has(.report-page) {
   border: 1px solid rgba(255, 255, 255, 0.22);
   background: rgba(0, 0, 0, 0.4);
   color: #fff;
+}
+.lot-facts-tab {
+  width: 36px;
+  height: 36px;
+  flex-basis: 36px;
 }
 .lot-detail-tabs {
   display: flex;
@@ -4215,8 +4221,9 @@ html[data-theme="light"] .lot-detail-row {
   border-top-color: rgba(0, 0, 0, 0.08);
 }
 html[data-theme="light"] .lot-detail-ask {
-  background: var(--light-action);
-  color: #ffffff;
+  background: #1648c8 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 html[data-theme="light"] .text-sapphire,
 html[data-theme="light"] .text-sapphire-glow {
@@ -4765,6 +4772,11 @@ html[data-theme="light"] :is(
   background: var(--light-action);
   border-color: var(--light-action);
   color: #ffffff;
+}
+html[data-theme="light"] .lot-detail-ask {
+  background: #1648c8 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 html[data-theme="light"] .report-section h2 {
   color: var(--light-action);

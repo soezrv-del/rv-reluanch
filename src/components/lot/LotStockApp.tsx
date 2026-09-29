@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Calculator, ChevronLeft, Search, X } from "lucide-react";
+import { Calculator, Check, ChevronLeft, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RAIDHO_R_MARK } from "@/assets/prestige";
 import { SuitePage } from "@/components/shell/SuitePage";
@@ -542,6 +542,15 @@ function LotDetail({
   return (
     <div className="lot-detail" data-lot-detail>
       <div className="lot-share-dock">
+        <button
+          type="button"
+          className="lot-cal-tab lot-facts-tab"
+          data-lot-facts
+          aria-label="RV facts"
+          onClick={() => nav?.setTab("rvfax")}
+        >
+          <Check className="size-3.5" aria-hidden />
+        </button>
         {price > 0 ? (
           <button
             type="button"
@@ -569,14 +578,6 @@ function LotDetail({
             More info
           </a>
         ) : null}
-        <button
-          type="button"
-          className="lot-detail-tab"
-          data-lot-facts
-          onClick={() => nav?.setTab("rvfax")}
-        >
-          RV facts
-        </button>
       </div>
       {stats.length ? (
         <div className="lot-detail-stats">
