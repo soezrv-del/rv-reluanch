@@ -544,12 +544,12 @@ function LotDetail({
       <div className="lot-share-dock">
         <button
           type="button"
-          className="lot-cal-tab lot-facts-tab"
+          className="lot-cal-tab"
           data-lot-facts
           aria-label="RV facts"
           onClick={() => nav?.setTab("rvfax")}
         >
-          <Check className="size-3.5" aria-hidden />
+          <Check className="size-4" aria-hidden />
         </button>
         {price > 0 ? (
           <button
@@ -564,9 +564,6 @@ function LotDetail({
             <Calculator className="size-4" aria-hidden />
           </button>
         ) : null}
-        <ReportShareButton report={buildUnitShareReport(unit)} />
-      </div>
-      <div className="lot-detail-tabs">
         {listing ? (
           <a
             className="lot-detail-tab"
@@ -578,6 +575,7 @@ function LotDetail({
             More info
           </a>
         ) : null}
+        <ReportShareButton report={buildUnitShareReport(unit)} />
       </div>
       {stats.length ? (
         <div className="lot-detail-stats">

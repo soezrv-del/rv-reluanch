@@ -3422,6 +3422,16 @@ body:has(.report-page) {
   gap: 0.4rem;
   padding: 0.7rem 0.85rem 0.15rem;
 }
+.lot-share-dock .lot-cal-tab,
+.lot-share-dock .lot-detail-tab,
+.lot-share-dock .report-share-main {
+  height: 44px;
+  min-height: 44px;
+  background: #1648c8;
+  border: 0;
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+}
 .lot-cal-tab {
   display: inline-flex;
   width: 44px;
@@ -3430,43 +3440,15 @@ body:has(.report-page) {
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(0, 0, 0, 0.4);
-  color: #fff;
-}
-.lot-facts-tab {
-  width: 36px;
-  height: 36px;
-  flex-basis: 36px;
-}
-.lot-detail-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  padding: 0.45rem 0.85rem 0.15rem;
 }
 .lot-detail-tab {
   display: inline-flex;
-  min-height: 32px;
   align-items: center;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(0, 0, 0, 0.3);
-  padding: 0 0.85rem;
-  color: #fff;
+  padding: 0 0.9rem;
   font-size: 12px;
   font-weight: 700;
   text-decoration: none;
-}
-html[data-theme="light"] .lot-detail-tab {
-  background: #ffffff;
-  border-color: rgba(0, 0, 0, 0.12);
-  color: #171a20;
-}
-html[data-theme="light"] .lot-cal-tab {
-  background: #171a20;
-  border-color: #171a20;
-  color: #fff;
 }
 
 .report-share {
@@ -4777,6 +4759,13 @@ html[data-theme="light"] .lot-detail-ask {
   background: #1648c8 !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
+}
+html[data-theme="light"] .lot-share-dock :is(.lot-cal-tab, .lot-detail-tab, .report-share-main) {
+  background: #1648c8 !important;
+  border-color: #1648c8 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: none !important;
 }
 html[data-theme="light"] .report-section h2 {
   color: var(--light-action);
