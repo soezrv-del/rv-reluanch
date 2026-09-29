@@ -24,13 +24,6 @@ export function GrokStatusWord({
   );
 }
 
-const LANDING_PILLS = [
-  "How many diesels on the lot?",
-  "Cheapest Class C",
-  "Compare two coaches",
-  "Tow rating for my truck",
-] as const;
-
 export function GrokLanding({
   status,
   speaking,
@@ -129,20 +122,6 @@ export function GrokLanding({
           <p className="mt-3 text-[12px] text-muted">{hint}</p>
         ) : null}
       </section>
-
-      <div className="grok-landing-pills" data-rvgrok-landing-pills>
-        {LANDING_PILLS.map((prompt) => (
-          <button
-            key={prompt}
-            type="button"
-            className="grok-landing-pill"
-            data-rvgrok-landing-pill={prompt}
-            onClick={() => onChip(prompt)}
-          >
-            {prompt}
-          </button>
-        ))}
-      </div>
     </div>
   );
 }
