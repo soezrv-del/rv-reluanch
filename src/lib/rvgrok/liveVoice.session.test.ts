@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import {
   buildRealtimeSessionUpdate,
   buildSessionIntroResponse,
+  isNativeRealtimeTool,
   REALTIME_SESSION_TOOLS,
 } from "./liveVoice.ts";
 import { buildVoiceGrounding } from "./grounding.ts";
@@ -62,6 +63,12 @@ test("session.update enables native web_search on the Realtime session", () => {
   assert.equal(session.audio.output.format.rate, PCM_SAMPLE_RATE);
   assert.equal(session.audio.output.speed, 1.25);
   assert.match(session.instructions, /native web_search/);
+  assert.match(session.instructions, /He did not found RV Country/);
+  assert.match(session.instructions, /Paul Evert founded RV Country in 1961/);
+  assert.match(
+    session.instructions,
+    /never mix in details from the app's own notes/,
+  );
   assert.match(
     session.instructions,
     /experienced RV salesman's pocket/,
@@ -171,6 +178,11 @@ test("onopen / lock-refresh path still calls buildRealtimeSessionUpdate", () => 
   assert.match(realtime, /response\.function_call_arguments\.done/);
   assert.match(realtime, /\/api\/rvgrok\/query-lot/);
   assert.match(realtime, /function_call_output/);
+  assert.doesNotMatch(realtime, /None\. Unknown tool/);
+  assert.match(realtime, /isNativeRealtimeTool/);
+  assert.match(realtime, /unrecognized tool/);
+  assert.equal(isNativeRealtimeTool("web_search"), true);
+  assert.equal(isNativeRealtimeTool("query_lot"), false);
 });
 
 test("session.update injects the active screen guide and forbids a blind-screen excuse", () => {

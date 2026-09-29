@@ -27,6 +27,7 @@ import {
   formatScreenContext,
   stripScreenContext,
 } from "./screenGuides.ts";
+import { DAVID_HANSEN_STORY, PEOPLE_FACTS_RULE } from "./originStory.ts";
 import { liveVoiceOutputFor, preferIosLoudspeaker, releaseLiveVoiceOutput } from "./voiceOutput.ts";
 import { PCM_SAMPLE_RATE, RV_VOICE_INSTRUCTIONS, VOICE_MIC_RULES } from "./voice.ts";
 
@@ -238,6 +239,18 @@ export const REALTIME_SESSION_TOOLS = [
   QUERY_LOT_TOOL,
 ] as const;
 
+/** xAI runs these. The client must not answer them. */
+export function isNativeRealtimeTool(name: string): boolean {
+  const n = name.trim().toLowerCase();
+  return (
+    n === "web_search" ||
+    n.startsWith("web_search") ||
+    n === "x_search" ||
+    n === "file_search" ||
+    n === "code_interpreter"
+  );
+}
+
 export function buildRealtimeSessionUpdate(
   voiceId: string,
   speed = 1,
@@ -264,7 +277,7 @@ export function buildRealtimeSessionUpdate(
   const screenSection = screen
     ? `${SCREEN_GUIDE_PREAMBLE}\n\n${formatScreenContext(screen)}`
     : SCREEN_GUIDE_PREAMBLE;
-  const instructions = `${core}\n\n${personalBlock}${memoryBlock}${catalogBlock}When a turn injects a lot snapshot, speak that total. Never replace it with a website count. This session has native web_search and query_lot. For a GVWR or other spec pin, a saved pin is the best available answer. Use the closest saved pin when one exists, and otherwise answer from web search. Never refuse, stall, or skip a spec pin because the match is not perfect. Call query_lot for ANY count or availability question, including a follow-up that changes type or condition. Call query_lot once per question. Never say none before that tool returns. Never answer a lot count from memory. Never tell the user to change a query, a parameter, or these instructions. Answer from the query_lot result only. Do not call web_search and do not mention web notes for a count, the cheapest or most expensive coach, availability, or stock. Say none only when that tool returns matched 0. If it returns did_you_mean or close, offer that name. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${intro} Then listen. Never repeat this intro.\n\n${VOICE_MIC_RULES}\n\n${screenSection}`;
+  const instructions = `${DAVID_HANSEN_STORY}\n${PEOPLE_FACTS_RULE}\n\n${core}\n\n${personalBlock}${memoryBlock}${catalogBlock}When a turn injects a lot snapshot, speak that total. Never replace it with a website count. This session has native web_search and query_lot. For a GVWR or other spec pin, a saved pin is the best available answer. Use the closest saved pin when one exists, and otherwise answer from web search. Never refuse, stall, or skip a spec pin because the match is not perfect. Call query_lot for ANY count or availability question, including a follow-up that changes type or condition. Call query_lot once per question. Never say none before that tool returns. Never answer a lot count from memory. Never tell the user to change a query, a parameter, or these instructions. Answer from the query_lot result only. Do not call web_search and do not mention web notes for a count, the cheapest or most expensive coach, availability, or stock. Say none only when that tool returns matched 0. If it returns did_you_mean or close, offer that name. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${intro} Then listen. Never repeat this intro.\n\n${VOICE_MIC_RULES}\n\n${screenSection}`;
   return {
     type: "session.update",
     session: {
