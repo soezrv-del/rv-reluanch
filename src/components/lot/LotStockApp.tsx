@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Calculator, ChevronLeft, Search, X } from "lucide-react";
+import { Calculator, Check, ChevronLeft, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RAIDHO_R_MARK } from "@/assets/prestige";
 import { SuitePage } from "@/components/shell/SuitePage";
@@ -542,6 +542,15 @@ function LotDetail({
   return (
     <div className="lot-detail" data-lot-detail>
       <div className="lot-share-dock">
+        <button
+          type="button"
+          className="lot-cal-tab"
+          data-lot-facts
+          aria-label="RV facts"
+          onClick={() => nav?.setTab("rvfax")}
+        >
+          <Check className="size-4" aria-hidden />
+        </button>
         {price > 0 ? (
           <button
             type="button"
@@ -555,19 +564,19 @@ function LotDetail({
             <Calculator className="size-4" aria-hidden />
           </button>
         ) : null}
+        {listing ? (
+          <a
+            className="lot-detail-tab"
+            href={listing}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-lot-listing
+          >
+            More info
+          </a>
+        ) : null}
         <ReportShareButton report={buildUnitShareReport(unit)} />
       </div>
-      {listing ? (
-        <a
-          className="lot-listing"
-          href={listing}
-          target="_blank"
-          rel="noopener noreferrer"
-          data-lot-listing
-        >
-          {listing}
-        </a>
-      ) : null}
       {stats.length ? (
         <div className="lot-detail-stats">
           {stats.map((stat) => (

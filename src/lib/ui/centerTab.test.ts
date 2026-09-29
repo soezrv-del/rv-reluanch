@@ -58,5 +58,5 @@ test("light selected tabs are graphite, not sapphire", () => {
     .join("}");
   assert.match(lightDock, /#171a20/);
   assert.doesNotMatch(lightDock, /#1648c8/);
-  assert.match(dock, /background:\s*#1648c8 !important/);
+  assert.match(dock, /background:\s*rgba\(255, 255, 255, 0\.16\) !important/);
 });

@@ -2466,6 +2466,7 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   border-radius: 8px;
   background: #1648c8;
   color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
   font-size: 14px;
   font-weight: 600;
 }
@@ -3417,9 +3418,19 @@ body:has(.report-page) {
 .lot-share-dock {
   display: flex;
   justify-content: flex-end;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.4rem;
   padding: 0.7rem 0.85rem 0.15rem;
+}
+.lot-share-dock .lot-cal-tab,
+.lot-share-dock .lot-detail-tab,
+.lot-share-dock .report-share-main {
+  height: 44px;
+  min-height: 44px;
+  background: #1648c8;
+  border: 0;
+  color: #fff;
+  -webkit-text-fill-color: #fff;
 }
 .lot-cal-tab {
   display: inline-flex;
@@ -3429,28 +3440,15 @@ body:has(.report-page) {
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(0, 0, 0, 0.4);
-  color: #fff;
 }
-.lot-listing {
-  display: block;
-  margin: 0.15rem 0.85rem 0.35rem;
-  color: #9eb6ff;
+.lot-detail-tab {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0 0.9rem;
   font-size: 12px;
-  font-weight: 650;
-  line-height: 1.35;
-  overflow-wrap: anywhere;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-html[data-theme="light"] .lot-cal-tab {
-  background: #171a20;
-  border-color: #171a20;
-  color: #fff;
-}
-html[data-theme="light"] .lot-listing {
-  color: var(--light-link);
+  font-weight: 700;
+  text-decoration: none;
 }
 
 .report-share {
@@ -3852,7 +3850,7 @@ html[data-theme="light"] [aria-label="Price input mode"] {
   gap: 0.5rem;
 }
 
-html[data-theme="light"] .app-shell button:not(.showroom-brand):not(.bottom-tab-btn):not(.showroom-hero):not(.showroom-placard):not(.showroom-arrival):not(.lot-card):not(.lot-card-hit):not(.grok-mic-btn):not(.showroom-mic):not(.showroom-hero-primary):not(.theme-switch):not(.home-jump):not(.grok-followup):not(.appearance-choice):not(.lot-detail-ask):not(.lot-cal-tab):not([data-on-dark]):not([data-voice-panel] *) {
+html[data-theme="light"] .app-shell button:not(.showroom-brand):not(.bottom-tab-btn):not(.showroom-hero):not(.showroom-placard):not(.showroom-arrival):not(.lot-card):not(.lot-card-hit):not(.grok-mic-btn):not(.showroom-mic):not(.showroom-hero-primary):not(.theme-switch):not(.home-jump):not(.grok-followup):not(.appearance-choice):not(.lot-detail-ask):not(.lot-cal-tab):not(.lot-detail-tab):not([data-on-dark]):not([data-voice-panel] *) {
   background: #ffffff;
   background-color: #ffffff;
   color: var(--light-action);
@@ -4205,8 +4203,9 @@ html[data-theme="light"] .lot-detail-row {
   border-top-color: rgba(0, 0, 0, 0.08);
 }
 html[data-theme="light"] .lot-detail-ask {
-  background: var(--light-action);
-  color: #ffffff;
+  background: #1648c8 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 html[data-theme="light"] .text-sapphire,
 html[data-theme="light"] .text-sapphire-glow {
@@ -4258,7 +4257,7 @@ html[data-theme="light"] :is(
   .tow-hero-panel,
   .exclusive-card,
   .grok-landing-card
-):not([data-tools-menu]):not([data-tools-menu] *) button:not(.rounded-full):not([aria-pressed="true"]):not([data-catalog-field]):not(.grok-chip):not(.grok-starter):not(.grok-lot-chip):not(.lot-chip):not(.underline):not([data-tow-details]):not(.grok-followup):not(.appearance-choice):not(.lot-card-hit):not(.lot-detail-ask):not(.lot-cal-tab):not(.report-share-main):not([data-share-link]):not([data-share-pdf]):not([data-on-dark]) {
+):not([data-tools-menu]):not([data-tools-menu] *) button:not(.rounded-full):not([aria-pressed="true"]):not([data-catalog-field]):not(.grok-chip):not(.grok-starter):not(.grok-lot-chip):not(.lot-chip):not(.underline):not([data-tow-details]):not(.grok-followup):not(.appearance-choice):not(.lot-card-hit):not(.lot-detail-ask):not(.lot-cal-tab):not(.lot-detail-tab):not(.report-share-main):not([data-share-link]):not([data-share-pdf]):not([data-on-dark]) {
   background: var(--light-shade) !important;
   background-color: var(--light-shade) !important;
   color: #111111 !important;
@@ -4755,6 +4754,18 @@ html[data-theme="light"] :is(
   background: var(--light-action);
   border-color: var(--light-action);
   color: #ffffff;
+}
+html[data-theme="light"] .lot-detail-ask {
+  background: #1648c8 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+html[data-theme="light"] .lot-share-dock :is(.lot-cal-tab, .lot-detail-tab, .report-share-main) {
+  background: #1648c8 !important;
+  border-color: #1648c8 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: none !important;
 }
 html[data-theme="light"] .report-section h2 {
   color: var(--light-action);

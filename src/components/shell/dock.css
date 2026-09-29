@@ -1,6 +1,8 @@
-/* Sliding dock. Facts, Lot, and Grok fit. The rest swipe in. */
-
+/* Sliding dock. Active tab is padded so it can sit in the center. */
 .bottom-tabs-nav[data-dock-icons="platinum"] {
+  --dock-tab: 9.25rem;
+  --dock-icon: 2.5rem;
+  --dock-label: 0.875rem;
   --dock-ink: #d5dde8;
   --dock-ink-active: #ffffff;
   background: transparent !important;
@@ -12,42 +14,43 @@ html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] {
 }
 
 html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] {
-  --dock-ink: #d8dee8;
+  --dock-ink: #d5dde8;
   --dock-ink-active: #ffffff;
 }
 
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tabs-dock {
   display: flex;
-  grid-template-columns: none;
   flex-wrap: nowrap;
   align-items: stretch;
-  gap: 0.15rem !important;
+  gap: 0 !important;
   overflow-x: auto !important;
   overflow-y: hidden !important;
   scroll-snap-type: x mandatory;
-  scroll-padding-inline: 0.28rem;
+  scroll-padding-inline: calc((100% - var(--dock-tab)) / 2);
   scrollbar-width: none;
   -ms-overflow-style: none;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
-  background: #12141a !important;
-  border: 1px solid rgba(213, 221, 232, 0.32) !important;
-  border-radius: 1.35rem !important;
-  box-shadow:
-    0 16px 36px rgba(0, 0, 0, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
-  padding: 0.28rem !important;
-  -webkit-backdrop-filter: blur(18px) saturate(1.2);
-  backdrop-filter: blur(18px) saturate(1.2);
+  max-width: none !important;
+  background: #000 !important;
+  border: 0 !important;
+  border-top: 0.5px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding-top: 0.45rem !important;
+  padding-bottom: 0.4rem !important;
+  padding-left: calc((100% - var(--dock-tab)) / 2) !important;
+  padding-right: calc((100% - var(--dock-tab)) / 2) !important;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tabs-dock,
 html[data-theme="light"] .showroom-dock .bottom-tabs-dock {
-  background: #ffffff !important;
-  border: 1px solid rgba(0, 0, 0, 0.06) !important;
-  box-shadow:
-    0 10px 28px rgba(0, 0, 0, 0.18),
-    0 2px 6px rgba(0, 0, 0, 0.08) !important;
+  background: #f2f2f2 !important;
+  border: 0 !important;
+  border-top: 0.5px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: none !important;
 }
 
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tabs-dock::-webkit-scrollbar {
@@ -55,24 +58,27 @@ html[data-theme="light"] .showroom-dock .bottom-tabs-dock {
 }
 
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn {
-  flex: 0 0 30% !important;
-  min-width: 5.6rem !important;
-  max-width: 7.5rem;
-  min-height: 3.6rem !important;
-  gap: 0.28rem;
-  padding: 0.4rem 0.35rem !important;
+  flex: 0 0 var(--dock-tab) !important;
+  width: var(--dock-tab);
+  min-width: var(--dock-tab) !important;
+  max-width: none !important;
+  min-height: 4.75rem !important;
+  gap: 0.35rem;
+  padding: 0.45rem 0.35rem 0.5rem !important;
   scroll-snap-align: center;
+  scroll-snap-stop: normal;
   border: 0 !important;
   border-top: 0 !important;
-  border-radius: 1.05rem;
+  border-radius: 1.15rem;
   background: transparent !important;
   box-shadow: none !important;
-  transition: background-color 200ms ease, color 200ms ease, box-shadow 200ms ease;
+  color: var(--dock-ink) !important;
 }
 
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-glyph {
-  width: 1.35rem !important;
-  height: 1.35rem !important;
+  width: var(--dock-icon) !important;
+  height: var(--dock-icon) !important;
+  flex-shrink: 0;
   color: var(--dock-ink) !important;
   -webkit-text-fill-color: var(--dock-ink) !important;
 }
@@ -80,9 +86,9 @@ html[data-theme="light"] .showroom-dock .bottom-tabs-dock {
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-caption {
   max-width: 100%;
   overflow: hidden;
-  font-size: 0.8125rem !important;
+  font-size: var(--dock-label) !important;
   font-weight: 600;
-  letter-spacing: 0;
+  letter-spacing: 0.01em;
   line-height: 1;
   text-transform: none;
   white-space: nowrap;
@@ -92,22 +98,18 @@ html[data-theme="light"] .showroom-dock .bottom-tabs-dock {
 }
 
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-grok {
-  width: 1.7rem;
-  height: 1.7rem;
-  box-shadow: inset 0 0 0 1.5px var(--dock-ink);
-}
-
-.bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-grok .bottom-tab-glyph {
-  width: 1.05rem !important;
-  height: 1.05rem !important;
+  display: contents;
+  box-shadow: none !important;
+  background: none !important;
 }
 
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active,
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] {
-  background: #1648c8 !important;
+  background: rgba(255, 255, 255, 0.16) !important;
   border-color: transparent !important;
   border-top-color: transparent !important;
-  box-shadow: 0 6px 14px rgba(22, 72, 200, 0.28) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22) !important;
+  color: var(--dock-ink-active) !important;
 }
 
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active .bottom-tab-glyph,
@@ -117,11 +119,6 @@ html[data-theme="light"] .showroom-dock .bottom-tabs-dock {
   color: var(--dock-ink-active) !important;
   -webkit-text-fill-color: var(--dock-ink-active) !important;
   background-image: none;
-}
-
-.bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active .bottom-tab-grok,
-.bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] .bottom-tab-grok {
-  box-shadow: inset 0 0 0 1.5px #ffffff;
 }
 
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active,
@@ -148,4 +145,10 @@ html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-ta
 .showroom-dock .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active,
 .showroom-dock .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] {
   border-top-color: transparent !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tabs-dock {
+    scroll-behavior: auto;
+  }
 }
