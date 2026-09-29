@@ -101,10 +101,9 @@ test("forbidden lot-first deflection matches the Seneca miss shape", () => {
 
 test("standing prompts have no pasted lot card; lean core only names the tool", () => {
   const prompts = src("prompts.ts");
-  const voice = src("voice.ts").replace(
-    /export const VOICE_MIC_RULES = `[\s\S]*?`;/,
-    "",
-  );
+  const voice = src("voice.ts")
+    .replace(/export const VOICE_MIC_RULES = `[\s\S]*?`;/, "")
+    .replace(/export const LIVE_VOICE_PROMPT = `[\s\S]*?`;/, "");
   const speechRaw = src("speechPolicy.ts");
   const speech = speechRaw
     .replace(/export const RV_GROK_LEAN_CORE = `[\s\S]*?`;/, "")
@@ -153,7 +152,7 @@ test("standing prompts have no pasted lot card; lean core only names the tool", 
     /ACCURACY_AIM_POLICY =\s*\n\s*"Get as accurate as possible, but not gospel\."/,
   );
   assert.match(speechRaw, /Get as accurate as possible, but not gospel\./);
-  assert.match(speechRaw, /closest saved pin when one exists/);
+  assert.match(speechRaw, /closest saved pin only if it matches this coach/);
   assert.doesNotMatch(speechRaw, /say that field is unverified/);
   assert.match(
     speechRaw,

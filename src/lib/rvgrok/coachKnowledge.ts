@@ -43,6 +43,9 @@ export {
 
 export const COACH_KNOWLEDGE_SCHEMA_VERSION = 2;
 
+/** Asking prices go stale in a week. Specs do not expire. */
+export const PRICE_FIELD_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
 export type CoachKnowledgeConfidence = "high" | "medium" | "low";
 
 export type CoachKnowledgeFieldKind = "spec" | "price";
@@ -163,15 +166,20 @@ export function confidenceAllowsReplace(
 }
 
 /**
- * Saved, non-rejected values stay. Age and schema version do not expire them.
- * A schema bump migrates the row forward on the next write.
+ * Specs stay until a newer equal-or-higher-confidence result replaces them.
+ * Asking prices expire after PRICE_FIELD_TTL_MS. Schema version does not wipe a row.
+ * Rejected values (EST., unknown, insufficient) are not fresh.
  */
 export function isKnowledgeFieldFresh(
   field: CoachKnowledgeField,
-  _now = Date.now(),
+  now = Date.now(),
   _schemaVersion = COACH_KNOWLEDGE_SCHEMA_VERSION,
 ): boolean {
-  return !isRejectedKnowledgeValue(field.value);
+  if (isRejectedKnowledgeValue(field.value)) return false;
+  if (field.kind !== "price") return true;
+  const at = Date.parse(field.researchedAt);
+  if (!Number.isFinite(at)) return false;
+  return now - at <= PRICE_FIELD_TTL_MS;
 }
 
 /** Merge incoming confirmed non-null fields onto the existing bag. */

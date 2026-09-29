@@ -239,7 +239,7 @@ test("Live Voice instructions aim for accuracy but not gospel; gesture order unt
   assert.doesNotMatch(voice, /ACCURACY FIRST/);
   assert.match(voice, /CAMERA:/);
   assert.match(src(root, "speechPolicy.ts"), /Get as accurate as possible, but not gospel\./);
-  assert.match(src(root, "speechPolicy.ts"), /closest saved pin when one exists/);
+  assert.match(src(root, "speechPolicy.ts"), /closest saved pin only if it matches this coach/);
   assert.match(src(root, "speechPolicy.ts"), /Never invent GVWR/);
   assert.doesNotMatch(voice, /You do not have a separate research step/);
   assert.match(live, /liveVoiceStartOrder/);
@@ -517,7 +517,7 @@ test("repair-mode playbook is wired through chat, voice, and browse", () => {
 
 test("system prompts never deflect to website / OEM / dealer — unconditional", () => {
   const speech = src(root, "speechPolicy.ts");
-  assert.match(speech, /closest saved pin when one exists/);
+  assert.match(speech, /closest saved pin only if it matches this coach/);
   assert.match(speech, /Never invent GVWR/);
   assert.doesNotMatch(speech, /the catalog pin in this turn wins/);
   assert.match(src(root, "prompts.ts"), /RV_GROK_LEAN_CORE/);
@@ -938,7 +938,7 @@ test("2025 Aspire 44R grounding injects VERIFIED GVWR 49000 — never teach I-do
   const speech = src(root, "speechPolicy.ts");
   assert.match(prompts, /RV_GROK_LEAN_CORE/);
   assert.match(voiceSrc, /RV_GROK_LEAN_CORE/);
-  assert.match(live, /RV_VOICE_INSTRUCTIONS/);
+  assert.match(live, /liveVoicePrompt/);
   assert.match(
     speech,
     /never say you don't have/i,

@@ -7,9 +7,12 @@ import {
   buildRealtimeSessionUpdate,
   buildSessionIntroResponse,
   isNativeRealtimeTool,
+  liveVoiceBaseInstructions,
   REALTIME_SESSION_TOOLS,
 } from "./liveVoice.ts";
 import { buildVoiceGrounding } from "./grounding.ts";
+import { RV_SYSTEM_PROMPT } from "./prompts.ts";
+import { visitorPersonalizationBlock } from "./speechPolicy.ts";
 import {
   DEFAULT_VOICE,
   GROK_VOICES,
@@ -31,7 +34,7 @@ test("unlocked session.update does not inject standing CATALOG GAP", () => {
   );
   const factsSession = factsEmpty.session as { instructions: string };
   assert.doesNotMatch(factsSession.instructions, standing);
-  assert.match(factsSession.instructions, /native web_search/);
+  assert.doesNotMatch(factsSession.instructions, /native web_search/);
   assert.match(factsSession.instructions, /I'm RvGrok/);
 });
 
@@ -55,6 +58,7 @@ test("session.update enables native web_search on the Realtime session", () => {
     "query_lot",
   );
   assert.match(session.instructions, /query_lot/);
+  assert.doesNotMatch(session.instructions, /native web_search/);
   assert.equal(session.voice, "ara");
   assert.equal(session.turn_detection.type, "server_vad");
   assert.equal(session.audio.input.format.type, "audio/pcm");
@@ -62,7 +66,7 @@ test("session.update enables native web_search on the Realtime session", () => {
   assert.equal(session.audio.output.format.type, "audio/pcm");
   assert.equal(session.audio.output.format.rate, PCM_SAMPLE_RATE);
   assert.equal(session.audio.output.speed, 1.25);
-  assert.match(session.instructions, /native web_search/);
+  assert.doesNotMatch(session.instructions, /native web_search/);
   assert.match(session.instructions, /He did not found RV Country/);
   assert.match(session.instructions, /Paul Evert founded RV Country in 1961/);
   assert.match(
@@ -73,16 +77,14 @@ test("session.update enables native web_search on the Realtime session", () => {
     session.instructions,
     /experienced RV salesman's pocket/,
   );
-  assert.match(session.instructions, /closest saved pin when one exists/);
+  assert.match(session.instructions, /closest saved pin only if it matches this coach/);
   assert.doesNotMatch(session.instructions, /the catalog pin in this turn wins/);
   assert.match(session.instructions, /give me one second/);
-  assert.match(session.instructions, /only when research is actually running/);
+  assert.match(session.instructions, /only while research is running/);
   assert.doesNotMatch(session.instructions, /LIVE VOICE ACKNOWLEDGMENT/);
   assert.doesNotMatch(session.instructions, /rotating acknowledgment/);
   assert.match(session.instructions, /I'm RvGrok/);
-  const introAt = session.instructions.indexOf("Never repeat this intro.");
-  const micAt = session.instructions.indexOf("say that last part again");
-  assert.ok(micAt > introAt, "mic rules stay at the end of the voice prompt");
+  assert.match(session.instructions, /say that last part again/);
   assert.doesNotMatch(session.instructions, /STANDING LESSONS \(desk SoT\)/);
   assert.doesNotMatch(session.instructions, /sales-floor wingman/);
   assert.doesNotMatch(session.instructions, /CARFAX-style coach report/);
@@ -92,12 +94,13 @@ test("session.update enables native web_search on the Realtime session", () => {
 test("named visitor cold-open is Hello, first name — not I'm RvGrok", () => {
   const msg = buildRealtimeSessionUpdate("ara", 1, "", "David Hansen");
   const session = msg.session as { instructions: string };
+  assert.match(session.instructions, /The person you are talking to is David/);
   assert.match(session.instructions, /Their first name is David/);
-  assert.match(session.instructions, /Welcome them back by that first name once/);
+  assert.doesNotMatch(session.instructions, /Welcome them back by that first name once/);
   assert.match(session.instructions, /address them by David/);
   assert.doesNotMatch(session.instructions, /only occasionally/);
   assert.doesNotMatch(session.instructions, /not every turn/);
-  assert.match(session.instructions, /Say exactly: Hello, David/);
+  assert.match(session.instructions, /say exactly "Hello, David\."/);
   assert.doesNotMatch(session.instructions, /Say exactly: I'm RvGrok/);
   assert.doesNotMatch(session.instructions, /I'm RvGrok, David/);
   assert.equal(session.instructions.includes(`I'm RvGrok, David`), false);
@@ -120,7 +123,7 @@ test("visitor memory is additive and does not change the spoken intro", () => {
       session.instructions.indexOf("VISITOR MEMORY"),
   );
   assert.doesNotMatch(session.instructions, /STANDING LESSONS/);
-  assert.match(session.instructions, /Say exactly: Hello, David/);
+  assert.match(session.instructions, /say exactly "Hello, David\."/);
   assert.doesNotMatch(session.instructions, /Say exactly: I'm RvGrok/);
   assert.doesNotMatch(session.instructions, /I'm RvGrok, David/);
 });
@@ -146,7 +149,7 @@ test("catalog lock session.update still ships voice, VAD, audio, and web_search"
   assert.equal(session.turn_detection.threshold, 0.45);
   assert.equal(session.audio.output.speed, 1);
   assert.match(session.instructions, /2022 Newmar Dutch Star 4369/);
-  assert.match(session.instructions, /native web_search/);
+  assert.doesNotMatch(session.instructions, /native web_search/);
 });
 
 test("standing lessons no longer stack the retired desk bullets", () => {
@@ -196,18 +199,20 @@ test("session.update injects the active screen guide and forbids a blind-screen 
     "Lot",
   );
   const instructions = (msg.session as { instructions: string }).instructions;
-  assert.match(instructions, /APP SCREEN AWARENESS/);
-  assert.match(instructions, /Never say you can't see his screen/);
+  assert.match(instructions, /You're built into the rvmax app/);
+  assert.match(instructions, /Don't describe the screen unless he asks/);
   assert.match(instructions, /ACTIVE SCREEN: Lot/);
   assert.match(instructions, /FEATURED REPORT/);
   assert.match(instructions, /PIN GVWR 39600/);
   assert.doesNotMatch(instructions, /DID YOU MEAN\?/);
   assert.doesNotMatch(instructions, /You cannot see the screen/);
   assert.doesNotMatch(instructions, /I can't see the screen/);
+  assert.doesNotMatch(instructions, /APP SCREEN AWARENESS/);
   const bare = buildRealtimeSessionUpdate("ara");
   const bareText = (bare.session as { instructions: string }).instructions;
-  assert.match(bareText, /APP SCREEN AWARENESS/);
-  assert.doesNotMatch(bareText, /SCREEN GUIDE:/);
+  assert.match(bareText, /Don't describe the screen unless he asks/);
+  assert.doesNotMatch(bareText, /SCREEN CONTEXT START/);
+  assert.doesNotMatch(bareText, /APP SCREEN AWARENESS/);
 });
 
 test("Altair is a male voice and session.update sends that id", () => {
@@ -231,4 +236,64 @@ test("Altair is a male voice and session.update sends that id", () => {
   const publicDir = join(root, "../../../public/assets/brand");
   assert.equal(existsSync(join(publicDir, "icon-rvgrok-female.png")), true);
   assert.equal(existsSync(join(publicDir, "icon-rvgrok-male.png")), true);
+});
+
+test("live voice prompt says each rewritten rule once and drops the old ones", () => {
+  const msg = buildRealtimeSessionUpdate("ara", 1, "", "David");
+  const instructions = (msg.session as { instructions: string }).instructions;
+  const once = [
+    "closest saved pin",
+    "isn't verified yet",
+    "Never give a near match's number as this coach's.",
+    "Name the source",
+    "Never invent GVWR, UVW, payload, hitch weight, price, tank sizes, or a recall.",
+    "never from memory",
+    "Lot answers are exact",
+    "Call query_lot once per count question",
+    '"do we have," or "on the lot."',
+    "home turf",
+    "Then stop.",
+    "Do not apologize.",
+    'say exactly "Hello, David."',
+    "Don't describe the screen unless he asks",
+    "where is X",
+  ];
+  for (const phrase of once) {
+    const hits = instructions.split(phrase).length - 1;
+    assert.equal(hits, 1, phrase);
+  }
+  for (const banned of [
+    "85 to 90",
+    "Never refuse",
+    "estimate",
+    "on our lot",
+    "Welcome them back",
+    "I only",
+  ]) {
+    assert.equal(
+      instructions.toLowerCase().includes(banned.toLowerCase()),
+      false,
+      banned,
+    );
+  }
+
+  const memory =
+    "VISITOR MEMORY. Welcome them back by that first name once — separate from the one-time I'm RvGrok intro. Prefers compact answers.";
+  const withMemory = buildRealtimeSessionUpdate("ara", 1, "", "David", memory);
+  const remembered = (withMemory.session as { instructions: string }).instructions;
+  assert.match(remembered, /The person you are talking to is David/);
+  assert.doesNotMatch(remembered, /Welcome them back/);
+  assert.equal(
+    remembered.split('say exactly "Hello, David."').length - 1,
+    1,
+  );
+  assert.match(remembered, /Prefers compact answers/);
+
+  const base = liveVoiceBaseInstructions("David");
+  const words = base.trim().split(/\s+/).filter(Boolean);
+  assert.ok(words.length < 700, `base prompt is ${words.length} words`);
+  assert.match(visitorPersonalizationBlock("David"), /Welcome them back/);
+  assert.match(RV_SYSTEM_PROMPT, /one natural follow-up/);
+  assert.doesNotMatch(RV_SYSTEM_PROMPT, /85 to 90/);
+  assert.match(RV_SYSTEM_PROMPT, /closest saved pin only if it matches this coach/);
 });

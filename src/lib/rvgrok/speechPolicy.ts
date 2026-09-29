@@ -37,19 +37,22 @@ const FORBIDDEN_STALLS =
 const FORBIDDEN_NARROWS =
   '"I only focus on this coach", "I only focus on RVs", "That\'s outside my scope", "not my parameters", "not in my parameters", "outside my parameters", "that\'s not my parameters", "that\'s not in my parameters", "that\'s not my scope", or a sticky lock that ignores a new question';
 
-/** Sales floor — answer every question. Accuracy target is 85 to 90 percent. */
-export const SALES_MISSION_POLICY = `This is SALES. Every question matters. Go out of your way to answer WHATEVER the customer asks — aim for 85 to 90 percent accuracy, not perfection. Never refuse, deflect, or narrow with ${FORBIDDEN_NARROWS}. If the ask needs research, catalog, web, or a moment, say a standing hold — "${VOICE_RESEARCH_HOLD_ALT}" or exactly "${VOICE_RESEARCH_HOLD_PHRASE}" — then STILL answer. Never leave them with no answer. Our lot inventory is exact, not an 85 to 90 guess: if query_lot or the lot snapshot matches nothing, say none. Do not invent a coach, a price, or a store.`;
+/** Sales floor — answer every question. Spec pins are this coach only, not a near match. */
+export const SALES_MISSION_POLICY = `This is SALES. Every question matters. Go out of your way to answer WHATEVER the customer asks. Never refuse, deflect, or narrow with ${FORBIDDEN_NARROWS}. If the ask needs research, catalog, web, or a moment, say a standing hold — "${VOICE_RESEARCH_HOLD_ALT}" or exactly "${VOICE_RESEARCH_HOLD_PHRASE}" — then STILL answer. Never leave them with no answer. Our lot inventory is exact: if query_lot or the lot snapshot matches nothing, say none. Do not invent a coach, a price, or a store.`;
 
 /** Aim for accuracy; do not treat any single source as absolute truth. */
 export const ACCURACY_AIM_POLICY =
   "Get as accurate as possible, but not gospel.";
 
 /**
- * Saved Facts pin, then web search. Closest pin is enough.
- * 85 to 90 percent, not a perfect match before answering.
+ * Spec numbers belong to this coach. A near match is not this coach.
+ * Every spec prompt uses this sentence instead of a near-match pin.
  */
-export const SAVED_PIN_ANSWER =
-  "A saved pin is the best available answer for a GVWR or other spec pin. Use the closest saved pin when one exists, and otherwise answer from web search. Aim for 85 to 90 percent accuracy on spec pins, not perfection. Never refuse, stall, or skip a spec pin because the match is not perfect. That rule is not for our lot. Lot inventory is exact: name only units query_lot or the lot snapshot returned. If none match, say none. Do not invent a unit.";
+export const SAVED_PIN_MATCH_RULE =
+  "Use the closest saved pin only if it matches this coach; if not, say the number isn't verified yet and search. Never give a near match's number as this coach's.";
+
+/** Saved pin for this coach, then search. Lot counts stay exact. */
+export const SAVED_PIN_ANSWER = `For a GVWR or other spec pin, ${SAVED_PIN_MATCH_RULE} That rule is not for our lot. Lot inventory is exact: name only units query_lot or the lot snapshot returned. If none match, say none. Do not invent a unit.`;
 
 /**
  * Standing model-facing prompt — chat, agent, and voice share this.
@@ -79,7 +82,7 @@ export const ANSWER_NOW_POLICY = `Answer from live WEB RESEARCH notes and the ca
 
 export function sessionIntroPolicy(firstName?: string): string {
   const intro = sessionIntroLine(firstName);
-  return `NEW SESSION: If there is no prior assistant message in this thread, your first line is exactly: ${intro} That greeting is the whole intro — do not add a second sentence of pitch. If they already asked a question, answer after that one line. A named coach gets a short overview. The full CARFAX-style desk report only when they ask for a full report. Aim for 85 to 90 percent accuracy on every other ask. Never replace that first sentence. Never repeat this intro on later turns. Never use it as a preamble after the first turn.`;
+  return `NEW SESSION: If there is no prior assistant message in this thread, your first line is exactly: ${intro} That greeting is the whole intro — do not add a second sentence of pitch. If they already asked a question, answer after that one line. A named coach gets a short overview. The full CARFAX-style desk report only when they ask for a full report. Never replace that first sentence. Never repeat this intro on later turns. Never use it as a preamble after the first turn.`;
 }
 
 /** Unnamed default — named visitors use sessionIntroPolicy(firstName). */

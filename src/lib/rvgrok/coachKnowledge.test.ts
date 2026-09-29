@@ -151,15 +151,21 @@ test("parse confirmed OEM notes into storeable fields", () => {
   assert.equal(parsed.gvwr?.kind, "spec");
 });
 
-test("saved fields do not expire, including old prices and old schema rows", () => {
+test("specs do not expire; asking prices stay on the 7-day TTL", () => {
   const now = Date.parse("2026-09-23T00:00:00.000Z");
   const oldPrice = field(
     "Low / Average / High $180k / $210k / $240k",
     "price",
     "2024-01-01T00:00:00.000Z",
   );
+  const weekOldPrice = field(
+    "Low / Average / High $180k / $210k / $240k",
+    "price",
+    "2026-09-20T00:00:00.000Z",
+  );
   const oldSpec = field("51000 lb", "spec", "2020-06-01T00:00:00.000Z");
-  assert.equal(isKnowledgeFieldFresh(oldPrice, now), true);
+  assert.equal(isKnowledgeFieldFresh(oldPrice, now), false);
+  assert.equal(isKnowledgeFieldFresh(weekOldPrice, now), true);
   assert.equal(isKnowledgeFieldFresh(oldSpec, now), true);
   assert.equal(isKnowledgeFieldFresh(field("EST. 32,000 lb"), now), false);
   assert.equal(
@@ -167,7 +173,8 @@ test("saved fields do not expire, including old prices and old schema rows", () 
     true,
   );
   const knowledge = src("src/lib/rvgrok/coachKnowledge.ts");
-  assert.doesNotMatch(knowledge, /SPEC_FIELD_TTL_MS|PRICE_FIELD_TTL_MS/);
+  assert.match(knowledge, /PRICE_FIELD_TTL_MS/);
+  assert.doesNotMatch(knowledge, /SPEC_FIELD_TTL_MS/);
 });
 
 test("read plan skips live only for a fresh queried field", () => {

@@ -36,7 +36,8 @@ test("chat, agent, and voice share David's lean standing core", () => {
 
   assert.match(prompts, /RV_GROK_LEAN_CORE/);
   assert.match(voice, /RV_GROK_LEAN_CORE/);
-  assert.match(live, /RV_VOICE_INSTRUCTIONS/);
+  assert.match(live, /liveVoicePrompt/);
+  assert.doesNotMatch(live, /RV_VOICE_INSTRUCTIONS/);
   assert.match(speech, /RV_GROK_LEAN_CORE/);
 });
 
@@ -51,7 +52,7 @@ test("lean core is David's verbatim standing prompt", () => {
     RV_GROK_LEAN_CORE,
     /Never invent GVWR, UVW, payload, hitch weight, price, tank sizes, or a recall/,
   );
-  assert.match(RV_GROK_LEAN_CORE, /closest saved pin when one exists/);
+  assert.match(RV_GROK_LEAN_CORE, /closest saved pin only if it matches this coach/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /the catalog pin in this turn wins/);
   assert.match(RV_GROK_LEAN_CORE, /not a menu/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /Pin every verified field/);
@@ -247,6 +248,42 @@ test("no Grok prompt string contains perfectly exact, exact pin, or exact live f
     }
   }
   assert.match(src("screenGuides.ts"), /exactly as written/);
-  assert.match(src("liveVoice.ts"), /Say exactly:/);
+  assert.match(src("voice.ts"), /say exactly "/);
   assert.match(src("webSearch.ts"), /spelled exactly as the OEM string/);
+});
+
+test("near-match pin wording is gone everywhere, one match rule remains", () => {
+  const banned = [
+    "85 to 90",
+    "closest saved pin when one exists",
+    "not a perfect match",
+  ];
+  const files = readdirSync(root)
+    .filter((name) => name.endsWith(".ts") && !name.endsWith(".test.ts"));
+  files.push(
+    "../rv/promptRules.ts",
+    "../../routes/api/rvgrok.ts",
+    "../../routes/api/rvfax.dossier.ts",
+  );
+  for (const file of files) {
+    const text = src(file);
+    for (const phrase of banned) {
+      assert.equal(text.includes(phrase), false, `${file} still has ${phrase}`);
+    }
+  }
+  const rule = /closest saved pin only if it matches this coach|SAVED_PIN_MATCH_RULE/;
+  for (const file of [
+    "speechPolicy.ts",
+    "voice.ts",
+    "webSearch.ts",
+    "geminiResearch.ts",
+    "voiceWeb.ts",
+    "grounding.ts",
+    "coachReport.ts",
+    "screenGuides.ts",
+    "voiceSpecTurn.ts",
+    "grokExtras.ts",
+  ]) {
+    assert.match(src(file), rule, file);
+  }
 });

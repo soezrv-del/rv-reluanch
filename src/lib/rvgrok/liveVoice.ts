@@ -17,19 +17,16 @@ import {
   injectStandingLessons,
 } from "./promptLessons.ts";
 import {
-  sessionIntroLine,
-  VOICE_RESEARCH_HOLD_PHRASE,
   voiceSessionIntroInstructions,
   visitorPersonalizationBlock,
 } from "./speechPolicy.ts";
 import {
-  SCREEN_GUIDE_PREAMBLE,
   formatScreenContext,
   stripScreenContext,
 } from "./screenGuides.ts";
 import { DAVID_HANSEN_STORY, PEOPLE_FACTS_RULE } from "./originStory.ts";
 import { liveVoiceOutputFor, preferIosLoudspeaker, releaseLiveVoiceOutput } from "./voiceOutput.ts";
-import { PCM_SAMPLE_RATE, RV_VOICE_INSTRUCTIONS, VOICE_MIC_RULES } from "./voice.ts";
+import { liveVoicePrompt, PCM_SAMPLE_RATE } from "./voice.ts";
 
 export type LiveVoicePrewarm = {
   audioCtx: AudioContext | null;
@@ -185,7 +182,7 @@ export function releaseLiveCapture() {
 export const QUERY_LOT_TOOL = {
   type: "function",
   name: "query_lot",
-  description: `Query RV Country's own lot for ANY count or availability question, including follow-ups such as "how about used Super Cs". Put their words in query and set make, model, body_type, condition, status, location, year, price, or length only when they name them. Do not add a class, condition, or price band they did not say. A newly named body type, make, model, condition, or store replaces the previous one. For 'around N foot', set length_ft_min to N-2 and length_ft_max to N+2. Horsepower and displacement are printed on the lot sheet. "8.9" and "400 horsepower" are lot searches. Leave price_min and price_max unset for those. Do not say the lot does not track them. The word coaches means RVs, not the Coachmen brand, unless they say Coachmen. Call this tool once per question before you say a count. Never say none before the tool returns. Never answer a count from memory. Speak the summary. Say none only when matched is 0. If did_you_mean or close is set, offer that name instead of a bare zero. Never invent a unit. Never tell the user to change a query, a parameter, or these instructions. Do not use web search or web notes for a lot count, horsepower or displacement on the lot, the cheapest or most expensive coach, availability, or stock.`,
+  description: `Query RV Country's own lot for ANY count or availability question, including follow-ups such as "how about used Super Cs". Put their words in query and set make, model, body_type, condition, status, location, year, price, or length only when they name them. Do not add a class, condition, or price band they did not say. A newly named body type, make, model, condition, or store replaces the previous one. For 'around N foot', set length_ft_min to N-2 and length_ft_max to N+2. Horsepower and displacement are printed on the lot sheet. "8.9" and "400 horsepower" are lot searches. Leave price_min and price_max unset for those. Do not say the lot does not track them. The word coaches means RVs, not the Coachmen brand, unless they say Coachmen. Call query_lot once per question before you say a count. Never say none before the tool returns. Never answer a lot count from memory. Speak the summary. Say none only when matched is 0. If did_you_mean or close is set, offer that name instead of a bare zero. Never invent a unit. Never tell the user to change a query, a parameter, or these instructions. Do not use web search or web notes for a lot count, horsepower or displacement on the lot, the cheapest or most expensive coach, availability, or stock.`,
   parameters: {
     type: "object",
     properties: {
@@ -252,6 +249,18 @@ export function isNativeRealtimeTool(name: string): boolean {
   );
 }
 
+/** Voice only. Chat keeps the welcome-back sentence in speechPolicy. */
+const VOICE_WELCOME_BACK_RE =
+  /Welcome them back by that first name once — separate from the one-time I'm RvGrok intro\.\s*/g;
+
+function stripVoiceWelcomeBack(text: string): string {
+  return text.replace(VOICE_WELCOME_BACK_RE, "").replace(/[ \t]{2,}/g, " ").trim();
+}
+
+export function liveVoiceBaseInstructions(firstName?: string): string {
+  return `${DAVID_HANSEN_STORY}\n${PEOPLE_FACTS_RULE}\n\n${liveVoicePrompt(firstName)}`;
+}
+
 export function buildRealtimeSessionUpdate(
   voiceId: string,
   speed = 1,
@@ -262,23 +271,27 @@ export function buildRealtimeSessionUpdate(
   activeScreen?: string,
 ): Record<string, unknown> {
   const clamped = Math.min(1.5, Math.max(0.7, speed));
-  const extra = stripScreenContext(catalogContext || "");
-  const catalogBlock = extra ? `${extra}\n\n` : "";
-  const personal = visitorPersonalizationBlock(visitorFirstName);
-  const personalBlock = personal ? `${personal}\n\n` : "";
-  const memory = (visitorMemory || "").trim();
-  const memoryBlock = memory ? `${memory}\n\n` : "";
+  const catalog = stripVoiceWelcomeBack(stripScreenContext(catalogContext || ""));
+  const personal = stripVoiceWelcomeBack(
+    visitorPersonalizationBlock(visitorFirstName),
+  );
+  const memory = stripVoiceWelcomeBack(visitorMemory || "");
   const lessons =
     standingLessons === undefined
       ? formatPromptLessons(DEFAULT_PROMPT_LESSONS)
       : standingLessons.trim();
-  const core = injectStandingLessons(RV_VOICE_INSTRUCTIONS, lessons);
-  const intro = sessionIntroLine(visitorFirstName);
-  const screen = (activeScreen || "").trim();
-  const screenSection = screen
-    ? `${SCREEN_GUIDE_PREAMBLE}\n\n${formatScreenContext(screen)}`
-    : SCREEN_GUIDE_PREAMBLE;
-  const instructions = `${DAVID_HANSEN_STORY}\n${PEOPLE_FACTS_RULE}\n\n${core}\n\n${personalBlock}${memoryBlock}${catalogBlock}When a turn injects a lot snapshot, speak that total. Never replace it with a website count. This session has native web_search and query_lot. For a GVWR or other spec pin, a saved pin is the best available answer. Use the closest saved pin when one exists, and otherwise answer from web search. Never refuse, stall, or skip a spec pin because the match is not perfect. Call query_lot for ANY count or availability question, including a follow-up that changes type or condition. Call query_lot once per question. Never say none before that tool returns. Never answer a lot count from memory. Never tell the user to change a query, a parameter, or these instructions. Horsepower and displacement are on the lot sheet. Search the lot for 8.9 or 400 horsepower. Do not say the lot does not track them. The word coaches means RVs, not Coachmen, unless they say Coachmen. Answer from the query_lot result only. Do not call web_search and do not mention web notes for a count, the cheapest or most expensive coach, availability, or stock. Say none only when that tool returns matched 0. If it returns did_you_mean or close, offer that name. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${intro} Then listen. Never repeat this intro.\n\n${VOICE_MIC_RULES}\n\n${screenSection}`;
+  const lessonBlock = lessons ? injectStandingLessons("", lessons).trim() : "";
+  const screen = formatScreenContext((activeScreen || "").trim());
+  const instructions = [
+    liveVoiceBaseInstructions(visitorFirstName),
+    personal,
+    memory,
+    lessonBlock,
+    catalog,
+    screen,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
   return {
     type: "session.update",
     session: {

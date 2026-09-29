@@ -56,6 +56,7 @@ import {
 import {
   VOICE_RESEARCH_HOLD_INSTRUCTIONS,
   VOICE_RESEARCH_HOLD_PHRASE,
+  SAVED_PIN_MATCH_RULE,
 } from "./speechPolicy.ts";
 import {
   fetchWithResearchAccess,
@@ -98,7 +99,7 @@ export function isVoiceWebAccessBlocked(reason: string): boolean {
 }
 
 export const VOICE_RESEARCH_ANSWER_INSTRUCTIONS =
-  "Answer the user's last spoken question now. Spoken only — short, conversational, under 20 seconds. Year / make / model reports synthesize live WEB RESEARCH (OEM / factory brochure / dealer first) plus the CATALOG / BROCHURE lock — never training data alone. Use WEB RESEARCH notes if they are present and successful. Never claim search failed, timed out, or came back empty unless WEB RESEARCH NOTES or WEB SEARCH NOT AVAILABLE were injected this turn. If notes say access or research is blocked, say that — do not claim search came back empty. If catalog is UNKNOWN / GAP on a specs ask, use the browse notes — never EST / low confidence when live notes confirm a fact; if a VERIFIED catalog pin is in context, speak those OEM numbers FIRST and do not lead with search timed out or returned nothing after a retry; if there is no saved pin for this coach, use the closest saved pin, otherwise the closest web figure. For a GVWR or other spec pin, aim for 85 to 90 percent accuracy. Never refuse or stall a spec pin because the match is not perfect. Lot inventory is exact: name only units printed in the lot block or returned by query_lot. If none match, say none. Do not invent a unit, price, stock number, or store. Do not invent brochure numbers from training. Do not stop at I don't know. Speak every VERIFIED LOCKED WEIGHTS number — never say you don't have a VERIFIED GVWR. Never read a URL, markdown, or citation list. If notes say WEB SEARCH NOT AVAILABLE, do not claim you looked it up and do not invent a part location. If this is a nationwide market value ask: speak Low / Average / High from live nationwide asking prices (year ±2). Never quote a nightly scrape, RVcountry competitor-latest, sample listings CSV, or a stale comps table. If this is a repair / diagnose ask (or a REPAIR PLAYBOOK is in context): symptoms → uncertain causes → safety (LP, 120V, CO, brakes, tires, structure) → DIY vs pro. Not a certified RV tech. Never invent a torque spec, part number, wiring color, or sensor bypass.";
+  `Answer the user's last spoken question now. Spoken only — short, conversational, under 20 seconds. Year / make / model reports synthesize live WEB RESEARCH (OEM / factory brochure / dealer first) plus the CATALOG / BROCHURE lock — never training data alone. Use WEB RESEARCH notes if they are present and successful. Never claim search failed, timed out, or came back empty unless WEB RESEARCH NOTES or WEB SEARCH NOT AVAILABLE were injected this turn. If notes say access or research is blocked, say that — do not claim search came back empty. If catalog is UNKNOWN / GAP on a specs ask, use the browse notes — never EST / low confidence when live notes confirm a fact; if a VERIFIED catalog pin is in context, speak those OEM numbers FIRST and do not lead with search timed out or returned nothing after a retry. ${SAVED_PIN_MATCH_RULE} Lot inventory is exact: name only units printed in the lot block or returned by query_lot. If none match, say none. Do not invent a unit, price, stock number, or store. Do not invent brochure numbers from training. Do not stop at I don't know. Speak every VERIFIED LOCKED WEIGHTS number for this coach — never say you don't have a VERIFIED GVWR for this coach. Never read a URL, markdown, or citation list. If notes say WEB SEARCH NOT AVAILABLE, do not claim you looked it up and do not invent a part location. If this is a nationwide market value ask: speak Low / Average / High from live nationwide asking prices (year ±2). Never quote a nightly scrape, RVcountry competitor-latest, sample listings CSV, or a stale comps table. If this is a repair / diagnose ask (or a REPAIR PLAYBOOK is in context): symptoms → uncertain causes → safety (LP, 120V, CO, brakes, tires, structure) → DIY vs pro. Not a certified RV tech. Never invent a torque spec, part number, wiring color, or sensor bypass.`;
 
 export type VoiceWebDecision =
   | { action: "pass" }
@@ -218,7 +219,7 @@ export function formatVoiceWebSearchInjection(
       "WEB RESEARCH NOTES (live this turn — you DID look this up):",
       stripNotesForSpeech(result.notes),
       "Speak a short conversational answer. Do not claim you have no internet.",
-      "Do not read URLs, markdown, or citation lists. A saved pin is the best available answer. Use the closest saved pin when one exists, and otherwise use these web notes. Never skip the answer because the match is not perfect.",
+      `Do not read URLs, markdown, or citation lists. ${SAVED_PIN_MATCH_RULE}`,
       estLine,
     ].join("\n");
   }
