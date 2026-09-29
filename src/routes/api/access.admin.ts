@@ -29,6 +29,10 @@ import {
   setResearchProviderOverride,
 } from "@/lib/rvgrok/researchProviderStore";
 import {
+  listCoachKnowledge,
+  promoteCoachKnowledge,
+} from "@/lib/rvgrok/coachKnowledgeStore";
+import {
   addPromptLesson,
   deletePromptLesson,
   readPromptLessonsStatus,
@@ -46,6 +50,10 @@ type Body = {
   researchOrder?: string;
   order?: string;
   text?: string;
+  year?: string;
+  make?: string;
+  model?: string;
+  floorplan?: string;
 };
 
 async function researchProviderPayload() {
@@ -64,13 +72,14 @@ export const Route = createFileRoute("/api/access/admin")({
       GET: async ({ request }) => {
         const blocked = denyAccessAdmin(request);
         if (blocked) return blocked;
-        const [entries, requests, researchProvider, researchOrder, promptLessons] =
+        const [entries, requests, researchProvider, researchOrder, promptLessons, coachKnowledge] =
           await Promise.all([
             listWhitelist(),
             listAccessRequests(),
             researchProviderPayload(),
             researchOrderPayload(),
             readPromptLessonsStatus(),
+            listCoachKnowledge(),
           ]);
         return Response.json({
           entries,
@@ -78,6 +87,7 @@ export const Route = createFileRoute("/api/access/admin")({
           researchProvider,
           researchOrder,
           promptLessons,
+          coachKnowledge,
         });
       },
       PATCH: async ({ request }) => {
@@ -221,6 +231,25 @@ export const Route = createFileRoute("/api/access/admin")({
             ok: true,
             researchProvider: researchProviderStatus({ override: saved.override }),
             researchOrder: await researchOrderPayload(),
+          });
+        }
+
+        if (action === "promote-coach-knowledge") {
+          const ok = await promoteCoachKnowledge({
+            year: String(body.year ?? ""),
+            make: String(body.make ?? ""),
+            model: String(body.model ?? ""),
+            floorplan: String(body.floorplan ?? ""),
+          });
+          if (!ok) {
+            return Response.json(
+              { error: "Could not promote that coach." },
+              { status: 400 },
+            );
+          }
+          return Response.json({
+            ok: true,
+            coachKnowledge: await listCoachKnowledge(),
           });
         }
 

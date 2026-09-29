@@ -71,6 +71,16 @@ function FactsReportRoute() {
   }, [search.floorplan, search.make, search.series, search.year]);
 
   return (
-    <ShareReportPage report={report} pending={pending} missing={missing} />
+    <ShareReportPage
+      report={report}
+      pending={pending}
+      missing={missing}
+      knowledge={{
+        year: search.year,
+        make: search.make,
+        model: search.series,
+        floorplan: search.floorplan,
+      }}
+    />
   );
 }

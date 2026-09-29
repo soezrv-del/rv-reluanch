@@ -28,6 +28,7 @@ import {
   looksLikeCoachReportAsk,
 } from "./coachReport.ts";
 import {
+  formatCoachKnowledgeLabel,
   planCoachKnowledgeRead,
   planCoachKnowledgeWrite,
   resolveKnowledgeIdentity,
@@ -158,6 +159,23 @@ export function logWebResearchEvent(opts: {
   console.warn(JSON.stringify(payload));
 }
 
+/** Neon write failed. Research answers still return. */
+export function logCoachKnowledgeWriteFailed(opts: {
+  coachKey: string;
+  fields: string[];
+  error: string;
+}): void {
+  console.warn(
+    JSON.stringify({
+      tag: LOG_TAG,
+      kind: "coach_knowledge_write_failed",
+      coachKey: opts.coachKey.slice(0, 120),
+      fields: opts.fields.slice(0, 24),
+      error: opts.error.slice(0, 300),
+    }),
+  );
+}
+
 export function researchResponseHeaders(body: WebResearchApiBody): HeadersInit {
   return {
     "Cache-Control": "no-store",
@@ -233,11 +251,18 @@ async function writeSharedCoachKnowledge(
   plan: CoachKnowledgeWritePlan,
   hooks?: ExecuteWebResearchOpts["knowledge"],
 ): Promise<void> {
+  const failed = (err: unknown) => {
+    logCoachKnowledgeWriteFailed({
+      coachKey: formatCoachKnowledgeLabel(plan.key),
+      fields: Object.keys(plan.fields),
+      error: err instanceof Error ? err.message : String(err),
+    });
+  };
   if (hooks?.upsert) {
     try {
       await hooks.upsert(plan);
-    } catch {
-      /* fail-soft */
+    } catch (err) {
+      failed(err);
     }
     return;
   }
@@ -245,8 +270,8 @@ async function writeSharedCoachKnowledge(
   try {
     const { upsertCoachKnowledgePlan } = await import("./coachKnowledgeStore.ts");
     await upsertCoachKnowledgePlan(plan);
-  } catch {
-    /* fail-soft — research already succeeded */
+  } catch (err) {
+    failed(err);
   }
 }
 

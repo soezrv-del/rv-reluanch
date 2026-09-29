@@ -16,6 +16,7 @@ import {
   Sparkles,
   Truck,
 } from "lucide-react";
+import { CoachKnowledgeFacts } from "@/components/rvfax/CoachKnowledgeFacts";
 import type { RVResult } from "@/lib/rv/catalog";
 import {
   estimateMarket,
@@ -1890,6 +1891,12 @@ export function RvDetail({
             {!sheetOmits.propane && quietSheet(specs.propane) ? (
               <SpecRow label="PROPANE" value={specs.propane} />
             ) : null}
+            <CoachKnowledgeFacts
+              year={year}
+              make={make}
+              model={model}
+              floorplan={floorplan}
+            />
 
             <details className="mt-5 border-t border-white/10 pt-3" data-no-export>
               <summary className="cursor-pointer list-none text-[11px] font-medium text-white/35">

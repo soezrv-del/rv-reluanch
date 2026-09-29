@@ -5,9 +5,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   COACH_KNOWLEDGE_SCHEMA_VERSION,
-  PRICE_FIELD_TTL_MS,
-  SPEC_FIELD_TTL_MS,
   coachKnowledgeKeyEquals,
+  confidenceAllowsReplace,
   formatCoachKnowledgeNotes,
   gateKnowledgeFields,
   isKnowledgeFieldFresh,
@@ -19,6 +18,8 @@ import {
   planCoachKnowledgeWrite,
   shouldSkipLiveForAsk,
 } from "./coachKnowledge.ts";
+import { knowledgeDisplayRows, VERIFIED_FROM_WEB_LABEL } from "./coachKnowledgeDisplay.ts";
+import { logCoachKnowledgeWriteFailed } from "./webResearchTelemetry.ts";
 import { executeWebResearch } from "./webResearchTelemetry.ts";
 import { clearWebSearchCache } from "./webSearch.ts";
 import { CHAT_MAY_WRITE_FACTS_CACHE } from "./grounding.ts";
@@ -150,35 +151,23 @@ test("parse confirmed OEM notes into storeable fields", () => {
   assert.equal(parsed.gvwr?.kind, "spec");
 });
 
-test("price fields are short TTL; spec fields last until 90d or schema bump", () => {
+test("saved fields do not expire, including old prices and old schema rows", () => {
   const now = Date.parse("2026-09-23T00:00:00.000Z");
-  const price = field(
+  const oldPrice = field(
     "Low / Average / High $180k / $210k / $240k",
     "price",
-    "2026-09-20T00:00:00.000Z",
+    "2024-01-01T00:00:00.000Z",
   );
-  const spec = field("51000 lb", "spec", "2026-08-01T00:00:00.000Z");
-  assert.equal(isKnowledgeFieldFresh(price, now), true);
+  const oldSpec = field("51000 lb", "spec", "2020-06-01T00:00:00.000Z");
+  assert.equal(isKnowledgeFieldFresh(oldPrice, now), true);
+  assert.equal(isKnowledgeFieldFresh(oldSpec, now), true);
+  assert.equal(isKnowledgeFieldFresh(field("EST. 32,000 lb"), now), false);
   assert.equal(
-    isKnowledgeFieldFresh(
-      field(price.value, "price", "2026-09-01T00:00:00.000Z"),
-      now,
-    ),
-    false,
+    isKnowledgeFieldFresh(oldSpec, now, COACH_KNOWLEDGE_SCHEMA_VERSION + 3),
+    true,
   );
-  assert.equal(isKnowledgeFieldFresh(spec, now), true);
-  assert.equal(
-    isKnowledgeFieldFresh(field(spec.value, "spec", "2026-06-01T00:00:00.000Z"), now),
-    false,
-  );
-  assert.equal(PRICE_FIELD_TTL_MS, 7 * 24 * 60 * 60 * 1000);
-  assert.equal(SPEC_FIELD_TTL_MS, 90 * 24 * 60 * 60 * 1000);
-
-  const staleSchema = field("51000 lb", "spec", "2026-09-22T00:00:00.000Z");
-  assert.equal(
-    isKnowledgeFieldFresh(staleSchema, now, COACH_KNOWLEDGE_SCHEMA_VERSION + 1),
-    false,
-  );
+  const knowledge = src("src/lib/rvgrok/coachKnowledge.ts");
+  assert.doesNotMatch(knowledge, /SPEC_FIELD_TTL_MS|PRICE_FIELD_TTL_MS/);
 });
 
 test("read plan skips live only for a fresh queried field", () => {
@@ -396,6 +385,124 @@ test("shared sidecar is Neon research-only; Facts cache and DialaBot stay out", 
   const notes = formatCoachKnowledgeNotes(keyFixture(), { gvwr: field("51000 lb") });
   assert.match(notes, /SHARED COACH KNOWLEDGE/);
   assert.doesNotMatch(notes, /Facts cache/);
+});
+
+test("medium confidence never overwrites a high saved value", () => {
+  const existing = {
+    gvwr: { ...field("51000 lb"), confidence: "high" as const },
+  };
+  const kept = mergeConfirmedFields(
+    existing,
+    { gvwr: { ...field("49000 lb"), confidence: "medium" } },
+    { incomingConfidence: "medium" },
+  );
+  assert.equal(kept.gvwr?.value, "51000 lb");
+  const replaced = mergeConfirmedFields(
+    existing,
+    { gvwr: { ...field("52000 lb"), confidence: "high" } },
+    { incomingConfidence: "high" },
+  );
+  assert.equal(replaced.gvwr?.value, "52000 lb");
+  assert.equal(confidenceAllowsReplace("high", "medium"), false);
+  assert.equal(confidenceAllowsReplace("high", "high"), true);
+  assert.equal(confidenceAllowsReplace("medium", "medium"), true);
+  assert.equal(confidenceAllowsReplace("medium", "high"), true);
+});
+
+test("new coach fields and unmapped notes are stored", () => {
+  const notes = [
+    "CONFIRMED: yes.",
+    "Dry weight 32,000 lb.",
+    "Sleeps 8.",
+    "Slides 4.",
+    "Awning: 20 ft power awning.",
+    "Generator: Onan 5500.",
+    "Solar: 400 watt roof panel.",
+    "Warranty: 2 year limited.",
+    "The bedroom has a rear closet the brochure does not name.",
+    "Source: https://example.com/dutch-star-4369",
+  ].join(" ");
+  const parsed = parseConfirmedFieldsFromNotes(
+    notes,
+    "what's the dry weight of a 2022 Newmar Dutch Star 4369",
+    "2026-09-29T12:00:00.000Z",
+  );
+  assert.match(parsed.dryWeight?.value || "", /32,000|32000/);
+  assert.equal(parsed.sleeps?.value, "8");
+  assert.equal(parsed.slides?.value, "4");
+  assert.match(parsed.awning?.value || "", /20 ft/i);
+  assert.match(parsed.generator?.value || "", /Onan 5500/i);
+  assert.match(parsed.solar?.value || "", /400 watt/i);
+  assert.match(parsed.warranty?.value || "", /2 year/i);
+  assert.match(parsed.notes?.value || "", /rear closet/);
+  assert.match(parsed.notes?.value || "", /https:\/\/example.com\/dutch-star-4369/);
+  assert.match(parsed.notes?.value || "", /2026-09-29/);
+});
+
+test("failed knowledge writes are logged and research still returns", () => {
+  const logs: string[] = [];
+  const orig = console.warn;
+  console.warn = (msg?: unknown) => {
+    logs.push(String(msg));
+  };
+  try {
+    logCoachKnowledgeWriteFailed({
+      coachKey: "2022 newmar dutch star 4369",
+      fields: ["gvwr", "notes"],
+      error: "connection refused",
+    });
+  } finally {
+    console.warn = orig;
+  }
+  const parsed = JSON.parse(logs[0] || "{}") as {
+    kind?: string;
+    coachKey?: string;
+    fields?: string[];
+    error?: string;
+  };
+  assert.equal(parsed.kind, "coach_knowledge_write_failed");
+  assert.match(parsed.coachKey || "", /dutch star/i);
+  assert.deepEqual(parsed.fields, ["gvwr", "notes"]);
+  assert.match(parsed.error || "", /connection refused/);
+
+  const store = src("src/lib/rvgrok/coachKnowledgeStore.ts");
+  const telemetry = src("src/lib/rvgrok/webResearchTelemetry.ts");
+  assert.match(store, /logCoachKnowledgeWriteFailed/);
+  assert.match(telemetry, /logCoachKnowledgeWriteFailed/);
+  assert.doesNotMatch(telemetry, /catch \{\s*\/\* fail-soft/);
+});
+
+test("Facts and report label coach knowledge as Verified from web", () => {
+  const rows = knowledgeDisplayRows({
+    sources: ["https://example.com/brochure"],
+    fields: {
+      gvwr: {
+        value: "51000 lb",
+        researchedAt: "2026-09-29T12:00:00.000Z",
+        sourceUrl: "https://example.com/brochure",
+      },
+    },
+  });
+  assert.equal(rows[0]?.verified, true);
+  assert.equal(rows[0]?.sourceUrl, "https://example.com/brochure");
+  assert.match(rows[0]?.foundAt || "", /2026/);
+  const promoted = knowledgeDisplayRows({
+    promoted: true,
+    fields: { gvwr: { value: "51000 lb", researchedAt: "2026-09-29T12:00:00.000Z" } },
+  });
+  assert.equal(promoted[0]?.verified, false);
+
+  const facts = src("src/components/rvfax/VerifiedFromWeb.tsx");
+  const panel = src("src/components/rvfax/RvDetail.tsx");
+  const report = src("src/components/report/ShareReportPage.tsx");
+  const block = src("src/components/rvfax/CoachKnowledgeFacts.tsx");
+  assert.match(facts, new RegExp(VERIFIED_FROM_WEB_LABEL));
+  assert.match(facts, /data-verified-from-web/);
+  assert.match(facts, /verified-from-web-link/);
+  assert.match(panel, /CoachKnowledgeFacts/);
+  assert.match(report, /CoachKnowledgeFacts/);
+  assert.match(block, /VerifiedFromWeb/);
+  assert.match(block, /row\.verified/);
 });
 
 function keyFixture() {

@@ -9,14 +9,18 @@
 import { getSql } from "@/lib/db";
 import {
   COACH_KNOWLEDGE_SCHEMA_VERSION,
+  confidenceRank,
+  formatCoachKnowledgeLabel,
   mergeConfirmedFields,
   mergeKnowledgeSources,
   normalizeCoachKnowledgeKey,
+  type CoachKnowledgeConfidence,
   type CoachKnowledgeFields,
   type CoachKnowledgeKey,
   type CoachKnowledgeRecord,
   type CoachKnowledgeWritePlan,
 } from "./coachKnowledge.ts";
+import { logCoachKnowledgeWriteFailed } from "./webResearchTelemetry.ts";
 import type { CoachIdentity } from "./coachIdentity.ts";
 
 type KnowledgeRow = {
@@ -30,6 +34,7 @@ type KnowledgeRow = {
   confidence: string;
   schema_version: number | string;
   updated_at: string;
+  promoted?: boolean | null;
 };
 
 function parseFields(raw: unknown): CoachKnowledgeFields {
@@ -46,13 +51,29 @@ function parseFields(raw: unknown): CoachKnowledgeFields {
   const out: CoachKnowledgeFields = {};
   for (const [name, value] of Object.entries(obj as Record<string, unknown>)) {
     if (!value || typeof value !== "object") continue;
-    const field = value as { value?: unknown; kind?: unknown; researchedAt?: unknown };
+    const field = value as {
+      value?: unknown;
+      kind?: unknown;
+      researchedAt?: unknown;
+      confidence?: unknown;
+      sourceUrl?: unknown;
+    };
     if (typeof field.value !== "string" || !field.value.trim()) continue;
+    const confidence =
+      field.confidence === "high" ||
+      field.confidence === "medium" ||
+      field.confidence === "low"
+        ? field.confidence
+        : undefined;
     out[name] = {
       value: field.value.trim(),
       kind: field.kind === "price" ? "price" : "spec",
       researchedAt:
         typeof field.researchedAt === "string" ? field.researchedAt : "",
+      ...(confidence ? { confidence } : {}),
+      ...(typeof field.sourceUrl === "string" && field.sourceUrl
+        ? { sourceUrl: field.sourceUrl }
+        : {}),
     };
   }
   return out;
@@ -90,6 +111,7 @@ function mapRow(row: KnowledgeRow): CoachKnowledgeRecord {
         : "medium",
     schemaVersion,
     updatedAt: String(row.updated_at || ""),
+    promoted: row.promoted === true,
   };
 }
 
@@ -102,7 +124,7 @@ export async function loadCoachKnowledge(
     const sql = await getSql();
     const rows = await sql<KnowledgeRow>`
       select year, make, model, floorplan, fields, sources,
-             researched_at, confidence, schema_version, updated_at
+             researched_at, confidence, schema_version, updated_at, promoted
       from rvgrok_coach_knowledge
       where year = ${key.year}
         and make = ${key.make}
@@ -124,14 +146,29 @@ export async function upsertCoachKnowledge(input: {
 }): Promise<CoachKnowledgeRecord | null> {
   const key = normalizeCoachKnowledgeKey(input.key);
   if (!key) return null;
-  const incoming = mergeConfirmedFields({}, input.fields);
+  const incomingConfidence: CoachKnowledgeConfidence =
+    input.confidence === "high" || input.confidence === "low"
+      ? input.confidence
+      : "medium";
+  const incoming = mergeConfirmedFields({}, input.fields, {
+    incomingConfidence,
+  });
   if (!Object.keys(incoming).length) return null;
 
   try {
     const existing = await loadCoachKnowledge(key);
-    const fields = mergeConfirmedFields(existing?.fields, incoming);
+    const fields = mergeConfirmedFields(existing?.fields, incoming, {
+      incomingConfidence,
+      existingConfidence:
+        existing?.confidence === "high" || existing?.confidence === "low"
+          ? existing.confidence
+          : "medium",
+    });
     const sources = mergeKnowledgeSources(existing?.sources, input.sources);
-    const confidence = input.confidence || existing?.confidence || "medium";
+    const confidence =
+      confidenceRank(existing?.confidence) >= confidenceRank(incomingConfidence)
+        ? existing?.confidence || incomingConfidence
+        : incomingConfidence;
     const sql = await getSql();
     const rows = await sql.query<KnowledgeRow>(
       `insert into rvgrok_coach_knowledge (
@@ -146,7 +183,7 @@ export async function upsertCoachKnowledge(input: {
          schema_version = excluded.schema_version,
          updated_at = now()
        returning year, make, model, floorplan, fields, sources,
-                 researched_at, confidence, schema_version, updated_at`,
+                 researched_at, confidence, schema_version, updated_at, promoted`,
       [
         key.year,
         key.make,
@@ -159,8 +196,56 @@ export async function upsertCoachKnowledge(input: {
       ],
     );
     return rows[0] ? mapRow(rows[0]) : null;
-  } catch {
+  } catch (err) {
+    logCoachKnowledgeWriteFailed({
+      coachKey: formatCoachKnowledgeLabel(key),
+      fields: Object.keys(incoming),
+      error: err instanceof Error ? err.message : String(err),
+    });
     return null;
+  }
+}
+
+export async function listCoachKnowledge(limit = 40): Promise<CoachKnowledgeRecord[]> {
+  try {
+    const sql = await getSql();
+    const rows = await sql<KnowledgeRow>`
+      select year, make, model, floorplan, fields, sources,
+             researched_at, confidence, schema_version, updated_at, promoted
+      from rvgrok_coach_knowledge
+      order by updated_at desc
+      limit ${Math.max(1, Math.min(limit, 80))}
+    `;
+    return rows.map(mapRow);
+  } catch {
+    return [];
+  }
+}
+
+export async function promoteCoachKnowledge(
+  identity: Pick<CoachKnowledgeKey, "year" | "make" | "model" | "floorplan">,
+): Promise<boolean> {
+  const key = normalizeCoachKnowledgeKey(identity);
+  if (!key) return false;
+  try {
+    const sql = await getSql();
+    const rows = await sql<{ year: string }>`
+      update rvgrok_coach_knowledge
+      set promoted = true, updated_at = now()
+      where year = ${key.year}
+        and make = ${key.make}
+        and model = ${key.model}
+        and floorplan = ${key.floorplan}
+      returning year
+    `;
+    return Boolean(rows[0]);
+  } catch (err) {
+    logCoachKnowledgeWriteFailed({
+      coachKey: formatCoachKnowledgeLabel(key),
+      fields: ["promoted"],
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return false;
   }
 }
 
