@@ -2614,28 +2614,32 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   position: relative;
   border-radius: 2rem;
 }
-.grok-landing-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: auto;
-  padding: 1.25rem 0.15rem 0.35rem;
+.grok-ask-field::placeholder {
+  color: transparent;
+  -webkit-text-fill-color: transparent;
 }
-.grok-landing-pill {
-  min-height: 40px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 999px;
-  background: transparent;
-  padding: 0.45rem 0.9rem;
-  color: rgba(255, 255, 255, 0.86);
-  font-size: 13px;
-  font-weight: 600;
-}
-.grok-landing-pill:hover,
-.grok-landing-pill:focus-visible {
-  border-color: #1648c8;
-  color: #ffffff;
-  outline: none;
+.grok-ask-platinum {
+  position: absolute;
+  top: 0.62rem;
+  left: 0.5rem;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  pointer-events: none;
+  background-image: linear-gradient(
+    100deg,
+    #516070 0%,
+    #c5d2de 24%,
+    #f7fafc 40%,
+    #6a7c8e 54%,
+    #e4ebf1 72%,
+    #3d4b5a 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
 }
 .grok-avatar-ring {
   background: #1648c8;
@@ -3817,7 +3821,7 @@ html[data-theme="light"] [aria-label="Price input mode"] {
   gap: 0.5rem;
 }
 
-html[data-theme="light"] .app-shell button:not(.showroom-brand):not(.bottom-tab-btn):not(.showroom-hero):not(.showroom-placard):not(.showroom-arrival):not(.lot-card):not(.lot-card-hit):not(.grok-mic-btn):not(.showroom-mic):not(.showroom-hero-primary):not(.theme-switch):not(.home-jump):not(.grok-followup):not(.appearance-choice):not(.grok-landing-pill):not(.lot-detail-ask):not([data-on-dark]) {
+html[data-theme="light"] .app-shell button:not(.showroom-brand):not(.bottom-tab-btn):not(.showroom-hero):not(.showroom-placard):not(.showroom-arrival):not(.lot-card):not(.lot-card-hit):not(.grok-mic-btn):not(.showroom-mic):not(.showroom-hero-primary):not(.theme-switch):not(.home-jump):not(.grok-followup):not(.appearance-choice):not(.lot-detail-ask):not([data-on-dark]) {
   background: var(--light-shade);
   background-color: var(--light-shade);
   color: #111111;
@@ -4224,7 +4228,7 @@ html[data-theme="light"] :is(
   .tow-hero-panel,
   .exclusive-card,
   .grok-landing-card
-):not([data-tools-menu]):not([data-tools-menu] *) button:not(.rounded-full):not([aria-pressed="true"]):not([data-catalog-field]):not(.grok-chip):not(.grok-starter):not(.grok-lot-chip):not(.lot-chip):not(.underline):not([data-tow-details]):not(.grok-followup):not(.appearance-choice):not(.grok-landing-pill):not(.lot-card-hit):not(.lot-detail-ask):not(.report-share-main):not([data-share-link]):not([data-share-pdf]):not([data-on-dark]) {
+):not([data-tools-menu]):not([data-tools-menu] *) button:not(.rounded-full):not([aria-pressed="true"]):not([data-catalog-field]):not(.grok-chip):not(.grok-starter):not(.grok-lot-chip):not(.lot-chip):not(.underline):not([data-tow-details]):not(.grok-followup):not(.appearance-choice):not(.lot-card-hit):not(.lot-detail-ask):not(.report-share-main):not([data-share-link]):not([data-share-pdf]):not([data-on-dark]) {
   background: var(--light-shade) !important;
   background-color: var(--light-shade) !important;
   color: #111111 !important;
@@ -4364,16 +4368,10 @@ html[data-theme="light"] .grok-landing-glow {
     radial-gradient(ellipse at 50% 24%, rgba(22, 72, 200, 0.12), transparent 64%),
     radial-gradient(ellipse at 30% 80%, rgba(255, 255, 255, 0.85), transparent 58%);
 }
-html[data-theme="light"] .grok-landing-pill {
-  border-color: rgba(0, 0, 0, 0.1);
-  color: #111111;
-  background: #ffffff;
-  box-shadow: 0 6px 18px rgba(17, 17, 17, 0.06);
-}
-html[data-theme="light"] .grok-landing-pill:hover,
-html[data-theme="light"] .grok-landing-pill:focus-visible {
-  border-color: #1648c8;
-  color: #1648c8;
+html[data-theme="light"] .app-shell .grok-ask-field::placeholder {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  background-image: none !important;
 }
 html[data-theme="light"] .grok-mic-btn:not(.is-live):not(.is-rec) {
   background: transparent !important;

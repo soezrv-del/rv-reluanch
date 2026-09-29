@@ -180,19 +180,26 @@ export function GrokComposer({
             </>
           ) : null}
 
-          <textarea
-            value={displayInput}
-            onChange={(e) => {
-              if (!isRecording) onChange(e.target.value);
-            }}
-            onFocus={keepComposerFieldVisible}
-            onKeyDown={onKeyDown}
-            rows={1}
-            maxLength={2000}
-            placeholder={placeholder}
-            className="max-h-28 min-h-10 flex-1 resize-none bg-transparent px-2 py-2.5 text-[15px] text-fg outline-none placeholder:text-muted"
-            readOnly={isRecording || liveActive}
-          />
+          <div className="relative min-w-0 flex-1">
+            {!displayInput ? (
+              <span className="grok-ask-platinum" aria-hidden>
+                {placeholder}
+              </span>
+            ) : null}
+            <textarea
+              value={displayInput}
+              onChange={(e) => {
+                if (!isRecording) onChange(e.target.value);
+              }}
+              onFocus={keepComposerFieldVisible}
+              onKeyDown={onKeyDown}
+              rows={1}
+              maxLength={2000}
+              placeholder={placeholder}
+              className="grok-ask-field max-h-28 min-h-10 w-full resize-none bg-transparent px-2 py-2.5 text-[15px] text-fg outline-none"
+              readOnly={isRecording || liveActive}
+            />
+          </div>
         </div>
 
         <button
