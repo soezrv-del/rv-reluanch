@@ -181,7 +181,7 @@ export function SapphireHeader({ tab }: { tab: AppTab }) {
             </div>
 
             {showVerified ? (
-              <div className="-mt-0.5 w-full px-2 leading-none">
+              <div className="sapphire-verified -mt-0.5 w-full px-2 leading-none">
                 <MetalVerifiedTrue size="sm" />
               </div>
             ) : null}

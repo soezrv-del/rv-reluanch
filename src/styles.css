@@ -3609,7 +3609,11 @@ html[data-theme="light"] [data-premium-screen] .sapphire-header-inner {
   box-shadow: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  padding: 0.35rem 1.15rem 0.15rem !important;
+  padding: 0.15rem max(1.35rem, var(--safe-right, 0px)) 0.2rem max(1.35rem, var(--safe-left, 0px)) !important;
+}
+html[data-theme="light"] .sapphire-header {
+  padding-left: 0;
+  padding-right: 0;
 }
 html[data-theme="light"] .sapphire-banner-ambient,
 html[data-theme="light"] .sapphire-banner-edge,
@@ -3650,7 +3654,25 @@ html[data-theme="light"] .suite-title-accent {
 html[data-theme="light"] .sapphire-header-inner .z-\[2\] {
   align-items: flex-start;
   text-align: left;
-  padding-right: 6.4rem;
+  padding-right: 0;
+}
+html[data-theme="light"] .sapphire-title-stage {
+  box-sizing: border-box;
+  max-width: 100%;
+  padding-left: 0;
+  padding-right: 6.6rem;
+}
+html[data-theme="light"] .sapphire-verified {
+  width: 100%;
+  margin: 0.15rem 0 0;
+  padding: 0;
+  text-align: left;
+}
+html[data-theme="light"] .sapphire-verified .metal-hammered {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  text-align: left;
 }
 html[data-theme="light"] .sapphire-header-badge {
   margin: 0 0 0.35rem;
@@ -3664,39 +3686,22 @@ html[data-theme="light"] .sapphire-header-badge {
 }
 html[data-theme="light"] .metal-hammered,
 html[data-theme="light"] .metal-hammered-face {
-  font-size: 22px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 600;
   letter-spacing: 0.16em;
-  line-height: 1.2;
+  line-height: 1;
+  white-space: nowrap;
 }
 html[data-theme="light"] .metal-hammered-face {
-  color: #1648c8;
-  -webkit-text-fill-color: #1648c8;
-  background-image: none;
-  text-shadow: none;
-  filter: none;
-}
-@supports (background-clip: text) {
-  html[data-theme="light"] .metal-hammered-face {
-    background-image: linear-gradient(
-      180deg,
-      #5b8af0 0%,
-      #2f62dc 30%,
-      #1648c8 48%,
-      #0e3494 56%,
-      #1648c8 78%,
-      #3a6be0 100%
-    );
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    -webkit-text-fill-color: transparent;
-    -webkit-text-stroke: 0.4px #0e3494;
-    text-shadow: none;
-    filter: drop-shadow(0 -0.5px 0 rgba(255, 255, 255, 0.9))
-      drop-shadow(0 1px 0 #0b2a7a)
-      drop-shadow(0 2px 0 #09225f);
-  }
+  color: #1648c8 !important;
+  -webkit-text-fill-color: #1648c8 !important;
+  background: none !important;
+  background-image: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-text-stroke: 0 !important;
+  text-shadow: none !important;
+  filter: none !important;
 }
 html[data-theme="light"] .sapphire-header-line {
   margin-top: 0.45rem;
