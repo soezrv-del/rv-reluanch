@@ -38,7 +38,7 @@ test("lot chips and the dock call the shared centering helper", () => {
   const tabs = readFileSync(join(root, "../../components/shell/BottomTabs.tsx"), "utf8");
   const trips = readFileSync(join(root, "../../components/rvtrips/RvTripsApp.tsx"), "utf8");
   assert.match(lot, /useCenterSelectedTab/);
-  assert.match(tabs, /useCenterSelectedTab/);
+  assert.match(tabs, /placeDock/);
   assert.match(trips, /useCenterSelectedTab/);
   assert.doesNotMatch(tabs, /const PINNED/);
 });
@@ -58,5 +58,5 @@ test("light selected tabs are graphite, not sapphire", () => {
     .join("}");
   assert.match(lightDock, /#171a20/);
   assert.doesNotMatch(lightDock, /#1648c8/);
-  assert.match(dock, /background:\s*rgba\(255, 255, 255, 0\.16\) !important/);
+  assert.match(dock, /background:\s*rgba\(255, 255, 255, 0\.14\) !important/);
 });

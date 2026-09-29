@@ -1,11 +1,11 @@
-import { useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
+import { Calculator, FileText, MapPin, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { hapticLight } from "@/lib/haptics";
 import {
   isAndroidNativeWebView,
   isStationaryDockTap,
 } from "@/lib/hooks/nativeWebView";
-import { useCenterSelectedTab } from "@/lib/hooks/useCenterSelectedTab";
 import "./dock.css";
 
 export type AppTab =
@@ -19,7 +19,6 @@ export type AppTab =
   | "rvlot"
   | "more";
 
-/** Six rooms. The row slides. The active tab eases to the center. */
 const TABS: {
   id: Exclude<AppTab, "more" | "rvshare" | "rvsold">;
   label: string;
@@ -33,61 +32,41 @@ const TABS: {
   { id: "rvtrips", label: "RV GPS", short: "RV GPS" },
 ];
 
+const glyph = {
+  className: "bottom-tab-glyph",
+  strokeWidth: 1.75,
+  "aria-hidden": true as const,
+};
+
 function DockGlyph({ id }: { id: (typeof TABS)[number]["id"] }) {
-  const stroke = {
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: 2,
-    strokeLinecap: "round" as const,
-    strokeLinejoin: "round" as const,
-  };
-  if (id === "rvfax") {
-    return (
-      <svg viewBox="0 0 24 24" className="bottom-tab-glyph" aria-hidden>
-        <rect x="5" y="3" width="14" height="18" rx="1.5" {...stroke} />
-        <path d="M8 9.2h8M8 13h8" {...stroke} />
-      </svg>
-    );
-  }
-  if (id === "rvlot") {
-    return (
-      <svg viewBox="0 0 24 24" className="bottom-tab-glyph" aria-hidden>
-        <path d="M2.5 17.2V10.2h8.8l2.6-4.2h6.4a1.2 1.2 0 0 1 1.2 1.2v10" {...stroke} />
-        <path d="M2.5 17.2h19" {...stroke} />
-        <circle cx="7" cy="17.2" r="1.7" {...stroke} strokeWidth={1.6} />
-        <circle cx="16.2" cy="17.2" r="1.7" {...stroke} strokeWidth={1.6} />
-      </svg>
-    );
-  }
-  if (id === "rvgrok") {
-    return (
-      <span className="bottom-tab-grok">
-        <svg viewBox="0 0 24 24" className="bottom-tab-glyph" aria-hidden>
-          <path
-            d="M12 3.2 13.15 10.15 20.8 12 13.15 13.85 12 20.8 10.85 13.85 3.2 12 10.85 10.15Z"
-            {...stroke}
-          />
-        </svg>
-      </span>
-    );
-  }
+  if (id === "rvfax") return <FileText {...glyph} />;
+  if (id === "rvgrok") return <Sparkles {...glyph} />;
+  if (id === "rvcal") return <Calculator {...glyph} />;
+  if (id === "rvtrips") return <MapPin {...glyph} />;
   if (id === "rvtow") {
     return (
       <svg viewBox="0 0 24 24" className="bottom-tab-glyph" aria-hidden>
-        <path d="M2.8 13h8.4" {...stroke} />
-        <path d="M11.2 9.2h3.2v7.6h-3.2" {...stroke} />
-        <circle cx="18.2" cy="13" r="2.7" {...stroke} strokeWidth={1.6} />
-      </svg>
-    );
-  }
-  if (id === "rvcal") {
-    return (
-      <svg viewBox="0 0 24 24" className="bottom-tab-glyph" aria-hidden>
-        <rect x="6" y="2.8" width="12" height="18.4" rx="2" {...stroke} />
-        <path d="M8.4 7h7.2" {...stroke} />
         <path
-          d="M8.6 11.2h2.2M13.2 11.2h2.2M8.6 14.6h2.2M13.2 14.6h2.2"
-          {...stroke}
+          d="M3 12h8"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+        />
+        <path
+          d="M11 9.25h3.25v5.5H11z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinejoin="round"
+        />
+        <circle
+          cx="17.7"
+          cy="12"
+          r="2.15"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
         />
       </svg>
     );
@@ -95,16 +74,46 @@ function DockGlyph({ id }: { id: (typeof TABS)[number]["id"] }) {
   return (
     <svg viewBox="0 0 24 24" className="bottom-tab-glyph" aria-hidden>
       <path
-        d="M12 20.5s5.6-4.8 5.6-9.1a5.6 5.6 0 1 0-11.2 0c0 4.3 5.6 9.1 5.6 9.1z"
-        {...stroke}
+        d="M2.75 16.25V10.1c0-.6.45-1.1 1.05-1.1H11l2.35-3.15h6.15c.7 0 1.25.55 1.25 1.25v9.15"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
-      <circle cx="12" cy="11.2" r="1.7" {...stroke} />
+      <path
+        d="M2.75 16.25h18.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+      <path
+        d="M13.6 6.55v3.35"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+      <circle cx="7.1" cy="16.25" r="1.35" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="16.1" cy="16.25" r="1.35" fill="none" stroke="currentColor" strokeWidth="1.5" />
     </svg>
   );
 }
 
+function placeDock(dock: HTMLDivElement, smooth: boolean) {
+  const active = dock.querySelector<HTMLElement>(".is-active");
+  const left = active
+    ? active.offsetLeft - (dock.clientWidth - active.offsetWidth) / 2
+    : 0;
+  dock.scrollTo({
+    left: Math.max(0, left),
+    behavior: smooth ? "smooth" : "auto",
+  });
+}
+
 /**
- * Sliding dock. Side padding lets Facts and RV GPS reach the middle.
+ * Row starts at the left. A selected tab eases to the center.
  * Android WebView: do NOT put pointer-events-none on this nav.
  */
 export function BottomTabs({
@@ -119,7 +128,6 @@ export function BottomTabs({
   const lastFire = useRef({ id: "" as AppTab | "", at: 0 });
   const press = useRef<{ id: AppTab; x: number; y: number } | null>(null);
   const dockRef = useRef<HTMLDivElement>(null);
-  useCenterSelectedTab(dockRef, homeOpen ? "home" : tab);
 
   const fire = (id: AppTab) => {
     const now = performance.now();
@@ -129,9 +137,22 @@ export function BottomTabs({
     onChange(id);
   };
 
+  useLayoutEffect(() => {
+    const dock = dockRef.current;
+    if (!dock) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const frame = requestAnimationFrame(() => placeDock(dock, !reduced && !homeOpen));
+    const observer = new ResizeObserver(() => placeDock(dock, false));
+    observer.observe(dock);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, [tab, homeOpen]);
+
   return (
     <nav
-      className="bottom-tabs-nav pointer-events-auto relative z-[80] w-full px-0 pt-1"
+      className="bottom-tabs-nav pointer-events-auto relative z-[80] w-full px-0 pt-0"
       data-bottom-dock
       data-dock-icons="platinum"
       data-no-swipe
@@ -140,7 +161,7 @@ export function BottomTabs({
     >
       <div
         ref={dockRef}
-        className="bottom-tabs-dock pointer-events-auto relative isolate mx-auto flex w-full items-stretch overflow-x-auto overflow-y-hidden"
+        className="bottom-tabs-dock pointer-events-auto relative isolate flex w-full items-stretch overflow-x-auto overflow-y-hidden"
         style={{ touchAction: "pan-x" }}
       >
         {TABS.map(({ id, label, short }) => {
