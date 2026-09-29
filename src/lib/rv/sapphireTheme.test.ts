@@ -119,7 +119,10 @@ test("Grok tab uses Facts Raidho bleed — gold stays on frost, not a photo fiel
   assert.match(constants, /rvgrok:\s*"gold"/);
   assert.match(app, /data-page-accent=\{embedded \? undefined : "gold"\}/);
   assert.match(css, /\[data-rvgrok-wingman\] \.suite-raidho-field,/);
-  assert.match(css, /\.grok-frost \{[\s\S]*?blur\(28px\)/);
+  const frost = css.match(/\.grok-frost \{[^}]*\}/);
+  assert.ok(frost, "grok frost block");
+  assert.match(frost[0], /#1e2126/);
+  assert.doesNotMatch(frost[0], /blur\(|--color-gold-border/);
   assert.doesNotMatch(css, /\[data-rvgrok-wingman\] \.suite-raidho-bleed,/);
   assert.doesNotMatch(css, /DialaBot/);
 });
