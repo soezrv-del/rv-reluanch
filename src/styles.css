@@ -3812,7 +3812,7 @@ html[data-theme="light"] [aria-label="Price input mode"] {
   gap: 0.5rem;
 }
 
-html[data-theme="light"] .app-shell button:not(.showroom-brand):not(.bottom-tab-btn):not(.showroom-hero):not(.showroom-placard):not(.showroom-arrival):not(.lot-card):not(.lot-card-hit):not(.grok-mic-btn):not(.showroom-mic):not(.showroom-hero-primary):not(.theme-switch):not(.home-jump):not(.grok-followup):not(.appearance-choice):not(.grok-landing-pill):not(.lot-detail-ask):not([data-on-dark]) {
+html[data-theme="light"] .app-shell button:not(.showroom-brand):not(.bottom-tab-btn):not(.showroom-hero):not(.showroom-placard):not(.showroom-arrival):not(.lot-card):not(.lot-card-hit):not(.grok-mic-btn):not(.showroom-mic):not(.showroom-hero-primary):not(.theme-switch):not(.home-jump):not(.grok-followup):not(.appearance-choice):not(.grok-landing-pill):not(.lot-detail-ask):not([data-on-dark]):not([data-voice-panel] *) {
   background: var(--light-shade);
   background-color: var(--light-shade);
   color: #111111;
@@ -4282,6 +4282,115 @@ html[data-theme="light"] .text-ruby {
   color: #1648c8 !important;
   -webkit-text-fill-color: #1648c8 !important;
 }
+
+/* Voice settings, light. One shadow on the sheet. Dark mode is untouched. */
+html[data-theme="light"] [data-voice-panel] [data-voice-backdrop] {
+  background: rgba(0, 0, 0, 0.35);
+}
+html[data-theme="light"] [data-voice-panel] [data-voice-sheet] {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.10), 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+html[data-theme="light"] [data-voice-panel] [data-voice-handle] {
+  background: rgba(0, 0, 0, 0.12);
+}
+html[data-theme="light"] [data-voice-panel] [data-voice-header] {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 1rem 1.25rem;
+}
+html[data-theme="light"] [data-voice-panel] [data-voice-title] {
+  font-size: 15px;
+  font-weight: 600;
+  color: #171a20;
+}
+html[data-theme="light"] .app-shell [data-voice-panel] .text-white:not([data-on-dark]):not([data-on-dark] *) {
+  color: #171a20 !important;
+  -webkit-text-fill-color: #171a20 !important;
+}
+html[data-theme="light"] .app-shell [data-voice-panel] :is([data-voice-sub], [data-voice-muted], [data-voice-label], [data-voice-gender]).text-white:not([data-on-dark]):not([data-on-dark] *) {
+  color: #5c5e62 !important;
+  -webkit-text-fill-color: #5c5e62 !important;
+}
+html[data-theme="light"] [data-voice-panel] [data-voice-sub] {
+  font-size: 12px;
+}
+html[data-theme="light"] .app-shell [data-voice-panel] [data-voice-close].text-white:not([data-on-dark]):not([data-on-dark] *) {
+  color: #5c5e62 !important;
+  -webkit-text-fill-color: #5c5e62 !important;
+}
+html[data-theme="light"] [data-voice-panel] [data-voice-close]:hover,
+html[data-theme="light"] [data-voice-panel] [data-voice-close]:active {
+  background: rgba(0, 0, 0, 0.05);
+}
+html[data-theme="light"] [data-voice-panel] [data-voice-scroll] {
+  padding: 1rem 1.25rem;
+}
+html[data-theme="light"] [data-voice-panel] [data-voice-scroll].space-y-3 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 1.25rem;
+}
+html[data-theme="light"] [data-voice-panel] [data-voice-label] {
+  font-size: 11px;
+  font-weight: 500;
+}
+html[data-theme="light"] [data-voice-panel] :is([data-voice-card], [data-voice-row], [data-voice-chip], [data-voice-note]) {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  box-shadow: none;
+}
+html[data-theme="light"] [data-voice-panel] :is([data-voice-card], [data-voice-row]) {
+  min-height: 56px;
+  padding: 0.85rem 1rem;
+}
+html[data-theme="light"] [data-voice-panel] :is([data-voice-card], [data-voice-row], [data-voice-chip])[data-selected] {
+  border: 1.5px solid #1648c8;
+  background: rgba(22, 72, 200, 0.04);
+  box-shadow: none;
+}
+html[data-theme="light"] [data-voice-panel] [data-voice-chip] {
+  border-radius: 999px;
+  color: #171a20;
+}
+html[data-theme="light"] [data-voice-panel] [data-voice-chip][data-selected] {
+  color: #1648c8;
+}
+html[data-theme="light"] [data-voice-panel] [data-voice-gender] {
+  background: rgba(0, 0, 0, 0.05);
+}
+html[data-theme="light"] .app-shell [data-voice-panel] [data-voice-active].text-white:not([data-on-dark]):not([data-on-dark] *) {
+  background: #1648c8;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+html[data-theme="light"] [data-voice-panel] [data-voice-mark] {
+  background: rgba(0, 0, 0, 0.05);
+  color: #171a20;
+}
+html[data-theme="light"] .app-shell [data-voice-panel] [data-selected] [data-voice-mark].text-white:not([data-on-dark]):not([data-on-dark] *) {
+  background: #1648c8;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+html[data-theme="light"] [data-voice-panel] [data-voice-toggle] {
+  background: rgba(0, 0, 0, 0.12);
+}
+html[data-theme="light"] [data-voice-panel] [data-voice-toggle][data-on] {
+  background: #1648c8;
+}
+html[data-theme="light"] [data-voice-panel] [data-voice-play] {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: none;
+  color: #1648c8;
+}
+html[data-theme="light"] .app-shell [data-voice-panel] [data-voice-play][data-on].text-white:not([data-on-dark]):not([data-on-dark] *) {
+  background: #1648c8;
+  border-color: #1648c8;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
 html[data-theme="light"] .glass-prestige button[data-catalog-field]:not(.rounded-full),
 html[data-theme="light"] [data-tow-truck] button:not(.rounded-full):not([data-tow-kind]),
 html[data-theme="light"] [data-tow-details] {
