@@ -14,6 +14,7 @@ import {
   buildRealtimeSessionUpdate,
   buildSessionIntroResponse,
   getRetainedLiveCapture,
+  isNativeRealtimeTool,
   releaseLiveCapture,
   retainLiveCapture,
   type LiveVoicePrewarm,
@@ -123,6 +124,10 @@ export type RealtimeHandlers = {
  * start before the token/socket awaits. One shared AudioContext for capture
  * and playback (two contexts often stay silent on WKWebView).
  */
+function isUnknownToolBubble(text: string): boolean {
+  return /^none\.\s*unknown tool\.?$/i.test(text.trim());
+}
+
 export class GrokRealtimeSession {
   private ws: WebSocket | null = null;
   private mediaStream: MediaStream | null = null;
@@ -529,6 +534,10 @@ export class GrokRealtimeSession {
         const delta = String((msg as { delta?: string }).delta || "");
         if (delta) {
           this.assistantText += delta;
+          if (isUnknownToolBubble(this.assistantText)) {
+            this.assistantText = "";
+            break;
+          }
           this.handlers.onAssistantDelta(this.assistantText);
         }
         break;
@@ -540,6 +549,10 @@ export class GrokRealtimeSession {
           (msg as { transcript?: string }).transcript || this.assistantText,
         );
         this.assistantText = t;
+        if (isUnknownToolBubble(t)) {
+          this.assistantText = "";
+          break;
+        }
         this.emitAssistantDone(t);
         break;
       }
@@ -548,6 +561,10 @@ export class GrokRealtimeSession {
         const delta = String((msg as { delta?: string }).delta || "");
         if (delta) {
           this.assistantText += delta;
+          if (isUnknownToolBubble(this.assistantText)) {
+            this.assistantText = "";
+            break;
+          }
           this.handlers.onAssistantDelta(this.assistantText);
         }
         break;
@@ -558,6 +575,10 @@ export class GrokRealtimeSession {
           (msg as { text?: string }).text || this.assistantText,
         );
         this.assistantText = t;
+        if (isUnknownToolBubble(t)) {
+          this.assistantText = "";
+          break;
+        }
         this.emitAssistantDone(t);
         break;
       }
@@ -667,13 +688,18 @@ export class GrokRealtimeSession {
     const name = String(nested.name || msg.name || "");
     const callId = String(nested.call_id || msg.call_id || "");
     if (!callId || this.handledToolCallIds.has(callId)) return;
+    if (!name) return;
     this.handledToolCallIds.add(callId);
-    if (name && name !== "query_lot") {
-      this.sendToolOutput(callId, {
-        ok: false,
-        none: true,
-        speech: "None. Unknown tool.",
-      });
+    if (isNativeRealtimeTool(name)) return;
+    if (name !== "query_lot") {
+      const payload = nested.arguments ?? msg.arguments ?? "";
+      console.warn("[rvgrok] unrecognized tool", { name, payload });
+      this.sendToolOutput(
+        callId,
+        { ok: false, error: "unrecognized tool" },
+        undefined,
+        false,
+      );
       return;
     }
     let args: Record<string, unknown> = {};
@@ -699,19 +725,31 @@ export class GrokRealtimeSession {
           utterance: this.lastUserTranscript,
         }),
       });
-      const data = (await res.json()) as { lotMemory?: LotMemory | null };
+      const data = (await res.json()) as { lotMemory?: LotMemory | null } | null;
+      if (data == null || (typeof data === "object" && Object.keys(data).length === 0)) {
+        console.warn("[rvgrok] empty tool result", { name, payload: data });
+        this.sendToolOutput(callId, { ok: false, error: "empty result" }, undefined, false);
+        return;
+      }
       if (data?.lotMemory) this.lotMemory = data.lotMemory;
       this.sendToolOutput(callId, data);
-    } catch {
-      this.sendToolOutput(callId, {
-        ok: false,
-        none: true,
-        speech: "None. The lot lookup failed. Do not invent a unit.",
-      });
+    } catch (err) {
+      console.warn("[rvgrok] query_lot failed", { name, payload: err });
+      this.sendToolOutput(
+        callId,
+        { ok: false, error: "lookup failed" },
+        undefined,
+        false,
+      );
     }
   }
 
-  private sendToolOutput(callId: string, data: unknown, instructions?: string) {
+  private sendToolOutput(
+    callId: string,
+    data: unknown,
+    instructions?: string,
+    speak = true,
+  ) {
     const ws = this.ws;
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
     ws.send(
@@ -724,6 +762,7 @@ export class GrokRealtimeSession {
         },
       }),
     );
+    if (!speak) return;
     ws.send(
       JSON.stringify({
         type: "response.create",
@@ -738,6 +777,7 @@ export class GrokRealtimeSession {
   }
 
   private emitAssistantDone(text: string) {
+    if (isUnknownToolBubble(text)) return;
     if (text) this.noteCoachMention(text);
     if (this.researchPhase === "holding" || this.researchPhase === "searching") {
       return;

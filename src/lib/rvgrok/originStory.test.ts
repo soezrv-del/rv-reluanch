@@ -46,6 +46,7 @@ const ORIGIN_ASKS = [
   "Know before you buy",
   "Who are you?",
   "Who is David Hansen?",
+  "Who is Dave Hansen?",
   "Who is David?",
   "Tell me about David Hansen",
   "Tell me about the founder",
@@ -61,18 +62,22 @@ function assertNoIDontKnow(text: string, label: string) {
   assert.doesNotMatch(stripped, /I don't have that/, `${label} never I-don't-have`);
 }
 
-function assertHansenSpelling(text: string, label: string) {
+function assertHansenNote(text: string, label: string) {
   assert.match(text, /David Hansen/, `${label} names David Hansen`);
+  assert.match(
+    text,
+    /RvFOX \(rvmax\.app\) was built by David Hansen \(spelled H-A-N-S-E-N\), an RV salesman at RV Country/,
+    `${label} uses the short app note`,
+  );
+  assert.match(text, /He did not found RV Country/, `${label} does not found the dealership`);
+  assert.match(text, /Paul Evert founded RV Country in 1961/, `${label} names Paul Evert`);
+  assert.match(
+    text,
+    /never mix in details from the app's own notes/,
+    `${label} does not mix app notes into search`,
+  );
   assert.doesNotMatch(text, /Hanson/, `${label} never misspells Hansen as Hanson`);
-}
-
-function assertLotStory(text: string, label: string) {
-  assert.match(text, /dealer lot/, `${label} has the dealer-lot story`);
-  assert.match(text, /Class A diesel/, `${label} names Class A diesel`);
-  assert.match(text, /clipboard/, `${label} has the clipboard`);
-  assert.match(text, /fact-checking/, `${label} fact-checks the salesman`);
-  assert.match(text, /No recalls/, `${label} has the false no-recalls beat`);
-  assert.match(text, /wished he hadn'?t/, `${label} bought and regretted`);
+  assert.doesNotMatch(text, /born on a dealer lot/, `${label} drops the old lot biography`);
 }
 
 function assertWhyCreated(text: string, label: string) {
@@ -102,7 +107,7 @@ function assertVerifiedTruePromise(text: string, label: string) {
 }
 
 function assertOriginFacts(text: string, label: string) {
-  assertHansenSpelling(text, label);
+  assertHansenNote(text, label);
   assert.match(text, /RvFOX/, `${label} names RvFOX`);
   assert.match(text, /Verified & True/, `${label} has Verified & True`);
   assert.match(text, /Know before you buy/, `${label} has Know before you buy`);
@@ -112,7 +117,6 @@ function assertOriginFacts(text: string, label: string) {
     /never say "I don't know" about this/i,
     `${label} forbids I-don't-know on origin`,
   );
-  assertLotStory(text, label);
   assertWhyCreated(text, label);
   assertVerifiedTruePromise(text, label);
 }
@@ -132,9 +136,12 @@ test("origin KB is David Hansen / RvFOX / Verified & True / buyer-first", () => 
   assertOriginFacts(formatOriginGroundingBlock(), "formatOriginGroundingBlock");
 });
 
-test("founder KB locks Hansen, lot story, why created, Verified & True promise", () => {
-  assertHansenSpelling(DAVID_HANSEN_STORY, "DAVID_HANSEN_STORY");
-  assertLotStory(DAVID_HANSEN_STORY, "DAVID_HANSEN_STORY");
+test("founder KB is the short Hansen note, not the old lot biography", () => {
+  assert.equal(
+    DAVID_HANSEN_STORY,
+    "RvFOX (rvmax.app) was built by David Hansen (spelled H-A-N-S-E-N), an RV salesman at RV Country, to change the RV industry by making RVs fun to sell and fun to buy again. He did not found RV Country. Paul Evert founded RV Country in 1961.",
+  );
+  assertHansenNote(DAVID_HANSEN_STORY + "\n" + "For facts about companies or people, answer only from what the search results actually say, and never mix in details from the app's own notes.", "note plus rule");
   assertNoIDontKnow(DAVID_HANSEN_STORY, "DAVID_HANSEN_STORY");
 
   assertWhyCreated(WHY_RVFOX_CREATED, "WHY_RVFOX_CREATED");
@@ -149,8 +156,7 @@ test("founder KB locks Hansen, lot story, why created, Verified & True promise",
     ["ORIGIN_STORY_BLOCK", ORIGIN_STORY_BLOCK],
     ["formatOriginGroundingBlock", formatOriginGroundingBlock()],
   ] as const) {
-    assertHansenSpelling(text, label);
-    assertLotStory(text, label);
+    assertHansenNote(text, label);
     assertWhyCreated(text, label);
     assertVerifiedTruePromise(text, label);
     assertNoIDontKnow(text, label);
@@ -170,6 +176,10 @@ test("origin / about / mission / tagline asks match and never web-hold", () => {
   assert.equal(
     looksLikeOriginQuestion("What's the HP on a 2023 Entegra Vision?"),
     false,
+  );
+  assert.equal(
+    looksLikeOriginQuestion("Who is Dave Hans" + "on?"),
+    true,
   );
   assert.equal(
     looksLikeOriginQuestion("Tell me about the 2027 Grand Design Lineage"),
