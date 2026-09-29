@@ -52,10 +52,10 @@ export function HistoryPanel({
       >
         <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-white/15 sm:hidden" />
         <div className="flex items-center gap-2 border-b border-border px-4 py-3">
-          <History className="size-4 text-ruby" />
-          <h2 className="flex-1 text-sm font-semibold">Chat History</h2>
+          <History className="size-4 text-sapphire" />
+          <h2 className="flex-1 text-sm font-semibold">Last Chats</h2>
           {sessions.length > 0 && (
-            <span className="rounded-full bg-ruby-soft px-2 py-0.5 text-[10px] font-bold text-ruby">
+            <span className="rounded-full bg-sapphire px-2 py-0.5 text-[10px] font-bold text-white">
               {sessions.length}
             </span>
           )}
@@ -75,7 +75,7 @@ export function HistoryPanel({
               onNewChat();
               onClose();
             }}
-            className="flex w-full items-center justify-center gap-2 rounded-[var(--radius-md)] border border-ruby-border bg-ruby-soft px-3 py-2.5 text-sm font-semibold text-ruby transition hover:bg-ruby-mid"
+            className="flex w-full items-center justify-center gap-2 rounded-[var(--radius-md)] border border-sapphire/40 bg-sapphire/10 px-3 py-2.5 text-sm font-semibold text-sapphire transition hover:bg-sapphire/15"
           >
             <MessageSquarePlus className="size-4" />
             New chat

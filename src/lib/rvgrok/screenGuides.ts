@@ -146,7 +146,7 @@ There's no VIN field on Tow, even though the banner says "VIN decode". VIN decod
 - A route can be saved with Save.`,
 
   Grok: `This is the RV Grok chat. It has no bottom ask bar. It has its own "Ask RV Grok" box, the mic for Live Voice, and the camera button: tap to take a photo, or hold to pick from the library. A separate live-camera control stays on while he talks.
-Across the top are Chat history, Agent (deeper research), Voice settings, New chat (once a thread is open), and ⋯.
+Across the top are Agent, Voice settings, New chat (once a thread is open), and ⋯. Last Chats sits under the avatar.
 - Name a year, make, and model to get a spec report card. GAP fields stay empty, and nothing is invented.
 - After a report, Grok offers extras one at a time with Yes / No thanks: ratings, a video, NHTSA recalls, market bands, owner reviews, the maintenance list, a VIN decode, and sharing.
 - In Live Voice, CUT stops Grok mid-sentence and keeps listening. STOP ends the session.
