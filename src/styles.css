@@ -2900,7 +2900,7 @@ button.showroom-hero {
 /* Floor is a flip of the real Cornerstone cutout. Do not swap in a generated coach. */
 .showroom-floor {
   --floor-mirror: 2.65rem;
-  --floor-pull: 0.45rem;
+  --floor-pull: 0.75rem;
   position: relative;
   z-index: 2;
   width: 100%;
