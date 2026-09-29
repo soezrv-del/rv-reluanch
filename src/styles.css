@@ -2363,17 +2363,6 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
 .lot-well.is-rail {
   min-height: 7rem;
 }
-.lot-well-id {
-  position: absolute;
-  inset: auto 0 0;
-  z-index: 1;
-  padding: 2.1rem 0.85rem 0.7rem;
-  background: linear-gradient(
-    180deg,
-    transparent,
-    rgba(4, 10, 28, 0.82)
-  );
-}
 .lot-photo {
   position: absolute;
   inset: 0;
@@ -2397,37 +2386,35 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
 .lot-well > span {
   z-index: 1;
 }
-.lot-pills {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.4rem;
-}
-.lot-pill {
-  min-width: 0;
-  border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  padding: 0.65rem 0.3rem 0.55rem;
-  text-align: center;
-}
-.lot-pill-value {
+.lot-unit-title {
+  margin: 0;
+  max-width: 100%;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 0.78rem;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
   color: #fff;
 }
-.lot-pill-value.is-gap {
-  color: rgba(255, 255, 255, 0.45);
+.lot-unit-title.is-rail {
+  font-size: 1rem;
 }
-.lot-pill-label {
-  margin-top: 0.2rem;
-  font-size: 0.58rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
+.lot-unit-title.is-featured {
+  font-size: 1.125rem;
+}
+.lot-unit-meta {
+  margin: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.75);
 }
 @media (prefers-reduced-motion: reduce) {
   .lot-card,
@@ -2961,6 +2948,7 @@ button.showroom-hero {
 }
 .showroom-arrival-meta {
   display: flex;
+  min-width: 0;
   min-height: 4.1rem;
   flex-direction: column;
   justify-content: center;
@@ -2973,10 +2961,26 @@ button.showroom-hero {
   overflow: hidden;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  font-size: 0.75rem;
-  font-weight: 600;
-  line-height: 1.3;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
   color: #e9eef6;
+}
+.showroom-arrival-sub {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.62);
 }
 .showroom-arrival-price {
   font-size: 0.84rem;
@@ -3990,21 +3994,17 @@ html[data-theme="light"] .text-gold-bright {
   color: #1648c8 !important;
   -webkit-text-fill-color: #1648c8 !important;
 }
-html[data-theme="light"] .lot-pill {
-  background: transparent;
-  border: 0;
-}
-html[data-theme="light"] .lot-pill-value {
+html[data-theme="light"] .lot-unit-title {
   color: #111111 !important;
+  -webkit-text-fill-color: #111111;
   font-size: 1.35rem;
   font-weight: 700;
   letter-spacing: -0.03em;
 }
-html[data-theme="light"] .lot-pill-label {
-  color: #6e7c8c !important;
-  -webkit-text-fill-color: #6e7c8c !important;
-  font-weight: 500;
-  letter-spacing: 0.06em;
+html[data-theme="light"] .lot-unit-meta,
+html[data-theme="light"] .showroom-arrival-sub {
+  color: #3d4d68 !important;
+  -webkit-text-fill-color: #3d4d68 !important;
 }
 html[data-theme="light"] .text-sapphire,
 html[data-theme="light"] .text-sapphire-glow {
@@ -4182,7 +4182,6 @@ html[data-theme="light"] .app-shell * {
   text-shadow: none;
 }
 html[data-theme="light"] .rvfax-sapphire-label,
-html[data-theme="light"] .lot-pill-label,
 html[data-theme="light"] .sapphire-header-badge {
   color: #6e7c8c !important;
   -webkit-text-fill-color: #6e7c8c !important;
