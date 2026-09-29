@@ -848,6 +848,15 @@ function tryReadMoney(
   return { value, end: j };
 }
 
+/** First "around $N" band: ±20%, and never tighter than $15k either side. $50k → $35k–$65k. */
+const AROUND_PRICE_PCT = 0.2;
+const AROUND_PRICE_MIN_SPAN = 15_000;
+
+function aroundPriceBand(amount: number): { priceMin: number; priceMax: number } {
+  const span = Math.max(AROUND_PRICE_MIN_SPAN, Math.round(amount * AROUND_PRICE_PCT));
+  return { priceMin: amount - span, priceMax: amount + span };
+}
+
 function consumePrice(tokens: string[]): {
   tokens: string[];
   priceMin?: number;
@@ -881,8 +890,9 @@ function consumePrice(tokens: string[]): {
         if (under) priceMax = money.value;
         else if (over) priceMin = money.value;
         else {
-          priceMin = Math.round(money.value * 0.85);
-          priceMax = Math.round(money.value * 1.15);
+          const band = aroundPriceBand(money.value);
+          priceMin = band.priceMin;
+          priceMax = band.priceMax;
         }
       }
       if (money) {
@@ -906,8 +916,9 @@ function consumePrice(tokens: string[]): {
       priceMax == null &&
       (explicitMoney || bare.value >= 10000)
     ) {
-      priceMin = Math.round(bare.value * 0.85);
-      priceMax = Math.round(bare.value * 1.15);
+      const band = aroundPriceBand(bare.value);
+      priceMin = band.priceMin;
+      priceMax = band.priceMax;
       i = bare.end;
       continue;
     }

@@ -179,9 +179,9 @@ test("how about used Super Cs after a Lineage question still calls the tool and 
 test("fuel, spoken price, sort, and chassis match the lot sheet", () => {
   const snap = units();
   const around = searchLot(snap.units, { query: "diesel around a hundred thousand" });
-  assert.equal(around.matched, 11);
+  assert.equal(around.matched, 18);
   assert.ok(
-    around.units.every((unit) => (unit.price ?? 0) >= 85_000 && (unit.price ?? 0) <= 115_000),
+    around.units.every((unit) => (unit.price ?? 0) >= 80_000 && (unit.price ?? 0) <= 120_000),
   );
   assert.equal(
     snap.units.filter((unit) => {
@@ -189,11 +189,11 @@ test("fuel, spoken price, sort, and chassis match the lot sheet", () => {
       return (
         /\bdiesel\b/.test(fuel) &&
         unit.price != null &&
-        unit.price >= 85_000 &&
-        unit.price <= 115_000
+        unit.price >= 80_000 &&
+        unit.price <= 120_000
       );
     }).length,
-    11,
+    around.matched,
   );
 
   const cheap = searchLot(snap.units, { query: "cheapest diesel" });
@@ -214,22 +214,24 @@ test("fuel, spoken price, sort, and chassis match the lot sheet", () => {
   assert.equal(searchLot(snap.units, { query: "freightliner" }).matched, 34);
 
   const junk = searchLot(snap.units, { query: "diesel around a hundred thousand zzznomatch" });
-  assert.equal(junk.matched, 11);
+  assert.equal(junk.matched, 18);
 
   const dollars = searchLot(snap.units, { query: "used diesel around $100,000" });
   assert.ok(dollars.matched > 0);
-  assert.ok(dollars.matched <= 11);
+  assert.ok(dollars.matched <= 18);
   assert.equal(dollars.counts.condition.Used, dollars.matched);
   assert.ok(
-    dollars.units.every((unit) => (unit.price ?? 0) >= 85_000 && (unit.price ?? 0) <= 115_000),
+    dollars.units.every((unit) => (unit.price ?? 0) >= 80_000 && (unit.price ?? 0) <= 120_000),
   );
   assert.equal(
     searchLot(snap.units, { query: "diesel around $100,000" }).matched,
-    11,
+    18,
   );
 
   const voice = readFileSync(join(process.cwd(), "src/lib/rvgrok/liveVoice.ts"), "utf8");
   assert.match(voice, /Never say none before the tool returns/);
+  assert.match(voice, /Around \$50,000 is \$35,000 to \$65,000/);
+  assert.match(voice, /Never start at \$45,000 to \$55,000/);
   assert.match(voice, /Never answer a lot count from memory/);
   assert.match(voice, /Call query_lot once/);
 });
@@ -261,12 +263,32 @@ test("the salesman's words beat a bad model filter on the first ask", () => {
 
   const around = answerQueryLotFromSnapshot(
     snap,
+    { minPrice: 45000, maxPrice: 55000 },
+    null,
+    "how many RVs in the entire inventory around $50,000",
+  );
+  assert.ok(around.matched > 0);
+  assert.ok(
+    around.units.every((unit) => (unit.price ?? 0) >= 35_000 && (unit.price ?? 0) <= 65_000),
+  );
+  assert.equal(
+    searchLot(snap.units, {
+      query: "around $50,000",
+      price_min: 45000,
+      price_max: 55000,
+      utterance: "how many RVs in the entire inventory around $50,000",
+    }).matched,
+    around.matched,
+  );
+
+  const aroundHundred = answerQueryLotFromSnapshot(
+    snap,
     { minPrice: 90000, maxPrice: 110000 },
     null,
     "diesel around a hundred thousand",
   );
-  assert.equal(around.matched, 11);
-  assert.doesNotMatch(around.speech, /web notes/i);
+  assert.equal(aroundHundred.matched, 18);
+  assert.doesNotMatch(aroundHundred.speech, /web notes/i);
 
   assert.equal(
     searchLot(snap.units, { utterance: "deisel", body_type: "Class A" }).matched,
