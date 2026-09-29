@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { isAndroidNativeWebView } from "@/lib/hooks/nativeWebView";
-import { grokComposerKeyboardLift } from "@/lib/rvgrok/keyboardSafe";
+import {
+  grokComposerKeyboardLift,
+  syncRestingLayout,
+} from "@/lib/rvgrok/keyboardSafe";
 
 export type KeyboardInset = {
   /** Keyboard height overlapping the layout (px) */
@@ -54,13 +57,20 @@ function applyCssVars(k: KeyboardInset) {
       : typeof window !== "undefined"
         ? window.innerHeight
         : 0;
-  const layoutHeight = typeof window !== "undefined" ? window.innerHeight : 0;
+  const innerH = typeof window !== "undefined" ? window.innerHeight : 0;
+  const active = typeof document !== "undefined" ? document.activeElement : null;
+  const fieldFocused = active instanceof HTMLElement && isTextField(active);
+  // Keep the pre-keyboard height. iOS shrinks innerHeight with the IME, and
+  // comparing the shrunk height to the visual viewport double-counts.
+  const layoutHeight = syncRestingLayout(innerH, k.open, fieldFocused);
+  const pinChrome = active instanceof HTMLElement && isPinnedChromeField(active);
   const lift = grokComposerKeyboardLift({
     open: k.open,
     inset: k.inset,
     vvHeight: k.vvHeight || frameH,
     vvOffsetTop: k.vvOffsetTop,
     layoutHeight,
+    pinChrome,
   });
   root.style.setProperty("--kb-inset", `${k.inset}px`);
   root.style.setProperty("--kb-lift", `${lift}px`);

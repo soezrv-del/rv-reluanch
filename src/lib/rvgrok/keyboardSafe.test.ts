@@ -4,8 +4,10 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  currentRestingLayout,
   grokComposerKeyboardLift,
   grokScrollKeyboardPad,
+  syncRestingLayout,
 } from "./keyboardSafe.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -40,6 +42,52 @@ test("Safari visualViewport shrink is already consumed by the shell — no doubl
   );
 });
 
+test("lot search does not lift the ask bar off the keyboard", () => {
+  assert.equal(
+    grokComposerKeyboardLift({
+      open: true,
+      inset: 336,
+      vvHeight: 508,
+      vvOffsetTop: 0,
+      layoutHeight: 844,
+      pinChrome: false,
+    }),
+    0,
+  );
+  assert.equal(
+    grokComposerKeyboardLift({
+      open: true,
+      inset: 336,
+      vvHeight: 844,
+      vvOffsetTop: 0,
+      layoutHeight: 844,
+      pinChrome: false,
+    }),
+    0,
+  );
+});
+
+test("innerHeight shrinking with the keyboard is not a second lift", () => {
+  syncRestingLayout(844, false, false);
+  // visualViewport resize can report the keyboard as closed once innerHeight
+  // has already shrunk. A focused field must not overwrite the resting height.
+  const layout = syncRestingLayout(508, false, true);
+  assert.equal(layout, 844);
+  assert.equal(currentRestingLayout(508), 844);
+  assert.equal(
+    grokComposerKeyboardLift({
+      open: true,
+      inset: 336,
+      vvHeight: 508,
+      vvOffsetTop: 0,
+      layoutHeight: layout,
+      pinChrome: true,
+    }),
+    0,
+  );
+  assert.equal(syncRestingLayout(844, false, false), 844);
+});
+
 test("closed keyboard and desktop never lift", () => {
   assert.equal(
     grokComposerKeyboardLift({
@@ -59,8 +107,10 @@ test("Grok composer and thread chrome wire keyboard-safe inset + scroll-into-vie
   const app = read("../../components/rvgrok/RvGrokApp.tsx");
   const composer = read("../../components/rvgrok/GrokComposer.tsx");
   const css = read("../../styles.css");
+  const inset = read("../hooks/useKeyboardInset.ts");
 
   assert.match(app, /grokComposerKeyboardLift/);
+  assert.match(app, /currentRestingLayout/);
   assert.match(app, /grokScrollKeyboardPad/);
   assert.match(app, /data-rvgrok-composer-dock/);
   assert.match(app, /scrollFieldIntoVisibleArea/);
@@ -69,6 +119,10 @@ test("Grok composer and thread chrome wire keyboard-safe inset + scroll-into-vie
   assert.match(composer, /scrollFieldIntoVisibleArea/);
   assert.match(composer, /onFocus=/);
   assert.match(composer, /data-rvgrok-composer/);
+
+  assert.match(inset, /pinChrome/);
+  assert.match(inset, /syncRestingLayout/);
+  assert.match(inset, /isPinnedChromeField/);
 
   assert.match(css, /html\.kb-open \[data-rvgrok-composer\]/);
   assert.match(css, /html\.kb-open \[data-rvgrok-composer-dock\]/);

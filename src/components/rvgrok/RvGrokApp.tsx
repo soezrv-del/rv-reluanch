@@ -91,6 +91,7 @@ import {
   useKeyboardInset,
 } from "@/lib/hooks/useKeyboardInset";
 import {
+  currentRestingLayout,
   grokComposerKeyboardLift,
   grokScrollKeyboardPad,
 } from "@/lib/rvgrok/keyboardSafe";
@@ -184,7 +185,9 @@ export function RvGrokApp({
     inset: kb.inset,
     vvHeight: kb.vvHeight,
     vvOffsetTop: kb.vvOffsetTop,
-    layoutHeight: typeof window !== "undefined" ? window.innerHeight : 0,
+    layoutHeight: currentRestingLayout(
+      typeof window !== "undefined" ? window.innerHeight : 0,
+    ),
   });
   const scrollKbPad = grokScrollKeyboardPad(kb.open);
   const abortRef = useRef<AbortController | null>(null);
