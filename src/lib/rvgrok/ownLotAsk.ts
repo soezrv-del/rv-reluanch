@@ -302,7 +302,7 @@ export function looksLikeOwnLotSearchAsk(text: string): boolean {
   return false;
 }
 
-export type OwnLotSortBy = "price" | "length" | "year";
+export type OwnLotSortBy = "price" | "length" | "year" | "type";
 export type OwnLotSortDir = "asc" | "desc";
 
 export type OwnLotSort = {

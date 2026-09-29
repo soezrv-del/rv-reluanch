@@ -220,7 +220,12 @@ export const QUERY_LOT_TOOL = {
         type: "number",
         description: "Inclusive length in feet. Around 30 foot is 32.",
       },
-      sort: { type: "string", enum: ["price", "length", "year"] },
+      sort: {
+        type: "string",
+        enum: ["price", "length", "year", "type"],
+        description:
+          "price, length, year, or type. type groups by the class written on the coach (Class A, Class A Diesel, Class C, fifth wheel). Speak the by-type counts. Do not say type cannot be sorted.",
+      },
       order: { type: "string", enum: ["asc", "desc"] },
       limit: { type: "integer", description: "Top N. Default 12. Max 24." },
     },

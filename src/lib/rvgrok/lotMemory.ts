@@ -395,7 +395,10 @@ export function answerQueryLotFromSnapshot(
       maxPrice: searchArgs.price_max,
     },
     sort:
-      searchArgs.sort === "price" || searchArgs.sort === "length" || searchArgs.sort === "year"
+      searchArgs.sort === "price" ||
+      searchArgs.sort === "length" ||
+      searchArgs.sort === "year" ||
+      searchArgs.sort === "type"
         ? { by: searchArgs.sort, dir: searchArgs.order === "desc" ? "desc" : "asc" }
         : turn.sort,
     limit,

@@ -140,17 +140,23 @@ const STOP = new Set([
   "hi",
   "how",
   "i",
+  "im",
   "in",
   "inventory",
   "is",
   "it",
   "its",
   "just",
+  "know",
   "least",
+  "list",
+  "looking",
   "longest",
   "lot",
   "many",
+  "mean",
   "me",
+  "more",
   "newest",
   "of",
   "oldest",
@@ -162,8 +168,12 @@ const STOP = new Set([
   "please",
   "price",
   "priciest",
+  "probably",
+  "right",
   "shortest",
   "show",
+  "showed",
+  "sort",
   "stock",
   "tell",
   "that",
@@ -171,15 +181,27 @@ const STOP = new Set([
   "them",
   "there",
   "these",
+  "think",
   "this",
   "those",
+  "thousand",
+  "time",
   "to",
   "top",
+  "total",
+  "try",
+  "type",
+  "want",
   "we",
   "what",
   "which",
+  "why",
   "with",
+  "yeah",
+  "yes",
   "you",
+  "your",
+  "youre",
 ]);
 
 const STATUS_PHRASES = ["sale pending", "on order", "in transit", "available", "sold"];
@@ -481,6 +503,38 @@ function tokenHitsIdentity(unit: LotQueryUnit, token: string): boolean {
   return lotTokenMatchesUnit(asSearchable(unit), token);
 }
 
+function tokenIsCoachName(unit: LotQueryUnit, token: string): boolean {
+  if (/^\d+$/.test(token)) return false;
+  if (token.length < 4 && !/\d/.test(token)) return false;
+  if (
+    token === "class" ||
+    token === "diesel" ||
+    token === "gas" ||
+    token === "gasoline" ||
+    token === "super" ||
+    token === "motorhome" ||
+    token === "fifth" ||
+    token === "wheel" ||
+    token === "travel" ||
+    token === "trailer" ||
+    token === "toy" ||
+    token === "hauler" ||
+    token === "used" ||
+    token === "new"
+  ) {
+    return false;
+  }
+  const named = asSearchable({
+    year: "",
+    make: unit.make,
+    model: unit.model,
+    trim: unit.trim,
+    series: unit.series,
+    stock_number: unit.stock_number,
+  });
+  return lotTokenMatchesUnit(named, token);
+}
+
 /** Stop-word-free tokens for the dumb bar. Same matcher the Lot page uses. */
 function plainTypeaheadTokens(text: string): string[] {
   return tokenizeLotQuery(text).filter((token) => !STOP.has(token));
@@ -627,9 +681,18 @@ function oneLine(
   counts: LotQueryCounts,
   body: BodySpec,
   didYouMean?: string,
+  sort?: Parsed["sort"],
 ): string {
   if (!matched.length && didYouMean) return `None. Did you mean ${didYouMean}?`;
   if (!matched.length) return "None. No own-lot hit.";
+  if (sort === "type" && matched.length > 1) {
+    const rows = Object.entries(counts.body_type).sort((a, b) => {
+      const rank = typeRank(a[0]) - typeRank(b[0]);
+      return rank !== 0 ? rank : b[1] - a[1];
+    });
+    const list = rows.map(([name, n]) => `${n} ${name}`).join(", ");
+    return `Matching units: ${matched.length}. By type: ${list}.`;
+  }
   if (matched.length === 1) {
     const unit = matched[0]!;
     const name = [unit.year, unit.make, unit.model, unit.trim].filter(Boolean).join(" ");
@@ -702,7 +765,7 @@ function tryReadMoney(
   let seen = false;
   let j = start;
   while (j < tokens.length) {
-    const token = tokens[j] || "";
+    const token = (tokens[j] || "").replace(/^\$/, "");
     const kMatch = /^(\d+(?:\.\d+)?)k$/.exec(token);
     if (kMatch) {
       value += Number(kMatch[1]) * 1000;
@@ -724,6 +787,12 @@ function tryReadMoney(
         seen = true;
         j += 2;
         continue;
+      }
+      if (next === "000" && n < 1000) {
+        value += n * 1000;
+        seen = true;
+        j += 2;
+        break;
       }
       if (next === "hundred") {
         value += n * 100;
@@ -808,13 +877,15 @@ function consumePrice(tokens: string[]): {
       let start = i + 1;
       if ((token === "less" || token === "more") && tokens[start] === "than") start += 1;
       const money = tryReadMoney(tokens, start);
-      if (money) {
+      if (money && money.value >= 1000) {
         if (under) priceMax = money.value;
         else if (over) priceMin = money.value;
         else {
           priceMin = Math.round(money.value * 0.85);
           priceMax = Math.round(money.value * 1.15);
         }
+      }
+      if (money) {
         i = money.end;
         continue;
       }
@@ -848,15 +919,33 @@ function consumePrice(tokens: string[]): {
 
 function consumeSort(tokens: string[]): {
   tokens: string[];
-  sort?: "price";
+  sort?: "price" | "length" | "year" | "type";
   order?: "asc" | "desc";
 } {
   const kept: string[] = [];
-  let sort: "price" | undefined;
+  let sort: "price" | "length" | "year" | "type" | undefined;
   let order: "asc" | "desc" | undefined;
   for (let i = 0; i < tokens.length; ) {
     const token = tokens[i] || "";
     const next = tokens[i + 1];
+    if ((token === "sort" || token === "group" || token === "order") && next === "by") {
+      const which = tokens[i + 2];
+      if (which === "type" || which === "class") {
+        sort = "type";
+        i += 3;
+        continue;
+      }
+      if (which === "price" || which === "length" || which === "year") {
+        sort = which;
+        i += 3;
+        continue;
+      }
+    }
+    if (token === "by" && (next === "type" || next === "class")) {
+      sort = "type";
+      i += 2;
+      continue;
+    }
     if (token === "cheapest" || token === "priciest") {
       sort = "price";
       order = token === "priciest" ? "desc" : "asc";
@@ -923,7 +1012,7 @@ function fuelText(unit: LotQueryUnit, key: string): string {
 
 function fuelMatches(unit: LotQueryUnit, fuel: "" | "diesel" | "gas"): boolean {
   if (!fuel) return true;
-  const typed = `${fuelText(unit, "fuel_type")} ${fuelText(unit, "fuel")}`;
+  const typed = `${fuelText(unit, "fuel_type")} ${fuelText(unit, "fuel")} ${unit.body_type || ""}`.toLowerCase();
   const engine = fuelText(unit, "engine");
   if (fuel === "diesel") {
     return /\bdiesel\b/.test(typed) || /\bdiesel\b/.test(engine);
@@ -947,7 +1036,7 @@ type Parsed = {
   lengthMax?: number;
   fuel: "" | "diesel" | "gas";
   close?: string;
-  sort?: "price" | "length" | "year";
+  sort?: "price" | "length" | "year" | "type";
   order: "asc" | "desc";
   limit: number;
 };
@@ -1085,7 +1174,10 @@ function parseArgs(units: LotQueryUnit[], args: LotQueryArgs): Parsed {
   const tokens = [...new Set([...queryTokens, ...fieldTokens])];
   const namedPlaces = mentionedPlaces(statused.rest, places);
   const sortBy = str(args.sort) || sortedWords.sort || "";
-  const sort = sortBy === "price" || sortBy === "length" || sortBy === "year" ? sortBy : undefined;
+  const sort =
+    sortBy === "price" || sortBy === "length" || sortBy === "year" || sortBy === "type"
+      ? sortBy
+      : undefined;
   const rawLimit = num(args.limit);
   const limit = rawLimit != null ? Math.min(24, Math.max(1, Math.round(rawLimit))) : 12;
   const argOrder = str(args.order);
@@ -1162,7 +1254,39 @@ function hasRecognizedFilter(parsed: Parsed, lengthRequired: boolean): boolean {
   );
 }
 
+const TYPE_ORDER = [
+  "Class A Diesel",
+  "Class A Gas",
+  "Class A",
+  "Class B",
+  "Class C",
+  "Class Super C",
+  "Fifth Wheel",
+  "Fifth Wheel Toy Hauler",
+  "Travel Trailer",
+  "Travel Trailer Toy Hauler",
+  "Truck Camper",
+  "Destination Trailer",
+  "Popup",
+  "Popup Trailer",
+];
+
+function typeRank(body: string): number {
+  const i = TYPE_ORDER.indexOf(body);
+  return i < 0 ? TYPE_ORDER.length : i;
+}
+
 function compareUnits(a: LotQueryUnit, b: LotQueryUnit, parsed: Parsed): number {
+  if (parsed.sort === "type") {
+    const rank = typeRank(a.body_type || "") - typeRank(b.body_type || "");
+    if (rank !== 0) return rank;
+    const ap = a.price ?? null;
+    const bp = b.price ?? null;
+    if (ap == null && bp == null) return 0;
+    if (ap == null) return 1;
+    if (bp == null) return -1;
+    return ap - bp;
+  }
   const dir = parsed.order === "desc" ? -1 : 1;
   const value = (unit: LotQueryUnit): number | null => {
     if (parsed.sort === "price") return unit.price ?? null;
@@ -1200,23 +1324,33 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
   let matched = parsed.tokens.length
     ? structured.filter((unit) => passesTokens(unit, parsed.tokens))
     : structured;
-  // A junk word must not wipe a search that already recognized fuel, price, or type.
-  if (
-    !matched.length &&
-    parsed.tokens.length &&
-    hasRecognizedFilter(parsed, lengthRequired)
-  ) {
-    const known = parsed.tokens.filter((token) =>
-      units.some((unit) => tokenHitsIdentity(unit, token)),
+  // Spare words ("looking", "right", "try again") are not a coach name.
+  // If used / diesel / class / price already picked a set, keep that set.
+  // A real name that the class filter missed (Class A Lineage) still returns that coach.
+  const recognized = hasRecognizedFilter(parsed, lengthRequired);
+  if (!matched.length && parsed.tokens.length && recognized) {
+    const names = parsed.tokens.filter((token) =>
+      units.some((unit) => tokenIsCoachName(unit, token)),
     );
-    if (known.length < parsed.tokens.length) {
-      matched = known.length
-        ? structured.filter((unit) => passesTokens(unit, known))
-        : structured;
+    if (names.length) {
+      const byName = units.filter(
+        (unit) =>
+          names.every((token) => tokenIsCoachName(unit, token)) &&
+          conditionMatches(unit, parsed.condition) &&
+          statusMatches(unit, parsed.status) &&
+          locationMatches(unit, parsed.location, parsed.places) &&
+          yearMatches(unit, parsed.yearMin, parsed.yearMax) &&
+          priceMatches(unit, parsed.priceMin, parsed.priceMax) &&
+          fuelMatches(unit, parsed.fuel),
+      );
+      if (byName.length) matched = byName;
+    } else {
+      matched = structured;
     }
   }
-  // Structured filters that find nothing still fall back to the plain type-ahead bar.
-  if (!matched.length) {
+  // A name with no class, fuel, or price can still use the plain bar.
+  // Do not run that bar over a sentence that already named a real filter.
+  if (!matched.length && !recognized) {
     const plainTokens = plainTypeaheadTokens(
       [clean.query, clean.make, clean.model].filter(Boolean).join(" "),
     );
@@ -1233,7 +1367,8 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
         return passesStructured(unit, { ...parsed, lengthMin: undefined, lengthMax: undefined }, false);
       })
     : [];
-  const didYouMean = matched.length ? undefined : suggestName(parsed.tokens, units);
+  const didYouMean =
+    matched.length || recognized ? undefined : suggestName(parsed.tokens, units);
   const counts = countsFor(matched);
   const sorted = matched
     .map((unit, index) => ({ unit, index }))
@@ -1249,7 +1384,7 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
     counts,
     units: sorted.slice(0, parsed.limit).map(toRow),
     no_length: noLength.map(toRow),
-    summary: closeLine(oneLine(matched, counts, parsed.body, didYouMean), parsed.close, matched.length),
+    summary: closeLine(oneLine(matched, counts, parsed.body, didYouMean, parsed.sort), parsed.close, matched.length),
     ...(didYouMean ? { did_you_mean: didYouMean } : {}),
     ...(parsed.close && matched.length ? { close: parsed.close } : {}),
   };

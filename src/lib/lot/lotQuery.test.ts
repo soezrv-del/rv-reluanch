@@ -216,6 +216,18 @@ test("fuel, spoken price, sort, and chassis match the lot sheet", () => {
   const junk = searchLot(snap.units, { query: "diesel around a hundred thousand zzznomatch" });
   assert.equal(junk.matched, 11);
 
+  const dollars = searchLot(snap.units, { query: "used diesel around $100,000" });
+  assert.ok(dollars.matched > 0);
+  assert.ok(dollars.matched <= 11);
+  assert.equal(dollars.counts.condition.Used, dollars.matched);
+  assert.ok(
+    dollars.units.every((unit) => (unit.price ?? 0) >= 85_000 && (unit.price ?? 0) <= 115_000),
+  );
+  assert.equal(
+    searchLot(snap.units, { query: "diesel around $100,000" }).matched,
+    11,
+  );
+
   const voice = readFileSync(join(process.cwd(), "src/lib/rvgrok/liveVoice.ts"), "utf8");
   assert.match(voice, /Never say none before the tool returns/);
   assert.match(voice, /Never answer a lot count from memory/);
@@ -285,4 +297,45 @@ test("the salesman's words beat a bad model filter on the first ask", () => {
   assert.match(realtime, /Never tell the user to change/);
   assert.match(api, /utterance: ctx\.userText/);
   assert.match(api, /looksLikeOwnLotCountOrRankAsk/);
+});
+
+test("a sentence is read off the lot sheet, not turned into another coach", () => {
+  const snap = units();
+  const looking = searchLot(snap.units, {
+    query: "I'm just looking at Class A diesels",
+  });
+  assert.equal(looking.matched, 48);
+  assert.equal(looking.counts.body_type["Class A Diesel"], 48);
+  assert.equal(looking.did_you_mean, undefined);
+
+  const said = searchLot(snap.units, {
+    utterance:
+      "you're probably right about a hundred Class As. I'm just looking at Class A diesels",
+    body_type: "Class A",
+  });
+  assert.equal(said.matched, 48);
+  assert.equal(said.did_you_mean, undefined);
+  assert.doesNotMatch(said.summary, /Light/);
+
+  const again = searchLot(snap.units, {
+    utterance: "No, try it one more time. The used Class A diesels.",
+    body_type: "Class A Diesel",
+    condition: "used",
+  });
+  assert.equal(again.matched, 44);
+  assert.equal(again.counts.condition.Used, 44);
+  assert.equal(again.did_you_mean, undefined);
+  assert.match(again.summary, /Matching units: 44/);
+
+  const hundred = searchLot(snap.units, {
+    query: "you're probably right about a hundred Class As",
+  });
+  assert.equal(hundred.matched, 108);
+  assert.equal(hundred.did_you_mean, undefined);
+
+  const byType = searchLot(snap.units, { query: "diesels sort by type" });
+  assert.equal(byType.matched, 161);
+  assert.match(byType.summary, /By type:/);
+  assert.match(byType.summary, /48 Class A Diesel/);
+  assert.equal(byType.units[0]?.body_type, "Class A Diesel");
 });
