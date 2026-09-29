@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import {
   Check,
   Mic,
@@ -39,15 +40,27 @@ export function VoicePanel({
   previewingId: string | null;
 }) {
   const kb = useKeyboardInset();
+  const backdropTap = useRef<{ x: number; y: number } | null>(null);
+  const sheetGesture = useRef(false);
   if (!open) return null;
+
+  const sheetCap = kb.open
+    ? `min(88dvh, calc(var(--vv-height, 100dvh) - ${kb.inset + 32}px))`
+    : "min(88dvh, var(--vv-height, 88dvh))";
 
   return (
     <div
       data-voice-panel=""
-      className="fixed inset-x-0 top-0 z-50 flex items-end justify-center sm:items-center"
+      className="fixed inset-x-0 top-0 z-50 box-border flex items-end justify-center overflow-hidden overscroll-none sm:items-center"
       style={{
-        height: kb.vvHeight > 0 ? `${kb.vvHeight}px` : "100dvh",
-        top: kb.vvOffsetTop || 0,
+        top: kb.open ? kb.vvOffsetTop || 0 : 0,
+        bottom: kb.open ? "auto" : 0,
+        height: kb.open
+          ? kb.vvHeight > 0
+            ? `${kb.vvHeight}px`
+            : "100dvh"
+          : "auto",
+        overscrollBehavior: "none",
         paddingTop: "var(--safe-top, 0px)",
         paddingLeft: "max(0.75rem, var(--safe-left, 0px))",
         paddingRight: "max(0.75rem, var(--safe-right, 0px))",
@@ -56,18 +69,41 @@ export function VoicePanel({
           : "max(0.75rem, var(--safe-bottom, env(safe-area-inset-bottom)))",
       }}
     >
-      <button
-        type="button"
+      <div
         className="absolute inset-0 bg-black/70 backdrop-blur-[2px]"
         aria-label="Dismiss voice settings"
-        onClick={onClose}
+        onPointerDown={(e) => {
+          if (e.target !== e.currentTarget) return;
+          backdropTap.current = { x: e.clientX, y: e.clientY };
+        }}
+        onClick={(e) => {
+          if (e.target !== e.currentTarget) return;
+          if (sheetGesture.current) return;
+          const start = backdropTap.current;
+          backdropTap.current = null;
+          if (!start) return;
+          if (Math.hypot(e.clientX - start.x, e.clientY - start.y) > 8) return;
+          onClose();
+        }}
       />
       <div
-        className="relative z-10 flex w-full max-w-md flex-col overflow-hidden rounded-t-[var(--radius-2xl)] border border-border-strong bg-bg-elevated shadow-[var(--shadow-panel)] sm:rounded-[var(--radius-2xl)]"
+        className="relative z-10 flex w-full max-w-md min-h-0 flex-col overflow-hidden rounded-t-[var(--radius-2xl)] border border-border-strong bg-bg-elevated shadow-[var(--shadow-panel)] sm:rounded-[var(--radius-2xl)]"
         style={{
-          maxHeight: kb.open
-            ? `min(88dvh, calc(var(--vv-height, 100dvh) - ${kb.inset + 32}px))`
-            : "min(88dvh, var(--vv-height, 88dvh))",
+          height: `min(${sheetCap}, 100%)`,
+          maxHeight: `min(${sheetCap}, 100%)`,
+        }}
+        onPointerDown={() => {
+          sheetGesture.current = true;
+        }}
+        onPointerUp={() => {
+          window.setTimeout(() => {
+            sheetGesture.current = false;
+          }, 400);
+        }}
+        onPointerCancel={() => {
+          window.setTimeout(() => {
+            sheetGesture.current = false;
+          }, 400);
         }}
       >
         <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-white/15 sm:hidden" />
@@ -90,7 +126,15 @@ export function VoicePanel({
           </button>
         </div>
 
-        <div className="rv-scroll flex-1 space-y-3 overflow-y-auto px-4 py-3">
+        <div
+          data-voice-scroll=""
+          className="rv-scroll min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-3"
+          style={{
+            WebkitOverflowScrolling: "touch",
+            overscrollBehavior: "contain",
+            touchAction: "pan-y",
+          }}
+        >
           <button
             type="button"
             onClick={() => onLiveVoiceChange(!liveVoice)}

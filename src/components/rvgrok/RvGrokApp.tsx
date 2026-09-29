@@ -200,6 +200,10 @@ export function RvGrokApp({
   const liveDeskThisTurnRef = useRef(false);
   const voiceModeRef = useRef(voiceMode);
   const liveVoiceRef = useRef(liveVoice);
+  const selectedVoiceRef = useRef(selectedVoice);
+  const voicePanelOpenRef = useRef(false);
+  const pendingVoiceStartRef = useRef<"live" | "mode" | null>(null);
+  voicePanelOpenRef.current = voicePanelOpen;
   const liveCamRef = useRef(false);
   const isLoadingRef = useRef(false);
   const sendGenRef = useRef(0);
@@ -256,7 +260,10 @@ export function RvGrokApp({
     try {
       if (localStorage.getItem(AGENT_MODE_KEY) === "true") setAgentMode(true);
       const v = localStorage.getItem(VOICE_STORAGE_KEY);
-      if (v) setSelectedVoice(v);
+      if (v) {
+        selectedVoiceRef.current = v;
+        setSelectedVoice(v);
+      }
       const sp = localStorage.getItem(VOICE_SPEED_KEY);
       if (sp) {
         const n = Number(sp);
@@ -296,6 +303,7 @@ export function RvGrokApp({
   };
 
   const persistVoice = (id: string) => {
+    selectedVoiceRef.current = id;
     setSelectedVoice(id);
     try {
       localStorage.setItem(VOICE_STORAGE_KEY, id);
@@ -388,6 +396,7 @@ export function RvGrokApp({
     setVoiceError(null);
     setHistoryOpen(false);
     setVoicePanelOpen(false);
+    pendingVoiceStartRef.current = null;
     camStreamRef.current?.getTracks().forEach((t) => t.stop());
     camStreamRef.current = null;
     if (liveVideoRef.current) liveVideoRef.current.srcObject = null;
@@ -1178,7 +1187,7 @@ export function RvGrokApp({
           }
         },
       },
-      selectedVoice,
+      selectedVoiceRef.current,
       {
         speed: playbackSpeed,
         catalogContext,
@@ -1212,7 +1221,6 @@ export function RvGrokApp({
       startingLiveRef.current = false;
     }
   }, [
-    selectedVoice,
     scrollToBottom,
     reconnectAttempt,
     playbackSpeed,
@@ -1258,14 +1266,23 @@ export function RvGrokApp({
         }
         recognitionRef.current = null;
         setIsRecording(false);
-        setVoicePanelOpen(false);
-        const prewarm = beginLiveVoiceFromUserGesture();
-        void startLiveSessionRef.current(prewarm);
+        if (voicePanelOpenRef.current) {
+          pendingVoiceStartRef.current = "live";
+        } else {
+          pendingVoiceStartRef.current = null;
+          const prewarm = beginLiveVoiceFromUserGesture();
+          void startLiveSessionRef.current(prewarm);
+        }
       } else {
+        pendingVoiceStartRef.current = null;
         stopLiveSession();
         if (voiceModeRef.current) {
           continuousLoopRef.current = true;
-          window.setTimeout(() => startPushToTalkRef.current(), 300);
+          if (voicePanelOpenRef.current) {
+            pendingVoiceStartRef.current = "mode";
+          } else {
+            window.setTimeout(() => startPushToTalkRef.current(), 300);
+          }
         }
       }
     },
@@ -1284,9 +1301,16 @@ export function RvGrokApp({
     continuousLoopRef.current = on && !liveVoiceRef.current;
 
     if (on && !liveVoiceRef.current) {
-      setVoicePanelOpen(false);
-      window.setTimeout(() => startPushToTalkRef.current(), 200);
+      if (voicePanelOpenRef.current) {
+        pendingVoiceStartRef.current = "mode";
+      } else {
+        pendingVoiceStartRef.current = null;
+        window.setTimeout(() => startPushToTalkRef.current(), 200);
+      }
     } else if (!on && !liveVoiceRef.current) {
+      if (pendingVoiceStartRef.current === "mode") {
+        pendingVoiceStartRef.current = null;
+      }
       skipNextAutoRecordRef.current = true;
       try {
         recognitionRef.current?.abort();
@@ -1297,6 +1321,22 @@ export function RvGrokApp({
       setIsRecording(false);
       stopBrowserTts();
       setSpeakingId(null);
+    }
+  }, []);
+
+  const finishVoicePanel = useCallback(() => {
+    setVoicePanelOpen(false);
+    stopBrowserTts();
+    setPreviewingId(null);
+    const pending = pendingVoiceStartRef.current;
+    pendingVoiceStartRef.current = null;
+    if (pending === "live") {
+      const prewarm = beginLiveVoiceFromUserGesture();
+      void startLiveSessionRef.current(prewarm);
+      return;
+    }
+    if (pending === "mode") {
+      window.setTimeout(() => startPushToTalkRef.current(), 200);
     }
   }, []);
 
@@ -2018,13 +2058,12 @@ export function RvGrokApp({
 
       <VoicePanel
         open={voicePanelOpen}
-        onClose={() => {
-          setVoicePanelOpen(false);
-          stopBrowserTts();
-          setPreviewingId(null);
-        }}
+        onClose={finishVoicePanel}
         selectedId={selectedVoice}
-        onSelect={persistVoice}
+        onSelect={(id) => {
+          persistVoice(id);
+          finishVoicePanel();
+        }}
         voiceMode={voiceMode}
         onVoiceModeChange={setVoiceModeArmed}
         liveVoice={liveVoice}
