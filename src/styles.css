@@ -2893,18 +2893,94 @@ button.showroom-hero {
   background: transparent;
   border: 0;
 }
-.showroom-hero-pool {
+.showroom-hero-pool,
+.showroom-hero-beam {
+  display: none !important;
+}
+/* Floor is a flip of the real Cornerstone cutout. Do not swap in a generated coach. */
+.showroom-floor {
+  --floor-mirror: 2.65rem;
+  --floor-pull: 0.75rem;
   position: relative;
+  z-index: 2;
+  width: 100%;
+  margin: 0 0 var(--floor-mirror);
+  background: transparent;
+  line-height: 0;
+}
+.showroom-hero {
+  overflow: visible !important;
+}
+.showroom-floor .showroom-coach,
+.showroom-floor .showroom-coach-reflect {
+  display: block;
+  width: 100% !important;
+  height: auto !important;
+  max-height: 15rem !important;
+  aspect-ratio: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  object-fit: contain !important;
+  object-position: center bottom !important;
+  background: transparent !important;
+  filter: none !important;
+  border: 0 !important;
+  -webkit-box-reflect: none !important;
+}
+.showroom-floor .showroom-coach {
+  position: relative;
+  z-index: 2;
+}
+.showroom-floor-mirror {
+  position: absolute;
   z-index: 1;
-  height: 22px;
-  margin: -16px 12% 0;
+  left: 0;
+  right: 0;
+  top: calc(100% - var(--floor-pull));
+  height: var(--floor-mirror);
+  overflow: hidden;
+  pointer-events: none;
+}
+.showroom-coach-reflect {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% - var(--floor-pull) + 0.55rem);
+  transform: scaleY(-1);
+  transform-origin: center bottom;
+  opacity: 0.88;
+  filter: blur(0.2px) !important;
+  -webkit-mask-image: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.78) 0%,
+    rgba(0, 0, 0, 0.34) 24%,
+    rgba(0, 0, 0, 0.08) 46%,
+    transparent 68%
+  );
+  mask-image: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.78) 0%,
+    rgba(0, 0, 0, 0.34) 24%,
+    rgba(0, 0, 0, 0.08) 46%,
+    transparent 68%
+  );
+}
+.showroom-floor-gloss {
+  position: absolute;
+  z-index: 3;
+  left: 12%;
+  right: 12%;
+  bottom: -0.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
   pointer-events: none;
   background: radial-gradient(
-    ellipse 70% 80% at 50% 40%,
-    rgba(0, 0, 0, 0.14) 0%,
-    rgba(0, 0, 0, 0.04) 46%,
-    transparent 74%
+    ellipse at center,
+    rgba(255, 255, 255, 0.62) 0%,
+    rgba(186, 214, 255, 0.2) 30%,
+    rgba(255, 255, 255, 0.04) 54%,
+    transparent 72%
   );
+  filter: blur(1px);
 }
 .showroom-card {
   background: var(--color-showroom-glass);
@@ -3920,7 +3996,11 @@ html[data-theme="light"] .showroom-hero {
   margin: 0;
   padding: 20px 0 8px;
   border: 0;
-  background: #ffffff;
+  background: transparent !important;
+  overflow: visible !important;
+}
+html[data-theme="light"] .showroom-hero::after {
+  display: none !important;
 }
 html[data-theme="light"] .showroom-placard {
   position: relative;
@@ -3953,14 +4033,33 @@ html[data-theme="light"] .showroom-coach[data-hero-kind="photo"] {
   object-position: 50% 100%;
   filter: none;
 }
-html[data-theme="light"] .showroom-hero-pool {
-  filter: none;
-  background: radial-gradient(
-    ellipse 70% 80% at 50% 40%,
-    rgba(0, 0, 0, 0.14) 0%,
-    rgba(0, 0, 0, 0.04) 46%,
-    transparent 74%
+html[data-theme="light"] .showroom-floor {
+  --floor-mirror: 2rem;
+  --floor-pull: 0.3rem;
+}
+html[data-theme="light"] .showroom-coach-reflect {
+  opacity: 0.42;
+  -webkit-mask-image: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.4) 0%,
+    rgba(0, 0, 0, 0.12) 28%,
+    transparent 58%
   );
+  mask-image: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.4) 0%,
+    rgba(0, 0, 0, 0.12) 28%,
+    transparent 58%
+  );
+}
+html[data-theme="light"] .showroom-floor-gloss {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(23, 26, 32, 0.16) 0%,
+    rgba(23, 26, 32, 0.05) 42%,
+    transparent 72%
+  );
+  filter: blur(2px);
 }
 html[data-theme="light"] .showroom-spotyear,
 html[data-theme="light"] .showroom-spotstock,

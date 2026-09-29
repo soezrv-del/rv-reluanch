@@ -73,13 +73,18 @@ export function HomeScreen({
             </p>
           ) : null}
         </div>
-        <img
-          src={heroSrc}
-          alt={SHOWROOM_SPOTLIGHT.alt}
-          className="showroom-coach"
-          data-hero-kind="cutout"
-        />
-        <div className="showroom-hero-pool" aria-hidden />
+        <div className="showroom-floor" data-hero-kind="cutout">
+          <img
+            src={heroSrc}
+            alt={SHOWROOM_SPOTLIGHT.alt}
+            className="showroom-coach"
+            data-hero-kind="cutout"
+          />
+          <div className="showroom-floor-mirror" aria-hidden>
+            <img src={heroSrc} alt="" className="showroom-coach-reflect" />
+          </div>
+          <div className="showroom-floor-gloss" aria-hidden />
+        </div>
         {spotUnit ? (
           <button
             type="button"
