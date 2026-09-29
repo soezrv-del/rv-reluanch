@@ -35,6 +35,7 @@ export function GrokLanding({
   hint,
   greeting = RV_GROK_SESSION_INTRO,
   welcomeBack,
+  avatarSrc,
 }: {
   status: string;
   speaking: boolean;
@@ -48,6 +49,7 @@ export function GrokLanding({
   greeting?: string;
   /** UI-only welcome chip. Hidden when the heading is already Hello, {name}. */
   welcomeBack?: string;
+  avatarSrc?: string;
 }) {
   return (
     <div
@@ -90,7 +92,7 @@ export function GrokLanding({
           </div>
         ) : null}
 
-        <GrokAvatar size="lg" speaking={speaking} />
+        <GrokAvatar size="lg" speaking={speaking} src={avatarSrc} />
 
         <div className="mt-5">
           <p className="grok-display text-[1.35rem] font-semibold leading-none text-fg">

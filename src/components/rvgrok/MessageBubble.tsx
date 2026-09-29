@@ -66,6 +66,7 @@ export function MessageBubble({
   suggestions,
   onSuggestion,
   onFloorplanChoice,
+  avatarSrc = "/assets/brand/icon-rvgrok.png",
 }: {
   message: Message;
   onSpeak?: (id: string, text: string) => void;
@@ -75,6 +76,7 @@ export function MessageBubble({
   suggestions?: FollowUpChip[];
   onSuggestion?: (prompt: string) => void;
   onFloorplanChoice?: (code: string) => void;
+  avatarSrc?: string;
 }) {
   const isUser = message.role === "user";
   const hasAgentSteps = !isUser && (message.agentSteps?.length ?? 0) > 0;
@@ -117,8 +119,10 @@ export function MessageBubble({
         <div className="grok-avatar-ring relative mt-1 size-8 shrink-0 overflow-hidden rounded-full">
           <div className="grok-avatar-well absolute inset-[2px] overflow-hidden rounded-full">
             <img
-              src="/assets/brand/icon-rvgrok.png"
+              src={avatarSrc}
               alt=""
+              width={512}
+              height={512}
               className="size-full object-cover"
             />
           </div>

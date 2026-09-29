@@ -21,6 +21,23 @@ export interface GrokVoice {
   gender: "male" | "female" | "neutral";
 }
 
+export const GROK_AVATAR_FEMALE = "/assets/brand/icon-rvgrok-female.png";
+export const GROK_AVATAR_MALE = "/assets/brand/icon-rvgrok-male.png";
+export const GROK_AVATAR_DEFAULT = "/assets/brand/icon-rvgrok.png";
+
+/** Female voices share one face. Male voices, including Altair, share the other. */
+export function avatarForVoice(
+  voice: string | { id?: string; gender?: GrokVoice["gender"] } | null | undefined,
+): string {
+  const gender =
+    voice && typeof voice === "object"
+      ? voice.gender
+      : GROK_VOICES.find((v) => v.id === voice)?.gender;
+  if (gender === "female") return GROK_AVATAR_FEMALE;
+  if (gender === "male") return GROK_AVATAR_MALE;
+  return GROK_AVATAR_DEFAULT;
+}
+
 export const GROK_VOICES: GrokVoice[] = [
   {
     id: "ara",
@@ -50,13 +67,19 @@ export const GROK_VOICES: GrokVoice[] = [
     id: "sal",
     name: "Sal",
     description: "Balanced, neutral — versatile for any RV topic",
-    gender: "neutral",
+    gender: "male",
   },
   {
     id: "helix",
     name: "Helix",
     description: "Bright, modern — sharp on brochure specs & MPG",
-    gender: "neutral",
+    gender: "male",
+  },
+  {
+    id: "altair",
+    name: "Altair",
+    description: "Calm, assured male voice — steady on specs and walkthroughs",
+    gender: "male",
   },
 ];
 
