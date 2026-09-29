@@ -1843,7 +1843,7 @@ export function RvGrokApp({
             onClick={handleStop}
             className="mb-2 flex w-full items-center gap-2 rounded-[var(--radius-md)] border border-sky-300/40 bg-sky-500/25 px-3 py-2.5 text-left transition hover:bg-sky-500/30"
           >
-            <span className="flex size-7 items-center justify-center rounded-md bg-sky-500 text-white">
+            <span className="flex size-7 items-center justify-center rounded-md bg-sapphire text-white" data-on-dark="">
               <Square className="size-3.5 fill-current" />
             </span>
             <span className="flex-1 text-[13px] font-medium text-fg">
@@ -1897,7 +1897,8 @@ export function RvGrokApp({
                   type="button"
                   disabled={frameBusy}
                   onClick={() => void sendLiveFrame(true)}
-                  className="rounded-full bg-sky-500 px-3 py-1.5 text-[12px] font-bold text-white"
+                  className="rounded-full bg-sapphire px-3 py-1.5 text-[12px] font-bold text-white"
+                  data-on-dark=""
                 >
                   {frameBusy ? "Sending…" : "Show this"}
                 </button>
