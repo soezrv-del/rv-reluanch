@@ -557,17 +557,27 @@ function LotDetail({
         ) : null}
         <ReportShareButton report={buildUnitShareReport(unit)} />
       </div>
-      {listing ? (
-        <a
-          className="lot-listing"
-          href={listing}
-          target="_blank"
-          rel="noopener noreferrer"
-          data-lot-listing
+      <div className="lot-detail-tabs">
+        {listing ? (
+          <a
+            className="lot-detail-tab"
+            href={listing}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-lot-listing
+          >
+            More info
+          </a>
+        ) : null}
+        <button
+          type="button"
+          className="lot-detail-tab"
+          data-lot-facts
+          onClick={() => nav?.setTab("rvfax")}
         >
-          {listing}
-        </a>
-      ) : null}
+          RV facts
+        </button>
+      </div>
       {stats.length ? (
         <div className="lot-detail-stats">
           {stats.map((stat) => (
