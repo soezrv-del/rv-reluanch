@@ -49,6 +49,7 @@ import {
   VOICE_MODE_KEY,
   VOICE_SPEED_KEY,
   VOICE_STORAGE_KEY,
+  avatarForVoice,
   createPushToTalkRecognition,
   getSpeechRecognitionCtor,
   speakWithBrowserTts,
@@ -1709,6 +1710,7 @@ export function RvGrokApp({
               }
               void sendMessage(code);
             }}
+            avatarSrc={avatarForVoice(selectedVoice)}
           />
           {i === deskAfterIdx && m.deskSheet
             ? deskAfterReply(m.deskSheet, priorUserAt(i))
@@ -1742,6 +1744,7 @@ export function RvGrokApp({
           ? welcomeBack || undefined
           : undefined
       }
+      avatarSrc={avatarForVoice(selectedVoice)}
     />
   ) : (
     thread

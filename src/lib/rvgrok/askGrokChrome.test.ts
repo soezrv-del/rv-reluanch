@@ -84,8 +84,8 @@ test("the dock is six gold line icons and does not use the Einstein photo", () =
   const bubble = read("../../components/rvgrok/MessageBubble.tsx");
   const css = read("../../styles.css");
 
-  const grokSrc = bubble.match(/src="(\/assets\/brand\/icon-rvgrok\.png)"/)?.[1];
-  assert.equal(grokSrc, "/assets/brand/icon-rvgrok.png");
+  assert.match(bubble, /\/assets\/brand\/icon-rvgrok\.png/);
+  assert.doesNotMatch(bubble, /Einstein/);
   assert.match(tabs, /id: "rvgrok"/);
   assert.match(tabs, /data-dock-icons="gold"/);
   assert.match(tabs, /bottom-tab-grok/);

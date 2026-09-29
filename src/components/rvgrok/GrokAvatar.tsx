@@ -12,10 +12,12 @@ export function GrokAvatar({
   size = "lg",
   speaking = false,
   className,
+  src = "/assets/brand/icon-rvgrok.png",
 }: {
   size?: GrokAvatarSize;
   speaking?: boolean;
   className?: string;
+  src?: string;
 }) {
   return (
     <div
@@ -30,8 +32,10 @@ export function GrokAvatar({
     >
       <div className="grok-avatar-well absolute inset-[3px] overflow-hidden rounded-full">
         <img
-          src="/assets/brand/icon-rvgrok.png"
+          src={src}
           alt=""
+          width={512}
+          height={512}
           className="size-full object-cover"
         />
       </div>

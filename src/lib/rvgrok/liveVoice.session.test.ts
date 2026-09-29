@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -9,7 +9,11 @@ import {
   REALTIME_SESSION_TOOLS,
 } from "./liveVoice.ts";
 import { buildVoiceGrounding } from "./grounding.ts";
-import { PCM_SAMPLE_RATE } from "./voice.ts";
+import {
+  GROK_VOICES,
+  PCM_SAMPLE_RATE,
+  avatarForVoice,
+} from "./voice.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
@@ -191,4 +195,26 @@ test("session.update injects the active screen guide and forbids a blind-screen 
   const bareText = (bare.session as { instructions: string }).instructions;
   assert.match(bareText, /APP SCREEN AWARENESS/);
   assert.doesNotMatch(bareText, /SCREEN GUIDE:/);
+});
+
+test("Altair is a male voice and session.update sends that id", () => {
+  const altair = GROK_VOICES.find((v) => v.id === "altair");
+  assert.ok(altair);
+  assert.equal(altair.gender, "male");
+  assert.equal(GROK_VOICES.find((v) => v.id === "sal")?.gender, "male");
+  assert.equal(GROK_VOICES.find((v) => v.id === "helix")?.gender, "male");
+  const msg = buildRealtimeSessionUpdate("altair");
+  assert.equal((msg.session as { voice: string }).voice, "altair");
+  assert.equal(avatarForVoice("ara"), "/assets/brand/icon-rvgrok-female.png");
+  assert.equal(avatarForVoice("eve"), "/assets/brand/icon-rvgrok-female.png");
+  for (const id of ["leo", "rex", "sal", "helix", "altair"]) {
+    assert.equal(avatarForVoice(id), "/assets/brand/icon-rvgrok-male.png");
+  }
+  assert.equal(
+    avatarForVoice({ gender: "neutral" }),
+    "/assets/brand/icon-rvgrok.png",
+  );
+  const publicDir = join(root, "../../../public/assets/brand");
+  assert.equal(existsSync(join(publicDir, "icon-rvgrok-female.png")), true);
+  assert.equal(existsSync(join(publicDir, "icon-rvgrok-male.png")), true);
 });
