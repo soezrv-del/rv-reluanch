@@ -53,9 +53,12 @@ test("Grok tab landing is Lot wingman on Raidho — no family camping plate", ()
   assert.match(css, /\[data-rvgrok-landing\] \{[^}]*padding-top:\s*0\.75rem/);
   assert.doesNotMatch(css, /\[data-rvgrok-landing\] \{[^}]*safe-area-inset-top/);
   assert.doesNotMatch(css, /\[data-rvgrok-landing\] \{[^}]*3\.25rem/);
-  assert.match(css, /\.grok-frost \{[\s\S]*?blur\(28px\)/);
-  assert.match(css, /\.grok-frost \{[\s\S]*?--color-gold-border/);
-  assert.match(css, /--color-grok-mic:\s*#e8893a/);
+  const frost = css.match(/\.grok-frost \{[^}]*\}/);
+  assert.ok(frost, "grok frost block");
+  assert.match(frost[0], /#1e2126/);
+  assert.doesNotMatch(frost[0], /--color-gold-border|blur\(/);
+  assert.doesNotMatch(css, /--color-grok-mic:\s*#e8893a/);
+  assert.match(css, /\.grok-mic-btn[\s\S]{0,180}#1648c8/);
   assert.match(css, /--font-display:\s*"Fraunces"/);
   assert.match(css, /html\.kb-open \[data-rvgrok-composer\]/);
   assert.doesNotMatch(css, /hero-camp|family camping|campfire photo/i);

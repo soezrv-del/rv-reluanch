@@ -131,8 +131,10 @@ export function MessageBubble({
             "rounded-[var(--radius-lg)] px-3.5 py-3 text-[14px] leading-relaxed",
             isUser
               ? "rounded-br-sm bg-sapphire text-white shadow-[var(--shadow-glow-sapphire)]"
-              : "grok-frost rounded-bl-sm text-fg",
+              : "grok-frost rounded-bl-sm",
           )}
+          data-bubble={isUser ? "user" : "assistant"}
+          data-on-dark={isUser ? "" : undefined}
         >
         {hasAgentSteps ? (
           <div className="mb-2">
@@ -156,7 +158,7 @@ export function MessageBubble({
             {message.generatedImages.map((src, i) => (
               <div
                 key={`${src.slice(0, 48)}-${i}`}
-                className="overflow-hidden rounded-lg border border-gold/35 bg-black/40"
+                className="overflow-hidden rounded-lg border border-[#1648c8]/40 bg-black/40"
               >
                 <img
                   src={src}
@@ -169,13 +171,13 @@ export function MessageBubble({
         ) : null}
 
         {message.unverified ? (
-          <p className="mb-2 rounded-md border border-amber-400/35 bg-amber-500/15 px-2.5 py-1.5 text-[11px] leading-snug text-amber-100">
-            Unverified — confirm specs on the Facts report.
+          <p className="bubble-note">
+            Unverified. Confirm specs on the Facts report.
           </p>
         ) : null}
 
         {message.streaming && !displayContent ? (
-          <p className="flex items-center gap-2 text-white/80">
+          <p className="grok-thinking flex items-center gap-2">
             <Loader2 className="size-3.5 animate-spin" />
             Thinking…
           </p>
@@ -184,7 +186,7 @@ export function MessageBubble({
         )}
 
         <div className="mt-2 flex items-center justify-between gap-2">
-          <span className="text-[10px] opacity-60">
+          <span className="bubble-time">
             {formatTime(
               message.timestamp instanceof Date
                 ? message.timestamp
@@ -210,7 +212,7 @@ export function MessageBubble({
         {showFeedback ? (
           <div className="mt-2.5 border-t border-white/10 pt-2">
             <div className="flex items-center gap-1.5">
-              <span className="mr-1 text-[10px] text-white/45">Helpful?</span>
+              <span className="bubble-quiet mr-1 text-[10px]">Helpful?</span>
               <button
                 type="button"
                 aria-label="Thumbs up"
@@ -223,9 +225,10 @@ export function MessageBubble({
                 className={cn(
                   "inline-flex size-8 items-center justify-center rounded-full border transition",
                   voted === "up"
-                    ? "border-emerald-400/50 bg-emerald-500/20 text-emerald-300"
-                    : "border-white/15 bg-white/5 text-white/70 hover:border-emerald-400/40 hover:text-emerald-200",
+                    ? "border-transparent bg-sapphire text-white"
+                    : "border-white/20 bg-transparent",
                 )}
+                data-on-dark={voted === "up" ? "" : undefined}
               >
                 <ThumbsUp className="size-3.5" />
               </button>
@@ -244,8 +247,8 @@ export function MessageBubble({
                 className={cn(
                   "inline-flex size-8 items-center justify-center rounded-full border transition",
                   voted === "down"
-                    ? "border-ruby/50 bg-ruby/20 text-rose-300"
-                    : "border-white/15 bg-white/5 text-white/70 hover:border-rose-400/40 hover:text-rose-200",
+                    ? "border-white/40 bg-white/10"
+                    : "border-white/20 bg-transparent",
                 )}
               >
                 <ThumbsDown className="size-3.5" />
@@ -276,7 +279,7 @@ export function MessageBubble({
                   setDownOpen(false);
                 }}
               >
-                <p className="text-[11px] leading-snug text-white/70">
+                <p className="bubble-quiet text-[11px] leading-snug">
                   What should it have said? We’ll use this the next time this
                   year / make / model comes up.
                 </p>
@@ -319,7 +322,8 @@ export function MessageBubble({
                   <button
                     type="submit"
                     disabled={!correction.trim()}
-                    className="inline-flex min-h-[36px] flex-1 items-center justify-center gap-1 rounded-full bg-ruby px-3 text-[12px] font-bold text-white disabled:opacity-40"
+                    className="inline-flex min-h-[36px] flex-1 items-center justify-center gap-1 rounded-full bg-sapphire px-3 text-[12px] font-bold text-white disabled:opacity-40"
+                    data-on-dark=""
                   >
                     <Check className="size-3.5" />
                     Save correction
@@ -389,10 +393,10 @@ export function MessageBubble({
               className="grok-followup flex min-h-9 w-full items-start gap-2 rounded-lg px-1.5 py-1.5 text-left"
             >
               <CornerDownLeft
-                className="mt-0.5 size-3.5 shrink-0 text-white/40"
+                className="mt-0.5 size-3.5 shrink-0"
                 aria-hidden
               />
-              <span className="text-[13px] leading-snug text-white/70">
+              <span className="text-[13px] leading-snug">
                 {chip.label}
               </span>
             </button>

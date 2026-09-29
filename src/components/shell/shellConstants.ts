@@ -23,7 +23,7 @@ export const PAGE_ACCENT: Record<AppTab, "sapphire" | "ruby" | "gold"> = {
   rvtow: "sapphire",
   rvtrips: "gold",
   rvshare: "sapphire",
-  rvgrok: "gold",
+  rvgrok: "sapphire",
   rvsold: "sapphire",
   rvlot: "sapphire",
 

@@ -17,7 +17,9 @@ export function subscribeTheme(onStoreChange: () => void) {
 }
 
 export function setTheme(next: SuiteTheme) {
-  document.documentElement.dataset.theme = next;
+  const root = document.documentElement;
+  root.dataset.theme = next;
+  root.classList.toggle("dark", next === "dark");
   localStorage.setItem("rvfox-theme", next);
   document.querySelectorAll<HTMLImageElement>("[data-mark-light]").forEach((img) => {
     const light = img.dataset.markLight;
@@ -38,4 +40,4 @@ export function setTheme(next: SuiteTheme) {
 }
 
 /** Read before first paint. Keep in sync with RootDocument. */
-export const THEME_BOOT_SCRIPT = `(function(){try{var t=localStorage.getItem("rvfox-theme");if(t==="light"||t==="dark"){document.documentElement.dataset.theme=t;var c=t==="light"?"#ffffff":"#050505";var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",c);var s=document.querySelector('meta[name="color-scheme"]');if(s)s.setAttribute("content",t);}}catch(e){}})();`;
+export const THEME_BOOT_SCRIPT = `(function(){try{var t=localStorage.getItem("rvfox-theme");if(t==="light"||t==="dark"){var r=document.documentElement;r.dataset.theme=t;r.classList.toggle("dark",t==="dark");var c=t==="light"?"#ffffff":"#050505";var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",c);var s=document.querySelector('meta[name="color-scheme"]');if(s)s.setAttribute("content",t);}}catch(e){}})();`;

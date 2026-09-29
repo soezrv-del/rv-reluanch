@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -37,7 +37,7 @@ import { AccessMoreSection } from "@/components/access/AccessMoreSection";
 import { VoicePanel } from "@/components/rvgrok/VoicePanel";
 import { VIN_DECODER_SCREEN } from "@/lib/rvgrok/screenGuides";
 import { setActiveScreen } from "@/lib/rvgrok/screenContext";
-import { setTheme, type SuiteTheme } from "@/lib/theme";
+import { readTheme, serverTheme, setTheme, subscribeTheme, type SuiteTheme } from "@/lib/theme";
 import type { GrokVoice } from "@/lib/rvgrok/voice";
 import {
   DEFAULT_VOICE,
@@ -97,7 +97,7 @@ export function MoreApp({
 
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [vinOpen, setVinOpen] = useState(false);
-  const [theme, setThemeState] = useState<SuiteTheme>("dark");
+  const theme = useSyncExternalStore(subscribeTheme, readTheme, serverTheme);
 
   useEffect(() => {
     if (!active) return;
@@ -108,12 +108,6 @@ export function MoreApp({
   const [liveVoice, setLiveVoice] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [previewingId, setPreviewingId] = useState<string | null>(null);
-
-  useEffect(() => {
-    setThemeState(
-      document.documentElement.dataset.theme === "light" ? "light" : "dark",
-    );
-  }, []);
 
   useEffect(() => {
     try {
@@ -247,16 +241,38 @@ export function MoreApp({
               TOOLS
             </p>
             <div className="glass-prestige overflow-hidden rounded-[1.25rem]">
-              <RowLink
-                icon={<Sun className="size-4 text-blue" />}
-                title="Appearance"
-                sub={theme === "light" ? "Light" : "Dark · night"}
-                onClick={() => {
-                  const next: SuiteTheme = theme === "light" ? "dark" : "light";
-                  setTheme(next);
-                  setThemeState(next);
-                }}
-              />
+              <div className="flex w-full items-center gap-3 border-b border-white/10 px-3.5 py-3.5">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/10">
+                  <Sun className="size-4 text-blue" />
+                </span>
+                <span className="min-w-0 flex-1 text-[15px] font-bold text-white">
+                  Appearance
+                </span>
+                <span className="appearance-switch flex shrink-0 rounded-full border border-white/15 p-0.5" role="group" aria-label="Appearance">
+                  <button
+                    type="button"
+                    className="appearance-choice"
+                    aria-pressed={theme === "light"}
+                    onClick={() => {
+                      const next: SuiteTheme = "light";
+                      setTheme(next);
+                    }}
+                  >
+                    Light
+                  </button>
+                  <button
+                    type="button"
+                    className="appearance-choice"
+                    aria-pressed={theme === "dark"}
+                    onClick={() => {
+                      const next: SuiteTheme = "dark";
+                      setTheme(next);
+                    }}
+                  >
+                    Dark
+                  </button>
+                </span>
+              </div>
               <RowLink
                 icon={<Volume2 className="size-4 text-ruby" />}
                 title="RvGrok Voice Settings"

@@ -33,7 +33,7 @@ test("light theme is a flat Tesla canvas and dark chrome is unchanged", () => {
   assert.equal(existsSync(jpg), false, "gray-plate jpg removed");
   assert.equal(existsSync(oldPng), false, "old light png removed");
   assert.match(theme, /localStorage\.setItem\(\"rvfox-theme\", next\)/);
-  assert.match(theme, /document\.documentElement\.dataset\.theme = next/);
+  assert.match(theme, /root\.dataset\.theme = next/);
   assert.match(rootDoc, /THEME_BOOT_SCRIPT/);
   assert.match(more, /setTheme\(next\)/);
   assert.match(more, /data-tools-menu/);

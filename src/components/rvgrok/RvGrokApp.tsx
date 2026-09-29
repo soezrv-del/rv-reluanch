@@ -1726,7 +1726,6 @@ export function RvGrokApp({
       status={wingmanStatus}
       speaking={realtimeStatus === "speaking" || Boolean(speakingId)}
       lotChip={null}
-      starters={[]}
       onChip={(prompt) => void sendMessage(prompt)}
       toolbar={wingmanToolbar}
       composer={composer}
@@ -1753,7 +1752,7 @@ export function RvGrokApp({
       className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden text-fg"
       data-rvgrok-variant={variant}
       data-rvgrok-wingman=""
-      data-page-accent={embedded ? undefined : "gold"}
+      data-page-accent={embedded ? undefined : "sapphire"}
       data-readable-cards=""
       data-raidho-only=""
     >
@@ -1819,15 +1818,16 @@ export function RvGrokApp({
             onClick={() => {
               realtimeRef.current?.interrupt();
             }}
-            className="mb-2 flex w-full items-center gap-2 rounded-[var(--radius-md)] border border-amber-200/50 bg-amber-500/30 px-3 py-2.5 text-left"
+            className="mb-2 flex w-full items-center gap-2 rounded-[var(--radius-md)] border border-white/10 bg-[#1e2126] px-3 py-2.5 text-left"
+            data-on-dark=""
           >
-            <span className="flex size-7 items-center justify-center rounded-md bg-amber-500 text-black">
+            <span className="flex size-7 items-center justify-center rounded-md bg-sapphire text-white" data-on-dark="">
               <Square className="size-3.5 fill-current" />
             </span>
-            <span className="flex-1 text-[13px] font-semibold text-fg">
+            <span className="flex-1 text-[13px] font-semibold text-white">
               Interrupt — stop her, keep listening
             </span>
-            <span className="text-[11px] font-bold tracking-wide text-amber-100">
+            <span className="text-[11px] font-bold tracking-wide text-white/70">
               CUT
             </span>
           </button>
@@ -1843,7 +1843,7 @@ export function RvGrokApp({
             onClick={handleStop}
             className="mb-2 flex w-full items-center gap-2 rounded-[var(--radius-md)] border border-sky-300/40 bg-sky-500/25 px-3 py-2.5 text-left transition hover:bg-sky-500/30"
           >
-            <span className="flex size-7 items-center justify-center rounded-md bg-sky-500 text-white">
+            <span className="flex size-7 items-center justify-center rounded-md bg-sapphire text-white" data-on-dark="">
               <Square className="size-3.5 fill-current" />
             </span>
             <span className="flex-1 text-[13px] font-medium text-fg">
@@ -1897,7 +1897,8 @@ export function RvGrokApp({
                   type="button"
                   disabled={frameBusy}
                   onClick={() => void sendLiveFrame(true)}
-                  className="rounded-full bg-sky-500 px-3 py-1.5 text-[12px] font-bold text-white"
+                  className="rounded-full bg-sapphire px-3 py-1.5 text-[12px] font-bold text-white"
+                  data-on-dark=""
                 >
                   {frameBusy ? "Sending…" : "Show this"}
                 </button>
@@ -1919,9 +1920,10 @@ export function RvGrokApp({
                   className={cn(
                     "rounded-full border px-3 py-1.5 text-[11px] font-semibold text-white",
                     keepShowing
-                      ? "border-gold/50 bg-gold/25"
+                      ? "border-transparent bg-sapphire text-white"
                       : "border-white/30 bg-black/50",
                   )}
+                  data-on-dark={keepShowing ? "" : undefined}
                 >
                   {keepShowing ? "Keep showing" : "Tap only"}
                 </button>

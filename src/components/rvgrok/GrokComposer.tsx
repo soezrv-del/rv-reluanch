@@ -148,7 +148,7 @@ export function GrokComposer({
                 }}
                 className={cn(
                   "mb-0.5 flex size-10 shrink-0 items-center justify-center rounded-full text-fg transition hover:bg-white/5",
-                  pendingImage && "text-gold-bright",
+                  pendingImage && "text-sapphire",
                   (liveActive || imageBusy) && "opacity-40",
                 )}
                 aria-label="Take a photo for Grok"

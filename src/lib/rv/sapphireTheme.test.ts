@@ -108,7 +108,7 @@ test("Sold and Premium share sapphire accent + Raidho suite chrome — no dock S
   assert.doesNotMatch(css, /DialaBot/);
 });
 
-test("Grok tab uses Facts Raidho bleed — gold stays on frost, not a photo field", () => {
+test("Grok tab uses Facts Raidho bleed — sapphire stays on frost, not a photo field", () => {
   const app = read("../../components/rvgrok/RvGrokApp.tsx");
   const constants = read("../../components/shell/shellConstants.ts");
   const css = read("../../styles.css");
@@ -116,10 +116,13 @@ test("Grok tab uses Facts Raidho bleed — gold stays on frost, not a photo fiel
   assert.match(app, /data-raidho-only=""/);
   assert.doesNotMatch(app, /ScrollSuiteHeader/);
   assert.doesNotMatch(app, /SuiteBackdrop/);
-  assert.match(constants, /rvgrok:\s*"gold"/);
-  assert.match(app, /data-page-accent=\{embedded \? undefined : "gold"\}/);
+  assert.match(constants, /rvgrok:\s*"sapphire"/);
+  assert.match(app, /data-page-accent=\{embedded \? undefined : "sapphire"\}/);
   assert.match(css, /\[data-rvgrok-wingman\] \.suite-raidho-field,/);
-  assert.match(css, /\.grok-frost \{[\s\S]*?blur\(28px\)/);
+  const frost = css.match(/\.grok-frost \{[^}]*\}/);
+  assert.ok(frost, "grok frost block");
+  assert.match(frost[0], /#1e2126/);
+  assert.doesNotMatch(frost[0], /blur\(|--color-gold-border/);
   assert.doesNotMatch(css, /\[data-rvgrok-wingman\] \.suite-raidho-bleed,/);
   assert.doesNotMatch(css, /DialaBot/);
 });
