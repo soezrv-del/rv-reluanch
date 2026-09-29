@@ -83,7 +83,7 @@ export const GROK_VOICES: GrokVoice[] = [
   },
 ];
 
-export const DEFAULT_VOICE = "ara";
+export const DEFAULT_VOICE = "eve";
 
 export const SPEED_OPTIONS = [
   { label: "Slow", value: 0.85 },
