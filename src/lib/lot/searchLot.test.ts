@@ -461,6 +461,22 @@ test("type chips come from the lot snapshot and filter without catalog bleed", (
   const diesel = filterLotBrowse(snap.units, { type: "Class A Diesel" });
   assert.ok(diesel.length > 0);
   assert.ok(diesel.every((u) => u.body_type === "Class A Diesel"));
+  const used = filterLotBrowse(snap.units, { condition: "used" });
+  const fresh = filterLotBrowse(snap.units, { condition: "New" });
+  assert.ok(used.length > 0 && fresh.length > 0);
+  assert.ok(used.every((unit) => unit.condition === "Used"));
+  assert.ok(fresh.every((unit) => unit.condition === "New"));
+  assert.equal(used.length + fresh.length, snap.units.length);
+  const usedDiesel = filterLotBrowse(snap.units, {
+    condition: "Used",
+    type: "Class A Diesel",
+  });
+  assert.ok(usedDiesel.length > 0);
+  assert.ok(
+    usedDiesel.every(
+      (unit) => unit.condition === "Used" && unit.body_type === "Class A Diesel",
+    ),
+  );
   assert.equal(lotTypeFamily("Class A Diesel"), "a");
   assert.equal(lotTypeFamily("Class Super C"), "c");
   assert.equal(lotTypeFamily("Fifth Wheel Toy Hauler"), "toy");

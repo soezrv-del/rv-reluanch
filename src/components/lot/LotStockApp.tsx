@@ -44,6 +44,7 @@ export function LotStockApp({
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [type, setType] = useState("");
+  const [condition, setCondition] = useState<"" | "New" | "Used">("");
   const chipRailRef = useRef<HTMLDivElement>(null);
   useCenterSelectedTab(chipRailRef, type);
   const [openKey, setOpenKey] = useState<string | null>(null);
@@ -76,6 +77,7 @@ export function LotStockApp({
       if (!query) return;
       wantOpen.current = query;
       setType("");
+      setCondition("");
       setQuery(query);
     };
     pull();
@@ -85,8 +87,8 @@ export function LotStockApp({
 
   const chips = useMemo(() => lotTypeChips(snap?.units ?? []), [snap]);
   const filtered = useMemo(
-    () => filterLotBrowse(snap?.units ?? [], { query, type }),
-    [snap, query, type],
+    () => filterLotBrowse(snap?.units ?? [], { query, type, condition }),
+    [snap, query, type, condition],
   );
 
   useEffect(() => {
@@ -94,7 +96,7 @@ export function LotStockApp({
     if (!wantOpen.current) setOpenKey(null);
     const scroller = sentinelRef.current?.closest("[data-app-scroll]");
     if (scroller instanceof HTMLElement) scroller.scrollTop = 0;
-  }, [query, type]);
+  }, [query, type, condition]);
 
   useEffect(() => {
     const wanted = wantOpen.current;
@@ -132,7 +134,7 @@ export function LotStockApp({
     ? error
     : !snap
       ? "Loading lot…"
-      : query.trim() || type
+      : query.trim() || type || condition
         ? `${shown} of ${total} shown`
         : `${total} shown`;
 
@@ -195,17 +197,38 @@ export function LotStockApp({
           </span>
         </label>
 
-        {!query.trim() && !type ? (
+        {!query.trim() && !type && !condition ? (
           <LotArrivals
             units={snap?.units ?? []}
             onOpenUnit={(unit) => {
               const next = lotArrivalQuery(unit);
               wantOpen.current = next;
               setType("");
+              setCondition("");
               setQuery(next);
             }}
           />
         ) : null}
+
+        <div className="lot-condition" role="group" aria-label="New or used">
+          {(["New", "Used"] as const).map((label) => (
+            <button
+              key={label}
+              type="button"
+              data-lot-condition={label}
+              aria-pressed={condition === label}
+              onClick={() =>
+                setCondition((cur) => (cur === label ? "" : label))
+              }
+              className={cn(
+                "lot-chip lot-condition-tab shrink-0 rounded-full px-3 text-[12px] font-semibold",
+                condition === label && "is-on",
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
 
         {chips.length ? (
           <div className="lot-chip-rail" data-lot-chips ref={chipRailRef}>

@@ -2325,6 +2325,16 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   border-color: color-mix(in srgb, var(--color-sapphire-glow) 55%, transparent);
   color: #fff;
 }
+.lot-condition {
+  display: inline-flex;
+  gap: 0.35rem;
+}
+.lot-condition-tab {
+  min-height: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.3);
+  color: rgba(255, 255, 255, 0.85);
+}
 .lot-well {
   background:
     radial-gradient(
@@ -4254,6 +4264,7 @@ html[data-theme="light"] .grok-lot-chip {
   color: #111111 !important;
 }
 html[data-theme="light"] .lot-chip,
+html[data-theme="light"] .lot-condition-tab,
 html[data-theme="light"] .slider-tab {
   background: transparent !important;
   border: 1px solid rgba(0, 0, 0, 0.1) !important;
@@ -4262,6 +4273,7 @@ html[data-theme="light"] .slider-tab {
   -webkit-text-fill-color: #5c5e62 !important;
 }
 html[data-theme="light"] .lot-chip.is-on,
+html[data-theme="light"] .lot-condition-tab.is-on,
 html[data-theme="light"] .slider-tab.is-on,
 html[data-theme="light"] .slider-tab[aria-pressed="true"] {
   background: #171a20 !important;

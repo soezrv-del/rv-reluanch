@@ -670,13 +670,19 @@ export function formatLotUpdated(asOf: string): string {
 
 export function filterLotBrowse(
   units: LotUnit[],
-  opts: { query?: string; type?: string } = {},
+  opts: { query?: string; type?: string; condition?: string } = {},
 ): LotUnit[] {
   let rows = searchLotUnits(units, opts.query ?? "");
   const type = (opts.type ?? "").trim();
   if (type) {
     const types = new Set(type.split("|"));
     rows = rows.filter((unit) => types.has(unit.body_type));
+  }
+  const condition = (opts.condition ?? "").trim().toLowerCase();
+  if (condition) {
+    rows = rows.filter(
+      (unit) => unit.condition.trim().toLowerCase() === condition,
+    );
   }
   return rows;
 }
