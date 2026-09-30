@@ -6,6 +6,7 @@ import { snapshotFromJson } from "../rvgrok/ownLotInventory.ts";
 import { answerQueryLotFromSnapshot } from "../rvgrok/lotMemory.ts";
 import { QUERY_LOT_TOOL } from "../rvgrok/liveVoice.ts";
 import { decideVoiceWebResearch } from "../rvgrok/voiceWeb.ts";
+import { spokenLotPayload } from "../rvgrok/voiceTurnGate.ts";
 import { searchLot } from "./lotQuery.ts";
 import { searchLotUnits, singularizeLotToken } from "./lotSearch.ts";
 
@@ -597,4 +598,111 @@ test("follow-ups keep fuel, store, and the coach already named", () => {
   for (const said of ["how many trailers", "fivers", "the cheapest one", "used ones"]) {
     assert.equal(decideVoiceWebResearch({ transcript: said, lotFollowUp: true }).action, "pass", said);
   }
+});
+
+test("12-foot garage in a fifth wheel is fifth-wheel toy haulers, not a travel trailer", () => {
+  const snap = units();
+  const hit = searchLot(snap.units, { query: "a 12-foot garage in a fifth wheel" });
+  assert.equal(hit.applied.body_type, "Fifth Wheel Toy Hauler");
+  assert.equal(hit.matched, 22);
+  assert.ok(hit.matched < 88);
+  assert.notEqual(hit.matched, 256);
+  assert.ok(hit.units.every((unit) => unit.body_type === "Fifth Wheel Toy Hauler"));
+  assert.ok(!hit.units.some((unit) => unit.stock_number === "43377A"));
+  assert.match(hit.summary, /Skipped 38 with no garage length on the sheet/);
+  assert.doesNotMatch(hit.summary, /^None\./);
+  const follow = answerQueryLotFromSnapshot(
+    snap,
+    { query: "those aren't toy haulers" },
+    hit.applied ? answerQueryLotFromSnapshot(snap, { query: "a 12-foot garage in a fifth wheel" }, null).lotMemory : null,
+    "those aren't toy haulers",
+  );
+  assert.equal(follow.lotMemory?.filter.bodyType, "Fifth Wheel Toy Hauler");
+  assert.ok(follow.matched > 0);
+  assert.ok(follow.matched < 256);
+  assert.ok((follow.units[0]?.body_type || "").includes("Toy Hauler"));
+  assert.ok(!follow.units.some((unit) => unit.body_type === "Travel Trailer"));
+});
+
+test("those aren't toy haulers applies the fifth-wheel toy hauler filter", () => {
+  const snap = units();
+  const fifth = answerQueryLotFromSnapshot(snap, { query: "fifth wheels" }, null, "fifth wheels");
+  assert.equal(fifth.matched, 256);
+  const toys = answerQueryLotFromSnapshot(
+    snap,
+    { body_type: "Fifth Wheel" },
+    fifth.lotMemory,
+    "those aren't toy haulers",
+  );
+  assert.equal(toys.matched, 88);
+  assert.equal(toys.lotMemory?.filter.bodyType, "Fifth Wheel Toy Hauler");
+  assert.ok(toys.units.every((unit) => unit.body_type === "Fifth Wheel Toy Hauler"));
+  assert.ok(!toys.units.some((unit) => unit.body_type === "Travel Trailer"));
+});
+
+test("Class A around 50,000 miles is the odometer, not a price, and skips a blank sheet", () => {
+  const snap = units();
+  const hit = searchLot(snap.units, {
+    query: "Class A around 50,000 miles",
+    utterance: "Class A around 50,000 miles",
+    price_min: 42500,
+    price_max: 57500,
+    body_type: "Class C",
+  });
+  assert.equal(hit.matched, 11);
+  assert.equal(hit.applied.miles_min, 42500);
+  assert.equal(hit.applied.miles_max, 57500);
+  assert.equal(hit.applied.price_min, undefined);
+  assert.equal(hit.applied.price_max, undefined);
+  assert.equal(hit.applied.miles_skipped, 28);
+  assert.equal(hit.applied.body_type, "Class A");
+  assert.ok(hit.units.some((unit) => unit.stock_number === "46343A"));
+  assert.ok(
+    hit.units.every(
+      (unit) => unit.body_type === "Class A" || unit.body_type === "Class A Diesel",
+    ),
+  );
+  assert.match(hit.summary, /42,500 to 57,500 miles on the sheet/);
+  assert.match(hit.summary, /Skipped 28 with no mileage on the sheet/);
+  assert.doesNotMatch(hit.summary, /price band/i);
+  assert.doesNotMatch(hit.summary, /^None\./);
+});
+
+test("inventory, in stock, on the lot, and do we have are the same full count", () => {
+  const snap = units();
+  const total = snap.units.length;
+  const phrases = [
+    "How many RVs we have in inventory",
+    "how many RVs in stock",
+    "how many RVs on the lot",
+    "do we have",
+  ];
+  for (const phrase of phrases) {
+    const hit = answerQueryLotFromSnapshot(
+      snap,
+      { query: phrase, model: "RV", price_min: 10000, body_type: "Class B" },
+      null,
+      phrase,
+    );
+    assert.equal(hit.matched, total, phrase);
+    assert.equal(hit.none, false, phrase);
+    assert.doesNotMatch(hit.summary || "", /^None\./, phrase);
+  }
+});
+
+test("spoken lot line names at most 3 units and does not open a hit with None", () => {
+  const snap = units();
+  const fifth = answerQueryLotFromSnapshot(snap, { query: "fifth wheels" }, null);
+  const spoken = spokenLotPayload(fifth);
+  assert.equal(spoken.matched, 256);
+  assert.equal(spoken.units.length, 3);
+  assert.match(spoken.speech, /I can name more/);
+  assert.doesNotMatch(spoken.speech, /^None\./);
+  const glued = spokenLotPayload({
+    ...fifth,
+    summary: "None. Matching units: 8 Keystone Montana High Country.",
+    speech: "None. Matching units: 8 Keystone Montana High Country.",
+  });
+  assert.doesNotMatch(glued.speech, /^None\./);
+  assert.match(glued.speech, /Matching units: 8/);
 });
