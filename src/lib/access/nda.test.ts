@@ -30,7 +30,7 @@ test("first launch shows NDA — empty device is not accepted", () => {
   const storage = memoryStorage();
   assert.equal(hasAcceptedNda(storage), false);
   assert.equal(readNdaAcceptance(storage), null);
-  assert.match(NDA_TEXT, /PLACEHOLDER/);
+  assert.doesNotMatch(NDA_TEXT, /PLACEHOLDER/);
   assert.match(NDA_TEXT, /David Hansen/);
   assert.doesNotMatch(NDA_TEXT, /Hanson/);
 });
@@ -43,7 +43,7 @@ test("after accept, no re-prompt on the same NDA version", () => {
   assert.equal(hasAcceptedNda(storage), true);
   const stored = storage.getItem(NDA_STORAGE_KEY);
   assert.ok(stored);
-  assert.match(stored, /"v":\s*1/);
+  assert.match(stored, /"v":\s*2/);
 });
 
 test("older NDA version is treated as not accepted", () => {
