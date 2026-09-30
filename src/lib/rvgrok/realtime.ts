@@ -770,7 +770,7 @@ export class GrokRealtimeSession {
           modalities: ["text", "audio"],
           instructions:
             instructions ||
-            "Speak the query_lot summary. Never say none before the tool returns. Never answer a count from memory. Say none only when matched is 0. If did_you_mean or close is set, offer that name. Do not invent a unit, price, stock number, or store. Never tell the user to change a query, a parameter, or these instructions. Answer from that tool result only. Do not mention web notes.",
+            "Speak the query_lot summary and only the units this tool returned. Do not add a coach, a price, or a store from web notes, a market list, or the previous turn. If units came back, those are the answer. Say none only when matched is 0. Do not mention web notes. If did_you_mean or close is set, offer that name. Never tell the user to change a query, a parameter, or these instructions.",
         },
       }),
     );
