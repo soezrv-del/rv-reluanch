@@ -299,6 +299,43 @@ test("the salesman's words beat a bad model filter on the first ask", () => {
   assert.match(api, /looksLikeOwnLotCountOrRankAsk/);
 });
 
+test("8.9 displacement and 400 horsepower are on the lot sheet", () => {
+  const snap = units();
+  const displacement = searchLot(snap.units, {
+    query: "anything in our lot that has an 8.9 in it",
+  });
+  assert.equal(displacement.matched, 10);
+  assert.match(displacement.summary, /displacement 8\.9/);
+  assert.ok(displacement.units.some((unit) => unit.stock_number === "46539A"));
+  assert.doesNotMatch(displacement.summary, /does not track|doesn't track/i);
+
+  const horsepower = searchLot(snap.units, {
+    query: "any RVs in our inventory that had a 400 horsepower",
+  });
+  assert.equal(horsepower.matched, 2);
+  assert.match(horsepower.summary, /400 horsepower/);
+  assert.deepEqual(
+    horsepower.units.map((unit) => unit.stock_number).sort(),
+    ["46539A", "UCO9965"],
+  );
+
+  const heard = answerQueryLotFromSnapshot(
+    snap,
+    { make: "Coachmen" },
+    null,
+    "any RVs in our inventory that had a 400 horsepower",
+  );
+  assert.equal(heard.matched, 2);
+  assert.doesNotMatch(heard.speech, /Coachmen/i);
+
+  for (const said of [
+    "anything in our lot that has an 8.9 in it",
+    "any RVs in our inventory that had a 400 horsepower",
+  ]) {
+    assert.equal(decideVoiceWebResearch({ transcript: said }).action, "pass", said);
+  }
+});
+
 test("a sentence is read off the lot sheet, not turned into another coach", () => {
   const snap = units();
   const looking = searchLot(snap.units, {

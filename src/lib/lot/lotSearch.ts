@@ -96,7 +96,9 @@ export function isFloorplanLikeToken(token: string): boolean {
 export function normalizeLotSearchQuery(raw: string): string {
   let s = (raw || "").toLowerCase();
   s = s.replace(/['’]s\b/g, "").replace(/['’]/g, "");
+  s = s.replace(/(\d)\.(?=\d)/g, "$1\u0000");
   s = s.replace(/[?!.,;:()]+/g, " ");
+  s = s.replace(/\u0000/g, ".");
   s = s.replace(/\b(\d{2,3})\s*-\s*([a-z]{1,4})\b/g, "$1$2");
   s = s.replace(/\b(\d{2,3})\s+([a-z]{1,4})\b/g, "$1$2");
   s = s.replace(/-/g, " ");
