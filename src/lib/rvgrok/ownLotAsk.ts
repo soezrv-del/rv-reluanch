@@ -376,7 +376,7 @@ export function looksLikeOwnLotCountOrRankAsk(text: string): boolean {
   if (looksLikeOwnLotRankQuestion(t)) return true;
   if (
     /\bhow many\b/i.test(t) &&
-    /\b(?:diesel|deisel|gas|gasoline|coaches?|units?|class|super|inventory|stock|lot|freightliner|we have)\b/i.test(t)
+    /\b(?:diesel|deisel|gas|gasoline|coaches?|units?|class|super|inventory|stock|lot|freightliner|we have|trailer|towable|fifth|fiver|popup|hauler|pusher|wheel)\b/i.test(t)
   ) {
     return true;
   }
@@ -386,6 +386,13 @@ export function looksLikeOwnLotCountOrRankAsk(text: string): boolean {
   if (
     /\b(?:diesel|diesels|deisel|gasoline)\b/i.test(t) &&
     /\b(?:around|about|roughly|under|over|between|cheapest|lowest|priciest)\b/i.test(t)
+  ) {
+    return true;
+  }
+  if (
+    /\b(?:fivers?|fifth wheels?|5th wheels?|towables?|pull behinds?|pop(?:\s|-)?ups?|toy haulers?|diesel pushers?|trailers?)\b/i.test(
+      t,
+    )
   ) {
     return true;
   }
@@ -408,7 +415,7 @@ export function looksLikeLotCorrection(text: string): boolean {
 function looksLikeCheapestLotAsk(text: string): boolean {
   const t = normalizeAskText(text);
   if (!/\b(?:cheapest|least\s+expensive)\b/i.test(t)) return false;
-  return /\b(?:class|inventory|lot|we have|in stock)\b/i.test(t);
+  return /\b(?:inventory|lot|we have|in stock)\b/i.test(t);
 }
 
 /** The whole turn is the lot, as in a correction: "our inventory", "on our lot". */
@@ -444,7 +451,7 @@ export function looksLikeOwnLotFollowUp(text: string): boolean {
     return true;
   }
   if (
-    /\b(?:the ones|those|these|them|'em|’em|that's there|that show|the show)\b/i.test(
+    /\b(?:the ones|those|these|them|'em|’em|that's there|that show|the show|(?:the\s+)?(?:used|new)\s+ones)\b/i.test(
       t,
     )
   ) {

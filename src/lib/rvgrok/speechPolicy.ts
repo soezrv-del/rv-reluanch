@@ -21,7 +21,7 @@ export const RV_GROK_SESSION_INTRO = "I'm RvGrok";
 /** Post-sign-in default is Hello, {first name}. No name → I'm RvGrok. */
 export function sessionIntroLine(firstName?: string): string {
   const name = normalizeFirstName(firstName || "");
-  return name ? `Hello, ${name}` : RV_GROK_SESSION_INTRO;
+  return name ? `Hello, ${name}.` : RV_GROK_SESSION_INTRO;
 }
 
 /** Canonical short hold — Live Voice research beat. */
@@ -103,7 +103,7 @@ export function visitorPersonalizationBlock(firstName?: string): string {
   const name = normalizeFirstName(firstName || "");
   if (!name) return "";
   const hello = sessionIntroLine(name);
-  return `VISITOR: Their first name is ${name}. Welcome them back by that first name once — separate from the one-time ${RV_GROK_SESSION_INTRO} intro. The cued session line is exactly: ${hello}. After that, address them by ${name} in chat and Live Voice. Do not invent a different name. Never append the name onto ${RV_GROK_SESSION_INTRO}.`;
+  return `VISITOR: Their first name is ${name}. Welcome them back by that first name once — separate from the one-time ${RV_GROK_SESSION_INTRO} intro. The cued session line is exactly: ${hello} After that, address them by ${name} in chat and Live Voice. Do not invent a different name. Never append the name onto ${RV_GROK_SESSION_INTRO}.`;
 }
 
 export function isForbiddenResearchHold(text: string): boolean {

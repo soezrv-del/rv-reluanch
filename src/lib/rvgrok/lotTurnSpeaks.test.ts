@@ -24,6 +24,33 @@ test("cheapest and least expensive Class A asks are own-lot asks", () => {
   assert.equal(looksLikeOwnLotStockQuestion("top 10 cheapest"), false);
 });
 
+test("cheapest plus class is not a lot ask unless the lot is named", () => {
+  for (const ask of [
+    "cheapest Class A to insure",
+    "cheapest Class A ever made",
+    "cheapest way to winterize a class A",
+  ]) {
+    assert.equal(looksLikeOwnLotStockQuestion(ask), false, ask);
+  }
+  for (const ask of [
+    "cheapest Class A we have",
+    "cheapest Class A on our lot",
+    "cheapest Class A in inventory",
+  ]) {
+    assert.equal(looksLikeOwnLotStockQuestion(ask), true, ask);
+  }
+});
+
+test("used ones follows up; ones on the lot is a fresh ask", () => {
+  for (const ask of ["used ones", "the new ones", "and the used ones?"]) {
+    assert.equal(looksLikeOwnLotFollowUp(ask), true, ask);
+  }
+  for (const ask of ["any good ones on the lot?", "which ones do we have in stock"]) {
+    assert.equal(looksLikeOwnLotFollowUp(ask), false, ask);
+    assert.equal(looksLikeOwnLotStockQuestion(ask), true, ask);
+  }
+});
+
 test("a correction is a new own-lot ask, not the previous coaches", () => {
   const correction = "No, on our lot";
   assert.equal(looksLikeLotCorrection(correction), true);

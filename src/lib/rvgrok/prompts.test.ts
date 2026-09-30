@@ -122,7 +122,7 @@ test("standing prompts dropped the lecture stack", () => {
 test("visitor personalization is a small hook and named cold-open is Hello", () => {
   assert.equal(sessionIntroLine(""), "I'm RvGrok");
   assert.equal(sessionIntroLine(undefined), "I'm RvGrok");
-  assert.equal(sessionIntroLine("David Hansen"), "Hello, David");
+  assert.equal(sessionIntroLine("David Hansen"), "Hello, David.");
   assert.equal(visitorPersonalizationBlock(""), "");
   assert.equal(visitorPersonalizationBlock(undefined), "");
   const block = visitorPersonalizationBlock("David Hansen");
