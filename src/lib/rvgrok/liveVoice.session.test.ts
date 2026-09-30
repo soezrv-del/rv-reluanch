@@ -10,6 +10,8 @@ import {
   REALTIME_SESSION_TOOLS,
 } from "./liveVoice.ts";
 import { buildVoiceGrounding } from "./grounding.ts";
+import { RV_SYSTEM_PROMPT } from "./prompts.ts";
+import { RV_GROK_LEAN_CORE } from "./speechPolicy.ts";
 import {
   DEFAULT_VOICE,
   GROK_VOICES,
@@ -82,11 +84,39 @@ test("session.update enables native web_search on the Realtime session", () => {
   assert.match(session.instructions, /I'm RvGrok/);
   const introAt = session.instructions.indexOf("Never repeat this intro.");
   const micAt = session.instructions.indexOf("say that last part again");
+  const energyAt = session.instructions.indexOf("VOICE LOT ENERGY");
   assert.ok(micAt > introAt, "mic rules stay at the end of the voice prompt");
+  assert.ok(energyAt > micAt, "lot energy sits with the mic rules, not in chat");
   assert.doesNotMatch(session.instructions, /STANDING LESSONS \(desk SoT\)/);
   assert.doesNotMatch(session.instructions, /sales-floor wingman/);
   assert.doesNotMatch(session.instructions, /CARFAX-style coach report/);
   assert.doesNotMatch(session.instructions, /Their first name is/);
+});
+
+test("lot energy coaches one spoken line and stays out of chat", () => {
+  const msg = buildRealtimeSessionUpdate("ara");
+  const session = msg.session as { instructions: string };
+  assert.match(
+    session.instructions,
+    /never invent a spec, price, or lot unit to stay upbeat/,
+  );
+  assert.match(session.instructions, /We'll figure this out/);
+  assert.match(session.instructions, /good thing you checked — here's how we solve it/);
+  assert.match(session.instructions, /Never lead with "that's a problem\."/);
+  assert.match(session.instructions, /It does not mean you go silent/);
+  assert.match(session.instructions, /Hand him ONE line he can say out loud\. Then stop\./);
+  assert.match(session.instructions, /The sit is a look, not a buy/);
+  assert.match(
+    session.instructions,
+    /I'm not asking you to buy it\. Two minutes, no credit app/,
+  );
+  assert.match(session.instructions, /what do I have to do today/);
+  assert.match(session.instructions, /this one will be gone/);
+  assert.match(session.instructions, /your wife will love it/);
+  assert.match(session.instructions, /Never invent a number to get them in the chair/);
+  assert.doesNotMatch(RV_GROK_LEAN_CORE, /VOICE LOT ENERGY/);
+  assert.doesNotMatch(RV_SYSTEM_PROMPT, /VOICE LOT ENERGY/);
+  assert.doesNotMatch(RV_SYSTEM_PROMPT, /just looking/);
 });
 
 test("named visitor cold-open is Hello, first name — not I'm RvGrok", () => {

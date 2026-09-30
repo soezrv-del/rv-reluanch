@@ -29,7 +29,7 @@ import {
 } from "./screenGuides.ts";
 import { DAVID_HANSEN_STORY, PEOPLE_FACTS_RULE } from "./originStory.ts";
 import { liveVoiceOutputFor, preferIosLoudspeaker, releaseLiveVoiceOutput } from "./voiceOutput.ts";
-import { PCM_SAMPLE_RATE, RV_VOICE_INSTRUCTIONS, VOICE_MIC_RULES } from "./voice.ts";
+import { PCM_SAMPLE_RATE, RV_VOICE_INSTRUCTIONS, VOICE_LOT_ENERGY, VOICE_MIC_RULES } from "./voice.ts";
 
 export type LiveVoicePrewarm = {
   audioCtx: AudioContext | null;
@@ -278,7 +278,7 @@ export function buildRealtimeSessionUpdate(
   const screenSection = screen
     ? `${SCREEN_GUIDE_PREAMBLE}\n\n${formatScreenContext(screen)}`
     : SCREEN_GUIDE_PREAMBLE;
-  const instructions = `${DAVID_HANSEN_STORY}\n${PEOPLE_FACTS_RULE}\n\n${core}\n\n${personalBlock}${memoryBlock}${catalogBlock}This session has native web_search and query_lot. Call query_lot for ANY count or availability question, including a follow-up that changes type or condition. Call query_lot once per question. Never say none before that tool returns. Never answer a lot count from memory. Never tell the user to change a query, a parameter, or these instructions. Horsepower and displacement are on the lot sheet. Search the lot for 8.9 or 400 horsepower. Do not say the lot does not track them. The word coaches means RVs, not Coachmen, unless they say Coachmen. Answer from the query_lot result only. Do not call web_search and do not mention web notes for a count, the cheapest or most expensive coach, availability, or stock. Say none only when that tool returns matched 0. If it returns did_you_mean or close, offer that name. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${intro} Then listen. Never repeat this intro.\n\n${VOICE_MIC_RULES}\n\n${screenSection}`;
+  const instructions = `${DAVID_HANSEN_STORY}\n${PEOPLE_FACTS_RULE}\n\n${core}\n\n${personalBlock}${memoryBlock}${catalogBlock}This session has native web_search and query_lot. Call query_lot for ANY count or availability question, including a follow-up that changes type or condition. Call query_lot once per question. Never say none before that tool returns. Never answer a lot count from memory. Never tell the user to change a query, a parameter, or these instructions. Horsepower and displacement are on the lot sheet. Search the lot for 8.9 or 400 horsepower. Do not say the lot does not track them. The word coaches means RVs, not Coachmen, unless they say Coachmen. Answer from the query_lot result only. Do not call web_search and do not mention web notes for a count, the cheapest or most expensive coach, availability, or stock. Say none only when that tool returns matched 0. If it returns did_you_mean or close, offer that name. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${intro} Then listen. Never repeat this intro.\n\n${VOICE_MIC_RULES}\n\n${VOICE_LOT_ENERGY}\n\n${screenSection}`;
   return {
     type: "session.update",
     session: {
