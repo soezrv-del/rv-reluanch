@@ -22,7 +22,7 @@ import {
   type LotSnapshotView,
   type LotUnit,
 } from "@/lib/lot/ownLotPage";
-import { lotSearchSnippets, tokenizeLotQuery } from "@/lib/lot/lotSearch";
+import { lotSearchSnippets } from "@/lib/lot/lotSearch";
 import { lotOpenSections } from "@/lib/lot/lotDetail";
 import {
   LOT_UNIT_OPEN_EVENT,
@@ -99,7 +99,6 @@ export function LotStockApp({
     () => filterLotBrowse(snap?.units ?? [], { query: appliedQuery, type, condition }),
     [snap, appliedQuery, type, condition],
   );
-  const terms = useMemo(() => tokenizeLotQuery(appliedQuery), [appliedQuery]);
 
   useEffect(() => {
     setLimit(PAGE_SIZE);
@@ -296,7 +295,6 @@ export function LotStockApp({
                 <LotUnitCard
                   unit={featured}
                   featured
-                  terms={terms}
                   open={openKey === featuredKey}
                   onAsk={onAsk}
                   onToggle={() =>
@@ -329,7 +327,6 @@ export function LotStockApp({
                       <li key={key} className="min-w-0">
                         <LotUnitCard
                           unit={unit}
-                          terms={terms}
                           open={openKey === key}
                           onAsk={onAsk}
                           onToggle={() =>
@@ -437,36 +434,15 @@ function lotAskPrompt(unit: LotUnit): string {
     : `Tell me about the ${name}.`;
 }
 
-function Highlight({ text, terms }: { text: string; terms: string[] }) {
-  if (!terms.length || !text) return text;
-  const escaped = terms
-    .map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
-    .filter(Boolean);
-  if (!escaped.length) return text;
-  const re = new RegExp(`(${escaped.join("|")})`, "ig");
-  const parts = text.split(re);
-  return parts.map((part, index) =>
-    escaped.some((term) => part.toLowerCase() === term.toLowerCase()) ? (
-      <mark key={index} className="lot-hit" data-lot-hit>
-        {part}
-      </mark>
-    ) : (
-      <span key={index}>{part}</span>
-    ),
-  );
-}
-
 function LotUnitCard({
   unit,
   featured,
-  terms,
   open,
   onToggle,
   onAsk,
 }: {
   unit: LotUnit;
   featured?: boolean;
-  terms: string[];
   open: boolean;
   onToggle: () => void;
   onAsk?: (prompt: string) => void;
@@ -546,11 +522,11 @@ function LotUnitCard({
             )}
             data-lot-unit
           >
-            <Highlight text={headline} terms={terms} />
+            {headline}
           </p>
           {snippet ? (
             <p className="text-[12px] font-semibold text-white" data-lot-snippet>
-              <Highlight text={snippet.text} terms={terms.length ? terms : [snippet.text]} />
+              {snippet.text}
             </p>
           ) : null}
           <p className="lot-unit-meta" data-lot-meta>

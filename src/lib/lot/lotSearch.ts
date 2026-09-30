@@ -229,6 +229,7 @@ export type ParsedLotText = {
   horsepower?: number;
   displacement?: string;
   fuel: "" | "diesel" | "gas";
+  bed?: "king" | "queen" | "bunk" | "full";
   lengthMin?: number;
   lengthMax?: number;
 };
@@ -252,7 +253,19 @@ const IDENTITY_KEYS = new Set([
 const NOTES_KEY_RE =
   /description|notes|comment|lifestyle|floorplan_style|^flags$|collections/;
 
-const BED_KEY_RE = /bed|bunk|floorplan_feature/;
+const BED_COUNT_KEYS: Record<string, "king" | "queen" | "bunk" | "full"> = {
+  number_of_king_size_beds: "king",
+  number_of_queen_size_beds: "queen",
+  number_of_bunk_beds: "bunk",
+  number_of_full_size_beds: "full",
+};
+
+const BED_FIELD: Record<string, string> = {
+  king: "number_of_king_size_beds",
+  queen: "number_of_queen_size_beds",
+  bunk: "number_of_bunk_beds",
+  full: "number_of_full_size_beds",
+};
 
 const SKIP_PRINT_RE =
   /^(?:url|photo|image|images|floorplan_image|source_page|location_phone|id|scraped_at|received_date|paint_swatch|vin|stock_number)$/;
@@ -268,6 +281,7 @@ type LotSearchIndex = {
   attributeSet: Set<string>;
   noteSet: Set<string>;
   bedSet: Set<string>;
+  bedCounts: Record<string, number>;
   horsepower: number | null;
   displacement: string;
   fields: { field: string; text: string; tier: LotSearchTier }[];
@@ -296,23 +310,24 @@ export function indexLotUnits(units: object[]): void {
 }
 
 function wordsOf(text: string): string[] {
-  return text.split(/[^a-z0-9.]+/).filter(Boolean);
+  return text
+    .replace(/,/g, "")
+    .toLowerCase()
+    .split(/[^a-z0-9.]+/)
+    .filter(Boolean);
 }
 
 function pushField(
   fields: LotSearchIndex["fields"],
   buckets: Record<LotSearchTier, string[]>,
-  bed: string[],
   field: string,
   value: string,
   tier: LotSearchTier,
 ) {
   const text = value.trim();
   if (!text) return;
-  const line = `${field.replace(/_/g, " ")} ${text}`.toLowerCase();
-  buckets[tier].push(line);
+  buckets[tier].push(text.toLowerCase());
   fields.push({ field, text, tier });
-  if (BED_KEY_RE.test(field) || BED_WORDS.has(field)) bed.push(line);
 }
 
 function buildLotSearchIndex(unit: LotSearchable): LotSearchIndex {
@@ -325,15 +340,21 @@ function buildLotSearchIndex(unit: LotSearchable): LotSearchIndex {
   const fields: LotSearchIndex["fields"] = [];
   const printed = unit.printed || {};
   const seen = new Set<string>();
+  const bedCounts: Record<string, number> = {};
   const add = (field: string, value: string | undefined, tier: LotSearchTier) => {
     const key = field.toLowerCase();
     if (!value || seen.has(key)) return;
-    if (/number_of_.*bed/.test(key)) {
-      const count = Number(String(value).replace(/[^0-9.]/g, ""));
-      if (!(count > 0)) return;
-    }
     seen.add(key);
-    pushField(fields, buckets, bed, key, value, tier);
+    const bedKind = BED_COUNT_KEYS[key];
+    if (bedKind) {
+      const count = Number(String(value).replace(/[^0-9.]/g, ""));
+      if (count > 0) {
+        bedCounts[bedKind] = count;
+        bed.push(bedKind);
+      }
+      return;
+    }
+    pushField(fields, buckets, key, value, tier);
   };
   add("year", unit.year, "identity");
   add("make", unit.make, "identity");
@@ -346,7 +367,6 @@ function buildLotSearchIndex(unit: LotSearchable): LotSearchIndex {
   add("lot_status", unit.lot_status, "identity");
   add("dealer", unit.dealer, "identity");
   add("stock_number", unit.stock_number, "identity");
-  add("vin", unit.vin, "identity");
   add("fuel_type", unit.fuel_type, "attributes");
   add("engine", unit.engine, "attributes");
   add("chassis", unit.chassis || unit.chassis_brand, "attributes");
@@ -367,8 +387,6 @@ function buildLotSearchIndex(unit: LotSearchable): LotSearchIndex {
   const identityWords = wordsOf(identity);
   const attributeWords = wordsOf(attributes);
   const noteWords = wordsOf(notes);
-  const bedWords = wordsOf(bed.join(" \n "));
-  const hpRaw = printed.horsepower || "";
   return {
     identity,
     attributes,
@@ -379,8 +397,9 @@ function buildLotSearchIndex(unit: LotSearchable): LotSearchIndex {
     identitySet: new Set(identityWords),
     attributeSet: new Set(attributeWords),
     noteSet: new Set(noteWords),
-    bedSet: new Set(bedWords),
-    horsepower: parseSheetHorsepower(hpRaw),
+    bedSet: new Set(bed),
+    bedCounts,
+    horsepower: parseSheetHorsepower(printed.horsepower || unit.engine || ""),
     displacement: `${printed.displacement || ""} ${printed.engine || ""} ${printed.engine_type || ""} ${unit.engine || ""}`.toLowerCase(),
     fields,
   };
@@ -484,6 +503,7 @@ export function spokenLengthBand(phrase: string): { min?: number; max?: number }
 export function parseLotTextQuery(query: string): ParsedLotText {
   const band = spokenLengthBand(query);
   let fuel: "" | "diesel" | "gas" = "";
+  let bed: ParsedLotText["bed"];
   const spec = consumeSheetSpec(tokenizeLotQuery(query));
   const tokens: string[] = [];
   for (let i = 0; i < spec.tokens.length; ) {
@@ -506,8 +526,13 @@ export function parseLotTextQuery(query: string): ParsedLotText {
       i += 1;
       continue;
     }
-    if (BED_WORDS.has(token) && next === "bed") {
-      tokens.push(token);
+    if (token === "king" || token === "queen" || token === "bunk" || token === "bunks") {
+      bed = token === "bunks" ? "bunk" : token;
+      i += next === "bed" ? 2 : 1;
+      continue;
+    }
+    if (token === "full" && next === "bed") {
+      bed = "full";
       i += 2;
       continue;
     }
@@ -519,14 +544,46 @@ export function parseLotTextQuery(query: string): ParsedLotText {
     horsepower: spec.horsepower,
     displacement: spec.displacement,
     fuel,
+    bed,
     lengthMin: band.min,
     lengthMax: band.max,
   };
 }
 
-export function withoutCompanionBed(tokens: string[]): string[] {
-  if (!tokens.some((token) => BED_WORDS.has(token))) return tokens;
-  return tokens.filter((token) => token !== "bed");
+export function consumeBedTokens(tokens: string[]): {
+  tokens: string[];
+  bed?: "king" | "queen" | "bunk" | "full";
+} {
+  const kept: string[] = [];
+  let bed: "king" | "queen" | "bunk" | "full" | undefined;
+  for (let i = 0; i < tokens.length; ) {
+    const token = tokens[i] || "";
+    const next = tokens[i + 1] || "";
+    if (token === "king" || token === "queen" || token === "bunk" || token === "bunks") {
+      bed = token === "bunks" ? "bunk" : token;
+      i += next === "bed" ? 2 : 1;
+      continue;
+    }
+    if (token === "full" && next === "bed") {
+      bed = "full";
+      i += 2;
+      continue;
+    }
+    kept.push(token);
+    i += 1;
+  }
+  return { tokens: kept, bed };
+}
+
+export function unitHasBed(unit: LotSearchable, bed: string): boolean {
+  return (cacheLotSearchIndex(unit).bedCounts[bed] || 0) > 0;
+}
+
+export function lotTextScore(unit: LotSearchable, tokens: string[]): number {
+  const index = cacheLotSearchIndex(unit);
+  let score = 0;
+  for (const token of tokens) score += tokenTier(index, token);
+  return score;
 }
 
 function isEngineCode(token: string): boolean {
@@ -554,10 +611,8 @@ function snippetFor(index: LotSearchIndex, token: string): LotSnippet | null {
   const needle = token === "bunks" ? "bunk" : token;
   const ranked = [...index.fields].sort((a, b) => tierRank(b.tier) - tierRank(a.tier));
   for (const field of ranked) {
-    if (BED_WORDS.has(token) && !BED_KEY_RE.test(field.field)) continue;
-    const hay = `${field.field.replace(/_/g, " ")} ${field.text}`.toLowerCase();
-    const words = wordsOf(hay);
-    if (words.includes(needle) || (needle.length >= 3 && words.some((word) => word.startsWith(needle)))) {
+    const words = wordsOf(field.text);
+    if (words.includes(needle) || (needle.length >= 3 && !isEngineCode(needle) && words.some((word) => word.startsWith(needle)))) {
       return { field: field.field, text: field.text, tier: field.tier };
     }
   }
@@ -571,11 +626,17 @@ function tierRank(tier: LotSearchTier): number {
 }
 
 function unitFeet(unit: LotSearchable): number | null {
-  if (typeof unit.length_ft === "number" && unit.length_ft > 0) return unit.length_ft;
   if (typeof unit.lengthFt === "number" && unit.lengthFt > 0) return unit.lengthFt;
-  const printed = unit.printed?.vehicle_body_length || unit.printed?.length || "";
-  const match = printed.match(/(\d+(?:\.\d+)?)/);
-  return match ? Number(match[1]) : null;
+  if (typeof unit.length_ft === "number" && unit.length_ft > 0 && unit.length_ft <= 50) {
+    return unit.length_ft;
+  }
+  const trim = (unit.trim || unit.printed?.trim || "").trim();
+  const match = trim.match(/^(\d{2})(?!\d)/);
+  if (match) {
+    const n = Number(match[1]);
+    if (Number.isInteger(n) && n >= 18 && n <= 45) return n;
+  }
+  return null;
 }
 
 function fuelOk(unit: LotSearchable, fuel: "" | "diesel" | "gas"): boolean {
@@ -604,6 +665,7 @@ export function searchLotHits<T extends LotSearchable>(
     parsed.horsepower != null ||
     Boolean(parsed.displacement) ||
     Boolean(parsed.fuel) ||
+    Boolean(parsed.bed) ||
     parsed.lengthMin != null;
   if (!parsed.tokens.length && !specced) {
     return units.map((unit) => ({ unit, score: 0, full: true, snippets: [] }));
@@ -613,6 +675,7 @@ export function searchLotHits<T extends LotSearchable>(
     const index = cacheLotSearchIndex(unit);
     if (parsed.horsepower != null && index.horsepower !== parsed.horsepower) continue;
     if (parsed.displacement && !displacementHits(index.displacement, parsed.displacement)) continue;
+    if (parsed.bed && !(index.bedCounts[parsed.bed] > 0)) continue;
     if (!fuelOk(unit, parsed.fuel)) continue;
     if (parsed.lengthMin != null || parsed.lengthMax != null) {
       const feet = unitFeet(unit);
@@ -635,6 +698,14 @@ export function searchLotHits<T extends LotSearchable>(
       snippets.push({
         field: "displacement",
         text: `${parsed.displacement} L`,
+        tier: "attributes",
+      });
+      score += 2;
+    }
+    if (parsed.bed) {
+      snippets.push({
+        field: BED_FIELD[parsed.bed],
+        text: `${parsed.bed} bed`,
         tier: "attributes",
       });
       score += 2;

@@ -4,15 +4,17 @@
  */
 
 import {
+  consumeBedTokens,
   consumeSheetSpec,
   displacementHits,
+  lotTextScore,
   lotTokenMatchesUnit,
   normalizeLotSearchQuery,
   parseSheetHorsepower,
   singularizeLotToken,
   spokenLengthBand,
   tokenizeLotQuery,
-  withoutCompanionBed,
+  unitHasBed,
   type LotSearchable,
 } from "./lotSearch.ts";
 
@@ -1057,6 +1059,7 @@ type Parsed = {
   close?: string;
   horsepower?: number;
   displacement?: string;
+  bed?: "king" | "queen" | "bunk" | "full";
   sort?: "price" | "length" | "year" | "type";
   order: "asc" | "desc";
   limit: number;
@@ -1192,9 +1195,10 @@ function parseArgs(units: LotQueryUnit[], args: LotQueryArgs): Parsed {
   const sortedWords = consumeSort(priced.tokens);
   const fueled = consumeFuel(sortedWords.tokens);
   const spec = consumeSheetSpec(fueled.tokens);
+  const bedded = consumeBedTokens(spec.tokens);
   const band = spokenLengthBand(statused.rest);
-  const queryTokens = identityTokens(spec.tokens.join(" "), places);
-  const tokens = withoutCompanionBed([...new Set([...queryTokens, ...fieldTokens])]);
+  const queryTokens = identityTokens(bedded.tokens.join(" "), places);
+  const tokens = [...new Set([...queryTokens, ...fieldTokens])];
   const namedPlaces = mentionedPlaces(statused.rest, places);
   const sortBy = str(args.sort) || sortedWords.sort || "";
   const sort =
@@ -1225,6 +1229,7 @@ function parseArgs(units: LotQueryUnit[], args: LotQueryArgs): Parsed {
     close: fueled.close,
     horsepower: spec.horsepower,
     displacement: spec.displacement,
+    bed: bedded.bed,
     sort,
     order,
     limit,
@@ -1251,6 +1256,7 @@ function passesStructured(unit: LotQueryUnit, parsed: Parsed, lengthRequired: bo
   if (!priceMatches(unit, parsed.priceMin, parsed.priceMax)) return false;
   if (!fuelMatches(unit, parsed.fuel)) return false;
   if (!powerMatches(unit, parsed.horsepower, parsed.displacement)) return false;
+  if (parsed.bed && !unitHasBed(unit, parsed.bed)) return false;
   if (lengthRequired) {
     const length = lotUnitLength(unit).ft;
     if (length == null) return false;
@@ -1278,6 +1284,7 @@ function hasRecognizedFilter(parsed: Parsed, lengthRequired: boolean): boolean {
     Boolean(parsed.fuel) ||
     parsed.horsepower != null ||
     Boolean(parsed.displacement) ||
+    Boolean(parsed.bed) ||
     lengthRequired
   );
 }
@@ -1380,7 +1387,8 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
           yearMatches(unit, parsed.yearMin, parsed.yearMax) &&
           priceMatches(unit, parsed.priceMin, parsed.priceMax) &&
           fuelMatches(unit, parsed.fuel) &&
-          powerMatches(unit, parsed.horsepower, parsed.displacement),
+          powerMatches(unit, parsed.horsepower, parsed.displacement) &&
+          (!parsed.bed || unitHasBed(unit, parsed.bed)),
       );
       if (byName.length) matched = byName;
     } else {
@@ -1412,6 +1420,10 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
   const sorted = matched
     .map((unit, index) => ({ unit, index }))
     .sort((a, b) => {
+      if (parsed.tokens.length) {
+        const rank = lotTextScore(b.unit, parsed.tokens) - lotTextScore(a.unit, parsed.tokens);
+        if (rank !== 0) return rank;
+      }
       const cmp = compareUnits(a.unit, b.unit, parsed);
       return cmp !== 0 ? cmp : a.index - b.index;
     })

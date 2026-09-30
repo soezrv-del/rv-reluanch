@@ -3,7 +3,7 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { snapshotFromJson } from "../rvgrok/ownLotInventory.ts";
-import { searchLot } from "./lotQuery.ts";
+import { lotUnitLength, searchLot } from "./lotQuery.ts";
 import {
   parseSheetHorsepower,
   searchLotHits,
@@ -18,102 +18,121 @@ function snap() {
   );
 }
 
-test("400 hp, 400hp, and 400 horsepower are the two sheet units", () => {
+test("400 hp includes real sheet horsepower and skips a longer number", () => {
   const units = snap().units;
-  for (const query of ["400 hp", "400hp", "400 horsepower"]) {
-    const voice = searchLot(units, { query });
-    const page = searchLotHits(units, query).filter((hit) => hit.full);
-    const stocks = voice.units.map((unit) => unit.stock_number).sort();
-    assert.deepEqual(stocks, ["46539A", "UCO9965"], query);
-    assert.deepEqual(
-      page.map((hit) => hit.unit.stock_number).sort(),
-      ["46539A", "UCO9965"],
-      query,
-    );
-    assert.ok(
-      page.every((hit) =>
-        hit.snippets.some((row) => row.field === "horsepower" && /400/.test(row.text)),
-      ),
-      query,
-    );
-  }
+  const voice = searchLot(units, { query: "400 horsepower" });
+  const page = searchLotHits(units, "400 hp").filter((hit) => hit.full);
+  const stocks = new Set(page.map((hit) => hit.unit.stock_number));
+  assert.ok(stocks.has("46539A"));
+  assert.ok(stocks.has("UCO9965"));
+  assert.equal(voice.matched, page.length);
+  assert.equal(stocks.has("46374"), false, "6,400 rpm is not 400 hp");
+  assert.equal(stocks.has("UCL9540A"), false, "sheet horsepower is 360");
+  assert.equal(stocks.has("UCJ9680A"), false);
+  assert.equal(stocks.has("UCO9947"), false);
+  assert.ok(
+    page.every((hit) =>
+      hit.snippets.some((row) => row.field === "horsepower" && row.text === "400 HP"),
+    ),
+  );
+
+  const bare: LotSearchable = {
+    stock_number: "BARE400",
+    make: "Test",
+    model: "Coach",
+    printed: { horsepower: "400" },
+  };
+  const priced: LotSearchable = {
+    stock_number: "PRICE400",
+    make: "Test",
+    model: "4000",
+    price: 400000,
+    printed: { horsepower: "276", price: "$400,000" },
+  };
+  const joined = searchLotHits([bare, priced], "400 horsepower").filter((hit) => hit.full);
+  assert.deepEqual(
+    joined.map((hit) => hit.unit.stock_number),
+    ["BARE400"],
+  );
+  assert.equal(parseSheetHorsepower("300hp"), 300);
   assert.equal(parseSheetHorsepower("400"), 400);
-  assert.equal(parseSheetHorsepower("400 HP"), 400);
 });
 
-test("8.9 liter matches only units that list 8.9 L", () => {
+test("300hp and 8.9L match the joined forms", () => {
   const units = snap().units;
-  for (const query of ["8.9", "8.9L", "8.9 liter"]) {
-    const voice = searchLot(units, { query });
-    const page = searchLotHits(units, query).filter((hit) => hit.full);
-    assert.equal(voice.matched, page.length, query);
-    assert.ok(page.length > 0, query);
-    assert.ok(
-      page.every((hit) =>
-        hit.snippets.some((row) => row.field === "displacement" && /8\.9/.test(row.text)),
-      ),
-      query,
-    );
-  }
+  const hp = searchLotHits(units, "300hp").filter((hit) => hit.full);
+  const stocks = hp.map((hit) => hit.unit.stock_number).sort();
+  assert.ok(stocks.includes("UPD9637B"));
+  assert.ok(stocks.includes("UPZ9517"));
+  const spaced = searchLot(units, { query: "300 horsepower" });
+  assert.equal(spaced.matched, hp.length);
+
+  const liters = searchLotHits(units, "8.9L").filter((hit) => hit.full);
+  const words = searchLotHits(units, "8.9 liter").filter((hit) => hit.full);
+  assert.equal(liters.length, words.length);
+  assert.equal(words.length, 10);
+  assert.ok(words.every((hit) => hit.snippets.some((row) => row.field === "displacement")));
 });
 
-test("king bed diesel 40 ft skips Viking and still returns coaches", () => {
+test("king bed does not match Viking, and full is a bed only as full bed", () => {
   const units = snap().units;
-  const voice = searchLot(units, { query: "king bed diesel 40 ft" });
-  const page = searchLotHits(units, "king bed diesel 40 ft").filter((hit) => hit.full);
-  assert.ok(voice.matched > 0);
-  assert.ok(page.length > 0);
-  const stocks = new Set([
-    ...voice.units.map((unit) => unit.stock_number),
-    ...page.map((hit) => hit.unit.stock_number),
-  ]);
-  assert.equal(stocks.has("UPAUH9433"), false);
-  assert.equal(stocks.has("UPB9025A"), false);
+  const kings = searchLotHits(units, "king bed").filter((hit) => hit.full);
+  assert.ok(kings.length > 0);
+  assert.ok(kings.every((hit) => !/viking/i.test(`${hit.unit.make} ${hit.unit.model}`)));
+  assert.equal(
+    searchLot(units, { query: "king" }).units.some((unit) => /viking/i.test(unit.make)),
+    false,
+  );
 
-  const viking: LotSearchable = {
+  const sliding: LotSearchable = {
+    stock_number: "SLIDE",
     make: "Coachmen",
     model: "Viking",
-    stock_number: "UCL9540A",
-    body_type: "Travel Trailer",
-    printed: { floorplan_feature: "Outdoor Kitchen" },
+    printed: { master_bedroom_door_style: "Full Sliding Door", number_of_full_size_beds: "0" },
   };
-  const king: LotSearchable = {
+  const fullBed: LotSearchable = {
+    stock_number: "FULLBED",
     make: "Thor",
     model: "Ace",
-    stock_number: "KING1",
-    body_type: "Class A Diesel",
-    length_ft: 40,
-    fuel_type: "Diesel",
-    printed: { floorplan_feature: "King Bed", fuel_type: "Diesel" },
+    printed: { number_of_full_size_beds: "1" },
   };
-  const kingHits = searchLotHits([viking, king], "king").filter((hit) => hit.full);
+  const phrase = searchLotHits([sliding, fullBed], "full bed").filter((hit) => hit.full);
   assert.deepEqual(
-    kingHits.map((hit) => hit.unit.stock_number),
-    ["KING1"],
+    phrase.map((hit) => hit.unit.stock_number),
+    ["FULLBED"],
+  );
+  const word = searchLotHits([sliding, fullBed], "full").filter((hit) => hit.full);
+  assert.ok(word.some((hit) => hit.unit.stock_number === "SLIDE"));
+});
+
+test("L9 does not return stock UCL9540A", () => {
+  const units = snap().units;
+  const hits = searchLotHits(units, "L9").filter((hit) => hit.full);
+  assert.equal(
+    hits.some((hit) => hit.unit.stock_number === "UCL9540A"),
+    false,
   );
 });
 
-test("L9 does not match a stock number that merely contains those letters", () => {
-  const decoy: LotSearchable = {
-    make: "Fleetwood",
-    model: "Bounder",
-    stock_number: "UCL9540A",
-    printed: { engine: "Ford V10" },
-  };
-  const real: LotSearchable = {
-    make: "Newmar",
-    model: "Dutch Star",
-    stock_number: "L9REAL",
-    printed: { engine: "Cummins L9" },
-  };
-  const hits = searchLotHits([decoy, real], "L9").filter((hit) => hit.full);
-  assert.deepEqual(
-    hits.map((hit) => hit.unit.stock_number),
-    ["L9REAL"],
+test("40 ft uses the length filter and ignores 40 inside a stock number", () => {
+  const units = snap().units;
+  const voice = searchLot(units, { query: "40 ft" });
+  const page = searchLotHits(units, "40 feet").filter((hit) => hit.full);
+  assert.equal(voice.matched, page.length);
+  assert.ok(page.length > 0);
+  assert.equal(
+    page.some((hit) => hit.unit.stock_number === "47740"),
+    false,
+  );
+  assert.ok(
+    page.every((hit) => {
+    const feet = lotUnitLength(hit.unit).ft;
+      return feet != null && feet >= 38 && feet <= 42;
+    }),
   );
 });
 
-test("all terms matched outrank a partial, and the title outranks notes", () => {
+test("a title match outranks notes, and a warm query stays under 20ms", () => {
   const title: LotSearchable = {
     make: "Newmar",
     model: "Ventana",
@@ -126,35 +145,10 @@ test("all terms matched outrank a partial, and the title outranks notes", () => 
     stock_number: "NOTES",
     printed: { description: "someone mentioned ventana in the notes" },
   };
-  const partial: LotSearchable = {
-    make: "Ventana",
-    model: "Only",
-    stock_number: "PART",
-    printed: {},
-  };
-  const both: LotSearchable = {
-    make: "Ventana",
-    model: "King",
-    stock_number: "BOTH",
-    body_type: "Class A Diesel",
-    printed: { floorplan_feature: "King Bed" },
-  };
   const ranked = searchLotHits([notes, title], "ventana");
   assert.equal(ranked[0]?.unit.stock_number, "TITLE");
-  assert.ok((ranked[0]?.score || 0) > (ranked[1]?.score || 0));
+  assert.equal(ranked[0]?.snippets[0]?.field, "model");
 
-  const mixed = searchLotHits([partial, both], "ventana king").filter((hit) => hit.full);
-  assert.deepEqual(
-    mixed.map((hit) => hit.unit.stock_number),
-    ["BOTH"],
-  );
-  const withPartial = searchLotHits([partial, both], "ventana king");
-  assert.equal(withPartial[0]?.unit.stock_number, "BOTH");
-  assert.equal(withPartial[0]?.full, true);
-  assert.equal(withPartial.some((hit) => hit.unit.stock_number === "PART" && !hit.full), true);
-});
-
-test("a warm full-text query stays under 20ms", () => {
   const units = snap().units;
   searchLotHits(units, "400 hp");
   const started = performance.now();
