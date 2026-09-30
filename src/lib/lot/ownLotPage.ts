@@ -15,6 +15,7 @@ import {
   normalizeLotSearchToken,
   searchLotUnits,
   tokenizeLotQuery,
+  indexLotUnits,
 } from "./lotSearch.ts";
 
 export {
@@ -468,6 +469,7 @@ export function parseLotSnapshotJson(json: unknown): LotSnapshotView {
     if (unit.source) source = unit.source;
   }
 
+  indexLotUnits(units);
   return { units, asOf, dealer, source };
 }
 

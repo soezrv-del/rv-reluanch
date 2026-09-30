@@ -22,6 +22,7 @@ import {
   type LotSnapshotView,
   type LotUnit,
 } from "@/lib/lot/ownLotPage";
+import { lotSearchSnippets } from "@/lib/lot/lotSearch";
 import { lotOpenSections } from "@/lib/lot/lotDetail";
 import {
   LOT_UNIT_OPEN_EVENT,
@@ -45,6 +46,7 @@ export function LotStockApp({
   const [snap, setSnap] = useState<LotSnapshotView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [appliedQuery, setAppliedQuery] = useState("");
   const [type, setType] = useState("");
   const [condition, setCondition] = useState<"" | "New" | "Used">("");
   const chipRailRef = useRef<HTMLDivElement>(null);
@@ -87,10 +89,15 @@ export function LotStockApp({
     return () => window.removeEventListener(LOT_UNIT_OPEN_EVENT, pull);
   }, []);
 
+  useEffect(() => {
+    const id = window.setTimeout(() => setAppliedQuery(query), 150);
+    return () => window.clearTimeout(id);
+  }, [query]);
+
   const chips = useMemo(() => lotTypeChips(snap?.units ?? []), [snap]);
   const filtered = useMemo(
-    () => filterLotBrowse(snap?.units ?? [], { query, type, condition }),
-    [snap, query, type, condition],
+    () => filterLotBrowse(snap?.units ?? [], { query: appliedQuery, type, condition }),
+    [snap, appliedQuery, type, condition],
   );
 
   useEffect(() => {
@@ -98,7 +105,7 @@ export function LotStockApp({
     if (!wantOpen.current) setOpenKey(null);
     const scroller = sentinelRef.current?.closest("[data-app-scroll]");
     if (scroller instanceof HTMLElement) scroller.scrollTop = 0;
-  }, [query, type, condition]);
+  }, [appliedQuery, type, condition]);
 
   useEffect(() => {
     const wanted = wantOpen.current;
@@ -443,6 +450,8 @@ function LotUnitCard({
   const headline = showroomUnitLabel(unit).trim() || "GAP";
   const price = lotPriceOrGap(unit.price);
   const miles = lotCardMiles(unit);
+  const snippet = lotSearchSnippets(unit).find((row) => row.field === "horsepower" || row.field === "displacement")
+    || lotSearchSnippets(unit)[0];
   const meta = [
     lotTextOrGap(unit.stock_number),
     lotTextOrGap(unit.location),
@@ -515,6 +524,11 @@ function LotUnitCard({
           >
             {headline}
           </p>
+          {snippet ? (
+            <p className="text-[12px] font-semibold text-white" data-lot-snippet>
+              {snippet.text}
+            </p>
+          ) : null}
           <p className="lot-unit-meta" data-lot-meta>
             {meta}
           </p>
