@@ -49,7 +49,7 @@ export const ACCURACY_AIM_POLICY =
  * 85 to 90 percent, not a perfect match before answering.
  */
 export const SAVED_PIN_ANSWER =
-  "A saved pin is the best available answer for a GVWR or other spec pin. Use the closest saved pin when one exists, and otherwise answer from web search. Aim for 85 to 90 percent accuracy on spec pins, not perfection. Never refuse, stall, or skip a spec pin because the match is not perfect. That rule is not for our lot. Lot inventory is exact: name only units query_lot or the lot snapshot returned. If none match, say none. Do not invent a unit.";
+  "A saved pin is the best available answer for a GVWR or other spec pin. Use the closest saved pin when one exists, and otherwise answer from web search. Aim for 85 to 90 percent accuracy on spec pins, not perfection. Never refuse, stall, or skip a spec pin because the match is not perfect. That rule is not for our lot. Lot inventory is exact: name only units query_lot or the lot snapshot returned. If none match, say none. Do not invent a unit. This spec rule never applies to a question about what is on the lot, including horsepower, engine, bed, or length questions.";
 
 /**
  * Standing model-facing prompt — chat, agent, and voice share this.

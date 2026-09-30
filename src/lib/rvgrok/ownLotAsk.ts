@@ -422,6 +422,13 @@ export function looksLikeOwnLotFollowUp(text: string): boolean {
   ) {
     return true;
   }
+  const words = t.trim().split(/\s+/);
+  if (
+    words.length <= 4 &&
+    /^(?:how about\s+)?(?:a\s+|any\s+)?\d{1,2}\s*-?\s*(?:foot|feet|ft)\b/i.test(t.trim())
+  ) {
+    return true;
+  }
   return false;
 }
 

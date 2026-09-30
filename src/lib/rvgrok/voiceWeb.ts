@@ -157,17 +157,15 @@ export function decideVoiceWebResearch(opts: {
       speakHold: shouldSpeakVoiceResearchHold(transcript, opts.specs),
     };
   }
-  // Our lot. The query_lot tool answers a count, a cheapest, availability,
-  // or a stock number. Web notes are not added. A spec question still
-  // researches. A Facts spec that also asks stock already returned above.
+  // Our lot. Stock, price, and availability stay on query_lot even when
+  // the sentence also names horsepower, engine, a bed, or a length.
+  // A spec about one coach, with no lot cue, can still research.
   const lotOnly =
     looksLikeOwnLotCountOrRankAsk(transcript) ||
     looksLikeOwnLotStockQuestion(transcript) ||
     looksLikeInventoryOrCountQuestion(transcript) ||
     Boolean(opts.lotFollowUp);
-  if (lotOnly && !looksLikeSpecQuestion(transcript)) {
-    return { action: "pass" };
-  }
+  if (lotOnly) return { action: "pass" };
   if (!needsWebFallback(opts.specs ?? null, transcript)) {
     return { action: "pass" };
   }
@@ -198,7 +196,7 @@ export function stripNotesForSpeech(notes: string): string {
 
 export function formatVoiceWebSearchInjection(
   result: WebSearchNotes,
-  opts?: { catalogBlock?: string },
+  opts?: { catalogBlock?: string; lotTurn?: boolean },
 ): string {
   if (result.ok && isOwnLotResearchNotes(result.notes || "")) {
     return ownLotNotesForSpeech(result.notes);
@@ -210,11 +208,16 @@ export function formatVoiceWebSearchInjection(
       : gate.exhausted
         ? `Research loop exhausted (${gate.attempts} genuine rephrased attempts, all unconfirmed). Use ONLY what these notes actually contain. ${LOW_CONFIDENCE_EST_RULE}`
         : "Notes do not confirm the queried field. Do NOT speak a labeled EST / typical class range. Another rephrased search is required.";
+    const noteRule = opts?.lotTurn
+      ? "These notes are NOT RV Country stock. Never name a coach from them as on the lot."
+      : "Do not read URLs, markdown, or citation lists. A saved pin is the best available answer. Use the closest saved pin when one exists, and otherwise use these web notes. Never skip the answer because the match is not perfect.";
     return [
-      "WEB RESEARCH NOTES (live this turn — you DID look this up):",
+      opts?.lotTurn
+        ? "These notes are NOT RV Country stock. Never name a coach from them as on the lot."
+        : "WEB RESEARCH NOTES (live this turn — you DID look this up):",
       stripNotesForSpeech(result.notes),
       "Speak a short conversational answer. Do not claim you have no internet.",
-      "Do not read URLs, markdown, or citation lists. A saved pin is the best available answer. Use the closest saved pin when one exists, and otherwise use these web notes. Never skip the answer because the match is not perfect.",
+      noteRule,
       estLine,
     ].join("\n");
   }

@@ -696,7 +696,7 @@ test("unresolved named coach about-ask still fires web instead of a dealer dead-
   assert.match(api, /askNamesCoachIdentity/);
 });
 
-test("inventory / diesel count asks still trip the detector when catalog is locked", () => {
+test("inventory / diesel count asks stay on the lot and do not open web research", () => {
   const locked = { missingHard: false };
   const inventory = "How many diesel Newmar Dutch Stars are in inventory?";
   const dieselCount = "What's the diesel count for 2024 Tiffin Allegro?";
@@ -707,8 +707,8 @@ test("inventory / diesel count asks still trip the detector when catalog is lock
   const entegraFresno = "How many Entegra coaches do we have in Fresno?";
   for (const q of [inventory, dieselCount, lot, weHave, stock, bareStock, entegraFresno]) {
     assert.equal(looksLikeInventoryOrCountQuestion(q), true, q);
-    assert.equal(needsWebFallback(locked, q), true, q);
-    assert.equal(needsWebFallback(null, q), true, q);
+    assert.equal(needsWebFallback(locked, q), false, q);
+    assert.equal(needsWebFallback(null, q), false, q);
   }
   assert.equal(
     looksLikeInventoryOrCountQuestion("How many slides does a 2023 Dream have?"),

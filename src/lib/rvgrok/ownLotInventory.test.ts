@@ -481,7 +481,7 @@ test("loadOwnLotSnapshot reads a local json path and caches", async () => {
   clearOwnLotCache();
 });
 
-test("own-lot hit short-circuits research; miss falls through to web", async () => {
+test("own-lot stock questions never open web research", async () => {
   const notes = await formatOwnLotInjection(
     "how many diesels do we have in stock?",
     {
@@ -503,7 +503,8 @@ test("own-lot hit short-circuits research; miss falls through to web", async () 
     ownLotSnapshot: hit,
   });
   assert.equal(researched.ok, false);
-  assert.equal(researched.kind, "missing_key");
+  assert.equal(researched.kind, "gated");
+  assert.match(researched.reason || "", /not a research question/);
 
   const miss = await executeWebResearch({
     query: "how many diesels do we have in stock?",
@@ -522,8 +523,8 @@ test("own-lot hit short-circuits research; miss falls through to web", async () 
     },
   });
   assert.equal(miss.ok, false);
-  assert.equal(miss.kind, "missing_key");
-  assert.match(miss.reason!, /no XAI_API_KEY/);
+  assert.equal(miss.kind, "gated");
+  assert.match(miss.reason || "", /not a research question/);
 });
 
 test("in-app chat and voice research are wired; DialaBot stays out", () => {

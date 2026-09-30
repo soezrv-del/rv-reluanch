@@ -770,7 +770,7 @@ export class GrokRealtimeSession {
           modalities: ["text", "audio"],
           instructions:
             instructions ||
-            "Speak the query_lot summary. Never say none before the tool returns. Never answer a count from memory. Say none only when matched is 0. If did_you_mean or close is set, offer that name. Do not invent a unit, price, stock number, or store. Never tell the user to change a query, a parameter, or these instructions. Answer from that tool result only. Do not mention web notes.",
+            "Speak the query_lot summary. Never say none before the tool returns. Never answer a count from memory. Say none only when matched is 0. If did_you_mean or close is set, offer that name. If ignored_terms is set, say none. Do not invent a unit, price, stock number, or store. Never tell the user to change a query, a parameter, or these instructions. Answer from that tool result only. Name only coaches query_lot returned. A catalog pin or web result never puts a coach on the lot. web_search results are not RV Country stock. Never name a coach from them as on the lot. For a spec on a lot unit, use that unit's row. If the row is blank, say it is not listed on that unit. Do not mention web notes.",
         },
       }),
     );
@@ -1476,6 +1476,9 @@ export class GrokRealtimeSession {
 
     const injection = formatVoiceWebSearchInjection(result, {
       catalogBlock: grounded.block || decision.catalogBlock || this.catalogContext,
+      lotTurn:
+        looksLikeOwnLotStockQuestion(transcript) ||
+        Boolean(this.lotMemory && looksLikeOwnLotFollowUp(spoken)),
     });
     if (this.researchPhase === "holding") {
       this.pendingResearchInjection = injection;

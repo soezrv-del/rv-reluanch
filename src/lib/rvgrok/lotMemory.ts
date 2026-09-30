@@ -7,7 +7,6 @@
  */
 
 import {
-  filterLabel,
   ownLotIsUnavailable,
   parseOwnLotAsk,
   type OwnLotFilter,
@@ -19,6 +18,7 @@ import {
   reconcileLotArgs,
   searchLot,
   spokenLotBody,
+  type LotQueryArgs,
   type LotQueryCounts,
 } from "../lot/lotQuery.ts";
 import {
@@ -32,6 +32,8 @@ export type LotMemory = {
   sort?: OwnLotSort;
   limit?: number;
   condition?: string;
+  /** diesel or gas. A follow-up that does not rename the fuel keeps this. */
+  fuel?: "diesel" | "gas";
 };
 
 export type LotTurn = LotMemory & {
@@ -165,6 +167,39 @@ export function resolveLotTurn(
   };
 }
 
+function snapshotScrapedAt(snapshot: OwnLotSnapshot): string {
+  if (snapshot.asOf) return snapshot.asOf;
+  let latest = "";
+  for (const unit of snapshot.units) {
+    const stamp = unit.printed?.scraped_at || "";
+    if (stamp > latest) latest = stamp;
+  }
+  return latest;
+}
+
+function appliedFilterLabel(args: LotQueryArgs, fuel?: string): string {
+  const bits = [
+    args.make,
+    args.model,
+    args.body_type,
+    args.condition,
+    args.status,
+    args.location,
+    fuel,
+    args.king_bed ? "king bed" : "",
+    args.horsepower != null ? `${args.horsepower} hp` : "",
+    args.hp_min != null ? `hp ≥ ${args.hp_min}` : "",
+    args.displacement ? `${args.displacement} L` : "",
+    args.price_min != null || args.price_max != null
+      ? `$${args.price_min ?? "…"}–$${args.price_max ?? "…"}`
+      : "",
+    args.length_ft_min != null || args.length_ft_max != null
+      ? `${args.length_ft_min ?? "…"}–${args.length_ft_max ?? "…"} ft`
+      : "",
+  ].filter(Boolean);
+  return bits.length ? bits.join(" · ") : "all units";
+}
+
 function str(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
 }
@@ -281,6 +316,8 @@ export type QueryLotAnswer = {
   summary?: string;
   did_you_mean?: string;
   close?: string;
+  ignored_terms?: string[];
+  scraped_at?: string;
   speech: string;
   lotMemory: LotMemory | null;
 };
@@ -376,6 +413,7 @@ export function answerQueryLotFromSnapshot(
           carry_price_max: previous?.filter.maxPrice,
           carry_make: previous?.filter.make,
           carry_model: previous?.filter.model,
+          carry_fuel: previous?.fuel,
         }
       : {}),
   });
@@ -393,6 +431,8 @@ export function answerQueryLotFromSnapshot(
       model: searchArgs.model || undefined,
       minPrice: searchArgs.price_min,
       maxPrice: searchArgs.price_max,
+      lengthFtMin: searchArgs.length_ft_min,
+      lengthFtMax: searchArgs.length_ft_max,
     },
     sort:
       searchArgs.sort === "price" ||
@@ -407,18 +447,26 @@ export function answerQueryLotFromSnapshot(
       : followUp && previous?.condition
         ? { condition: previous.condition }
         : {}),
+    ...(searchArgs.fuel === "diesel" || searchArgs.fuel === "gas"
+      ? { fuel: searchArgs.fuel }
+      : followUp && (previous?.fuel === "diesel" || previous?.fuel === "gas")
+        ? { fuel: previous.fuel }
+        : {}),
   };
   const found = searchLot(snapshot.units, searchArgs);
+  const scrapedAt = snapshotScrapedAt(snapshot);
   let speech = found.summary;
   if (found.no_length.length) {
     const stocks = found.no_length.map((unit) => `stk ${unit.stock_number}`).join(", ");
     speech = `${speech} No length on file (not guessed): ${stocks}.`;
   }
+  if (scrapedAt) speech = `${speech} Scraped ${scrapedAt}.`;
+  const applied = appliedFilterLabel(searchArgs, memory.fuel);
   return {
     ok: true,
     none: found.matched === 0,
     matched: found.matched,
-    filter_label: filterLabel(turn.filter),
+    filter_label: applied,
     counts: found.counts,
     units: found.units.map((unit) => ({
       ...unit,
@@ -429,6 +477,8 @@ export function answerQueryLotFromSnapshot(
     summary: found.summary,
     ...(found.did_you_mean ? { did_you_mean: found.did_you_mean } : {}),
     ...(found.close ? { close: found.close } : {}),
+    ...(found.ignored_terms?.length ? { ignored_terms: found.ignored_terms } : {}),
+    ...(scrapedAt ? { scraped_at: scrapedAt } : {}),
     speech,
     lotMemory: memory,
   };

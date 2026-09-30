@@ -346,8 +346,8 @@ export function looksLikeLiveConditionQuestion(text: string): boolean {
  * offline and stream immediately. Coach and spec asks — pinned or not —
  * also stream from memory and the catalog. Resolved hard row or a gap,
  * they must not invent an OEM
- * pin; they do not wait on search. Own-lot *hit* skips the browse in the API.
- * Repair, market, inventory, and live conditions still browse.
+ * pin; they do not wait on search. Own-lot stock, counts, and prices stay on the
+ * scrape and do not browse. Repair, market, and live conditions still browse.
  */
 export function needsWebFallback(
   specs: WebFallbackSpecs,
@@ -360,8 +360,13 @@ export function needsWebFallback(
   if (looksLikeCarfaxQuestion(userText)) return false;
   if (looksLikeImageOnlyAsk(userText)) return false;
   if (looksLikeIncompleteCoachIdentityAsk(userText)) return false;
+  if (
+    looksLikeInventoryOrCountQuestion(userText) ||
+    /\b(?:do we have|on (?:the |our )?lot|in stock|our inventory)\b/i.test(userText)
+  ) {
+    return false;
+  }
   if (looksLikeLiveResearchQuestion(userText)) return true;
-  if (looksLikeInventoryOrCountQuestion(userText)) return true;
   // Both coaches identifiable — answer from catalog now.
   // Forum / repair already returned above.
   if (looksLikeCatalogAnswerableCoachCompare(userText)) return false;

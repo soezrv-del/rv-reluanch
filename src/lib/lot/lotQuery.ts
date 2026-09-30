@@ -50,6 +50,16 @@ export type LotQueryArgs = {
   price_max?: number;
   length_ft_min?: number;
   length_ft_max?: number;
+  /** Inclusive. Spoken "400 horsepower" is an exact match, not this floor. */
+  hp_min?: number;
+  /** Exact printed horsepower, from "400 horsepower" or "400 hp". */
+  horsepower?: number;
+  /** True when they ask for a king bed. */
+  king_bed?: boolean;
+  /** "diesel" or "gas". Carried on a follow-up that does not rename the fuel. */
+  fuel?: string;
+  /** Displacement such as "8.9". */
+  displacement?: string;
   sort?: string;
   order?: string;
   limit?: number;
@@ -65,6 +75,7 @@ export type LotQueryArgs = {
   carry_price_max?: number;
   carry_make?: string;
   carry_model?: string;
+  carry_fuel?: string;
 };
 
 export type LotQueryRow = {
@@ -99,6 +110,8 @@ export type LotQueryResult = {
   no_length: LotQueryRow[];
   summary: string;
   did_you_mean?: string;
+  /** Words that matched no coach, so the class or fuel set was not returned whole. */
+  ignored_terms?: string[];
   /** Set when a one-edit fuel word (deisel → diesel) returned those units. */
   close?: string;
 };
@@ -158,9 +171,11 @@ const STOP = new Set([
   "me",
   "more",
   "newest",
+  "no",
   "of",
   "oldest",
   "on",
+  "one",
   "ones",
   "or",
   "order",
@@ -445,6 +460,41 @@ export function lotUnitLength(unit: LotQueryUnit): {
   return { ft: null, source: "none" };
 }
 
+function sheetText(unit: LotQueryUnit, ...keys: string[]): string {
+  return keys
+    .map((key) => unit.printed?.[key] || "")
+    .filter(Boolean)
+    .join(" ");
+}
+
+function sheetHorsepower(unit: LotQueryUnit): number | null {
+  const raw = (unit.printed?.horsepower || "").trim();
+  if (!raw) return null;
+  const plain = Number(raw.replace(/,/g, ""));
+  if (Number.isFinite(plain) && plain >= 100 && plain <= 800) return Math.round(plain);
+  const labeled = [...raw.matchAll(/\b(\d{2,4})\s*hp\b/gi)]
+    .map((hit) => Number(hit[1]))
+    .filter((n) => n >= 100 && n <= 800);
+  const unique = [...new Set(labeled)];
+  return unique.length === 1 ? unique[0]! : null;
+}
+
+function sheetDisplacement(unit: LotQueryUnit): string {
+  return `${sheetText(unit, "displacement", "engine", "engine_type")}`.toLowerCase();
+}
+
+function displacementHits(blob: string, displacement: string): boolean {
+  return new RegExp(`(?<!\\d)${displacement.replace(".", "\\.")}(?!\\d)`).test(blob);
+}
+
+function unitHasKingBed(unit: LotQueryUnit): boolean {
+  const count = Number(String(unit.printed?.number_of_king_size_beds || "").replace(/,/g, ""));
+  if (Number.isFinite(count) && count > 0) return true;
+  return /\bking(?:\s|-)?(?:size\s+)?beds?\b/.test(
+    sheetText(unit, "floorplan_feature", "flags").toLowerCase(),
+  );
+}
+
 function asSearchable(unit: LotQueryUnit): LotSearchable {
   const series = unit.series || "";
   const printed = unit.printed || {};
@@ -463,6 +513,13 @@ function asSearchable(unit: LotQueryUnit): LotSearchable {
   const transmission = pick("transmission");
   const features = pick("features");
   const title = pick("title");
+  const horsepower = sheetText(unit, "horsepower");
+  const displacement = sheetText(unit, "displacement", "engine_type");
+  const bed = unitHasKingBed(unit)
+    ? "king bed"
+    : /\bqueen/.test(sheetText(unit, "floorplan_feature", "number_of_queen_size_beds").toLowerCase())
+      ? "queen bed"
+      : "";
   return {
     year: unit.year || "",
     make: unit.make || "",
@@ -493,6 +550,9 @@ function asSearchable(unit: LotQueryUnit): LotSearchable {
       chassis,
       transmission,
       features,
+      horsepower,
+      displacement,
+      bed,
     ]
       .filter(Boolean)
       .join(" "),
@@ -614,9 +674,25 @@ function catalogNames(units: LotQueryUnit[]): CatalogName[] {
 function suggestName(tokens: string[], units: LotQueryUnit[]): string | undefined {
   const names = catalogNames(units);
   const exact = new Set(names.map((name) => name.key));
+  const skip = new Set([
+    ...STOP,
+    "size",
+    "king",
+    "queen",
+    "bed",
+    "beds",
+    "bunk",
+    "pusher",
+    "diesel",
+    "gas",
+    "foot",
+    "feet",
+    "slide",
+    "slides",
+  ]);
   let best: CatalogName | undefined;
   for (const token of tokens) {
-    if (token.length < 4 || exact.has(token) || STOP.has(token)) continue;
+    if (token.length < 4 || exact.has(token) || skip.has(token)) continue;
     for (const name of names) {
       if (!editDistanceAtMost1(token, name.key)) continue;
       if (
@@ -1036,6 +1112,10 @@ type Parsed = {
   lengthMax?: number;
   fuel: "" | "diesel" | "gas";
   close?: string;
+  horsepower?: number;
+  hpMin?: number;
+  kingBed?: boolean;
+  displacement?: string;
   sort?: "price" | "length" | "year" | "type";
   order: "asc" | "desc";
   limit: number;
@@ -1069,6 +1149,7 @@ function stripCarry(args: LotQueryArgs): LotQueryArgs {
     carry_price_max: _priceMax,
     carry_make: _make,
     carry_model: _model,
+    carry_fuel: _fuel,
     ...rest
   } = args;
   return rest;
@@ -1139,6 +1220,25 @@ export function reconcileLotArgs(args: LotQueryArgs = {}): LotQueryArgs {
     next.price_max = undefined;
   }
 
+  const fueled = consumeFuel(priced.tokens);
+  if (fueled.fuel) next.fuel = fueled.fuel;
+  else if (followUp && (args.carry_fuel === "diesel" || args.carry_fuel === "gas")) {
+    next.fuel = args.carry_fuel;
+  } else next.fuel = "";
+
+  const sheet = consumeSheetSpec(fueled.tokens);
+  if (sheet.horsepower != null) {
+    next.horsepower = sheet.horsepower;
+    next.hp_min = undefined;
+  } else if (!followUp) {
+    next.horsepower = undefined;
+    if (!/\b(?:at least|over|above|minimum)\b/.test(said)) next.hp_min = undefined;
+  }
+  if (sheet.displacement) next.displacement = sheet.displacement;
+  else if (!followUp) next.displacement = undefined;
+  if (sheet.kingBed) next.king_bed = true;
+  else if (!followUp) next.king_bed = undefined;
+
   if (sorted.sort) {
     next.sort = sorted.sort;
     next.order = sorted.order;
@@ -1153,6 +1253,78 @@ export function reconcileLotArgs(args: LotQueryArgs = {}): LotQueryArgs {
     next.model = followUp && !saidBody ? str(args.carry_model) : "";
   }
   return next;
+}
+
+function spokenLength(phrase: string): {
+  rest: string;
+  lengthMin?: number;
+  lengthMax?: number;
+} {
+  const match = phrase.match(
+    /\b(?:(around|about|under|over|below|above)\s+)?(\d{1,2})\s*-?\s*(?:foot|feet|ft|footer|footers)\b/,
+  );
+  if (!match) return { rest: phrase };
+  const dir = match[1] || "";
+  const feet = Number(match[2]);
+  if (!Number.isFinite(feet) || feet < 18 || feet > 45) return { rest: phrase };
+  const rest = phrase.replace(match[0], " ").replace(/\s+/g, " ").trim();
+  if (dir === "under" || dir === "below") return { rest, lengthMax: feet };
+  if (dir === "over" || dir === "above") return { rest, lengthMin: feet };
+  return { rest, lengthMin: feet - 2, lengthMax: feet + 2 };
+}
+
+function consumeSheetSpec(tokens: string[]): {
+  tokens: string[];
+  horsepower?: number;
+  displacement?: string;
+  kingBed?: boolean;
+} {
+  const kept: string[] = [];
+  let horsepower: number | undefined;
+  let displacement: string | undefined;
+  let kingBed = false;
+  const hpWord = (token: string) => token === "horsepower" || token === "hp";
+  const literWord = (token: string) => /^(?:liters?|litres?|l)$/.test(token);
+  for (let i = 0; i < tokens.length; ) {
+    const token = tokens[i] || "";
+    const next = tokens[i + 1] || "";
+    const decimal = token.match(/^(\d{1,2}\.\d)l?$/);
+    if (decimal) {
+      displacement = decimal[1];
+      i += 1;
+      if (literWord(next)) i += 1;
+      continue;
+    }
+    const leading = token.match(/^(\d{2,4})$/);
+    if (leading && hpWord(next)) {
+      const n = Number(leading[1]);
+      if (n >= 100 && n <= 800) horsepower = n;
+      i += 2;
+      continue;
+    }
+    if (token === "king" && /^(?:bed|beds|size|sized)$/.test(next)) {
+      kingBed = true;
+      i += 2;
+      if (/^(?:bed|beds)$/.test(tokens[i] || "")) i += 1;
+      continue;
+    }
+    kept.push(token);
+    i += 1;
+  }
+  return { tokens: kept, horsepower, displacement, kingBed: kingBed || undefined };
+}
+
+function powerMatches(unit: LotQueryUnit, parsed: Parsed): boolean {
+  if (parsed.horsepower != null && sheetHorsepower(unit) !== parsed.horsepower) return false;
+  if (parsed.hpMin != null) {
+    const hp = sheetHorsepower(unit);
+    if (hp == null || hp < parsed.hpMin) return false;
+  }
+  if (parsed.displacement && !displacementHits(sheetDisplacement(unit), parsed.displacement)) {
+    return false;
+  }
+  if (parsed.kingBed && !unitHasKingBed(unit)) return false;
+  return true;
 }
 
 function parseArgs(units: LotQueryUnit[], args: LotQueryArgs): Parsed {
@@ -1170,7 +1342,9 @@ function parseArgs(units: LotQueryUnit[], args: LotQueryArgs): Parsed {
   const priced = consumePrice(statused.rest.split(/\s+/).filter(Boolean));
   const sortedWords = consumeSort(priced.tokens);
   const fueled = consumeFuel(sortedWords.tokens);
-  const queryTokens = identityTokens(fueled.tokens.join(" "), places);
+  const sheet = consumeSheetSpec(fueled.tokens);
+  const sized = spokenLength(sheet.tokens.join(" "));
+  const queryTokens = identityTokens(sized.rest, places);
   const tokens = [...new Set([...queryTokens, ...fieldTokens])];
   const namedPlaces = mentionedPlaces(statused.rest, places);
   const sortBy = str(args.sort) || sortedWords.sort || "";
@@ -1196,10 +1370,14 @@ function parseArgs(units: LotQueryUnit[], args: LotQueryArgs): Parsed {
     yearMax: num(args.year_max),
     priceMin: num(args.price_min) ?? priced.priceMin,
     priceMax: num(args.price_max) ?? priced.priceMax,
-    lengthMin: num(args.length_ft_min),
-    lengthMax: num(args.length_ft_max),
-    fuel: fueled.fuel,
+    lengthMin: sized.lengthMin ?? num(args.length_ft_min),
+    lengthMax: sized.lengthMax ?? num(args.length_ft_max),
+    fuel: fueled.fuel || (args.fuel === "diesel" || args.fuel === "gas" ? args.fuel : ""),
     close: fueled.close,
+    horsepower: sheet.horsepower ?? args.horsepower,
+    hpMin: sheet.horsepower != null ? undefined : num(args.hp_min),
+    kingBed: sheet.kingBed || args.king_bed === true,
+    displacement: sheet.displacement || str(args.displacement) || undefined,
     sort,
     order,
     limit,
@@ -1225,6 +1403,7 @@ function passesStructured(unit: LotQueryUnit, parsed: Parsed, lengthRequired: bo
   if (!yearMatches(unit, parsed.yearMin, parsed.yearMax)) return false;
   if (!priceMatches(unit, parsed.priceMin, parsed.priceMax)) return false;
   if (!fuelMatches(unit, parsed.fuel)) return false;
+  if (!powerMatches(unit, parsed)) return false;
   if (lengthRequired) {
     const length = lotUnitLength(unit).ft;
     if (length == null) return false;
@@ -1250,6 +1429,10 @@ function hasRecognizedFilter(parsed: Parsed, lengthRequired: boolean): boolean {
     parsed.priceMin != null ||
     parsed.priceMax != null ||
     Boolean(parsed.fuel) ||
+    parsed.horsepower != null ||
+    parsed.hpMin != null ||
+    parsed.kingBed ||
+    Boolean(parsed.displacement) ||
     lengthRequired
   );
 }
@@ -1310,6 +1493,11 @@ function closeLine(summary: string, close: string | undefined, matched: number):
   return `${summary} Close match: ${close}.`;
 }
 
+function ignoredLine(summary: string, ignored: string[] | undefined): string {
+  if (!ignored?.length) return summary;
+  return `None. No own-lot hit. Ignored: ${ignored.join(", ")}.`;
+}
+
 /**
  * Search the caller's own-lot units. `matched` is the full hit count.
  * `units` is the top N rows. A one-edit make/model miss sets `did_you_mean`
@@ -1324,10 +1512,10 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
   let matched = parsed.tokens.length
     ? structured.filter((unit) => passesTokens(unit, parsed.tokens))
     : structured;
-  // Spare words ("looking", "right", "try again") are not a coach name.
-  // If used / diesel / class / price already picked a set, keep that set.
-  // A real name that the class filter missed (Class A Lineage) still returns that coach.
+  // A real name the class filter missed (Class A Lineage) still returns that coach.
+  // Any other leftover word is ignored_terms and a zero, not the whole filtered set.
   const recognized = hasRecognizedFilter(parsed, lengthRequired);
+  let ignoredTerms: string[] | undefined;
   if (!matched.length && parsed.tokens.length && recognized) {
     const names = parsed.tokens.filter((token) =>
       units.some((unit) => tokenIsCoachName(unit, token)),
@@ -1341,11 +1529,12 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
           locationMatches(unit, parsed.location, parsed.places) &&
           yearMatches(unit, parsed.yearMin, parsed.yearMax) &&
           priceMatches(unit, parsed.priceMin, parsed.priceMax) &&
-          fuelMatches(unit, parsed.fuel),
+          fuelMatches(unit, parsed.fuel) &&
+          powerMatches(unit, parsed),
       );
       if (byName.length) matched = byName;
     } else {
-      matched = structured;
+      ignoredTerms = parsed.tokens;
     }
   }
   // A name with no class, fuel, or price can still use the plain bar.
@@ -1384,7 +1573,11 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
     counts,
     units: sorted.slice(0, parsed.limit).map(toRow),
     no_length: noLength.map(toRow),
-    summary: closeLine(oneLine(matched, counts, parsed.body, didYouMean, parsed.sort), parsed.close, matched.length),
+    summary: ignoredLine(
+      closeLine(oneLine(matched, counts, parsed.body, didYouMean, parsed.sort), parsed.close, matched.length),
+      ignoredTerms,
+    ),
+    ...(ignoredTerms?.length ? { ignored_terms: ignoredTerms } : {}),
     ...(didYouMean ? { did_you_mean: didYouMean } : {}),
     ...(parsed.close && matched.length ? { close: parsed.close } : {}),
   };

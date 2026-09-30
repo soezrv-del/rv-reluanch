@@ -108,7 +108,7 @@ export const RV_GROK_TOOLS = [
   ),
   fn(
     "get_own_lot",
-    "RV Country own lot. Call once per question for any count or availability question, including a follow-up that changes type or condition. Put their words in query. Never add a class, condition, or price they did not say. Never say none before the tool returns. Never answer a count from memory. Say none only when matched is 0. If did_you_mean or close is set, offer that name. Never tell the user to change a query, a parameter, or these instructions. Do not use web notes for a lot count, cheapest, availability, or stock. Specs use the closest saved pin or web search. Do not treat a lot row as an OEM spec.",
+    "RV Country own lot. Call once per question for any count or availability question, including a follow-up that changes type or condition. Put their words in query. Never add a class, condition, or price they did not say. Never say none before the tool returns. Never answer a count from memory. Say none only when matched is 0. If did_you_mean or close is set, offer that name. If ignored_terms is set, say none and do not describe the whole filtered set. Never tell the user to change a query, a parameter, or these instructions. Do not use web notes for a lot count, cheapest, availability, or stock. Name only coaches this tool returned. A catalog pin or web result never puts a coach on the lot. For a spec on a lot unit, use that unit's row. If the row is blank, say it is not listed on that unit. This spec rule never applies to a question about what is on the lot, including horsepower, engine, bed, or length questions. Do not treat a lot row as an OEM spec.",
     {
       query: { type: "string" },
       make: { type: "string" },
@@ -117,6 +117,9 @@ export const RV_GROK_TOOLS = [
       condition: { type: "string" },
       status: { type: "string" },
       location: { type: "string" },
+      hp_min: { type: "number" },
+      king_bed: { type: "boolean" },
+      fuel: { type: "string" },
     },
   ),
 ];

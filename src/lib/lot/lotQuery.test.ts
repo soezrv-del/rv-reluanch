@@ -5,7 +5,8 @@ import { join } from "node:path";
 import { snapshotFromJson } from "../rvgrok/ownLotInventory.ts";
 import { answerQueryLotFromSnapshot } from "../rvgrok/lotMemory.ts";
 import { QUERY_LOT_TOOL } from "../rvgrok/liveVoice.ts";
-import { decideVoiceWebResearch } from "../rvgrok/voiceWeb.ts";
+import { decideVoiceWebResearch, formatVoiceWebSearchInjection } from "../rvgrok/voiceWeb.ts";
+import { needsWebFallback } from "../rvgrok/webIntent.ts";
 import { searchLot } from "./lotQuery.ts";
 import { searchLotUnits, singularizeLotToken } from "./lotSearch.ts";
 
@@ -214,7 +215,8 @@ test("fuel, spoken price, sort, and chassis match the lot sheet", () => {
   assert.equal(searchLot(snap.units, { query: "freightliner" }).matched, 34);
 
   const junk = searchLot(snap.units, { query: "diesel around a hundred thousand zzznomatch" });
-  assert.equal(junk.matched, 11);
+  assert.equal(junk.matched, 0);
+  assert.deepEqual(junk.ignored_terms, ["zzznomatch"]);
 
   const dollars = searchLot(snap.units, { query: "used diesel around $100,000" });
   assert.ok(dollars.matched > 0);
@@ -339,3 +341,83 @@ test("a sentence is read off the lot sheet, not turned into another coach", () =
   assert.match(byType.summary, /48 Class A Diesel/);
   assert.equal(byType.units[0]?.body_type, "Class A Diesel");
 });
+
+test("400 horsepower diesels come from the sheet, not a brochure", () => {
+  const snap = units();
+  const said = "do we have 400 horsepower diesels";
+  assert.equal(decideVoiceWebResearch({ transcript: said }).action, "pass");
+  assert.equal(needsWebFallback(null, said), false);
+  const hit = searchLot(snap.units, { query: said });
+  assert.deepEqual(
+    hit.units.map((unit) => unit.stock_number).sort(),
+    ["46539A", "UCO9965"],
+  );
+  assert.equal(hit.matched, 2);
+  assert.doesNotMatch(hit.summary, /4037|Dutch Star|Allegro Bus/i);
+  const answer = answerQueryLotFromSnapshot(snap, { query: said }, null, said);
+  assert.deepEqual(
+    answer.units.map((unit) => unit.stock_number).sort(),
+    ["46539A", "UCO9965"],
+  );
+  assert.match(answer.scraped_at || "", /\d{4}-\d{2}-\d{2}/);
+  assert.doesNotMatch(answer.speech, /4037|Dutch Star|Allegro Bus/i);
+});
+
+test("40 foot diesel pushers with king beds stay on the sheet", () => {
+  const hit = searchLot(units().units, {
+    query: "40 foot diesel pushers with king beds",
+  });
+  assert.ok(hit.matched > 0);
+  const stocks = hit.units.map((unit) => unit.stock_number);
+  assert.ok(stocks.includes("UCBGN9287A"));
+  assert.ok(stocks.includes("UPI9379"));
+  assert.equal(hit.did_you_mean, undefined);
+});
+
+test("8.9 liter matches only units that list that displacement", () => {
+  const snap = units();
+  const hit = searchLot(snap.units, { query: "8.9 liter" });
+  assert.ok(hit.matched > 0);
+  assert.ok(hit.matched < snap.units.length);
+  assert.ok(hit.units.every((unit) => {
+    const row = snap.units.find((item) => item.stock_number === unit.stock_number);
+    return /8\.9/.test(row?.printed?.displacement || "");
+  }));
+});
+
+test("an unmatched word with a diesel filter is a zero, not every diesel", () => {
+  const hit = searchLot(units().units, { query: "diesel zzznomatch" });
+  assert.equal(hit.matched, 0);
+  assert.deepEqual(hit.ignored_terms, ["zzznomatch"]);
+  assert.notEqual(hit.matched, 161);
+});
+
+test("a price follow-up after diesels keeps diesel", () => {
+  const snap = units();
+  const first = answerQueryLotFromSnapshot(snap, {}, null, "how many diesels do we have");
+  assert.equal(first.matched, 161);
+  assert.equal(first.lotMemory?.fuel, "diesel");
+  const next = answerQueryLotFromSnapshot(
+    snap,
+    {},
+    first.lotMemory,
+    "any of those around a hundred thousand",
+  );
+  assert.equal(next.lotMemory?.fuel, "diesel");
+  assert.equal(next.matched, 11);
+  assert.match(next.filter_label, /diesel/i);
+  assert.match(next.filter_label, /\$/);
+  assert.doesNotMatch(next.filter_label, /Class A/);
+});
+
+test("lot-turn web notes are not stock", () => {
+  const notes = formatVoiceWebSearchInjection(
+    { ok: true, notes: "2026 Ventana 4037 has a 400 hp Cummins.", model: "grok-4.7" },
+    { lotTurn: true },
+  );
+  assert.match(notes, /NOT RV Country stock/);
+  assert.match(notes, /Never name a coach from them as on the lot/);
+  assert.doesNotMatch(notes, /use these web notes/i);
+  assert.doesNotMatch(notes, /Never skip the answer because the match is not perfect/);
+});
+
