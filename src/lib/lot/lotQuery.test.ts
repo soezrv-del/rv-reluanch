@@ -376,3 +376,106 @@ test("a sentence is read off the lot sheet, not turned into another coach", () =
   assert.match(byType.summary, /48 Class A Diesel/);
   assert.equal(byType.units[0]?.body_type, "Class A Diesel");
 });
+
+test("a broad count is the whole lot, not a name search (#556 regression)", () => {
+  const snap = units();
+  const total = snap.units.length;
+  assert.ok(total > 0);
+  const asks = [
+    "how many RVs do we have on the lot right now",
+    "how many RVs on the lot",
+    "how many RVs total",
+    "how many units",
+    "how many coaches",
+  ];
+  for (const ask of asks) {
+    assert.equal(searchLot(snap.units, { query: ask }).matched, total, `searchLot ${ask}`);
+    for (const args of [{}, { query: "RVs" }, { query: ask }]) {
+      const answer = answerQueryLotFromSnapshot(snap, { ...args }, null, ask);
+      assert.equal(answer.matched, total, `${JSON.stringify(args)} + ${ask}`);
+      assert.equal(answer.none, false, ask);
+      assert.doesNotMatch(answer.speech, /No own-lot hit/, ask);
+    }
+  }
+});
+
+test("a broad count after a Lineage question drops the Lineage filter", () => {
+  const snap = units();
+  const lineage = answerQueryLotFromSnapshot(
+    snap,
+    { make: "Grand Design", model: "Lineage" },
+    null,
+    "how many Grand Design Lineages do we have",
+  );
+  assert.equal(lineage.matched, 27);
+  assert.equal(lineage.lotMemory?.filter.model, "Lineage");
+  for (const args of [{}, { query: "RVs" }]) {
+    const total = answerQueryLotFromSnapshot(
+      snap,
+      { ...args },
+      lineage.lotMemory,
+      "how many RVs do we have on the lot right now",
+    );
+    assert.equal(total.matched, snap.units.length, JSON.stringify(args));
+  }
+});
+
+test("a follow-up after a Lineage question keeps Lineage", () => {
+  const snap = units();
+  const lineage = answerQueryLotFromSnapshot(
+    snap,
+    { make: "Grand Design", model: "Lineage" },
+    null,
+    "how many Grand Design Lineages do we have",
+  );
+  assert.equal(lineage.matched, 27);
+  const follow = answerQueryLotFromSnapshot(
+    snap,
+    {},
+    lineage.lotMemory,
+    "how many of those are new",
+  );
+  assert.equal(follow.matched, 27);
+  assert.ok(follow.units.every((unit) => /lineage/i.test(unit.model)));
+  const fresno = answerQueryLotFromSnapshot(
+    snap,
+    {},
+    lineage.lotMemory,
+    "how many of them are at Fresno",
+  );
+  assert.ok(fresno.matched > 0 && fresno.matched < 27);
+  assert.ok(fresno.units.every((unit) => /lineage/i.test(unit.model)));
+});
+
+test("Grand Design Lineage stays 27 and Cruiser RV still finds Cruiser units", () => {
+  const snap = units();
+  assert.equal(searchLot(snap.units, { query: "Grand Design Lineage" }).matched, 27);
+  const cruiser = snap.units.filter((unit) => /^cruiser rv$/i.test(unit.make || ""));
+  assert.ok(cruiser.length > 0);
+  for (const args of [
+    { query: "Cruiser RV" },
+    { query: "how many Cruiser RVs do we have" },
+    { make: "Cruiser RV" },
+  ]) {
+    const hit = searchLot(snap.units, { ...args, limit: 24 });
+    assert.ok(hit.matched >= cruiser.length && hit.matched < 50, JSON.stringify(args));
+    const stocks = new Set(hit.units.map((unit) => unit.stock_number));
+    for (const unit of cruiser) assert.ok(stocks.has(unit.stock_number), JSON.stringify(args));
+  }
+});
+
+test("a make that is not on the lot still says none", () => {
+  const snap = units();
+  const miss = searchLot(snap.units, { query: "how many Newells do we have" });
+  assert.equal(miss.matched, 0);
+});
+
+test("400 hp still reads the horsepower figure off the sheet", () => {
+  const snap = units();
+  const phrased = searchLot(snap.units, {
+    query: "any RVs in our inventory that had a 400 horsepower",
+  });
+  const short = searchLot(snap.units, { query: "400 hp" });
+  assert.equal(short.matched, phrased.matched);
+  assert.ok(short.matched > 0 && short.matched < snap.units.length);
+});
