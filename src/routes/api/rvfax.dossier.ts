@@ -394,8 +394,8 @@ async function runTwoStepDossier(opts: {
   const coach = `${opts.year} ${opts.make} ${opts.model}${opts.floorplan ? ` floorplan ${opts.floorplan}` : " (NO FLOORPLAN SELECTED)"}`;
   const candidateBlock = formatCandidateBlock(opts.candidate, opts.year);
   const fpRule = opts.floorplan
-    ? `FLOORPLAN LOCK: Research floorplan "${opts.floorplan}" first. A saved pin for this plan is the best available answer. If none, use the closest saved pin for this model and year, otherwise web search. Aim for 85 to 90 percent accuracy. Do not present another floorplan's number as this plan. Do not average the model line. Keep the model year and fuel type (gas vs diesel).`
-    : `NO FLOORPLAN: No plan is selected. Use the closest saved pin for this model, otherwise web search. Aim for 85 to 90 percent accuracy. Do not invent a floorplan code.`;
+    ? `FLOORPLAN LOCK: Research floorplan "${opts.floorplan}" first. Use a saved pin only if it matches this floorplan; if not, say the number isn't verified yet and search. Never give a near match's number as this plan's. Do not present another floorplan's number as this plan. Do not average the model line. Keep the model year and fuel type (gas vs diesel).`
+    : `NO FLOORPLAN: No plan is selected. Do not invent a floorplan code. Say the number isn't verified until a floorplan is selected. Never give another plan's number as if a plan were chosen.`;
 
   if (plan.skipLive) {
     return {

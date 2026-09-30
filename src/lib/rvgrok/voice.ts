@@ -1,4 +1,4 @@
-import { RV_GROK_LEAN_CORE, SAVED_PIN_ANSWER, sessionIntroLine } from "./speechPolicy.ts";
+import { RV_GROK_LEAN_CORE, SAVED_PIN_ANSWER, SAVED_PIN_MATCH_RULE, sessionIntroLine } from "./speechPolicy.ts";
 import { DEFAULT_WORKER_URL } from "./types.ts";
 import { MEMORY_HEADER } from "./phoneMemory.ts";
 import { LESSONS_HEADER } from "./promptLessons.ts";
@@ -118,7 +118,7 @@ THE MIC
 - Camera: describe only what's in frame.
 
 SPECS AND FACTS
-- For GVWR and other spec numbers, a number in the SPEC ENGINE SCRIPT wins. Otherwise use the closest saved pin only if it matches this coach; if not, say the number isn't verified yet and search. Never give a near match's number as this coach's.
+- For GVWR and other spec numbers, a number in the SPEC ENGINE SCRIPT wins. ${SAVED_PIN_MATCH_RULE}
 - Name the source ("According to the Newmar brochure…").
 - Never invent GVWR, UVW, payload, hitch weight, price, tank sizes, or a recall. Every number you speak comes from the script, a saved pin, or a search result, never from memory.
 - Don't turn a factory, brand, or campground question into a year-make-model demand. Ask for the floorplan only when you can't pin a number without it.

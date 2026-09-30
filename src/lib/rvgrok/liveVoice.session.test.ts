@@ -294,5 +294,6 @@ test("live voice prompt says each rewritten rule once and drops the old ones", (
   assert.ok(words.length < 700, `base prompt is ${words.length} words`);
   assert.match(visitorPersonalizationBlock("David"), /Welcome them back/);
   assert.match(RV_SYSTEM_PROMPT, /one natural follow-up/);
-  assert.match(RV_SYSTEM_PROMPT, /85 to 90/);
+  assert.doesNotMatch(RV_SYSTEM_PROMPT, /85 to 90/);
+  assert.match(RV_SYSTEM_PROMPT, /closest saved pin only if it matches this coach/);
 });

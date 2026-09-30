@@ -143,9 +143,9 @@ test("Facts voice searches for specs; the session prompt matches the other scree
 });
 
 test("Facts spec wiring searches and keeps the lot tool; core prompt and model ids stay", () => {
-  assert.match(GROUNDING_RULES, /closest saved pin when one exists/);
-  assert.match(VOICE_MIC_RULES, /closest saved pin when one exists/);
-  assert.match(RV_GROK_LEAN_CORE, /closest saved pin when one exists/);
+  assert.match(GROUNDING_RULES, /closest saved pin only if it matches this coach/);
+  assert.match(VOICE_MIC_RULES, /closest saved pin only if it matches this coach/);
+  assert.match(RV_GROK_LEAN_CORE, /closest saved pin only if it matches this coach/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /the catalog pin in this turn wins/);
   assert.doesNotMatch(VOICE_MIC_RULES, /do not speak a weight/i);
   const api = readFileSync(join(root, "../../routes/api/rvgrok.ts"), "utf8");
@@ -168,7 +168,7 @@ test("Facts spec wiring searches and keeps the lot tool; core prompt and model i
   const live = readFileSync(join(root, "liveVoice.ts"), "utf8");
   assert.doesNotMatch(live, /applyFactsDelivery|voiceBrowseLine/);
   const speech = readFileSync(join(root, "speechPolicy.ts"), "utf8");
-  assert.match(speech, /closest saved pin when one exists/);
+  assert.match(speech, /closest saved pin only if it matches this coach/);
   assert.doesNotMatch(speech, /say that field is unverified/);
   const policy = readFileSync(join(root, "factsScreenPolicy.ts"), "utf8");
   assert.doesNotMatch(policy, /factsChatTools|factsStockCheckAllowed|classifyFactsTurn/);
