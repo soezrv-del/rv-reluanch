@@ -2419,6 +2419,14 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
 .lot-unit-title.is-featured {
   font-size: 1.125rem;
 }
+.lot-hit {
+  background: transparent;
+  color: inherit;
+  font-weight: 800;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+}
 .lot-unit-meta {
   margin: 0;
   max-width: 100%;

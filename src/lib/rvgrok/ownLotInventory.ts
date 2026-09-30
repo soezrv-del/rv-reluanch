@@ -47,7 +47,7 @@ import {
   parseOwnLotStockNumber,
   type OwnLotSort,
 } from "./ownLotAsk.ts";
-import { searchLotUnits } from "../lot/lotSearch.ts";
+import { indexLotUnits, searchLotUnits } from "../lot/lotSearch.ts";
 
 export {
   isBareFloorplanCode,
@@ -689,6 +689,7 @@ export function parseOwnLotUnits(json: unknown): OwnLotUnit[] {
     }
     units.push(unit);
   }
+  indexLotUnits(units);
   return units;
 }
 

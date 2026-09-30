@@ -4,10 +4,15 @@
  */
 
 import {
+  consumeSheetSpec,
+  displacementHits,
   lotTokenMatchesUnit,
   normalizeLotSearchQuery,
+  parseSheetHorsepower,
   singularizeLotToken,
+  spokenLengthBand,
   tokenizeLotQuery,
+  withoutCompanionBed,
   type LotSearchable,
 } from "./lotSearch.ts";
 
@@ -366,6 +371,7 @@ function identityTokens(phrase: string, places: Set<string>): string[] {
     if (!token || STOP.has(token)) continue;
     if (places.has(token)) continue;
     if (/^\d{1,2}$/.test(token)) continue;
+    if (/^\d{2}(?:ft|foot|feet|footer|footers)$/.test(token)) continue;
     if (token.length < 2 && !/\d/.test(token)) continue;
     out.push(token);
   }
@@ -420,87 +426,17 @@ function yearMatches(unit: LotQueryUnit, min?: number, max?: number): boolean {
   return true;
 }
 
-function sheetHorsepower(unit: LotQueryUnit): number | null {
-  const raw = (unit.printed?.horsepower || "").trim();
-  if (!raw) return null;
-  const plain = Number(raw.replace(/,/g, ""));
-  if (Number.isFinite(plain) && plain >= 100 && plain <= 800) return Math.round(plain);
-  const labeled = [...raw.matchAll(/\b(\d{2,4})\s*hp\b/gi)]
-    .map((hit) => Number(hit[1]))
-    .filter((n) => n >= 100 && n <= 800);
-  const unique = [...new Set(labeled)];
-  return unique.length === 1 ? unique[0]! : null;
-}
-
 function sheetDisplacement(unit: LotQueryUnit): string {
   return `${unit.printed?.displacement || ""} ${unit.printed?.engine || ""} ${unit.printed?.engine_type || ""}`.toLowerCase();
 }
 
-function displacementHits(blob: string, displacement: string): boolean {
-  return new RegExp(`(?<!\\d)${displacement.replace(".", "\\.")}(?!\\d)`).test(blob);
-}
-
 function powerMatches(unit: LotQueryUnit, horsepower?: number, displacement?: string): boolean {
   if (horsepower == null && !displacement) return true;
-  if (horsepower != null && sheetHorsepower(unit) !== horsepower) return false;
+  if (horsepower != null && parseSheetHorsepower(unit.printed?.horsepower || "") !== horsepower) {
+    return false;
+  }
   if (displacement && !displacementHits(sheetDisplacement(unit), displacement)) return false;
   return true;
-}
-
-function consumeSheetSpec(tokens: string[]): {
-  tokens: string[];
-  horsepower?: number;
-  displacement?: string;
-} {
-  const kept: string[] = [];
-  let horsepower: number | undefined;
-  let displacement: string | undefined;
-  const hpWord = (token: string) => token === "horsepower" || token === "hp";
-  const literWord = (token: string) => /^(?:liters?|litres?|l)$/.test(token);
-  const takeHp = (raw: string): number | undefined => {
-    const n = Number(raw);
-    return n >= 100 && n <= 800 ? n : undefined;
-  };
-  for (let i = 0; i < tokens.length; ) {
-    const token = tokens[i] || "";
-    const next = tokens[i + 1] || "";
-    const decimal = token.match(/^(\d{1,2}\.\d)l?$/);
-    if (decimal) {
-      displacement = decimal[1];
-      i += 1;
-      if (literWord(next)) i += 1;
-      continue;
-    }
-    const leading = token.match(/^(\d{2,4})$/);
-    if (leading && hpWord(next)) {
-      const n = takeHp(leading[1]!);
-      if (n != null) horsepower = n;
-      i += 2;
-      continue;
-    }
-    if (hpWord(token)) {
-      const following = next.match(/^(\d{2,4})$/);
-      if (following) {
-        const n = takeHp(following[1]!);
-        if (n != null) horsepower = n;
-        i += 2;
-        continue;
-      }
-      const previous = kept[kept.length - 1];
-      if (previous && /^\d{2,4}$/.test(previous)) {
-        const n = takeHp(previous);
-        if (n != null) {
-          horsepower = n;
-          kept.pop();
-        }
-      }
-      i += 1;
-      continue;
-    }
-    kept.push(token);
-    i += 1;
-  }
-  return { tokens: kept, horsepower, displacement };
 }
 
 function priceMatches(unit: LotQueryUnit, min?: number, max?: number): boolean {
@@ -583,7 +519,7 @@ function asSearchable(unit: LotQueryUnit): LotSearchable {
 }
 
 function tokenHitsIdentity(unit: LotQueryUnit, token: string): boolean {
-  return lotTokenMatchesUnit(asSearchable(unit), token);
+  return lotTokenMatchesUnit(unit, token);
 }
 
 function tokenIsCoachName(unit: LotQueryUnit, token: string): boolean {
@@ -1256,8 +1192,9 @@ function parseArgs(units: LotQueryUnit[], args: LotQueryArgs): Parsed {
   const sortedWords = consumeSort(priced.tokens);
   const fueled = consumeFuel(sortedWords.tokens);
   const spec = consumeSheetSpec(fueled.tokens);
+  const band = spokenLengthBand(statused.rest);
   const queryTokens = identityTokens(spec.tokens.join(" "), places);
-  const tokens = [...new Set([...queryTokens, ...fieldTokens])];
+  const tokens = withoutCompanionBed([...new Set([...queryTokens, ...fieldTokens])]);
   const namedPlaces = mentionedPlaces(statused.rest, places);
   const sortBy = str(args.sort) || sortedWords.sort || "";
   const sort =
@@ -1282,8 +1219,8 @@ function parseArgs(units: LotQueryUnit[], args: LotQueryArgs): Parsed {
     yearMax: num(args.year_max),
     priceMin: num(args.price_min) ?? priced.priceMin,
     priceMax: num(args.price_max) ?? priced.priceMax,
-    lengthMin: num(args.length_ft_min),
-    lengthMax: num(args.length_ft_max),
+    lengthMin: num(args.length_ft_min) ?? band.min,
+    lengthMax: num(args.length_ft_max) ?? band.max,
     fuel: fueled.fuel,
     close: fueled.close,
     horsepower: spec.horsepower,
