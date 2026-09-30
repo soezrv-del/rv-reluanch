@@ -242,7 +242,10 @@ test("the salesman's words beat a bad model filter on the first ask", () => {
     null,
     "how many diesels do we have",
   );
-  assert.equal(diesels.matched, 161);
+  // The model body stays. Spoken diesel adds fuel; it does not clear Class A.
+  assert.ok(diesels.matched > 0 && diesels.matched < 161);
+  assert.match(diesels.filter_label, /diesel/i);
+  assert.doesNotMatch(diesels.filter_label, /^all units$/);
   assert.doesNotMatch(diesels.summary || "", /web notes/i);
   assert.doesNotMatch(diesels.speech, /web notes/i);
 
@@ -268,10 +271,9 @@ test("the salesman's words beat a bad model filter on the first ask", () => {
   assert.equal(around.matched, 11);
   assert.doesNotMatch(around.speech, /web notes/i);
 
-  assert.equal(
-    searchLot(snap.units, { utterance: "deisel", body_type: "Class A" }).matched,
-    161,
-  );
+  const keptClass = searchLot(snap.units, { utterance: "deisel", body_type: "Class A" });
+  assert.ok(keptClass.matched > 0 && keptClass.matched < 161);
+  assert.equal(keptClass.close, "diesel");
   assert.equal(searchLot(snap.units, { utterance: "freightliner" }).matched, 34);
 
   const follow = answerQueryLotFromSnapshot(
@@ -478,4 +480,121 @@ test("400 hp still reads the horsepower figure off the sheet", () => {
   const short = searchLot(snap.units, { query: "400 hp" });
   assert.equal(short.matched, phrased.matched);
   assert.ok(short.matched > 0 && short.matched < snap.units.length);
+});
+
+test("category words are body filters, not a fuzzy name", () => {
+  const snap = units();
+  const total = snap.units.length;
+  const trailers = searchLot(snap.units, { query: "how many trailers" });
+  assert.equal(trailers.matched, 1053);
+  assert.equal(trailers.lot_total, total);
+  assert.match(
+    trailers.summary,
+    /Matching units: 1053\. 582 travel trailers, 256 fifth wheels, 94 travel trailer toy haulers, 88 fifth wheel toy haulers, plus 33 others\./,
+  );
+  assert.match(trailers.summary, /Top: \d{4} .+ stk \S+, \$[\d,]+/);
+  assert.equal(trailers.did_you_mean, undefined);
+  assert.equal(searchLot(snap.units, { query: "towables" }).matched, 1053);
+  assert.equal(searchLot(snap.units, { query: "pull behinds" }).matched, 1053);
+
+  const fivers = searchLot(snap.units, { query: "fivers" });
+  assert.equal(fivers.matched, 256);
+  assert.equal(fivers.counts.body_type["Fifth Wheel"], 256);
+  assert.equal(fivers.did_you_mean, undefined);
+  assert.doesNotMatch(fivers.summary, /River/i);
+  assert.equal(searchLot(snap.units, { query: "fifth wheels" }).matched, 256);
+  assert.equal(searchLot(snap.units, { query: "5th wheels" }).matched, 256);
+
+  const popups = searchLot(snap.units, { query: "pop ups" });
+  assert.equal(popups.matched, 3);
+  assert.equal(popups.did_you_mean, undefined);
+  assert.equal(searchLot(snap.units, { query: "popups" }).matched, 3);
+
+  const toys = searchLot(snap.units, { query: "toy haulers" });
+  assert.equal(toys.matched, 182);
+  assert.equal(toys.counts.body_type["Travel Trailer Toy Hauler"], 94);
+  assert.equal(toys.counts.body_type["Fifth Wheel Toy Hauler"], 88);
+
+  const gas = searchLot(snap.units, { query: "Class A gas" });
+  assert.equal(gas.matched, 60);
+  assert.equal(gas.counts.body_type["Class A"], 60);
+  assert.equal(gas.counts.body_type["Class A Diesel"], undefined);
+
+  const pushers = searchLot(snap.units, { query: "diesel pushers" });
+  assert.equal(pushers.matched, 48);
+  assert.equal(pushers.counts.body_type["Class A Diesel"], 48);
+  assert.equal(searchLot(snap.units, { query: "Class A diesel" }).matched, 48);
+
+  for (const ask of ["units", "coaches", "how many units", "how many coaches"]) {
+    const hit = searchLot(snap.units, { query: ask });
+    assert.equal(hit.matched, total, ask);
+    assert.equal(hit.did_you_mean, undefined, ask);
+  }
+  assert.equal(searchLot(snap.units, { query: "how many RVs on the lot" }).matched, total);
+  assert.equal(searchLot(snap.units, { query: "Lineage" }).matched, 27);
+  assert.ok(searchLot(snap.units, { query: "Cruiser RV" }).matched >= 9);
+  assert.equal(searchLot(snap.units, { query: "how many Newells" }).matched, 0);
+});
+
+test("follow-ups keep fuel, store, and the coach already named", () => {
+  const snap = units();
+  const usedAll = searchLot(snap.units, { query: "used" }).matched;
+  const fife = answerQueryLotFromSnapshot(snap, { query: "diesels in Fife" }, null);
+  assert.equal(fife.matched, 20);
+  assert.equal(fife.lot_total, snap.units.length);
+  assert.match(fife.filter_label, /diesel/i);
+  assert.match(fife.filter_label, /fife/i);
+  assert.doesNotMatch(fife.filter_label, /^all units$/);
+  assert.match(fife.summary || "", /Top: /);
+  const usedFife = answerQueryLotFromSnapshot(snap, {}, fife.lotMemory, "used ones");
+  assert.ok(usedFife.matched > 0 && usedFife.matched < usedAll);
+  assert.notEqual(usedFife.matched, usedAll);
+  assert.ok(usedFife.units.every((unit) => /fife/i.test(unit.location)));
+  assert.equal(usedFife.counts?.condition.Used, usedFife.matched);
+  assert.match(usedFife.filter_label, /diesel/i);
+  assert.match(usedFife.filter_label, /fife/i);
+  assert.match(usedFife.filter_label, /used/i);
+
+  const diesels = answerQueryLotFromSnapshot(snap, { query: "diesels" }, null);
+  assert.equal(diesels.matched, 161);
+  const cheap = answerQueryLotFromSnapshot(snap, {}, diesels.lotMemory, "the cheapest one");
+  assert.equal(cheap.units[0]?.price, 29995);
+  assert.ok(
+    cheap.units[0]?.stock_number === "28960E" || cheap.units[0]?.stock_number === "UPD9457A",
+  );
+  assert.match(cheap.summary || "", new RegExp(`stk ${cheap.units[0]?.stock_number}`));
+  assert.match(cheap.summary || "", /\$29,995/);
+  assert.doesNotMatch(cheap.summary || "", /Travel Trailer/);
+  const top = snap.units.find((unit) => unit.stock_number === cheap.units[0]?.stock_number);
+  const fuel = `${top?.printed?.fuel_type || ""} ${top?.printed?.fuel || ""} ${top?.printed?.engine || ""} ${top?.body_type || ""}`.toLowerCase();
+  assert.match(fuel, /\bdiesel\b/);
+
+  const lineage = answerQueryLotFromSnapshot(snap, { query: "Lineage" }, null);
+  assert.equal(lineage.matched, 27);
+  assert.match(lineage.lotMemory?.filter.model || "", /lineage/i);
+  const usedLineage = answerQueryLotFromSnapshot(
+    snap,
+    {},
+    lineage.lotMemory,
+    "how many of those are used",
+  );
+  assert.match(usedLineage.filter_label, /lineage/i);
+  assert.match(usedLineage.filter_label, /used/i);
+  assert.notEqual(usedLineage.matched, usedAll);
+  assert.ok(usedLineage.matched < 27);
+  const cheapestLineage = answerQueryLotFromSnapshot(
+    snap,
+    {},
+    lineage.lotMemory,
+    "the cheapest one",
+  );
+  assert.equal(cheapestLineage.matched, 27);
+  assert.ok(cheapestLineage.units.every((unit) => /lineage/i.test(unit.model)));
+  assert.match(cheapestLineage.summary || "", /Top: /);
+  assert.match(cheapestLineage.summary || "", /\$/);
+  assert.doesNotMatch(cheapestLineage.filter_label, /^all units$/);
+
+  for (const said of ["how many trailers", "fivers", "the cheapest one", "used ones"]) {
+    assert.equal(decideVoiceWebResearch({ transcript: said, lotFollowUp: true }).action, "pass", said);
+  }
 });

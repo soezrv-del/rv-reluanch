@@ -7,7 +7,6 @@
  */
 
 import {
-  filterLabel,
   ownLotIsUnavailable,
   parseOwnLotAsk,
   type OwnLotFilter,
@@ -19,7 +18,7 @@ import {
   lotQueryIsBareCount,
   reconcileLotArgs,
   searchLot,
-  spokenLotBody,
+  type LotQueryApplied,
   type LotQueryCounts,
 } from "../lot/lotQuery.ts";
 import {
@@ -33,6 +32,8 @@ export type LotMemory = {
   sort?: OwnLotSort;
   limit?: number;
   condition?: string;
+  /** Fuel carried across follow-ups. Not the Class A Diesel body proxy. */
+  fuel?: "" | "diesel" | "gas";
 };
 
 export type LotTurn = LotMemory & {
@@ -284,6 +285,8 @@ export type QueryLotAnswer = {
   close?: string;
   speech: string;
   lotMemory: LotMemory | null;
+  /** Units in the snapshot before this question's filters. */
+  lot_total?: number;
 };
 
 function structuredSubject(args: Record<string, unknown>): boolean {
@@ -294,11 +297,34 @@ function structuredSubject(args: Record<string, unknown>): boolean {
       str(args.condition) ||
       str(args.status) ||
       str(args.location) ||
+      str(args.fuel) ||
       num(args.year_min) != null ||
       num(args.year_max) != null ||
       num(args.price_min) != null ||
-      num(args.price_max) != null,
+      num(args.price_max) != null ||
+      num(args.length_ft_min) != null ||
+      num(args.length_ft_max) != null,
   );
+}
+
+function queryFilterLabel(applied: LotQueryApplied): string {
+  const bits = [
+    applied.condition,
+    applied.fuel,
+    applied.body_type,
+    applied.make,
+    applied.model,
+    applied.location,
+    applied.year_min != null ? `year ≥ ${applied.year_min}` : "",
+    applied.year_max != null ? `year ≤ ${applied.year_max}` : "",
+    applied.price_min != null ? `min $${applied.price_min}` : "",
+    applied.price_max != null ? `max $${applied.price_max}` : "",
+    applied.length_ft_min != null ? `length ≥ ${applied.length_ft_min} ft` : "",
+    applied.length_ft_max != null ? `length ≤ ${applied.length_ft_max} ft` : "",
+    applied.horsepower != null ? `${applied.horsepower} horsepower` : "",
+    applied.displacement ? `displacement ${applied.displacement}` : "",
+  ].filter(Boolean);
+  return bits.length ? bits.join(" · ") : "all units";
 }
 
 export function answerQueryLotFromSnapshot(
@@ -330,108 +356,158 @@ export function answerQueryLotFromSnapshot(
     args.price_max = args.maxPrice ?? args.priceMax;
   }
   const query = str(args.query);
-  const fresh = lotQueryHasSubject(query) || structuredSubject(args);
   const spoken = str(utterance) || str(args.utterance);
-  const followUp = Boolean(spoken && previous && looksLikeOwnLotFollowUp(spoken));
+  const text = spoken || query;
+  const saidRank = parseLotRank(text);
+  const toolRank = rankFromToolArgs(args);
+  const sort = toolRank.sort ?? saidRank.sort;
+  const hasIdentityArg = Boolean(
+    str(args.make) ||
+      str(args.model) ||
+      str(args.body_type) ||
+      str(args.location) ||
+      str(args.fuel),
+  );
+  const hasConstraintArg =
+    num(args.year_min) != null ||
+    num(args.year_max) != null ||
+    num(args.price_min) != null ||
+    num(args.price_max) != null ||
+    num(args.length_ft_min) != null ||
+    num(args.length_ft_max) != null ||
+    Boolean(str(args.condition));
+  const textHasSubject = Boolean(
+    (query && lotQueryHasSubject(query)) || (spoken && lotQueryHasSubject(spoken)),
+  );
+  const isBare =
+    !hasIdentityArg &&
+    !hasConstraintArg &&
+    !sort &&
+    !saidRank.sort &&
+    lotQueryIsBareCount(query || text) &&
+    (!text || lotQueryIsBareCount(text));
+  // A follow-up, or a sort/length/price tool call with no new coach, keeps
+  // the last filter. A bare "how many RVs" does not.
+  const followUp = Boolean(
+    previous &&
+      !isBare &&
+      (looksLikeOwnLotFollowUp(text) || (!textHasSubject && !hasIdentityArg)),
+  );
+  const limit =
+    toolRank.limit ?? saidRank.limit ?? (followUp ? previous?.limit : undefined) ?? 12;
+  const fresh = !followUp && !isBare && (textHasSubject || structuredSubject(args));
   // A bare count ("how many RVs do we have on the lot right now") names no
   // filter and does not follow up on the last one: count the whole lot, as
   // before #556. Do not search the spoken words or carry a stale filter.
-  const bareCount =
-    !fresh &&
-    !followUp &&
-    !rankFromToolArgs(args).sort &&
-    lotQueryIsBareCount(query) &&
-    (!spoken || lotQueryIsBareCount(spoken)) &&
-    Boolean(spoken || !previous);
-  const turn = bareCount
-    ? { filter: {}, limit: rankFromToolArgs(args).limit, carried: false, replaced: Boolean(previous) }
-    : fresh
-      ? {
-          filter: filterFromToolArgs(args),
-          ...rankFromToolArgs(args),
-          carried: false,
-          replaced: Boolean(previous),
-        }
-      : mergeToolCall(args, previous);
-  const limit = turn.limit ?? 12;
+  const bareCount = isBare && Boolean(text || !previous);
+  const carried = followUp ? previous : null;
   const searchArgs = reconcileLotArgs({
-    query: bareCount ? "" : fresh ? query : spoken || query,
-    make: turn.filter.make,
-    model: [turn.filter.model, turn.filter.trim].filter(Boolean).join(" "),
-    body_type: turn.filter.bodyType,
-    condition: str(args.condition),
+    query: bareCount ? "" : text,
+    make: str(args.make) || carried?.filter.make,
+    model:
+      str(args.model) ||
+      [carried?.filter.model, carried?.filter.trim].filter(Boolean).join(" "),
+    body_type: str(args.body_type) || carried?.filter.bodyType,
+    condition: str(args.condition) || (followUp ? carried?.condition : ""),
     status: str(args.status),
-    location: turn.filter.location,
-    year_min: turn.filter.yearMin ?? (turn.filter.year ? Number(turn.filter.year) : undefined),
-    year_max: turn.filter.yearMax ?? (turn.filter.year ? Number(turn.filter.year) : undefined),
-    price_min: num(args.price_min) ?? turn.filter.minPrice,
-    price_max: num(args.price_max) ?? turn.filter.maxPrice,
+    location: str(args.location) || carried?.filter.location,
+    fuel: str(args.fuel) || (followUp ? carried?.fuel : ""),
+    year_min:
+      num(args.year_min) ??
+      carried?.filter.yearMin ??
+      (carried?.filter.year ? Number(carried.filter.year) : undefined),
+    year_max:
+      num(args.year_max) ??
+      carried?.filter.yearMax ??
+      (carried?.filter.year ? Number(carried.filter.year) : undefined),
+    price_min: num(args.price_min) ?? carried?.filter.minPrice,
+    price_max: num(args.price_max) ?? carried?.filter.maxPrice,
     length_ft_min:
-      turn.filter.lengthFtMin ??
-      (turn.filter.aroundLengthFt != null
-        ? turn.filter.aroundLengthFt - 2
-        : turn.filter.minLengthFt),
+      num(args.length_ft_min) ??
+      carried?.filter.lengthFtMin ??
+      (carried?.filter.aroundLengthFt != null
+        ? carried.filter.aroundLengthFt - 2
+        : carried?.filter.minLengthFt),
     length_ft_max:
-      turn.filter.lengthFtMax ??
-      (turn.filter.aroundLengthFt != null
-        ? turn.filter.aroundLengthFt + 2
-        : turn.filter.maxLengthFt),
-    sort: turn.sort?.by,
-    order: turn.sort?.dir,
+      num(args.length_ft_max) ??
+      carried?.filter.lengthFtMax ??
+      (carried?.filter.aroundLengthFt != null
+        ? carried.filter.aroundLengthFt + 2
+        : carried?.filter.maxLengthFt),
+    sort: sort?.by,
+    order: sort?.dir,
     limit,
-    ...(spoken && !bareCount
+    ...(text && !bareCount
       ? {
-          utterance: spoken,
+          utterance: text,
           follow_up: followUp,
-          carry_body_type: previous?.filter.bodyType,
-          carry_condition: previous?.condition,
-          carry_price_min: previous?.filter.minPrice,
-          carry_price_max: previous?.filter.maxPrice,
-          carry_make: previous?.filter.make,
-          carry_model: previous?.filter.model,
+          carry_body_type: carried?.filter.bodyType,
+          carry_condition: carried?.condition,
+          carry_price_min: carried?.filter.minPrice,
+          carry_price_max: carried?.filter.maxPrice,
+          carry_make: carried?.filter.make,
+          carry_model: carried?.filter.model,
+          carry_fuel: carried?.fuel,
+          carry_location: carried?.filter.location,
+          carry_year_min: carried?.filter.yearMin,
+          carry_year_max: carried?.filter.yearMax,
+          carry_length_ft_min: carried?.filter.lengthFtMin,
+          carry_length_ft_max: carried?.filter.lengthFtMax,
         }
       : {}),
   });
-  const saidBody = spokenLotBody(spoken);
-  const saidCondition = /\bused\b/i.test(spoken)
-    ? "used"
-    : /\bnew\b/i.test(spoken)
-      ? "new"
-      : "";
-  const memory: LotMemory = {
-    filter: {
-      ...turn.filter,
-      bodyType: saidBody || (followUp ? previous?.filter.bodyType : searchArgs.body_type) || undefined,
-      make: searchArgs.make || undefined,
-      model: searchArgs.model || undefined,
-      minPrice: searchArgs.price_min,
-      maxPrice: searchArgs.price_max,
-    },
-    sort:
-      searchArgs.sort === "price" ||
-      searchArgs.sort === "length" ||
-      searchArgs.sort === "year" ||
-      searchArgs.sort === "type"
-        ? { by: searchArgs.sort, dir: searchArgs.order === "desc" ? "desc" : "asc" }
-        : turn.sort,
-    limit,
-    ...(saidCondition
-      ? { condition: saidCondition }
-      : followUp && previous?.condition
-        ? { condition: previous.condition }
-        : {}),
-  };
-  const found = searchLot(snapshot.units, searchArgs);
+  const found = searchLot(snapshot.units, bareCount ? { limit } : searchArgs);
+  const applied = found.applied;
+  const memory: LotMemory = bareCount
+    ? { filter: {}, limit }
+    : {
+        filter: {
+          ...(str(searchArgs.make) || applied.make
+            ? { make: str(searchArgs.make) || applied.make }
+            : {}),
+          ...(str(searchArgs.model) || applied.model
+            ? { model: str(searchArgs.model) || applied.model }
+            : {}),
+          ...(applied.body_type ? { bodyType: applied.body_type } : {}),
+          ...(applied.location ? { location: applied.location } : {}),
+          ...(applied.year_min != null ? { yearMin: applied.year_min } : {}),
+          ...(applied.year_max != null ? { yearMax: applied.year_max } : {}),
+          ...(applied.price_min != null ? { minPrice: applied.price_min } : {}),
+          ...(applied.price_max != null ? { maxPrice: applied.price_max } : {}),
+          ...(applied.length_ft_min != null ? { lengthFtMin: applied.length_ft_min } : {}),
+          ...(applied.length_ft_max != null ? { lengthFtMax: applied.length_ft_max } : {}),
+        },
+        ...(applied.fuel ? { fuel: applied.fuel } : {}),
+        ...(applied.condition ? { condition: applied.condition } : {}),
+        ...(searchArgs.sort === "price" ||
+        searchArgs.sort === "length" ||
+        searchArgs.sort === "year" ||
+        searchArgs.sort === "type"
+          ? {
+              sort: {
+                by: searchArgs.sort,
+                dir: searchArgs.order === "desc" ? ("desc" as const) : ("asc" as const),
+              },
+            }
+          : followUp && previous?.sort
+            ? { sort: previous.sort }
+            : {}),
+        limit,
+      };
   let speech = found.summary;
   if (found.no_length.length) {
     const stocks = found.no_length.map((unit) => `stk ${unit.stock_number}`).join(", ");
     speech = `${speech} No length on file (not guessed): ${stocks}.`;
   }
+  let filter_label = bareCount ? "all units" : queryFilterLabel(applied);
+  if (!bareCount && filter_label === "all units" && found.matched !== found.lot_total) {
+    filter_label = applied.model || applied.body_type || "filtered";
+  }
   return {
     ok: true,
     none: found.matched === 0,
     matched: found.matched,
-    filter_label: filterLabel(turn.filter),
+    filter_label,
     counts: found.counts,
     units: found.units.map((unit) => ({
       ...unit,
@@ -444,5 +520,6 @@ export function answerQueryLotFromSnapshot(
     ...(found.close ? { close: found.close } : {}),
     speech,
     lotMemory: memory,
+    lot_total: found.lot_total,
   };
 }

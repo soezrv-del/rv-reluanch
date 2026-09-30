@@ -516,6 +516,7 @@ export class GrokRealtimeSession {
           (msg as { transcript?: string }).transcript || "",
         );
         if (transcript) {
+          this.lastUserTranscript = transcript;
           this.handlers.onUserTranscript(transcript);
           this.handlers.onUserTurnDone?.(transcript);
           void this.maybeEnrichWithWebResearch(transcript);
@@ -1266,7 +1267,9 @@ export class GrokRealtimeSession {
 
   private async maybeEnrichWithWebResearch(transcript: string) {
     const spoken = transcript;
-    this.lastUserTranscript = spoken;
+    // Real user speech sets lastUserTranscript in the transcription handler.
+    // Replay paths call this with an older coach query and must not replace
+    // the utterance the lot tool will read.
     this.recentUserTurns.push(spoken);
     if (this.recentUserTurns.length > 12) this.recentUserTurns.shift();
     const priorTurns = this.recentUserTurns.slice(0, -1);
@@ -1600,7 +1603,7 @@ export class GrokRealtimeSession {
           response: {
             modalities: ["text", "audio"],
             instructions: inventoryTurn
-              ? `${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}\n\nThis turn is a lot question. Speak the Lot total and any listed unit. If the block says none, say none. Do not invent a coach, price, or store. If a floorplan breakdown is printed, say it once and do not recount. Do not keep a store from an earlier turn unless that store is on a unit line.`
+              ? `This turn is a lot question. Speak the listed unit in plain words. If the block says none, say none. Do not invent a coach, price, or store. If a floorplan breakdown is printed, say it once and do not recount. Do not keep a store from an earlier turn unless that store is on a unit line. Do not mention web notes or read raw tool fields.`
               : plantTurn
                 ? `${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}\n\nThis is a factory or company question, not a coach. Answer it in full. Do not stop after the factory's name. Do not ask for a year, make, model, or floorplan.`
                 : looksLikeRepairQuestion(this.lastResearchTranscript)

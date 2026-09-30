@@ -61,8 +61,10 @@ export type LotQueryArgs = {
   order?: string;
   limit?: number;
   /**
-   * The salesman's raw words. When set, they win over model-invented
-   * class, condition, price, make, and sort.
+   * The salesman's raw words. They add a filter the model left blank.
+   * They do not drop body, fuel, location, year, length, or price the
+   * model already set. Make and model still have to be in the words on a
+   * fresh ask, so "coaches" cannot stick as Coachmen.
    */
   utterance?: string;
   follow_up?: boolean;
@@ -72,6 +74,14 @@ export type LotQueryArgs = {
   carry_price_max?: number;
   carry_make?: string;
   carry_model?: string;
+  carry_fuel?: string;
+  carry_location?: string;
+  carry_year_min?: number;
+  carry_year_max?: number;
+  carry_length_ft_min?: number;
+  carry_length_ft_max?: number;
+  /** diesel or gas. Spoken fuel fills this when the model left it blank. */
+  fuel?: string;
 };
 
 export type LotQueryRow = {
@@ -108,6 +118,27 @@ export type LotQueryResult = {
   did_you_mean?: string;
   /** Set when a one-edit fuel word (deisel → diesel) returned those units. */
   close?: string;
+  /** Units in the snapshot that was searched, before filters. */
+  lot_total: number;
+  /** Filters the search actually applied. Memory and filter_label read this. */
+  applied: LotQueryApplied;
+};
+
+export type LotQueryApplied = {
+  body_type: string;
+  condition: string;
+  location: string;
+  fuel: "" | "diesel" | "gas";
+  year_min?: number;
+  year_max?: number;
+  price_min?: number;
+  price_max?: number;
+  length_ft_min?: number;
+  length_ft_max?: number;
+  make: string;
+  model: string;
+  horsepower?: number;
+  displacement?: string;
 };
 
 type BodySpec =
@@ -192,6 +223,7 @@ const STOP = new Set([
   "oldest",
   "on",
   "ones",
+  "one",
   "or",
   "order",
   "our",
@@ -262,13 +294,32 @@ function take(phrase: string, re: RegExp): { hit: boolean; rest: string } {
   };
 }
 
+const TOWABLE_LABELS = [
+  "Travel Trailer",
+  "Fifth Wheel",
+  "Travel Trailer Toy Hauler",
+  "Fifth Wheel Toy Hauler",
+  "Destination Trailer",
+  "Popup",
+  "Popup Trailer",
+];
+
+const POPUP_LABELS = ["Popup", "Popup Trailer"];
+
+function sameLabelSet(labels: string[], expected: string[]): boolean {
+  if (labels.length !== expected.length) return false;
+  const have = new Set(labels);
+  return expected.every((label) => have.has(label));
+}
+
 export function bodySpecFromText(raw: string): { spec: BodySpec; rest: string } {
   let rest = normalizeLotQueryText(raw);
   const motor = take(rest, /\bmotorhome\b/);
   if (motor.hit) return { spec: { kind: "motorhome" }, rest: motor.rest };
 
+  // Specific body phrases before the generic "trailer" / "towable" bucket.
   const toy = take(rest, /\btoy hauler\b/);
-  const fifth = take(toy.rest, /\bfifth wheel\b/);
+  const fifth = take(toy.rest, /\b(?:fifth wheel|5th wheel|fiver)\b/);
   const travel = take(fifth.rest, /\btravel trailer\b/);
   rest = travel.rest;
   if (toy.hit && fifth.hit) {
@@ -281,17 +332,23 @@ export function bodySpecFromText(raw: string): { spec: BodySpec; rest: string } 
   if (fifth.hit) return { spec: { kind: "labels", labels: ["Fifth Wheel"] }, rest };
   if (travel.hit) return { spec: { kind: "labels", labels: ["Travel Trailer"] }, rest };
 
+  const popup = take(rest, /\b(?:popup|pop ups|pop up)\b/);
+  if (popup.hit) {
+    return { spec: { kind: "labels", labels: [...POPUP_LABELS] }, rest: popup.rest };
+  }
+
   const superC = take(rest, /\b(?:class\s+)?super c\b/);
   if (superC.hit) {
     return { spec: { kind: "labels", labels: ["Class Super C"] }, rest: superC.rest };
   }
-  const diesel = take(rest, /\bclass a diesel\b/);
+  const diesel = take(rest, /\b(?:class a diesel|diesel pusher)\b/);
   if (diesel.hit) {
     return { spec: { kind: "labels", labels: ["Class A Diesel"] }, rest: diesel.rest };
   }
   const gas = take(rest, /\bclass a gas\b/);
   if (gas.hit) {
-    return { spec: { kind: "labels", labels: ["Class A Gas"] }, rest: gas.rest };
+    // The scrape prints a gas Class A as "Class A", not "Class A Gas".
+    return { spec: { kind: "labels", labels: ["Class A"] }, rest: gas.rest };
   }
   const classA = take(rest, /\bclass a\b/);
   if (classA.hit) {
@@ -310,6 +367,11 @@ export function bodySpecFromText(raw: string): { spec: BodySpec; rest: string } 
       spec: { kind: "labels", labels: ["Class C", "Class Super C"] },
       rest: classC.rest,
     };
+  }
+
+  const towable = take(rest, /\b(?:towable|pull behind|trailer)\b/);
+  if (towable.hit) {
+    return { spec: { kind: "labels", labels: [...TOWABLE_LABELS] }, rest: towable.rest };
   }
   return { spec: { kind: "any" }, rest };
 }
@@ -720,28 +782,59 @@ function sharedLeadingWord(models: string[]): string {
   return heads.every((head) => head.toLowerCase() === first.toLowerCase()) ? first : "";
 }
 
+function formatUsd(price: number | null | undefined): string {
+  if (price == null || !Number.isFinite(price)) return "";
+  const rounded = Math.round(price);
+  const sign = rounded < 0 ? "-" : "";
+  const digits = String(Math.abs(rounded));
+  const withCommas = digits.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return `${sign}$${withCommas}`;
+}
+
+function topClause(unit: LotQueryUnit | undefined): string {
+  if (!unit) return "";
+  const name = [unit.year, unit.make, unit.model].filter(Boolean).join(" ");
+  const stock = unit.stock_number ? `stk ${unit.stock_number}` : "";
+  const price = formatUsd(unit.price);
+  const bits = [name, stock, price].filter(Boolean);
+  if (!bits.length) return "";
+  return ` Top: ${bits.join(", ")}.`;
+}
+
 function oneLine(
   matched: LotQueryUnit[],
   counts: LotQueryCounts,
   body: BodySpec,
   didYouMean?: string,
   sort?: Parsed["sort"],
+  top?: LotQueryUnit,
 ): string {
   if (!matched.length && didYouMean) return `None. Did you mean ${didYouMean}?`;
   if (!matched.length) return "None.";
+  const topBit = matched.length > 1 ? topClause(top) : "";
+  if (body.kind === "labels" && sameLabelSet(body.labels, TOWABLE_LABELS) && matched.length > 1) {
+    const travel = counts.body_type["Travel Trailer"] || 0;
+    const fifth = counts.body_type["Fifth Wheel"] || 0;
+    const travelToy = counts.body_type["Travel Trailer Toy Hauler"] || 0;
+    const fifthToy = counts.body_type["Fifth Wheel Toy Hauler"] || 0;
+    const others = matched.length - (travel + fifth + travelToy + fifthToy);
+    return `Matching units: ${matched.length}. ${travel} travel trailers, ${fifth} fifth wheels, ${travelToy} travel trailer toy haulers, ${fifthToy} fifth wheel toy haulers, plus ${others} others.${topBit}`;
+  }
   if (sort === "type" && matched.length > 1) {
     const rows = Object.entries(counts.body_type).sort((a, b) => {
       const rank = typeRank(a[0]) - typeRank(b[0]);
       return rank !== 0 ? rank : b[1] - a[1];
     });
     const list = rows.map(([name, n]) => `${n} ${name}`).join(", ");
-    return `Matching units: ${matched.length}. By type: ${list}.`;
+    return `Matching units: ${matched.length}. By type: ${list}.${topBit}`;
   }
   if (matched.length === 1) {
     const unit = matched[0]!;
     const name = [unit.year, unit.make, unit.model, unit.trim].filter(Boolean).join(" ");
+    const price = formatUsd(unit.price);
+    const priceBit = price ? `, ${price}` : "";
     const status = unit.lot_status ? `, ${unit.lot_status}` : "";
-    return `Matching units: 1 ${name}, stk ${unit.stock_number}${status}.`;
+    return `Matching units: 1 ${name}, stk ${unit.stock_number}${priceBit}${status}.`;
   }
   const classC = counts.body_type["Class C"] || 0;
   const superC = counts.body_type["Class Super C"] || 0;
@@ -751,7 +844,7 @@ function oneLine(
     body.labels.includes("Class Super C") &&
     classC + superC === matched.length
   ) {
-    return `Matching units: ${matched.length} Class C on the lot, ${classC} Class C and ${superC} Class Super C.`;
+    return `Matching units: ${matched.length} Class C on the lot, ${classC} Class C and ${superC} Class Super C.${topBit}`;
   }
   const models = Object.keys(counts.model);
   const makes = tally(matched, (unit) => unit.make || "");
@@ -766,7 +859,7 @@ function oneLine(
         : "";
   const cond = conditions.length === 1 ? `, all ${conditions[0]!.toLowerCase()}` : "";
   const label = name ? ` ${name}` : "";
-  return `Matching units: ${matched.length}${label}${cond}.`;
+  return `Matching units: ${matched.length}${label}${cond}.${topBit}`;
 }
 
 const SMALL_NUMBER: Record<string, number> = {
@@ -1116,15 +1209,23 @@ function stripCarry(args: LotQueryArgs): LotQueryArgs {
     carry_price_max: _priceMax,
     carry_make: _make,
     carry_model: _model,
+    carry_fuel: _fuel,
+    carry_location: _location,
+    carry_year_min: _yearMin,
+    carry_year_max: _yearMax,
+    carry_length_ft_min: _lengthMin,
+    carry_length_ft_max: _lengthMax,
     ...rest
   } = args;
   return rest;
 }
 
-/** Body class the salesman actually said. Empty when they named none. */
-export function spokenLotBody(raw: string): string {
-  const spec = bodySpecFromText(raw).spec;
+/** A token bodySpecFromText can parse back into the same set. */
+function bodySpecLabel(spec: BodySpec): string {
   if (spec.kind === "labels") {
+    if (sameLabelSet(spec.labels, TOWABLE_LABELS)) return "towable";
+    if (sameLabelSet(spec.labels, POPUP_LABELS)) return "popup";
+    if (spec.labels.length === 1 && spec.labels[0] === "Class A") return "Class A gas";
     if (
       spec.labels.includes("Class C") &&
       spec.labels.includes("Class Super C") &&
@@ -1140,18 +1241,31 @@ export function spokenLotBody(raw: string): string {
   return "";
 }
 
+/** Body class the salesman actually said. Empty when they named none. */
+export function spokenLotBody(raw: string): string {
+  return bodySpecLabel(bodySpecFromText(raw).spec);
+}
+
 /**
- * Raw words win. A class, condition, price band, make, or sort the model
- * added on its own is dropped. A follow-up that names no new class keeps
- * the class already in the conversation.
+ * Spoken words fill filters the model left blank. They replace only the
+ * filter they name. Body, fuel, location, year, length, and price the
+ * model passed stay when the words do not name a different one.
+ * A fresh make or model that is not in the words is still dropped so
+ * "coaches" and "RVs" cannot stick as Coachmen.
  */
 export function reconcileLotArgs(args: LotQueryArgs = {}): LotQueryArgs {
   const loose = args as LooseArgs;
   const base: LotQueryArgs = {
     ...args,
     body_type: looseStr(loose, "body_type", "bodyType"),
+    fuel: looseStr(loose, "fuel"),
+    location: looseStr(loose, "location"),
     price_min: looseNum(loose, "price_min", "minPrice", "priceMin"),
     price_max: looseNum(loose, "price_max", "maxPrice", "priceMax"),
+    year_min: looseNum(loose, "year_min", "yearMin"),
+    year_max: looseNum(loose, "year_max", "yearMax"),
+    length_ft_min: looseNum(loose, "length_ft_min", "lengthFtMin"),
+    length_ft_max: looseNum(loose, "length_ft_max", "lengthFtMax"),
   };
   const utterance = str(args.utterance);
   if (!utterance) return stripCarry(base);
@@ -1163,27 +1277,59 @@ export function reconcileLotArgs(args: LotQueryArgs = {}): LotQueryArgs {
   const priced = consumePrice(words);
   const saidPrice = priced.priceMin != null || priced.priceMax != null;
   const sorted = consumeSort(priced.tokens);
+  const fueled = consumeFuel(sorted.tokens);
+  const band = spokenLengthBand(utterance);
   const said = normalizeLotQueryText(utterance);
   const next: LotQueryArgs = { ...stripCarry(base), query: utterance };
 
   if (saidBody) next.body_type = "";
-  else if (followUp && str(args.carry_body_type)) next.body_type = str(args.carry_body_type);
-  else next.body_type = "";
+  else if (!str(next.body_type) && followUp && str(args.carry_body_type)) {
+    next.body_type = str(args.carry_body_type);
+  }
 
   if (saidCondition === "new" || saidCondition === "used") next.condition = saidCondition;
-  else if (followUp && (args.carry_condition === "new" || args.carry_condition === "used")) {
+  else if (
+    !str(next.condition) &&
+    followUp &&
+    (args.carry_condition === "new" || args.carry_condition === "used")
+  ) {
     next.condition = args.carry_condition;
-  } else next.condition = "";
+  }
 
   if (saidPrice) {
     next.price_min = priced.priceMin;
     next.price_max = priced.priceMax;
-  } else if (followUp && (args.carry_price_min != null || args.carry_price_max != null)) {
+  } else if (next.price_min == null && next.price_max == null && followUp) {
     next.price_min = args.carry_price_min;
     next.price_max = args.carry_price_max;
-  } else {
-    next.price_min = undefined;
-    next.price_max = undefined;
+  }
+
+  if (fueled.fuel) next.fuel = fueled.fuel;
+  else if (
+    !str(next.fuel) &&
+    followUp &&
+    (args.carry_fuel === "diesel" || args.carry_fuel === "gas")
+  ) {
+    next.fuel = args.carry_fuel;
+  }
+
+  if (!str(next.location) && followUp && str(args.carry_location)) {
+    next.location = str(args.carry_location);
+  }
+
+  if (band.min != null || band.max != null) {
+    next.length_ft_min = band.min;
+    next.length_ft_max = band.max;
+  } else if (next.length_ft_min == null && next.length_ft_max == null && followUp) {
+    next.length_ft_min = args.carry_length_ft_min;
+    next.length_ft_max = args.carry_length_ft_max;
+  }
+
+  if (next.year_min == null && followUp && args.carry_year_min != null) {
+    next.year_min = args.carry_year_min;
+  }
+  if (next.year_max == null && followUp && args.carry_year_max != null) {
+    next.year_max = args.carry_year_max;
   }
 
   if (sorted.sort) {
@@ -1193,11 +1339,11 @@ export function reconcileLotArgs(args: LotQueryArgs = {}): LotQueryArgs {
 
   const make = str(base.make);
   if (make && !said.includes(normalizeLotQueryText(make))) {
-    next.make = followUp && !saidBody ? str(args.carry_make) : "";
+    next.make = followUp ? str(args.carry_make) || make : "";
   }
   const model = str(base.model);
   if (model && !said.includes(normalizeLotQueryText(model))) {
-    next.model = followUp && !saidBody ? str(args.carry_model) : "";
+    next.model = followUp ? str(args.carry_model) || model : "";
   }
   return next;
 }
@@ -1223,6 +1369,8 @@ function parseArgs(units: LotQueryUnit[], args: LotQueryArgs): Parsed {
   const queryTokens = identityTokens(bedded.tokens.join(" "), places);
   const tokens = [...new Set([...queryTokens, ...fieldTokens])];
   const namedPlaces = mentionedPlaces(statused.rest, places);
+  const argFuel = str(args.fuel).toLowerCase();
+  const carriedFuel = argFuel === "diesel" || argFuel === "gas" ? argFuel : "";
   const sortBy = str(args.sort) || sortedWords.sort || "";
   const sort =
     sortBy === "price" || sortBy === "length" || sortBy === "year" || sortBy === "type"
@@ -1239,7 +1387,8 @@ function parseArgs(units: LotQueryUnit[], args: LotQueryArgs): Parsed {
     body,
     condition: conditioned.condition,
     status: statused.status,
-    location: str(args.location),
+    // A place named in this question replaces a carried store. Otherwise keep it.
+    location: namedPlaces.length ? "" : str(args.location),
     places: namedPlaces,
     tokens,
     yearMin: num(args.year_min),
@@ -1248,7 +1397,7 @@ function parseArgs(units: LotQueryUnit[], args: LotQueryArgs): Parsed {
     priceMax: num(args.price_max) ?? priced.priceMax,
     lengthMin: num(args.length_ft_min) ?? band.min,
     lengthMax: num(args.length_ft_max) ?? band.max,
-    fuel: fueled.fuel,
+    fuel: fueled.fuel || carriedFuel,
     close: fueled.close,
     horsepower: spec.horsepower,
     displacement: spec.displacement,
@@ -1467,6 +1616,28 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
       return cmp !== 0 ? cmp : a.index - b.index;
     })
     .map((row) => row.unit);
+  const nameTokens = parsed.tokens.filter((token) =>
+    matched.some((unit) => tokenIsCoachName(unit, token)),
+  );
+  const applied: LotQueryApplied = {
+    body_type: bodySpecLabel(parsed.body),
+    condition: parsed.condition,
+    location: parsed.location || parsed.places.join(" "),
+    fuel: parsed.fuel,
+    year_min: parsed.yearMin,
+    year_max: parsed.yearMax,
+    price_min: parsed.priceMin,
+    price_max: parsed.priceMax,
+    length_ft_min: parsed.lengthMin,
+    length_ft_max: parsed.lengthMax,
+    make: str(clean.make),
+    model:
+      str(clean.model) ||
+      nameTokens.join(" ") ||
+      (matched.length ? "" : parsed.tokens.join(" ")),
+    horsepower: parsed.horsepower,
+    displacement: parsed.displacement,
+  };
   return {
     ok: true,
     matched: matched.length,
@@ -1475,10 +1646,16 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
     units: sorted.slice(0, parsed.limit).map(toRow),
     no_length: noLength.map(toRow),
     summary: specSummary(
-      closeLine(oneLine(matched, counts, parsed.body, didYouMean, parsed.sort), parsed.close, matched.length),
+      closeLine(
+        oneLine(matched, counts, parsed.body, didYouMean, parsed.sort, sorted[0]),
+        parsed.close,
+        matched.length,
+      ),
       parsed,
       matched.length,
     ),
+    lot_total: units.length,
+    applied,
     ...(didYouMean ? { did_you_mean: didYouMean } : {}),
     ...(parsed.close && matched.length ? { close: parsed.close } : {}),
   };
