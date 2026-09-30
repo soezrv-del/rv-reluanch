@@ -117,6 +117,29 @@ type BodySpec =
   | { kind: "labels"; labels: string[] };
 
 const STOP = new Set([
+  // Broad-count words. "How many RVs do we have on the lot right now" names no
+  // coach, so none of these may filter the lot to zero (#556 regression).
+  // A make that contains one ("Cruiser RV", "Thor Motor Coach") still matches
+  // on its other word.
+  "all",
+  "altogether",
+  "coach",
+  "coaches",
+  "count",
+  "currently",
+  "everything",
+  "now",
+  "number",
+  "rig",
+  "rigs",
+  "rv",
+  "rvs",
+  "today",
+  "unit",
+  "units",
+  "vehicle",
+  "vehicles",
+  "whole",
   "a",
   "about",
   "an",
@@ -1234,6 +1257,22 @@ function parseArgs(units: LotQueryUnit[], args: LotQueryArgs): Parsed {
     order,
     limit,
   };
+}
+
+/**
+ * True when the words name nothing to filter on: no coach, type, condition,
+ * status, place, year, price, length, fuel, spec, bed, or sort.
+ * "How many RVs do we have on the lot right now" is a bare count.
+ */
+export function lotQueryIsBareCount(query: string): boolean {
+  const parsed = parseArgs([], { query });
+  const lengthBounded = parsed.lengthMin != null || parsed.lengthMax != null;
+  return (
+    parsed.tokens.length === 0 &&
+    !parsed.sort &&
+    !parsed.close &&
+    !hasRecognizedFilter(parsed, lengthBounded)
+  );
 }
 
 /** True when the free-text question names a coach, type, condition, or status. */

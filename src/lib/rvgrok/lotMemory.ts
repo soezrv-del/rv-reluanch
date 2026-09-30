@@ -16,6 +16,7 @@ import {
 } from "./ownLotInventory.ts";
 import {
   lotQueryHasSubject,
+  lotQueryIsBareCount,
   reconcileLotArgs,
   searchLot,
   spokenLotBody,
@@ -330,19 +331,31 @@ export function answerQueryLotFromSnapshot(
   }
   const query = str(args.query);
   const fresh = lotQueryHasSubject(query) || structuredSubject(args);
-  const turn = fresh
-    ? {
-        filter: filterFromToolArgs(args),
-        ...rankFromToolArgs(args),
-        carried: false,
-        replaced: Boolean(previous),
-      }
-    : mergeToolCall(args, previous);
-  const limit = turn.limit ?? 12;
   const spoken = str(utterance) || str(args.utterance);
   const followUp = Boolean(spoken && previous && looksLikeOwnLotFollowUp(spoken));
+  // A bare count ("how many RVs do we have on the lot right now") names no
+  // filter and does not follow up on the last one: count the whole lot, as
+  // before #556. Do not search the spoken words or carry a stale filter.
+  const bareCount =
+    !fresh &&
+    !followUp &&
+    !rankFromToolArgs(args).sort &&
+    lotQueryIsBareCount(query) &&
+    (!spoken || lotQueryIsBareCount(spoken)) &&
+    Boolean(spoken || !previous);
+  const turn = bareCount
+    ? { filter: {}, limit: rankFromToolArgs(args).limit, carried: false, replaced: Boolean(previous) }
+    : fresh
+      ? {
+          filter: filterFromToolArgs(args),
+          ...rankFromToolArgs(args),
+          carried: false,
+          replaced: Boolean(previous),
+        }
+      : mergeToolCall(args, previous);
+  const limit = turn.limit ?? 12;
   const searchArgs = reconcileLotArgs({
-    query: fresh ? query : spoken || query,
+    query: bareCount ? "" : fresh ? query : spoken || query,
     make: turn.filter.make,
     model: [turn.filter.model, turn.filter.trim].filter(Boolean).join(" "),
     body_type: turn.filter.bodyType,
@@ -366,7 +379,7 @@ export function answerQueryLotFromSnapshot(
     sort: turn.sort?.by,
     order: turn.sort?.dir,
     limit,
-    ...(spoken
+    ...(spoken && !bareCount
       ? {
           utterance: spoken,
           follow_up: followUp,
