@@ -2141,6 +2141,9 @@ export function ownLotPublicFileCandidates(): string[] {
 }
 
 export const OWN_LOT_FULLTEXT_RELATIVE = "public/inventory/own-lot-fulltext.json";
+/** Relative to this module — createRequire resolves the bundled dump. */
+export const OWN_LOT_FULLTEXT_MODULE_SPEC =
+  "../../../public/inventory/own-lot-fulltext.json";
 
 export type OwnLotFulltextIndex = {
   byStock: Map<string, string>;
@@ -2174,10 +2177,34 @@ export function fulltextIndexFromJson(json: unknown): OwnLotFulltextIndex {
 
 export function ownLotFulltextCandidates(): string[] {
   const cwd = process.cwd();
-  return [
+  const out = [
     pathJoin(cwd, OWN_LOT_FULLTEXT_RELATIVE),
     pathJoin(cwd, "inventory/own-lot-fulltext.json"),
   ];
+  try {
+    out.push(fileUrlToPath(OWN_LOT_FULLTEXT_MODULE_SPEC));
+  } catch {
+    // ignore invalid URL resolution in odd bundles
+  }
+  return [...new Set(out.filter(Boolean))];
+}
+
+/** Bundled dump when the public file is not on disk (Vercel file trace). */
+export async function readBundledOwnLotFulltext(): Promise<OwnLotFulltextIndex> {
+  if (typeof window !== "undefined") return emptyFulltextIndex();
+  try {
+    const { createRequire } = await import("node:module");
+    const require = createRequire(import.meta.url);
+    try {
+      const resolved = require.resolve(OWN_LOT_FULLTEXT_MODULE_SPEC);
+      delete require.cache[resolved];
+    } catch {
+      // resolve can fail in some bundles; require below still tries
+    }
+    return fulltextIndexFromJson(require(OWN_LOT_FULLTEXT_MODULE_SPEC) as unknown);
+  } catch {
+    return emptyFulltextIndex();
+  }
 }
 
 /** Missing or broken file is an empty index. Never throws. */
@@ -2203,8 +2230,14 @@ export async function loadOwnLotFulltextIndex(): Promise<OwnLotFulltextIndex> {
       return fulltextCache.index;
     }
     const index = await readOwnLotFulltextFile(path);
+    if (index.byStock.size === 0 && index.byVin.size === 0) continue;
     fulltextCache = { path, mtimeMs: mtime, index };
     return index;
+  }
+  const bundled = await readBundledOwnLotFulltext();
+  if (bundled.byStock.size > 0 || bundled.byVin.size > 0) {
+    fulltextCache = { path: `require:${OWN_LOT_FULLTEXT_MODULE_SPEC}`, mtimeMs: 0, index: bundled };
+    return bundled;
   }
   fulltextCache = null;
   return emptyFulltextIndex();

@@ -133,3 +133,26 @@ test("the lot page does not load the dump", () => {
   assert.doesNotMatch(page, /own-lot-fulltext/);
   assert.doesNotMatch(page, /fulltext/);
 });
+
+test("the committed dump carries King Bed for a sheet that did not print it", () => {
+  const dump = JSON.parse(
+    readFileSync(join(process.cwd(), "public/inventory/own-lot-fulltext.json"), "utf8"),
+  );
+  const index = fulltextIndexFromJson(dump);
+  const text = index.byStock.get("47515") || "";
+  assert.match(text, /King Bed/);
+  const unit = {
+    year: "2027",
+    make: "Thor Motor Coach",
+    model: "Four Winds",
+    trim: "",
+    stock_number: "47515",
+    body_type: "Class C",
+    location: "Fife WA",
+    fulltext: text,
+  };
+  const found = searchLot([unit], { query: "king bed" });
+  assert.equal(found.units[0]?.stock_number, "47515");
+  assert.equal(found.feature_blank, undefined);
+});
+
