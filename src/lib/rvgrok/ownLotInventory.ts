@@ -122,6 +122,8 @@ export type OwnLotUnit = {
    * A blank key is absent. Nothing here is filled from a brochure.
    */
   printed?: Record<string, string>;
+  /** Listing dump for search. Never shown on a card and never spoken raw. */
+  fulltext?: string;
 };
 
 export type OwnLotFilter = {
@@ -196,7 +198,12 @@ export type OwnLotSnapshot = {
   units: OwnLotUnit[];
 };
 
-type CacheEntry = { at: number; mtimeMs: number; snapshot: OwnLotSnapshot };
+type CacheEntry = {
+  at: number;
+  mtimeMs: number;
+  fulltextMtimeMs: number;
+  snapshot: OwnLotSnapshot;
+};
 
 const cache = new Map<string, CacheEntry>();
 
@@ -2133,6 +2140,132 @@ export function ownLotPublicFileCandidates(): string[] {
   return [...new Set(out.filter(Boolean))];
 }
 
+export const OWN_LOT_FULLTEXT_RELATIVE = "public/inventory/own-lot-fulltext.json";
+/** Relative to this module — createRequire resolves the bundled dump. */
+export const OWN_LOT_FULLTEXT_MODULE_SPEC =
+  "../../../public/inventory/own-lot-fulltext.json";
+
+export type OwnLotFulltextIndex = {
+  byStock: Map<string, string>;
+  byVin: Map<string, string>;
+};
+
+function emptyFulltextIndex(): OwnLotFulltextIndex {
+  return { byStock: new Map(), byVin: new Map() };
+}
+
+function normLotId(value: string | undefined): string {
+  return (value || "").toLowerCase().replace(/^#/, "").trim();
+}
+
+/** Dump rows that are not on the sheet are ignored by the caller. */
+export function fulltextIndexFromJson(json: unknown): OwnLotFulltextIndex {
+  const index = emptyFulltextIndex();
+  if (!Array.isArray(json)) return index;
+  for (const row of json) {
+    if (!row || typeof row !== "object") continue;
+    const record = row as Record<string, unknown>;
+    const text = str(record.fulltext);
+    if (!text) continue;
+    const stock = normLotId(str(record.stock_number));
+    const vin = normLotId(str(record.vin));
+    if (stock) index.byStock.set(stock, text);
+    else if (vin) index.byVin.set(vin, text);
+  }
+  return index;
+}
+
+export function ownLotFulltextCandidates(): string[] {
+  const cwd = process.cwd();
+  const out = [
+    pathJoin(cwd, OWN_LOT_FULLTEXT_RELATIVE),
+    pathJoin(cwd, "inventory/own-lot-fulltext.json"),
+  ];
+  try {
+    out.push(fileUrlToPath(OWN_LOT_FULLTEXT_MODULE_SPEC));
+  } catch {
+    // ignore invalid URL resolution in odd bundles
+  }
+  return [...new Set(out.filter(Boolean))];
+}
+
+/** Bundled dump when the public file is not on disk (Vercel file trace). */
+export async function readBundledOwnLotFulltext(): Promise<OwnLotFulltextIndex> {
+  if (typeof window !== "undefined") return emptyFulltextIndex();
+  try {
+    const { createRequire } = await import("node:module");
+    const require = createRequire(import.meta.url);
+    try {
+      const resolved = require.resolve(OWN_LOT_FULLTEXT_MODULE_SPEC);
+      delete require.cache[resolved];
+    } catch {
+      // resolve can fail in some bundles; require below still tries
+    }
+    return fulltextIndexFromJson(require(OWN_LOT_FULLTEXT_MODULE_SPEC) as unknown);
+  } catch {
+    return emptyFulltextIndex();
+  }
+}
+
+/** Missing or broken file is an empty index. Never throws. */
+export async function readOwnLotFulltextFile(path: string): Promise<OwnLotFulltextIndex> {
+  if (!path || typeof window !== "undefined") return emptyFulltextIndex();
+  try {
+    const { readFile } = await import("node:fs/promises");
+    const text = await readFile(path, "utf8");
+    return fulltextIndexFromJson(JSON.parse(text) as unknown);
+  } catch {
+    return emptyFulltextIndex();
+  }
+}
+
+let fulltextCache: { path: string; mtimeMs: number; index: OwnLotFulltextIndex } | null = null;
+
+export async function loadOwnLotFulltextIndex(): Promise<OwnLotFulltextIndex> {
+  if (typeof window !== "undefined") return emptyFulltextIndex();
+  for (const path of ownLotFulltextCandidates()) {
+    const mtime = await fileMtimeMs(path);
+    if (mtime == null) continue;
+    if (fulltextCache && fulltextCache.path === path && fulltextCache.mtimeMs === mtime) {
+      return fulltextCache.index;
+    }
+    const index = await readOwnLotFulltextFile(path);
+    if (index.byStock.size === 0 && index.byVin.size === 0) continue;
+    fulltextCache = { path, mtimeMs: mtime, index };
+    return index;
+  }
+  const bundled = await readBundledOwnLotFulltext();
+  if (bundled.byStock.size > 0 || bundled.byVin.size > 0) {
+    fulltextCache = { path: `require:${OWN_LOT_FULLTEXT_MODULE_SPEC}`, mtimeMs: 0, index: bundled };
+    return bundled;
+  }
+  fulltextCache = null;
+  return emptyFulltextIndex();
+}
+
+/** Attach dump text onto sheet units. Stock wins, then VIN. Sold dump rows are not added. */
+export function applyOwnLotFulltext(units: OwnLotUnit[], index: OwnLotFulltextIndex): number {
+  let attached = 0;
+  for (const unit of units) {
+    const stock = normLotId(unit.stock_number);
+    const vin = normLotId(unit.vin);
+    const text = (stock && index.byStock.get(stock)) || (vin && index.byVin.get(vin)) || "";
+    if (!text) continue;
+    unit.fulltext = text;
+    attached += 1;
+  }
+  return attached;
+}
+
+async function attachOwnLotFulltext(snapshot: OwnLotSnapshot): Promise<number> {
+  if (!snapshot.ok || snapshot.units.length === 0) return 0;
+  try {
+    return applyOwnLotFulltext(snapshot.units, await loadOwnLotFulltextIndex());
+  } catch {
+    return 0;
+  }
+}
+
 export function sameOriginOwnLotUrls(opts?: { requestOrigin?: string }): string[] {
   const urls: string[] = [];
   const origin = (opts?.requestOrigin || "").trim().replace(/\/$/, "");
@@ -2264,8 +2397,8 @@ async function tryRequireBundledPublic(): Promise<OwnLotSnapshot | null> {
   }
 }
 
-function remember(cacheKey: string, snapshot: OwnLotSnapshot, mtimeMs = Date.now()): OwnLotSnapshot {
-  cache.set(cacheKey, { at: Date.now(), mtimeMs, snapshot });
+function remember(cacheKey: string, snapshot: OwnLotSnapshot, mtimeMs = Date.now(), fulltextMtimeMs = 0): OwnLotSnapshot {
+  cache.set(cacheKey, { at: Date.now(), mtimeMs, fulltextMtimeMs, snapshot });
   return snapshot;
 }
 
@@ -2319,6 +2452,16 @@ async function readBestOwnLotFile(
   return best ? { snapshot: best.snapshot, mtime: best.mtime } : null;
 }
 
+async function rememberWithDump(
+  cacheKey: string,
+  snapshot: OwnLotSnapshot,
+  mtimeMs = Date.now(),
+): Promise<OwnLotSnapshot> {
+  await attachOwnLotFulltext(snapshot);
+  const ft = await fileMtimeMs(ownLotFulltextCandidates()[0] || "");
+  return remember(cacheKey, snapshot, mtimeMs, ft ?? 0);
+}
+
 export async function loadOwnLotSnapshot(opts?: {
   path?: string;
   url?: string;
@@ -2356,13 +2499,17 @@ export async function loadOwnLotSnapshot(opts?: {
         }
       }
     }
+    if (!stale && !opts?.skipFiles) {
+      const ft = await fileMtimeMs(ownLotFulltextCandidates()[0] || "");
+      if ((ft ?? 0) !== (hit.fulltextMtimeMs || 0)) stale = true;
+    }
     if (!stale) return hit.snapshot;
   }
 
   // Exclusive override — do not mix with the public fallback.
   if (url) {
     const snapshot = await fetchOwnLotUrl(url);
-    if (snapshot.ok) return remember(cacheKey, snapshot);
+    if (snapshot.ok) return await rememberWithDump(cacheKey, snapshot);
     return snapshot;
   }
 
@@ -2373,7 +2520,7 @@ export async function loadOwnLotSnapshot(opts?: {
       try {
         const snapshot = await readOwnLotFile(explicitPath);
         if (snapshot.ok) {
-          return remember(cacheKey, snapshot, Date.parse(snapshot.asOf) || Date.now());
+          return await rememberWithDump(cacheKey, snapshot, Date.parse(snapshot.asOf) || Date.now());
         }
         return snapshot;
       } catch (e) {
@@ -2388,11 +2535,11 @@ export async function loadOwnLotSnapshot(opts?: {
     // Larger own-lot snapshot wins — a stale smaller file must not hide
     // the public snapshot the Lot page is showing.
     const best = await readBestOwnLotFile(diskPaths);
-    if (best) return remember(cacheKey, best.snapshot, best.mtime);
+    if (best) return await rememberWithDump(cacheKey, best.snapshot, best.mtime);
     tried.push(diskPaths.join(" | ") || path);
 
     const required = await tryRequireBundledPublic();
-    if (required) return remember(cacheKey, required);
+    if (required) return await rememberWithDump(cacheKey, required);
   } else {
     tried.push("files skipped");
   }
@@ -2400,7 +2547,7 @@ export async function loadOwnLotSnapshot(opts?: {
   const publicUrls = sameOriginOwnLotUrls({ requestOrigin: opts?.requestOrigin });
   for (const publicUrl of publicUrls) {
     const snapshot = await fetchOwnLotUrl(publicUrl);
-    if (snapshot.ok) return remember(cacheKey, snapshot);
+    if (snapshot.ok) return await rememberWithDump(cacheKey, snapshot);
     tried.push(snapshot.pathTried || publicUrl);
   }
 

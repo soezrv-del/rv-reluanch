@@ -15,7 +15,7 @@
  * path) is copied into public/ first, then published.
  */
 
-import { execFileSync } from "node:child_process";
+import { listingDumpBytes, FULLTEXT_REPO_PATH } from "./build-own-lot-fulltext.mjs";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -172,14 +172,34 @@ export function commitSnapshot({
   repo = REPO,
   branch = BRANCH,
 }) {
-  const body = {
+  return commitRepoFile({
+    path: REPO_PATH,
+    bytes,
+    sha,
     message: `Publish own-lot snapshot (${units} units, ${scrapedAt || "undated"}).\n\nWorkspace scrape is newer than production. Inventory file only.`,
+    ghImpl,
+    repo,
+    branch,
+  });
+}
+
+function commitRepoFile({
+  path,
+  bytes,
+  sha,
+  message,
+  ghImpl = gh,
+  repo = REPO,
+  branch = BRANCH,
+}) {
+  const body = {
+    message,
     content: Buffer.from(bytes).toString("base64"),
     branch,
   };
   if (sha) body.sha = sha;
   const res = ghImpl(
-    ["api", "--method", "PUT", `repos/${repo}/contents/${REPO_PATH}`, "--input", "-"],
+    ["api", "--method", "PUT", `repos/${repo}/contents/${path}`, "--input", "-"],
     { input: JSON.stringify(body) },
   );
   const parsed = JSON.parse(res);
@@ -187,6 +207,24 @@ export function commitSnapshot({
     commit: parsed?.commit?.sha || "",
     html: parsed?.commit?.html_url || "",
   };
+}
+
+function remoteContentSha(path, { ghImpl = gh, repo = REPO, branch = BRANCH } = {}) {
+  try {
+    const meta = JSON.parse(
+      ghImpl([
+        "api",
+        `repos/${repo}/contents/${path}?ref=${branch}`,
+        "--jq",
+        "{sha:.sha}",
+      ]),
+    );
+    return meta?.sha || "";
+  } catch (err) {
+    const msg = String(err?.stderr || err?.message || err);
+    if (/404/.test(msg)) return "";
+    throw err;
+  }
 }
 
 export function syncOwnLot({
@@ -262,6 +300,18 @@ export function syncOwnLot({
   });
   summary.commit = committed.commit;
   summary.html = committed.html;
+  if (publishing?.bytes) {
+    const dump = listingDumpBytes(publishing.bytes);
+    atomicWrite(join(ROOT, FULLTEXT_REPO_PATH), dump);
+    const dumpSha = remoteContentSha(FULLTEXT_REPO_PATH, { ghImpl });
+    commitRepoFile({
+      path: FULLTEXT_REPO_PATH,
+      bytes: dump,
+      sha: dumpSha,
+      message: `Publish own-lot listing dump (${JSON.parse(dump.toString("utf8")).length} rows).\n\nFloorplan lists the sheet does not print. Same scrape as the snapshot.`,
+      ghImpl,
+    });
+  }
   return summary;
 }
 

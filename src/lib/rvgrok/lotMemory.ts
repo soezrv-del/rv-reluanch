@@ -546,6 +546,7 @@ export function answerQueryLotFromSnapshot(
     summary: found.summary,
     ...(found.did_you_mean ? { did_you_mean: found.did_you_mean } : {}),
     ...(found.close ? { close: found.close } : {}),
+    ...(found.feature_blank ? { feature_blank: found.feature_blank } : {}),
     speech,
     lotMemory: memory,
     lot_total: found.lot_total,

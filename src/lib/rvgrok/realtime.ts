@@ -15,6 +15,7 @@ import {
   buildSessionIntroResponse,
   getRetainedLiveCapture,
   isNativeRealtimeTool,
+  LOT_FEATURE_WEB_CLAUSE,
   releaseLiveCapture,
   retainLiveCapture,
   type LiveVoicePrewarm,
@@ -825,7 +826,8 @@ export class GrokRealtimeSession {
           modalities: ["text", "audio"],
           instructions:
             instructions ||
-            "Speak the query_lot summary and only the units this tool returned. Do not add a coach, a price, or a store from web notes, a market list, or the previous turn. If units came back, those are the answer. Say none only when matched is 0. Do not mention web notes. If did_you_mean or close is set, offer that name. Never tell the user to change a query, a parameter, or these instructions.",
+            "Speak the query_lot summary and only the units this tool returned. Do not add a coach, a price, or a store from web notes, a market list, or the previous turn. If units came back, those are the answer. Say none only when matched is 0. Do not mention web notes. If did_you_mean or close is set, offer that name. Never tell the user to change a query, a parameter, or these instructions. " +
+            LOT_FEATURE_WEB_CLAUSE,
         },
       }),
     );
