@@ -471,6 +471,13 @@ function consumeSheetSpec(tokens: string[]): {
       if (literWord(next)) i += 1;
       continue;
     }
+    const glued = token.match(/^(\d{2,4})hp$/);
+    if (glued) {
+      const n = takeHp(glued[1]!);
+      if (n != null) horsepower = n;
+      i += 1;
+      continue;
+    }
     const leading = token.match(/^(\d{2,4})$/);
     if (leading && hpWord(next)) {
       const n = takeHp(leading[1]!);

@@ -334,6 +334,25 @@ test("8.9 displacement and 400 horsepower are on the lot sheet", () => {
   ]) {
     assert.equal(decideVoiceWebResearch({ transcript: said }).action, "pass", said);
   }
+
+  for (const query of ["400 hp", "400hp", "300 hp", "300hp"]) {
+    const result = searchLot(snap.units, { query });
+    assert.ok(result.matched > 0, query);
+    assert.match(result.summary, /horsepower/);
+    assert.doesNotMatch(result.summary, /does not track|doesn't track/i);
+  }
+  const abbreviated = searchLot(snap.units, { query: "400 hp" });
+  assert.equal(abbreviated.matched, 2);
+  assert.deepEqual(
+    abbreviated.units.map((unit) => unit.stock_number).sort(),
+    ["46539A", "UCO9965"],
+  );
+  const threeHundred = searchLot(snap.units, { query: "300hp" });
+  assert.equal(threeHundred.matched, 3);
+  assert.deepEqual(
+    threeHundred.units.map((unit) => unit.stock_number).sort(),
+    ["UPD9637B", "UPI9555A", "UPZ9517"],
+  );
 });
 
 test("a sentence is read off the lot sheet, not turned into another coach", () => {
