@@ -13,6 +13,11 @@ import { buildVoiceGrounding } from "./grounding.ts";
 import { RV_SYSTEM_PROMPT } from "./prompts.ts";
 import { RV_GROK_LEAN_CORE } from "./speechPolicy.ts";
 import {
+  isIgnorableVoiceTranscript,
+  isSameLotLine,
+  repeatsLotLine,
+} from "./voiceTurnGate.ts";
+import {
   DEFAULT_VOICE,
   GROK_VOICES,
   PCM_SAMPLE_RATE,
@@ -114,6 +119,9 @@ test("lot energy coaches one spoken line and stays out of chat", () => {
   assert.match(session.instructions, /this one will be gone/);
   assert.match(session.instructions, /your wife will love it/);
   assert.match(session.instructions, /Never invent a number to get them in the chair/);
+  assert.match(session.instructions, /not a truck question/);
+  assert.match(session.instructions, /Ask "what's their truck\?" only when he named a towable or a truck/);
+  assert.match(session.instructions, /It is not their truck/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /VOICE LOT ENERGY/);
   assert.doesNotMatch(RV_SYSTEM_PROMPT, /VOICE LOT ENERGY/);
   assert.doesNotMatch(RV_SYSTEM_PROMPT, /just looking/);
@@ -261,4 +269,28 @@ test("Altair is a male voice and session.update sends that id", () => {
   const publicDir = join(root, "../../../public/assets/brand");
   assert.equal(existsSync(join(publicDir, "icon-rvgrok-female.png")), true);
   assert.equal(existsSync(join(publicDir, "icon-rvgrok-male.png")), true);
+});
+
+test("empty or noise transcripts do not start a lot reply, and a lot line is not said twice", () => {
+  assert.equal(isIgnorableVoiceTranscript(""), true);
+  assert.equal(isIgnorableVoiceTranscript("   "), true);
+  assert.equal(isIgnorableVoiceTranscript("uh"), true);
+  assert.equal(isIgnorableVoiceTranscript("hmm"), true);
+  assert.equal(isIgnorableVoiceTranscript("[noise]"), true);
+  assert.equal(isIgnorableVoiceTranscript("those aren't toy haulers"), false);
+  assert.equal(isIgnorableVoiceTranscript("Recommendations."), false);
+  const line = "Matching units: 8 Keystone Montana High Country, stk 47709.";
+  assert.equal(isSameLotLine(line, line), true);
+  assert.equal(isSameLotLine(line, `None. ${line}`), true);
+  assert.equal(repeatsLotLine(`${line} ${line}`), true);
+  assert.equal(repeatsLotLine(line), false);
+  const realtime = readFileSync(join(root, "realtime.ts"), "utf8");
+  assert.match(realtime, /isIgnorableVoiceTranscript/);
+  assert.match(realtime, /cancelAutoReply/);
+  assert.match(realtime, /repeatsLotLine/);
+  const session = buildRealtimeSessionUpdate("ara").session as { instructions: string };
+  assert.match(session.instructions, /at most 3 units/);
+  assert.match(session.instructions, /Never say None and then list units/);
+  assert.match(session.instructions, /Do not describe this screen/);
+  assert.match(session.instructions, /Recommendations/);
 });

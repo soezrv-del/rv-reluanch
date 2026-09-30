@@ -26,6 +26,7 @@ import {
   parseLotRank,
   type OwnLotSort,
 } from "./ownLotAsk.ts";
+import { isLotListExpansion } from "../lot/lotSearch.ts";
 
 export type LotMemory = {
   filter: OwnLotFilter;
@@ -34,6 +35,10 @@ export type LotMemory = {
   condition?: string;
   /** Fuel carried across follow-ups. Not the Class A Diesel body proxy. */
   fuel?: "" | "diesel" | "gas";
+  milesMin?: number;
+  milesMax?: number;
+  garageFtMin?: number;
+  garageFtMax?: number;
 };
 
 export type LotTurn = LotMemory & {
@@ -323,6 +328,9 @@ function queryFilterLabel(applied: LotQueryApplied): string {
     applied.length_ft_max != null ? `length ≤ ${applied.length_ft_max} ft` : "",
     applied.horsepower != null ? `${applied.horsepower} horsepower` : "",
     applied.displacement ? `displacement ${applied.displacement}` : "",
+    applied.miles_min != null && applied.miles_max != null
+      ? `${applied.miles_min} to ${applied.miles_max} miles`
+      : "",
   ].filter(Boolean);
   return bits.length ? bits.join(" · ") : "all units";
 }
@@ -379,19 +387,25 @@ export function answerQueryLotFromSnapshot(
   const textHasSubject = Boolean(
     (query && lotQueryHasSubject(query)) || (spoken && lotQueryHasSubject(spoken)),
   );
+  // "in inventory" is the same full-lot count as "in stock" / "on the lot".
+  // A model price or make stuffed onto that sentence does not shrink it.
+  const wordsBare = Boolean(text) && lotQueryIsBareCount(text);
+  const listAll = isLotListExpansion(text);
   const isBare =
-    !hasIdentityArg &&
-    !hasConstraintArg &&
-    !sort &&
-    !saidRank.sort &&
-    lotQueryIsBareCount(query || text) &&
-    (!text || lotQueryIsBareCount(text));
+    !listAll &&
+    (wordsBare ||
+      (!hasIdentityArg &&
+        !hasConstraintArg &&
+        !sort &&
+        !saidRank.sort &&
+        lotQueryIsBareCount(query || text) &&
+        (!text || lotQueryIsBareCount(text))));
   // A follow-up, or a sort/length/price tool call with no new coach, keeps
-  // the last filter. A bare "how many RVs" does not.
+  // the last filter. A bare "how many RVs" does not. "The full list" keeps it.
   const followUp = Boolean(
     previous &&
       !isBare &&
-      (looksLikeOwnLotFollowUp(text) || (!textHasSubject && !hasIdentityArg)),
+      (listAll || looksLikeOwnLotFollowUp(text) || (!textHasSubject && !hasIdentityArg)),
   );
   const limit =
     toolRank.limit ?? saidRank.limit ?? (followUp ? previous?.limit : undefined) ?? 12;
@@ -453,6 +467,10 @@ export function answerQueryLotFromSnapshot(
           carry_year_max: carried?.filter.yearMax,
           carry_length_ft_min: carried?.filter.lengthFtMin,
           carry_length_ft_max: carried?.filter.lengthFtMax,
+          carry_miles_min: carried?.milesMin,
+          carry_miles_max: carried?.milesMax,
+          carry_garage_ft_min: carried?.garageFtMin,
+          carry_garage_ft_max: carried?.garageFtMax,
         }
       : {}),
   });
@@ -479,6 +497,16 @@ export function answerQueryLotFromSnapshot(
         },
         ...(applied.fuel ? { fuel: applied.fuel } : {}),
         ...(applied.condition ? { condition: applied.condition } : {}),
+        ...(applied.miles_min != null || applied.miles_max != null
+          ? { milesMin: applied.miles_min, milesMax: applied.miles_max }
+          : {}),
+        ...(applied.garage_skipped != null ||
+        (searchArgs.garage_ft_min != null || searchArgs.garage_ft_max != null)
+          ? {
+              garageFtMin: searchArgs.garage_ft_min,
+              garageFtMax: searchArgs.garage_ft_max,
+            }
+          : {}),
         ...(searchArgs.sort === "price" ||
         searchArgs.sort === "length" ||
         searchArgs.sort === "year" ||

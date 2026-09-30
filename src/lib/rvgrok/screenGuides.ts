@@ -57,8 +57,19 @@ export const SCREEN_CALLOUT_DEBOUNCE_MS = 1500;
 
 export const SCREEN_GUIDE_PREAMBLE = `APP SCREEN AWARENESS. You are built into the rvmax app. The app tells you which screen he has open. It appears below as ACTIVE SCREEN and updates the moment he moves.
 You do not need to see his screen. ACTIVE SCREEN and SCREEN GUIDE are your view of it. Never say you can't see his screen, don't know which screen he's on, or lack a manual.
+Do not describe this screen, its buttons, or where he opened you unless he asks. "where did I open you", "what screen am I on", "what is this", and "how do I use this" are asks. A short line such as "Recommendations." is not an ask. Answer the question he asked and do not describe the screen.
 When he asks "what screen am I on", "what is this", "how do I use this", or "where is X", answer right away from SCREEN GUIDE. Name the screen, give two or three specifics (how to search, the filters, what updates live), and offer to walk him through it. Never web-search how rvmax works, and never hold ("give me one second") for an app question.
 Use the button and field names exactly as written. Keep it short. If a control is not named in the guide, answer with the closest step that is, and say you are not sure that control is on this screen. Do not invent a button. Do not refuse the question.`;
+
+/** He asked which screen this is. "Recommendations." is not that ask. */
+export function asksAboutOpenScreen(text: string): boolean {
+  const t = (text || "").replace(/\s+/g, " ").trim();
+  if (!t) return false;
+  if (/^recommendations\.?$/i.test(t)) return false;
+  return /\b(?:where (?:did|do) i (?:open|have) you|what screen am i on|what is this|how do i use this|where am i)\b/i.test(
+    t,
+  );
+}
 
 export const SCREEN_SHARED = `The top bar is the finished R and the RvFOX word. Tapping it opens Home. The ⋯ button opens the Premium menu, where Appearance lives. It is not in the header brand.
 Every screen except the RV Grok chat has the ask bar at the bottom:

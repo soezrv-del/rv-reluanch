@@ -5,6 +5,7 @@ import {
   type LotMemory,
 } from "@/lib/rvgrok/lotMemory";
 import { loadOwnLotSnapshot } from "@/lib/rvgrok/ownLotInventory";
+import { spokenLotPayload } from "@/lib/rvgrok/voiceTurnGate";
 
 /**
  * POST /api/rvgrok/query-lot
@@ -53,7 +54,7 @@ export const Route = createFileRoute("/api/rvgrok/query-lot")({
           readMemory(body.lotMemory),
           utterance,
         );
-        return Response.json(answer);
+        return Response.json(spokenLotPayload(answer));
       },
     },
   },

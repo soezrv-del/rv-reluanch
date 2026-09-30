@@ -10,6 +10,7 @@ import {
   SCREEN_CALLOUT_DEBOUNCE_MS,
   SCREEN_GUIDE_PREAMBLE,
   SCREEN_SHARED,
+  asksAboutOpenScreen,
   initialScreenCalloutState,
   planCalloutDelivery,
   reduceScreenCallout,
@@ -78,8 +79,19 @@ test("guides match the current showroom, pills, and labels", () => {
   assert.match(screenGuideFor("Premium") || "", /NHTSA\.gov — Official Recalls/);
   assert.match(screenGuideFor("VIN Decoder") || "", /Decode the chassis VIN on motorhomes/);
   assert.match(SCREEN_GUIDE_PREAMBLE, /Never say you can't see his screen/);
+  assert.match(SCREEN_GUIDE_PREAMBLE, /Do not describe this screen/);
+  assert.match(SCREEN_GUIDE_PREAMBLE, /Recommendations/);
   assert.doesNotMatch(SCREEN_GUIDE_PREAMBLE, /You cannot see the screen/);
   assert.doesNotMatch(all, /You cannot see the screen|I can't see the screen/);
+});
+
+test("where did I open you asks about the screen; Recommendations does not", () => {
+  assert.equal(asksAboutOpenScreen("where did I open you at? Right here."), true);
+  assert.equal(asksAboutOpenScreen("what screen am I on"), true);
+  assert.equal(asksAboutOpenScreen("how do I use this"), true);
+  assert.equal(asksAboutOpenScreen("Recommendations."), false);
+  assert.equal(asksAboutOpenScreen("Recommendations"), false);
+  assert.equal(asksAboutOpenScreen(""), false);
 });
 
 test("VIN Decoder is its own screen while Premium is open", () => {

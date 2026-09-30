@@ -78,6 +78,12 @@ import {
   ownLotVoiceCoachLock,
 } from "./ownLotAsk";
 import type { LotMemory } from "./lotMemory";
+import {
+  isIgnorableVoiceTranscript,
+  isSameLotLine,
+  lotSummaryForSpeech,
+  repeatsLotLine,
+} from "./voiceTurnGate";
 import { researchAccessHeaders } from "../access/researchUnlock";
 import { GROK_EXTRA_PROMPTS, type GrokExtraKind } from "./grokExtras";
 import {
@@ -171,6 +177,8 @@ export class GrokRealtimeSession {
   private lotMemory: LotMemory | null = null;
   /** Last thing the salesman said. query_lot runs only for a lot question. */
   private lastUserTranscript = "";
+  /** Last lot line spoken, so a noise echo does not say it again. */
+  private lastSpokenLotLine = "";
   private handledToolCallIds = new Set<string>();
   private introSpoken = false;
   private lastDeskQuery = "";
@@ -515,6 +523,13 @@ export class GrokRealtimeSession {
         const transcript = String(
           (msg as { transcript?: string }).transcript || "",
         );
+        if (
+          isIgnorableVoiceTranscript(transcript) ||
+          isSameLotLine(this.lastSpokenLotLine, transcript)
+        ) {
+          this.cancelAutoReply();
+          break;
+        }
         if (transcript) {
           this.lastUserTranscript = transcript;
           this.handlers.onUserTranscript(transcript);
@@ -537,6 +552,10 @@ export class GrokRealtimeSession {
           this.assistantText += delta;
           if (isUnknownToolBubble(this.assistantText)) {
             this.assistantText = "";
+            break;
+          }
+          if (repeatsLotLine(this.assistantText)) {
+            this.cancelAutoReply();
             break;
           }
           this.handlers.onAssistantDelta(this.assistantText);
@@ -733,7 +752,26 @@ export class GrokRealtimeSession {
         return;
       }
       if (data?.lotMemory) this.lotMemory = data.lotMemory;
-      this.sendToolOutput(callId, data);
+      const matched = Number((data as { matched?: number }).matched ?? 0);
+      const summary = lotSummaryForSpeech(
+        String((data as { summary?: string; speech?: string }).speech || (data as { summary?: string }).summary || ""),
+        Number.isFinite(matched) ? matched : 0,
+      );
+      if (summary && isSameLotLine(this.lastSpokenLotLine, summary)) {
+        this.sendToolOutput(callId, data, undefined, false);
+        return;
+      }
+      if (summary) this.lastSpokenLotLine = summary;
+      const listed = /\bNamed:/i.test(summary);
+      this.sendToolOutput(
+        callId,
+        data,
+        summary
+          ? listed
+            ? `Say this once, then stop: ${summary} He asked for the list. Read the Named units. Do not add None. Do not repeat it. Do not read a stock number.`
+            : `Say this once, then stop: ${summary} Do not add None. Do not repeat it. Do not read more than 3 units.`
+          : undefined,
+      );
     } catch (err) {
       console.warn("[rvgrok] query_lot failed", { name, payload: err });
       this.sendToolOutput(
@@ -742,6 +780,22 @@ export class GrokRealtimeSession {
         undefined,
         false,
       );
+    }
+  }
+
+  /** Drop a VAD reply to silence, noise, or an echo of the lot line. */
+  private cancelAutoReply() {
+    const ws = this.ws;
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    try {
+      ws.send(JSON.stringify({ type: "response.cancel" }));
+    } catch {
+      /* nothing in flight */
+    }
+    try {
+      ws.send(JSON.stringify({ type: "input_audio_buffer.clear" }));
+    } catch {
+      /* buffer already clear */
     }
   }
 
