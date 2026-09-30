@@ -643,6 +643,7 @@ async function runRegisteredTool(
         trim: u.trim,
         stock_number: u.stock_number,
         price: u.price,
+        mileage: u.mileage,
         location: u.location,
         body_type: u.body_type,
         condition: u.condition,

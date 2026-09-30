@@ -8,6 +8,7 @@ import { QUERY_LOT_TOOL } from "../rvgrok/liveVoice.ts";
 import { decideVoiceWebResearch } from "../rvgrok/voiceWeb.ts";
 import { searchLot } from "./lotQuery.ts";
 import { searchLotUnits, singularizeLotToken } from "./lotSearch.ts";
+import { parseLotSnapshotJson } from "./ownLotPage.ts";
 
 function units() {
   const snap = snapshotFromJson(
@@ -597,4 +598,115 @@ test("follow-ups keep fuel, store, and the coach already named", () => {
   for (const said of ["how many trailers", "fivers", "the cheapest one", "used ones"]) {
     assert.equal(decideVoiceWebResearch({ transcript: said, lotFollowUp: true }).action, "pass", said);
   }
+});
+
+test("around 50,000 miles is the odometer, not a price band", () => {
+  const snap = units();
+  const ask = "Do we have any Class A motorhomes with around 50,000 miles on them?";
+  const priced = {
+    query: ask,
+    utterance: ask,
+    price_min: 42500,
+    price_max: 57500,
+  };
+  const hit = searchLot(snap.units, { ...priced, limit: 24 });
+  assert.equal(hit.matched, 13, hit.summary);
+  assert.match(hit.summary, /40,000 to 60,000 miles on the sheet/);
+  assert.doesNotMatch(hit.summary, /price band/i);
+  assert.match(hit.summary, /Top: /);
+  const forza = hit.units.find((unit) => unit.stock_number === "46343A");
+  assert.ok(forza, hit.units.map((unit) => unit.stock_number).join(","));
+  assert.equal(forza.mileage, 55892);
+  assert.ok((forza.price ?? 0) > 100000);
+  assert.match(forza.body_type, /class a/i);
+  assert.ok(
+    hit.units.every(
+      (unit) =>
+        /class a/i.test(unit.body_type) &&
+        (unit.mileage ?? 0) >= 40000 &&
+        (unit.mileage ?? 0) <= 60000,
+    ),
+  );
+  const tool = QUERY_LOT_TOOL as {
+    description: string;
+    parameters: { properties: Record<string, unknown> };
+  };
+  assert.match(tool.description, /never a price/i);
+  assert.ok(tool.parameters.properties.miles_min);
+  assert.ok(tool.parameters.properties.miles_max);
+
+  const page = parseLotSnapshotJson(
+    JSON.parse(readFileSync(join(process.cwd(), "public/inventory/own-lot-latest.json"), "utf8")),
+  );
+  const typed = searchLotUnits(page.units, "around 50000 miles");
+  assert.ok(typed.some((unit) => unit.stock_number === "46343A"));
+  assert.ok(
+    typed.every((unit) => {
+      const miles = Number(String(unit.mileage).replace(/[^0-9.]/g, ""));
+      return miles >= 40000 && miles <= 60000;
+    }),
+  );
+});
+
+test("a miles follow-up keeps the class and does not turn into a price", () => {
+  const snap = units();
+  const ask = "Class A around 50,000 miles";
+  const first = answerQueryLotFromSnapshot(snap, { price_min: 42500, price_max: 57500 }, null, ask);
+  assert.equal(first.matched, 13);
+  assert.equal(first.lotMemory?.milesMin, 40000);
+  assert.equal(first.lotMemory?.milesMax, 60000);
+  const cheapest = answerQueryLotFromSnapshot(
+    snap,
+    {},
+    first.lotMemory,
+    "the cheapest one",
+  );
+  assert.equal(cheapest.matched, 13);
+  assert.ok((cheapest.units[0]?.mileage ?? 0) >= 40000);
+  assert.ok((cheapest.units[0]?.mileage ?? 0) <= 60000);
+  assert.match(cheapest.units[0]?.body_type || "", /class a/i);
+  const prices = cheapest.units.map((unit) => unit.price ?? Number.POSITIVE_INFINITY);
+  assert.ok(prices[0]! <= prices[1]!);
+});
+
+test("slides, generator, solar, kitchen, and engine filter the sheet", () => {
+  const snap = units();
+  const two = snap.units.filter((unit) => unit.slides === 2).length;
+  const none = snap.units.filter((unit) => unit.slides === 0).length;
+  assert.ok(two > 0 && none > 0);
+  assert.equal(searchLot(snap.units, { query: "2 slides" }).matched, two);
+  assert.equal(searchLot(snap.units, { query: "no slides" }).matched, none);
+  assert.equal(searchLot(snap.units, { query: "at least 2 slides" }).matched,
+    snap.units.filter((unit) => (unit.slides ?? -1) >= 2).length);
+
+  const generatorText = (unit: (typeof snap.units)[number]) =>
+    `${unit.generator || ""} ${unit.printed?.generator || ""} ${unit.printed?.generator_type || ""}`;
+  const gens = snap.units.filter((unit) => generatorText(unit).trim()).length;
+  assert.ok(gens > 0);
+  assert.equal(searchLot(snap.units, { query: "with a generator" }).matched, gens);
+  const dieselGens = snap.units.filter((unit) => /diesel/i.test(generatorText(unit))).length;
+  assert.ok(dieselGens > 0 && dieselGens < gens);
+  assert.equal(searchLot(snap.units, { query: "diesel generator" }).matched, dieselGens);
+
+  const featureText = (unit: (typeof snap.units)[number]) =>
+    `${unit.printed?.floorplan_feature || ""} ${unit.printed?.flags || ""}`;
+  const solar = snap.units.filter((unit) => /\bsolar\b/i.test(featureText(unit))).length;
+  assert.ok(solar > 0);
+  assert.equal(searchLot(snap.units, { query: "solar" }).matched, solar);
+  const kitchen = snap.units.filter((unit) => /outdoor kitchen/i.test(featureText(unit))).length;
+  assert.ok(kitchen > 0);
+  assert.equal(searchLot(snap.units, { query: "outdoor kitchen" }).matched, kitchen);
+
+  const cummins = snap.units.filter((unit) => /cummins/i.test(unit.printed?.engine || "")).length;
+  assert.ok(cummins > 0);
+  assert.equal(searchLot(snap.units, { query: "Cummins" }).matched, cummins);
+  const stroke = snap.units.filter((unit) => /power stroke/i.test(unit.printed?.engine || "")).length;
+  assert.ok(stroke > 0);
+  assert.equal(searchLot(snap.units, { query: "Power Stroke" }).matched, stroke);
+
+  const king = searchLot(snap.units, { query: "king bed" });
+  assert.ok(king.matched > 0 && king.matched < snap.units.length);
+  const forza = searchLot(snap.units, { query: "what's the mileage on the 2016 Forza" });
+  assert.ok(forza.units.some((unit) => unit.stock_number === "46343A"));
+  assert.ok(forza.matched < 20);
 });

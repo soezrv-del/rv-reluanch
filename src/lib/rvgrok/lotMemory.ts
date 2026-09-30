@@ -34,6 +34,9 @@ export type LotMemory = {
   condition?: string;
   /** Fuel carried across follow-ups. Not the Class A Diesel body proxy. */
   fuel?: "" | "diesel" | "gas";
+  /** Odometer band carried across a follow-up. Not a price. */
+  milesMin?: number;
+  milesMax?: number;
 };
 
 export type LotTurn = LotMemory & {
@@ -434,6 +437,8 @@ export function answerQueryLotFromSnapshot(
       (carried?.filter.aroundLengthFt != null
         ? carried.filter.aroundLengthFt + 2
         : carried?.filter.maxLengthFt),
+    miles_min: num(args.miles_min) ?? carried?.milesMin,
+    miles_max: num(args.miles_max) ?? carried?.milesMax,
     sort: sort?.by,
     order: sort?.dir,
     limit,
@@ -453,6 +458,8 @@ export function answerQueryLotFromSnapshot(
           carry_year_max: carried?.filter.yearMax,
           carry_length_ft_min: carried?.filter.lengthFtMin,
           carry_length_ft_max: carried?.filter.lengthFtMax,
+          carry_miles_min: carried?.milesMin,
+          carry_miles_max: carried?.milesMax,
         }
       : {}),
   });
@@ -479,6 +486,9 @@ export function answerQueryLotFromSnapshot(
         },
         ...(applied.fuel ? { fuel: applied.fuel } : {}),
         ...(applied.condition ? { condition: applied.condition } : {}),
+        ...(searchArgs.miles_min != null || searchArgs.miles_max != null
+          ? { milesMin: searchArgs.miles_min, milesMax: searchArgs.miles_max }
+          : {}),
         ...(searchArgs.sort === "price" ||
         searchArgs.sort === "length" ||
         searchArgs.sort === "year" ||

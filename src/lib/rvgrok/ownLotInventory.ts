@@ -111,6 +111,12 @@ export type OwnLotUnit = {
   lot_status?: string;
   /** Printed length in feet. Null when the sheet has no length. Never a floorplan. */
   lengthFt: number | null;
+  /** Printed odometer. Null when blank or 0. */
+  miles?: number | null;
+  /** Slide count from the sheet. 0 is real. Null when the sheet left it blank. */
+  slides?: number | null;
+  /** Generator type when the sheet names one. Blank when it does not. */
+  generator?: string;
   /**
    * Every non-empty field on the scrape row. Voice reads this.
    * A blank key is absent. Nothing here is filled from a brochure.
@@ -619,6 +625,45 @@ export function printedScrapeFields(
   return out;
 }
 
+function pickOdometerMiles(row: Record<string, unknown>): number | null {
+  const raw = row.mileage ?? row.odometer ?? row.miles;
+  if (raw == null || raw === "") return null;
+  const n = Number(String(raw).replace(/[^0-9.]/g, ""));
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return Math.round(n);
+}
+
+function pickSlideCount(row: Record<string, unknown>): number | null {
+  const raw = row.number_of_slideouts ?? row.slides ?? row.slideouts ?? attributeValue(row, "Number of Slideouts");
+  if (raw == null || raw === "") return null;
+  const n = Number(String(raw).replace(/[^0-9.]/g, ""));
+  if (!Number.isFinite(n) || n < 0 || n > 12) return null;
+  return Math.round(n);
+}
+
+function attributeValue(row: Record<string, unknown>, key: string): unknown {
+  const raw = row.raw;
+  if (!raw || typeof raw !== "object") return undefined;
+  const attrs = (raw as { attributes?: unknown }).attributes;
+  if (!attrs || typeof attrs !== "object") return undefined;
+  return (attrs as Record<string, unknown>)[key];
+}
+
+function pickGenerator(row: Record<string, unknown>): string {
+  const direct = pickStr(row, "generator");
+  const raw = row.raw;
+  const attrs =
+    raw && typeof raw === "object"
+      ? (raw as { attributes?: unknown }).attributes
+      : undefined;
+  const typed =
+    attrs && typeof attrs === "object"
+      ? (attrs as Record<string, unknown>)["Generator Type"]
+      : undefined;
+  const fromAttr = typeof typed === "string" ? typed.trim() : "";
+  return fromAttr || direct;
+}
+
 export function rowToUnit(row: Record<string, unknown>): OwnLotUnit {
   const printed = printedScrapeFields(row);
   const seriesName = pickStr(row, "series");
@@ -652,6 +697,9 @@ export function rowToUnit(row: Record<string, unknown>): OwnLotUnit {
     dealer: pickStr(row, "dealer") || "RV Country",
     price: pickOwnLotPrice(row),
     lengthFt: pickPrintedLengthFt(row),
+    miles: pickOdometerMiles(row),
+    slides: pickSlideCount(row),
+    generator: pickGenerator(row),
     condition: pickStr(row, "condition"),
     lot_status: pickStr(row, "lot_status", "status"),
     printed,

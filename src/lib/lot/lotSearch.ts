@@ -32,6 +32,13 @@ export type LotSearchable = {
   lengthFt?: number | null;
   price?: number | null;
   year_num?: number | null;
+  /** Odometer miles when the loader kept the number. 0 is not an odometer. */
+  miles?: number | null;
+  /** Printed string such as "55,892" or "6,870 mi". */
+  mileage?: string | number | null;
+  /** Slide count. 0 is real. Null when the sheet left it blank. */
+  slides?: number | null;
+  generator?: string;
 };
 
 export type LotSearchUnit = LotSearchable;
@@ -232,6 +239,16 @@ export type ParsedLotText = {
   bed?: "king" | "queen" | "bunk" | "full";
   lengthMin?: number;
   lengthMax?: number;
+  milesMin?: number;
+  milesMax?: number;
+  /** The words named a mileage number, so that number is not a price. */
+  milesBounded: boolean;
+  slidesMin?: number;
+  slidesMax?: number;
+  generator: boolean;
+  generatorFuel: "" | "gas" | "diesel" | "propane";
+  engine: string;
+  features: string[];
 };
 
 const BED_WORDS = new Set(["king", "queen", "bunk", "bunks"]);
@@ -500,11 +517,444 @@ export function spokenLengthBand(phrase: string): { min?: number; max?: number }
   return { min: n - 2, max: n + 2 };
 }
 
+const MILE_WORDS = new Set(["mile", "miles", "mileage", "odometer"]);
+const SLIDE_FILLER = new Set(["on", "the", "a", "an", "of", "with", "them", "it"]);
+const COUNT_WORD: Record<string, number> = {
+  zero: 0,
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+  seven: 7,
+  eight: 8,
+  nine: 9,
+  ten: 10,
+};
+
+const FEATURE_PHRASES: { tokens: string[]; id: string }[] = [
+  { tokens: ["outdoor", "kitchen"], id: "outdoor kitchen" },
+  { tokens: ["washer", "dryer"], id: "washer" },
+  { tokens: ["washer"], id: "washer" },
+  { tokens: ["fireplace"], id: "fireplace" },
+  { tokens: ["theater", "seating"], id: "theater" },
+  { tokens: ["theater"], id: "theater" },
+  { tokens: ["solar", "prep"], id: "solar" },
+  { tokens: ["solar"], id: "solar" },
+  { tokens: ["bunk", "house"], id: "bunkhouse" },
+  { tokens: ["bunkhouse"], id: "bunkhouse" },
+];
+
+const ENGINE_PHRASES: { tokens: string[]; id: string }[] = [
+  { tokens: ["power", "stroke"], id: "power stroke" },
+  { tokens: ["powerstroke"], id: "powerstroke" },
+  { tokens: ["eco", "boost"], id: "ecoboost" },
+  { tokens: ["ecoboost"], id: "ecoboost" },
+  { tokens: ["cummins"], id: "cummins" },
+  { tokens: ["triton"], id: "triton" },
+  { tokens: ["mercedes"], id: "mercedes" },
+  { tokens: ["duramax"], id: "duramax" },
+  { tokens: ["vortec"], id: "vortec" },
+  { tokens: ["maxxforce"], id: "maxxforce" },
+  { tokens: ["pentastar"], id: "pentastar" },
+];
+
+function readSpokenCount(
+  tokens: string[],
+  start: number,
+): { value: number; end: number } | null {
+  const token = tokens[start] || "";
+  const word = COUNT_WORD[token];
+  if (word != null) {
+    const next = tokens[start + 1];
+    if (next === "thousand" || next === "grand") return { value: word * 1000, end: start + 2 };
+    return { value: word, end: start + 1 };
+  }
+  const kMatch = /^(\d+(?:\.\d+)?)k$/.exec(token);
+  if (kMatch) return { value: Math.round(Number(kMatch[1]) * 1000), end: start + 1 };
+  if (!/^\d+(?:\.\d+)?$/.test(token)) return null;
+  const n = Number(token);
+  const next = tokens[start + 1];
+  if (next === "thousand" || next === "grand" || next === "k") {
+    return { value: Math.round(n * 1000), end: start + 2 };
+  }
+  // "50,000" tokenizes as 50 000.
+  if (next === "000" && n < 1000) return { value: n * 1000, end: start + 2 };
+  return { value: Math.round(n), end: start + 1 };
+}
+
+function aroundMiles(n: number): { min: number; max: number } {
+  const pad = Math.max(5000, Math.round(n * 0.2));
+  return { min: Math.max(1, n - pad), max: n + pad };
+}
+
+function slideSpan(tokens: string[], index: number): number {
+  const token = tokens[index] || "";
+  if (token === "slideout") return 1;
+  if (token === "slide" && tokens[index + 1] === "out") return 2;
+  if (token === "slide") return 1;
+  return 0;
+}
+
+/** Pull mileage off the tokens so "around 50,000 miles" cannot become a price. */
+export function consumeMiles(tokens: string[]): {
+  tokens: string[];
+  milesBounded: boolean;
+  milesMin?: number;
+  milesMax?: number;
+} {
+  const kept: string[] = [];
+  let milesBounded = false;
+  let milesMin: number | undefined;
+  let milesMax: number | undefined;
+  for (let i = 0; i < tokens.length; ) {
+    const token = tokens[i] || "";
+    if (token === "between") {
+      const left = readSpokenCount(tokens, i + 1);
+      if (left && tokens[left.end] === "and") {
+        const right = readSpokenCount(tokens, left.end + 1);
+        if (right && MILE_WORDS.has(tokens[right.end] || "")) {
+          milesBounded = true;
+          milesMin = Math.min(left.value, right.value);
+          milesMax = Math.max(left.value, right.value);
+          i = right.end + 1;
+          continue;
+        }
+      }
+    }
+    const less = token === "less" && tokens[i + 1] === "than";
+    const more = token === "more" && tokens[i + 1] === "than";
+    const qual =
+      token === "around" ||
+      token === "about" ||
+      token === "roughly" ||
+      token === "under" ||
+      token === "below" ||
+      token === "over" ||
+      token === "above";
+    if (qual || less || more) {
+      const start = less || more ? i + 2 : i + 1;
+      let cursor = start;
+      while (SLIDE_FILLER.has(tokens[cursor] || "")) cursor += 1;
+      const count = readSpokenCount(tokens, cursor);
+      if (count && MILE_WORDS.has(tokens[count.end] || "")) {
+        milesBounded = true;
+        if (token === "under" || token === "below" || less) milesMax = count.value;
+        else if (token === "over" || token === "above" || more) milesMin = count.value;
+        else {
+          const band = aroundMiles(count.value);
+          milesMin = band.min;
+          milesMax = band.max;
+        }
+        i = count.end + 1;
+        continue;
+      }
+    }
+    const bare = readSpokenCount(tokens, i);
+    if (bare && bare.value >= 1000 && MILE_WORDS.has(tokens[bare.end] || "")) {
+      milesBounded = true;
+      const band = aroundMiles(bare.value);
+      milesMin = band.min;
+      milesMax = band.max;
+      i = bare.end + 1;
+      continue;
+    }
+    if (MILE_WORDS.has(token)) {
+      i += 1;
+      continue;
+    }
+    kept.push(token);
+    i += 1;
+  }
+  return { tokens: kept, milesBounded, milesMin, milesMax };
+}
+
+function consumeSlides(tokens: string[]): {
+  tokens: string[];
+  slidesMin?: number;
+  slidesMax?: number;
+} {
+  const kept: string[] = [];
+  let slidesMin: number | undefined;
+  let slidesMax: number | undefined;
+  for (let i = 0; i < tokens.length; ) {
+    const token = tokens[i] || "";
+    if (token === "at" && tokens[i + 1] === "least") {
+      const count = readSpokenCount(tokens, i + 2);
+      const span = count ? slideSpan(tokens, count.end) : 0;
+      if (count && span) {
+        slidesMin = count.value;
+        slidesMax = undefined;
+        i = count.end + span;
+        continue;
+      }
+    }
+    if (token === "no" || token === "zero" || token === "without") {
+      const span = slideSpan(tokens, i + 1);
+      if (span) {
+        slidesMin = 0;
+        slidesMax = 0;
+        i += 1 + span;
+        continue;
+      }
+    }
+    if (token === "with" || token === "has" || token === "have") {
+      const span = slideSpan(tokens, i + 1);
+      if (span) {
+        slidesMin = Math.max(slidesMin ?? 1, 1);
+        i += 1 + span;
+        continue;
+      }
+    }
+    const count = readSpokenCount(tokens, i);
+    const span = count ? slideSpan(tokens, count.end) : 0;
+    if (count && span && count.value <= 12) {
+      const after = count.end + span;
+      if (tokens[after] === "or" && tokens[after + 1] === "more") {
+        slidesMin = count.value;
+        slidesMax = undefined;
+        i = after + 2;
+        continue;
+      }
+      slidesMin = count.value;
+      slidesMax = count.value;
+      i = after;
+      continue;
+    }
+    kept.push(token);
+    i += 1;
+  }
+  return { tokens: kept, slidesMin, slidesMax };
+}
+
+function consumeGenerator(tokens: string[]): {
+  tokens: string[];
+  generator: boolean;
+  generatorFuel: "" | "gas" | "diesel" | "propane";
+} {
+  const kept: string[] = [];
+  let generator = false;
+  let generatorFuel: "" | "gas" | "diesel" | "propane" = "";
+  for (let i = 0; i < tokens.length; ) {
+    const token = tokens[i] || "";
+    const next = tokens[i + 1] || "";
+    const fuel =
+      token === "diesel" || token === "gas" || token === "gasoline" || token === "propane"
+        ? token === "gasoline" || token === "gas"
+          ? "gas"
+          : token === "propane"
+            ? "propane"
+            : "diesel"
+        : "";
+    if (fuel && (next === "generator" || next === "genset")) {
+      generator = true;
+      generatorFuel = fuel;
+      i += 2;
+      continue;
+    }
+    if (token === "generator" || token === "genset") {
+      generator = true;
+      i += 1;
+      continue;
+    }
+    kept.push(token);
+    i += 1;
+  }
+  return { tokens: kept, generator, generatorFuel };
+}
+
+function takePhrase(tokens: string[], start: number, phrase: string[]): boolean {
+  for (let i = 0; i < phrase.length; i++) {
+    if (tokens[start + i] !== phrase[i]) return false;
+  }
+  return true;
+}
+
+function consumePhrases(tokens: string[]): {
+  tokens: string[];
+  engine: string;
+  features: string[];
+} {
+  const kept: string[] = [];
+  let engine = "";
+  const features: string[] = [];
+  for (let i = 0; i < tokens.length; ) {
+    const feature = FEATURE_PHRASES.find((phrase) => takePhrase(tokens, i, phrase.tokens));
+    if (feature) {
+      if (!features.includes(feature.id)) features.push(feature.id);
+      i += feature.tokens.length;
+      continue;
+    }
+    const motor = ENGINE_PHRASES.find((phrase) => takePhrase(tokens, i, phrase.tokens));
+    if (motor) {
+      engine = motor.id;
+      i += motor.tokens.length;
+      continue;
+    }
+    kept.push(tokens[i] || "");
+    i += 1;
+  }
+  return { tokens: kept, engine, features };
+}
+
+/** Mileage, slides, generator, solar, engine, and floorplan features. */
+export function consumeSalesmanFilters(tokens: string[]): {
+  tokens: string[];
+  milesBounded: boolean;
+  milesMin?: number;
+  milesMax?: number;
+  slidesMin?: number;
+  slidesMax?: number;
+  generator: boolean;
+  generatorFuel: "" | "gas" | "diesel" | "propane";
+  engine: string;
+  features: string[];
+} {
+  const miles = consumeMiles(tokens);
+  const slides = consumeSlides(miles.tokens);
+  const generator = consumeGenerator(slides.tokens);
+  const phrases = consumePhrases(generator.tokens);
+  return {
+    tokens: phrases.tokens,
+    milesBounded: miles.milesBounded,
+    milesMin: miles.milesMin,
+    milesMax: miles.milesMax,
+    slidesMin: slides.slidesMin,
+    slidesMax: slides.slidesMax,
+    generator: generator.generator,
+    generatorFuel: generator.generatorFuel,
+    engine: phrases.engine,
+    features: phrases.features,
+  };
+}
+
+function printedNumber(value: string | undefined): number | null {
+  if (!value) return null;
+  const n = Number(String(value).replace(/[^0-9.]/g, ""));
+  if (!Number.isFinite(n)) return null;
+  return Math.round(n);
+}
+
+/** Printed odometer. Blank and 0 are missing. Never guessed. */
+export function unitOdometerMiles(unit: LotSearchable): number | null {
+  if (typeof unit.miles === "number" && unit.miles > 0) return Math.round(unit.miles);
+  const direct = printedNumber(
+    unit.mileage == null || unit.mileage === "" ? undefined : String(unit.mileage),
+  );
+  if (direct != null && direct > 0) return direct;
+  const printed = unit.printed || {};
+  const fromSheet =
+    printedNumber(printed.mileage) ??
+    printedNumber(printed.odometer) ??
+    printedNumber(printed.miles);
+  return fromSheet != null && fromSheet > 0 ? fromSheet : null;
+}
+
+/** 0 is a real slide count. Null means the sheet did not say. */
+export function unitSlideCount(unit: LotSearchable): number | null {
+  if (typeof unit.slides === "number" && Number.isFinite(unit.slides) && unit.slides >= 0) {
+    return Math.round(unit.slides);
+  }
+  const printed = unit.printed || {};
+  const n = printedNumber(printed.number_of_slideouts) ?? printedNumber(printed.slides);
+  if (n == null || n < 0) return null;
+  return n;
+}
+
+function unitGeneratorText(unit: LotSearchable): string {
+  return [unit.generator, unit.printed?.generator, unit.printed?.generator_type]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
+function unitEngineText(unit: LotSearchable): string {
+  return [unit.engine, unit.printed?.engine, unit.printed?.engine_type]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
+function unitFeatureText(unit: LotSearchable): string {
+  return [
+    unit.features,
+    unit.printed?.floorplan_feature,
+    unit.printed?.features,
+    unit.printed?.flags,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
+export function unitMatchesSalesman(
+  unit: LotSearchable,
+  filter: {
+    milesMin?: number;
+    milesMax?: number;
+    slidesMin?: number;
+    slidesMax?: number;
+    generator?: boolean;
+    generatorFuel?: "" | "gas" | "diesel" | "propane";
+    engine?: string;
+    features?: string[];
+  },
+): boolean {
+  if (filter.milesMin != null || filter.milesMax != null) {
+    const miles = unitOdometerMiles(unit);
+    if (miles == null) return false;
+    if (filter.milesMin != null && miles < filter.milesMin) return false;
+    if (filter.milesMax != null && miles > filter.milesMax) return false;
+  }
+  if (filter.slidesMin != null || filter.slidesMax != null) {
+    const slides = unitSlideCount(unit);
+    if (slides == null) return false;
+    if (filter.slidesMin != null && slides < filter.slidesMin) return false;
+    if (filter.slidesMax != null && slides > filter.slidesMax) return false;
+  }
+  if (filter.generator) {
+    const text = unitGeneratorText(unit);
+    if (!text.trim()) return false;
+    if (filter.generatorFuel && !text.includes(filter.generatorFuel)) return false;
+  }
+  if (filter.engine) {
+    const needle = filter.engine === "powerstroke" ? "power stroke" : filter.engine;
+    const text = unitEngineText(unit).replace(/powerstroke/g, "power stroke");
+    if (!text.includes(needle)) return false;
+  }
+  for (const feature of filter.features || []) {
+    if (!unitFeatureText(unit).includes(feature)) return false;
+  }
+  return true;
+}
+
+export function salesmanFilterActive(filter: {
+  milesMin?: number;
+  milesMax?: number;
+  slidesMin?: number;
+  slidesMax?: number;
+  generator?: boolean;
+  engine?: string;
+  features?: string[];
+}): boolean {
+  return (
+    filter.milesMin != null ||
+    filter.milesMax != null ||
+    filter.slidesMin != null ||
+    filter.slidesMax != null ||
+    Boolean(filter.generator) ||
+    Boolean(filter.engine) ||
+    Boolean(filter.features && filter.features.length)
+  );
+}
+
 export function parseLotTextQuery(query: string): ParsedLotText {
   const band = spokenLengthBand(query);
+  const sales = consumeSalesmanFilters(tokenizeLotQuery(query));
   let fuel: "" | "diesel" | "gas" = "";
   let bed: ParsedLotText["bed"];
-  const spec = consumeSheetSpec(tokenizeLotQuery(query));
+  const spec = consumeSheetSpec(sales.tokens);
   const tokens: string[] = [];
   for (let i = 0; i < spec.tokens.length; ) {
     const token = spec.tokens[i] || "";
@@ -547,6 +997,15 @@ export function parseLotTextQuery(query: string): ParsedLotText {
     bed,
     lengthMin: band.min,
     lengthMax: band.max,
+    milesMin: sales.milesMin,
+    milesMax: sales.milesMax,
+    milesBounded: sales.milesBounded,
+    slidesMin: sales.slidesMin,
+    slidesMax: sales.slidesMax,
+    generator: sales.generator,
+    generatorFuel: sales.generatorFuel,
+    engine: sales.engine,
+    features: sales.features,
   };
 }
 
@@ -661,12 +1120,14 @@ export function searchLotHits<T extends LotSearchable>(
   query: string,
 ): LotTextHit<T>[] {
   const parsed = parseLotTextQuery(query);
+  const salesOn = salesmanFilterActive(parsed);
   const specced =
     parsed.horsepower != null ||
     Boolean(parsed.displacement) ||
     Boolean(parsed.fuel) ||
     Boolean(parsed.bed) ||
-    parsed.lengthMin != null;
+    parsed.lengthMin != null ||
+    salesOn;
   if (!parsed.tokens.length && !specced) {
     return units.map((unit) => ({ unit, score: 0, full: true, snippets: [] }));
   }
@@ -677,6 +1138,7 @@ export function searchLotHits<T extends LotSearchable>(
     if (parsed.displacement && !displacementHits(index.displacement, parsed.displacement)) continue;
     if (parsed.bed && !(index.bedCounts[parsed.bed] > 0)) continue;
     if (!fuelOk(unit, parsed.fuel)) continue;
+    if (!unitMatchesSalesman(unit, parsed)) continue;
     if (parsed.lengthMin != null || parsed.lengthMax != null) {
       const feet = unitFeet(unit);
       if (feet == null) continue;
