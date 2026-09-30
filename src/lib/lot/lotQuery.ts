@@ -13,6 +13,7 @@ import {
   displacementHits,
   lotTextScore,
   lotTokenMatchesUnit,
+  listingFeatureState,
   normalizeLotSearchQuery,
   parseSheetHorsepower,
   salesmanFilterActive,
@@ -20,7 +21,6 @@ import {
   spokenLengthBand,
   isLotListExpansion,
   tokenizeLotQuery,
-  unitHasBed,
   unitMatchesSalesman,
   unitOdometerMiles,
   type LotSearchable,
@@ -47,6 +47,8 @@ export type LotQueryUnit = {
   chassis_brand?: string;
   transmission?: string;
   features?: string;
+  /** Server-only listing dump. Not shown on the Lot page. */
+  fulltext?: string;
   /** Full printed scrape. Search reads fuel, engine, chassis, and features from here. */
   printed?: Record<string, string>;
 };
@@ -142,6 +144,8 @@ export type LotQueryResult = {
   close?: string;
   /** Units in the snapshot that was searched, before filters. */
   lot_total: number;
+  /** Set when one named coach is silent on the feature. Brochure only, not a lot count. */
+  feature_blank?: string;
   /** Filters the search actually applied. Memory and filter_label read this. */
   applied: LotQueryApplied;
 };
@@ -1758,7 +1762,8 @@ function parseArgs(units: LotQueryUnit[], args: LotQueryArgs): Parsed {
   const garaged = consumeGarageLength(milled.tokens);
   const slides = consumeSlides(garaged.tokens);
   const generated = consumeGenerator(slides.tokens);
-  const phrases = consumePhrases(generated.tokens);
+  const bedded = consumeBedTokens(generated.tokens);
+  const phrases = consumePhrases(bedded.tokens);
   const garageSpoken = spokenGarageBand(`${str(args.query)} ${str(args.utterance)}`);
   const saidMiles = milled.min != null || milled.max != null;
   const saidGarage =
@@ -1767,12 +1772,11 @@ function parseArgs(units: LotQueryUnit[], args: LotQueryArgs): Parsed {
   const sortedWords = consumeSort(priced.tokens);
   const fueled = consumeFuel(sortedWords.tokens);
   const spec = consumeSheetSpec(fueled.tokens);
-  const bedded = consumeBedTokens(spec.tokens);
-  const slept = consumeSleeps(bedded.tokens);
+  const slept = consumeSleeps(spec.tokens);
   const yeared = consumeYear(slept.tokens);
   const expansion = Boolean(args.list_all) || isLotListExpansion(str(args.query));
   const band = saidGarage || expansion ? {} : spokenLengthBand(statused.rest);
-  const queryTokens = expansion ? [] : identityTokens(yeared.tokens.join(" "), places);
+  const queryTokens = expansion ? [] : identityTokens(consumeListingAliases(yeared.tokens).join(" "), places);
   const tokens = expansion ? [] : [...new Set([...queryTokens, ...fieldTokens])];
   const namedPlaces = mentionedPlaces(statused.rest, places);
   const argFuel = str(args.fuel).toLowerCase();
@@ -1871,7 +1875,7 @@ function passesStructured(unit: LotQueryUnit, parsed: Parsed, lengthRequired: bo
   if (!priceMatches(unit, parsed.priceMin, parsed.priceMax)) return false;
   if (!fuelMatches(unit, parsed.fuel)) return false;
   if (!powerMatches(unit, parsed.horsepower, parsed.displacement)) return false;
-  if (parsed.bed && !unitHasBed(unit, parsed.bed)) return false;
+  if (parsed.bed && listingFeatureState(unit, parsed.bed) !== "yes") return false;
   if (parsed.sleepsMin != null) {
     const sleeps = unitSleeps(unit);
     if (sleeps != null && sleeps < parsed.sleepsMin) return false;
@@ -1895,6 +1899,27 @@ function passesStructured(unit: LotQueryUnit, parsed: Parsed, lengthRequired: bo
     if (parsed.lengthMax != null && length > parsed.lengthMax) return false;
   }
   return true;
+}
+
+function consumeListingAliases(tokens: string[]): string[] {
+  const out: string[] = [];
+  for (const token of tokens) {
+    if (token === "rl") out.push("rear", "living");
+    else if (token === "rk") out.push("rear", "kitchen");
+    else if (token === "fl") out.push("front", "living");
+    else if (token === "mk") out.push("mid", "kitchen");
+    else if (token === "ds") out.push("double", "slide");
+    else if (token === "th") out.push("toy", "hauler");
+    else out.push(token);
+  }
+  return out;
+}
+
+function bedLabel(bed: string): string {
+  if (bed === "bunk") return "Bunkhouse";
+  if (bed === "queen") return "Queen bed";
+  if (bed === "full") return "Full bed";
+  return "King bed";
 }
 
 function passesTokens(unit: LotQueryUnit, tokens: string[]): boolean {
@@ -2071,7 +2096,7 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
           priceMatches(unit, parsed.priceMin, parsed.priceMax) &&
           fuelMatches(unit, parsed.fuel) &&
           powerMatches(unit, parsed.horsepower, parsed.displacement) &&
-          (!parsed.bed || unitHasBed(unit, parsed.bed)),
+          (!parsed.bed || listingFeatureState(unit, parsed.bed) === "yes"),
       );
       if (byName.length) matched = byName;
     } else {
@@ -2135,6 +2160,43 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
         if (parsed.garageMax != null && feet > parsed.garageMax) return false;
         return true;
       });
+    }
+  }
+  let featureBlank: string | undefined;
+  let featureNo = false;
+  if (parsed.bed && !matched.length) {
+    let pool = units.filter((unit) =>
+      passesStructured(unit, { ...parsed, bed: undefined }, lengthRequired),
+    );
+    if (parsed.tokens.length) pool = pool.filter((unit) => passesTokens(unit, parsed.tokens));
+    else if (pool.length !== 1) pool = [];
+    if (milesBounded) {
+      pool = pool.filter((unit) => {
+        const miles = unitOdometerMiles(unit);
+        if (miles == null) return false;
+        if (parsed.milesMin != null && miles < parsed.milesMin) return false;
+        if (parsed.milesMax != null && miles > parsed.milesMax) return false;
+        return true;
+      });
+    }
+    if (garageBounded && !garageMissingSheet) {
+      pool = pool.filter((unit) => {
+        const feet = sheetGarageFeet(unit);
+        if (feet == null) return false;
+        if (parsed.garageMin != null && feet < parsed.garageMin) return false;
+        if (parsed.garageMax != null && feet > parsed.garageMax) return false;
+        return true;
+      });
+    }
+    if (pool.length === 1) {
+      const state = listingFeatureState(pool[0]!, parsed.bed);
+      if (state === "unknown") {
+        matched = pool;
+        featureBlank = parsed.bed;
+      } else if (state === "no") {
+        matched = pool;
+        featureNo = true;
+      }
     }
   }
   const noLength = lengthRequired
@@ -2205,6 +2267,45 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
     horsepower: parsed.horsepower,
     displacement: parsed.displacement,
   };
+  const named = sorted[0];
+  let summary = withSheetNotes(
+    specSummary(
+      closeLine(
+        oneLine(
+          matched,
+          counts,
+          parsed.body,
+          didYouMean,
+          parsed.sort,
+          sorted[0],
+          parsed.listAll ? sorted : undefined,
+        ),
+        parsed.close,
+        matched.length,
+      ),
+      parsed,
+      matched.length,
+    ),
+    {
+      matched: matched.length,
+      milesMin: parsed.milesMin,
+      milesMax: parsed.milesMax,
+      milesSkipped,
+      garageMin: parsed.garageMin,
+      garageMax: parsed.garageMax,
+      garageSkipped,
+      garageMissingSheet,
+      lengthMin: parsed.lengthMin,
+      lengthMax: parsed.lengthMax,
+    },
+  );
+  if (named && featureBlank) {
+    const name = [named.year, named.make, named.model].filter(Boolean).join(" ");
+    summary = `${name}, stk ${named.stock_number}. ${bedLabel(featureBlank)} is not on our listing.`;
+  } else if (named && featureNo && parsed.bed) {
+    const name = [named.year, named.make, named.model].filter(Boolean).join(" ");
+    summary = `No ${bedLabel(parsed.bed).toLowerCase()} on the ${name}, stk ${named.stock_number}.`;
+  }
   return {
     ok: true,
     matched: matched.length,
@@ -2212,39 +2313,10 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
     counts,
     units: sorted.slice(0, parsed.limit).map(toRow),
     no_length: noLength.map(toRow),
-    summary: withSheetNotes(
-      specSummary(
-        closeLine(
-          oneLine(
-            matched,
-            counts,
-            parsed.body,
-            didYouMean,
-            parsed.sort,
-            sorted[0],
-            parsed.listAll ? sorted : undefined,
-          ),
-          parsed.close,
-          matched.length,
-        ),
-        parsed,
-        matched.length,
-      ),
-      {
-        matched: matched.length,
-        milesMin: parsed.milesMin,
-        milesMax: parsed.milesMax,
-        milesSkipped,
-        garageMin: parsed.garageMin,
-        garageMax: parsed.garageMax,
-        garageSkipped,
-        garageMissingSheet,
-        lengthMin: parsed.lengthMin,
-        lengthMax: parsed.lengthMax,
-      },
-    ),
+    summary,
     lot_total: units.length,
     applied,
+    ...(featureBlank ? { feature_blank: featureBlank } : {}),
     ...(didYouMean ? { did_you_mean: didYouMean } : {}),
     ...(parsed.close && matched.length ? { close: parsed.close } : {}),
   };

@@ -11,6 +11,7 @@ import {
   looksLikeMarketValueQuestion,
   looksLikeNamedCoachProductQuestion,
   looksLikeSpecQuestion,
+  looksLikeRepairQuestion,
   normalizeAskText,
 } from "./webIntent.ts";
 import { wantsGeneratedImage } from "./imageGen.ts";
@@ -20,6 +21,8 @@ import {
   ownLotIsUnavailable,
 } from "./ownLotInventory.ts";
 import { searchLot } from "../lot/lotQuery.ts";
+import { looksLikeListingFeatureAsk } from "../lot/lotSearch.ts";
+import { LOT_FEATURE_WEB_CLAUSE } from "./liveVoice.ts";
 import { evaluateTowMatch } from "../tow/towMatch.ts";
 import { computeLoan } from "../rv/rvCal.ts";
 import { parseCreditBand, type CreditBand } from "../rv/lendersCatalog.ts";
@@ -108,7 +111,8 @@ export const RV_GROK_TOOLS = [
   ),
   fn(
     "get_own_lot",
-    "RV Country own lot. Call once per question for any count or availability question, including a follow-up that changes type or condition. Put their words in query. A mileage number is miles on the sheet, never a price. A dollar amount is a price unless they say mile, miles, or mi. Slides, generator, solar, outdoor kitchen, washer, fireplace, bed size, and an engine name are lot filters when they say them. Never add a class, condition, or price they did not say. Never say none before the tool returns. Never answer a count from memory. Say none only when matched is 0. If did_you_mean or close is set, offer that name. Never tell the user to change a query, a parameter, or these instructions. Do not use web notes for a lot count, cheapest, availability, or stock. Do not treat a lot row as an OEM spec.",
+    "RV Country own lot. Call once per question for any count or availability question, including a follow-up that changes type or condition. Put their words in query. A mileage number is miles on the sheet, never a price. A dollar amount is a price unless they say mile, miles, or mi. Slides, generator, solar, outdoor kitchen, washer, fireplace, bed size, and an engine name are lot filters when they say them. Never add a class, condition, or price they did not say. Never say none before the tool returns. Never answer a count from memory. Say none only when matched is 0. If did_you_mean or close is set, offer that name. Never tell the user to change a query, a parameter, or these instructions. Do not use web notes for a lot count, cheapest, availability, or stock. Do not treat a lot row as an OEM spec. " +
+      LOT_FEATURE_WEB_CLAUSE,
     {
       query: { type: "string" },
       make: { type: "string" },
@@ -150,6 +154,7 @@ export function requiredToolForAsk(text: string): string | null {
     return "check_tow";
   }
   if (looksLikeMarketValueQuestion(t)) return "search_listings";
+  if (looksLikeListingFeatureAsk(t) && !looksLikeRepairQuestion(t)) return "get_own_lot";
   if (looksLikeSpecQuestion(t) || looksLikeNamedCoachProductQuestion(t)) {
     return "get_coach_facts";
   }
@@ -506,6 +511,7 @@ async function getOwnLot(
     summary: found.summary,
     counts: found.counts,
     ...(found.did_you_mean ? { did_you_mean: found.did_you_mean } : {}),
+    ...(found.feature_blank ? { feature_blank: found.feature_blank } : {}),
     units: found.units.map((u) => ({
       year: u.year,
       make: u.make,

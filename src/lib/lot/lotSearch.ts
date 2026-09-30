@@ -32,6 +32,8 @@ export type LotSearchable = {
   /** 0 is a real slide count. Null means the sheet left it blank. */
   slides?: number | null;
   generator?: string;
+  /** Server-only listing dump. The Lot page never sets this. */
+  fulltext?: string;
   /** Printed scrape, including raw.attributes flattened by the loader. */
   printed?: Record<string, string>;
   length_ft?: number | null;
@@ -308,6 +310,8 @@ type LotSearchIndex = {
   horsepower: number | null;
   displacement: string;
   fields: { field: string; text: string; tier: LotSearchTier }[];
+  fulltextWords: string[];
+  fulltextSet: Set<string>;
 };
 
 const INDEXES = new WeakMap<object, LotSearchIndex>();
@@ -410,6 +414,7 @@ function buildLotSearchIndex(unit: LotSearchable): LotSearchIndex {
   const identityWords = wordsOf(identity);
   const attributeWords = wordsOf(attributes);
   const noteWords = wordsOf(notes);
+  const fulltextWords = wordsOfListing(unit.fulltext);
   return {
     identity,
     attributes,
@@ -425,6 +430,8 @@ function buildLotSearchIndex(unit: LotSearchable): LotSearchIndex {
     horsepower: parseSheetHorsepower(printed.horsepower || unit.engine || ""),
     displacement: `${printed.displacement || ""} ${printed.engine || ""} ${printed.engine_type || ""} ${unit.engine || ""}`.toLowerCase(),
     fields,
+    fulltextWords,
+    fulltextSet: new Set(fulltextWords),
   };
 }
 
@@ -1091,14 +1098,19 @@ export function consumeBedTokens(tokens: string[]): {
   for (let i = 0; i < tokens.length; ) {
     const token = tokens[i] || "";
     const next = tokens[i + 1] || "";
-    if (token === "king" || token === "queen" || token === "bunk" || token === "bunks") {
-      bed = token === "bunks" ? "bunk" : token;
-      i += next === "bed" ? 2 : 1;
-      continue;
-    }
     if (token === "full" && next === "bed") {
       bed = "full";
       i += 2;
+      continue;
+    }
+    const named = bedAlias(token, next);
+    if (named) {
+      bed = named.bed;
+      let skip = named.skip;
+      if (tokens[i + skip] === "size") skip += 1;
+      const after = tokens[i + skip] || "";
+      if (after === "bed" || after === "beds") skip += 1;
+      i += skip;
       continue;
     }
     kept.push(token);
@@ -1107,8 +1119,162 @@ export function consumeBedTokens(tokens: string[]): {
   return { tokens: kept, bed };
 }
 
+function bedAlias(
+  token: string,
+  next: string,
+): { bed: "king" | "queen" | "bunk"; skip: number } | null {
+  if (token === "bh" || token === "bunkhouse") return { bed: "bunk", skip: 1 };
+  if (token === "bunk" && next === "house") return { bed: "bunk", skip: 2 };
+  if (token === "qb") return { bed: "queen", skip: 1 };
+  if (
+    token.length >= 5 &&
+    !/\d/.test(token) &&
+    !isFloorplanLikeToken(token) &&
+    !isEngineCode(token) &&
+    oneLetterOff(token, "bunkhouse")
+  ) {
+    return { bed: "bunk", skip: 1 };
+  }
+  if (token === "king" || token === "queen" || token === "bunk" || token === "bunks") {
+    return { bed: token === "bunks" ? "bunk" : token, skip: 1 };
+  }
+  return null;
+}
+
 export function unitHasBed(unit: LotSearchable, bed: string): boolean {
   return (cacheLotSearchIndex(unit).bedCounts[bed] || 0) > 0;
+}
+
+const FINANCE_SENTENCE_RE =
+  /\b(?:apr|financing|down payment|monthly payment|interest rate)\b/i;
+
+/** Drop payment sentences. They are not a feature and she does not read them. */
+export function listingSearchText(raw: string | undefined): string {
+  if (!raw) return "";
+  return raw
+    .split(/[.!?\n]+/)
+    .filter((sentence) => !FINANCE_SENTENCE_RE.test(sentence))
+    .join(" ");
+}
+
+function wordsOfListing(raw: string | undefined): string[] {
+  const cleaned = listingSearchText(raw).replace(
+    /\b(?:no|without|not|zero)\s+(?:\w+\s+){0,3}(?:bunk\s*houses?|bunk\s*beds?|bunks?|king(?:\s|-)?(?:size\s+)?beds?|queen(?:\s|-)?(?:size\s+)?beds?|slides?)\b/gi,
+    " ",
+  );
+  return wordsOf(cleaned);
+}
+
+/** One substitution, insertion, or deletion. Equal strings are not a typo. */
+export function oneLetterOff(a: string, b: string): boolean {
+  if (a === b) return false;
+  const delta = a.length - b.length;
+  if (Math.abs(delta) > 1) return false;
+  if (a.length === b.length) {
+    let diffs = 0;
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) diffs += 1;
+    return diffs === 1;
+  }
+  const [shorter, longer] = a.length < b.length ? [a, b] : [b, a];
+  let i = 0;
+  let j = 0;
+  let skips = 0;
+  while (i < shorter.length && j < longer.length) {
+    if (shorter[i] === longer[j]) {
+      i++;
+      j++;
+    } else {
+      skips++;
+      j++;
+      if (skips > 1) return false;
+    }
+  }
+  return true;
+}
+
+const BED_PHRASE: Record<string, RegExp> = {
+  king: /\bking(?:\s|-)?(?:size\s+)?beds?\b/gi,
+  queen: /\bqueen(?:\s|-)?(?:size\s+)?beds?\b/gi,
+  bunk: /\bbunk\s*houses?\b|\bbunk\s*beds?\b|\bbunks\b/gi,
+  full: /\bfull(?:\s|-)?(?:size\s+)?beds?\b/gi,
+};
+
+const FEATURE_TEXT_RE =
+  /feature|flag|description|notes|comment|lifestyle|option|amenity|interior|bedroom|sleep|floorplan_style/;
+
+function listingBlob(unit: LotSearchable): string {
+  const parts: string[] = [];
+  if (unit.features) parts.push(unit.features);
+  const dumped = listingSearchText(unit.fulltext);
+  if (dumped) parts.push(dumped);
+  for (const [key, value] of Object.entries(unit.printed || {})) {
+    if (!value || SKIP_PRINT_RE.test(key) || BED_COUNT_KEYS[key]) continue;
+    if (FEATURE_TEXT_RE.test(key)) parts.push(value);
+  }
+  return parts.join(" \n ").toLowerCase();
+}
+
+function mentionState(blob: string, phrase: RegExp): "yes" | "no" | "unknown" {
+  phrase.lastIndex = 0;
+  let yes = false;
+  let no = false;
+  for (const match of blob.matchAll(phrase)) {
+    const start = match.index ?? 0;
+    const before = blob.slice(Math.max(0, start - 32), start);
+    if (/\b(?:no|without|not|zero)\s+(?:\w+\s+){0,3}$/i.test(before)) no = true;
+    else yes = true;
+  }
+  if (yes) return "yes";
+  if (no) return "no";
+  return "unknown";
+}
+
+function floorplanIsBunkhouse(unit: LotSearchable): boolean {
+  const blob = [
+    unit.model,
+    unit.trim,
+    unit.title,
+    unit.printed?.trim,
+    unit.printed?.floorplan,
+    unit.printed?.model,
+  ]
+    .filter(Boolean)
+    .join(" ");
+  return /\b\d{2,3}bhs?\b/i.test(blob);
+}
+
+/**
+ * Sheet count, then listing text, then a bunkhouse floorplan code.
+ * "no bunkhouse" is no. A blank field is unknown, not a no.
+ * The Lot page does not call this. It keeps the structured bed count.
+ */
+export function listingFeatureState(
+  unit: LotSearchable,
+  bed: string,
+): "yes" | "no" | "unknown" {
+  const key = BED_FIELD[bed];
+  if (key) {
+    const raw = unit.printed?.[key];
+    if (raw != null && String(raw).trim() !== "") {
+      const n = Number(String(raw).replace(/[^0-9.]/g, ""));
+      if (Number.isFinite(n) && n > 0) return "yes";
+      if (n === 0) return "no";
+    }
+  }
+  const phrase = BED_PHRASE[bed];
+  if (phrase) {
+    const heard = mentionState(listingBlob(unit), phrase);
+    if (heard !== "unknown") return heard;
+  }
+  if (bed === "bunk" && floorplanIsBunkhouse(unit)) return "yes";
+  return "unknown";
+}
+
+/** King, queen, or bunkhouse. Not a repair and not a lot-page filter. */
+export function looksLikeListingFeatureAsk(text: string): boolean {
+  return /\b(?:king(?:\s|-)?(?:size\s+)?beds?|queen(?:\s|-)?(?:size\s+)?beds?|bunk\s*houses?|bunk\s*beds?|bunks|\bbh\b)\b/i.test(
+    text || "",
+  );
 }
 
 export function lotTextScore(unit: LotSearchable, tokens: string[]): number {
@@ -1136,7 +1302,21 @@ function tokenTier(index: LotSearchIndex, token: string): number {
   if (wordHit(index.identitySet, index.identityWords, token)) return 3;
   if (wordHit(index.attributeSet, index.attributeWords, token)) return 2;
   if (index.noteSet.has(token)) return 1;
+  if (index.fulltextSet.has(token)) return 1;
+  if (fulltextTypo(index, token)) return 1;
   return 0;
+}
+
+function fulltextTypo(index: LotSearchIndex, token: string): boolean {
+  if (token.length < 5 || /\d/.test(token) || isEngineCode(token) || isFloorplanLikeToken(token)) {
+    return false;
+  }
+  for (const word of index.fulltextWords) {
+    if (word.length < 5 || word[0] !== token[0]) continue;
+    if (Math.abs(word.length - token.length) > 1) continue;
+    if (oneLetterOff(token, word)) return true;
+  }
+  return false;
 }
 
 function snippetFor(index: LotSearchIndex, token: string): LotSnippet | null {
