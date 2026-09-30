@@ -399,7 +399,24 @@ export function looksLikeOwnLotPriceOnThose(text: string): boolean {
   );
 }
 
-/** Bare "yeah" — only a lot follow-up when a lot filter is already in the session. */
+/** "No, on our lot" corrects a market list. It is a new lot ask, not the last spoken coaches. */
+export function looksLikeLotCorrection(text: string): boolean {
+  const t = normalizeAskText(text).trim();
+  return /^(?:no|nope|wrong|not that)\b/i.test(t) && /\b(?:lot|inventory|in stock)\b/i.test(t);
+}
+
+function looksLikeCheapestLotAsk(text: string): boolean {
+  const t = normalizeAskText(text);
+  if (!/\b(?:cheapest|least\s+expensive)\b/i.test(t)) return false;
+  return /\b(?:class|inventory|lot|we have|in stock)\b/i.test(t);
+}
+
+/** The whole turn is the lot, as in a correction: "our inventory", "on our lot". */
+function looksLikeBareLotPlace(text: string): boolean {
+  return /^(?:on (?:our|the) lot|our inventory|in our inventory|in inventory|in stock)[.!\s]*$/i.test(
+    normalizeAskText(text).trim(),
+  );
+}
 export function looksLikeBareLotConfirm(text: string): boolean {
   return /^(?:yeah|yes|yep|yup|sure|ok|okay|please|do that|go ahead|check(?: the full lot)?|full lot|the full lot)[.!\s]*$/i.test(
     normalizeAskText(text).trim(),
@@ -414,6 +431,7 @@ export function looksLikeBareLotConfirm(text: string): boolean {
 export function looksLikeOwnLotFollowUp(text: string): boolean {
   const t = normalizeAskText(text);
   if (!t.trim()) return false;
+  if (looksLikeLotCorrection(t)) return false;
   if (looksLikeBareLotConfirm(t)) return true;
   if (looksLikeOwnLotRankQuestion(t) || looksLikeOwnLotPriceOnThose(t)) return true;
   if (/\b(?:i meant|meant to say)\b/i.test(t)) return true;
@@ -435,9 +453,13 @@ export function looksLikeOwnLotFollowUp(text: string): boolean {
   return false;
 }
 
-/** Lot mode for a fresh question: an inventory phrase, and nothing else. */
+/** Lot mode for a fresh question: an inventory phrase, a cheapest ask, or a correction. */
 export function looksLikeOwnLotStockQuestion(text: string): boolean {
-  return looksLikeLotInventoryPhrase(text);
+  if (looksLikeLotInventoryPhrase(text)) return true;
+  if (looksLikeCheapestLotAsk(text)) return true;
+  if (looksLikeLotCorrection(text)) return true;
+  if (looksLikeBareLotPlace(text)) return true;
+  return false;
 }
 
 /**
@@ -448,7 +470,7 @@ export function looksLikeLotQuestion(
   text: string,
   memory?: { filter?: object } | null,
 ): boolean {
-  if (looksLikeLotInventoryPhrase(text)) return true;
+  if (looksLikeOwnLotStockQuestion(text)) return true;
   const filter = memory?.filter;
   if (!filter) return false;
   const active = Object.values(filter).some(

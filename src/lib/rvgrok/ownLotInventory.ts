@@ -1721,6 +1721,14 @@ function formatUnitListing(unit: OwnLotUnit): string {
     .join(" · ")}`;
 }
 
+/**
+ * Spoken when query_lot matched 0. Do not invent this when the tool was not called.
+ * A miss is only matched 0.
+ */
+export function formatOwnLotMissLine(): string {
+  return "None.";
+}
+
 export function formatOwnLotUnavailable(snapshot: OwnLotSnapshot): string {
   return [
     "OWN-LOT INVENTORY UNAVAILABLE.",

@@ -108,7 +108,8 @@ test("Odyssey 29V does not swallow Odyssey SE, and a real miss is plain none", (
     assert.equal(miss.none, true, model);
     assert.equal(miss.matched, 0, model);
     assert.equal(miss.units.length, 0, model);
-    assert.match(miss.speech, /None\. No own-lot hit/);
+    assert.match(miss.speech, /^None\./);
+    assert.doesNotMatch(miss.speech, /own-lot hit/);
     assert.doesNotMatch(miss.speech, /stk /);
   }
 });

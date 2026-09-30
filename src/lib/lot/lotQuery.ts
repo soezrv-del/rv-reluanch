@@ -728,7 +728,7 @@ function oneLine(
   sort?: Parsed["sort"],
 ): string {
   if (!matched.length && didYouMean) return `None. Did you mean ${didYouMean}?`;
-  if (!matched.length) return "None. No own-lot hit.";
+  if (!matched.length) return "None.";
   if (sort === "type" && matched.length > 1) {
     const rows = Object.entries(counts.body_type).sort((a, b) => {
       const rank = typeRank(a[0]) - typeRank(b[0]);
