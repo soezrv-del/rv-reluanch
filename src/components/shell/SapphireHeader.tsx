@@ -110,7 +110,7 @@ export function SapphireHeader({ tab }: { tab: AppTab }) {
           <PremiumMenuButton size="sm" />
         </div>
 
-        <div className="relative z-[2] flex flex-col items-center text-center">
+        <div className="sapphire-header-copy relative z-[2] flex w-full flex-col items-center text-center">
           {copy.badge ? (
             <span
               className={cn(
@@ -123,7 +123,7 @@ export function SapphireHeader({ tab }: { tab: AppTab }) {
           ) : null}
 
           <div className="flex flex-col items-center gap-0">
-            <div className="sapphire-title-stage relative inline-flex max-w-full items-center justify-center overflow-visible px-2 py-0.5">
+            <div className="sapphire-title-stage relative inline-flex max-w-full items-center justify-center">
               <span
                 aria-hidden
                 className="sapphire-title-ambient pointer-events-none absolute -inset-x-8 -inset-y-3 z-0"
