@@ -762,11 +762,14 @@ export class GrokRealtimeSession {
         return;
       }
       if (summary) this.lastSpokenLotLine = summary;
+      const listed = /\bNamed:/i.test(summary);
       this.sendToolOutput(
         callId,
         data,
         summary
-          ? `Say this once, then stop: ${summary} Do not add None. Do not repeat it. Do not read more than 3 units.`
+          ? listed
+            ? `Say this once, then stop: ${summary} He asked for the list. Read the Named units. Do not add None. Do not repeat it. Do not read a stock number.`
+            : `Say this once, then stop: ${summary} Do not add None. Do not repeat it. Do not read more than 3 units.`
           : undefined,
       );
     } catch (err) {

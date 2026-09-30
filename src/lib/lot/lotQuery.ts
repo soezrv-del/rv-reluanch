@@ -18,6 +18,7 @@ import {
   salesmanFilterActive,
   singularizeLotToken,
   spokenLengthBand,
+  isLotListExpansion,
   tokenizeLotQuery,
   unitHasBed,
   unitMatchesSalesman,
@@ -97,6 +98,8 @@ export type LotQueryArgs = {
   carry_miles_max?: number;
   carry_garage_ft_min?: number;
   carry_garage_ft_max?: number;
+  /** "Give me the full list" names the units already matched. Not a new model. */
+  list_all?: boolean;
   /** diesel or gas. Spoken fuel fills this when the model left it blank. */
   fuel?: string;
 };
@@ -241,6 +244,21 @@ const STOP = new Set([
   "list",
   "looking",
   "longest",
+  "older",
+  "couple",
+  "couples",
+  "uh",
+  "um",
+  "thats",
+  "mean",
+  "newer",
+  "later",
+  "under",
+  "over",
+  "below",
+  "above",
+  "shorter",
+  "longer",
   "lot",
   "many",
   "mean",
@@ -854,6 +872,18 @@ function topClause(unit: LotQueryUnit | undefined): string {
   return ` Top: ${bits.join(", ")}.`;
 }
 
+function namedClause(units: LotQueryUnit[]): string {
+  const shown = units.slice(0, 8);
+  const lines = shown.map((unit) => {
+    const name = [unit.year, unit.make, unit.model].filter(Boolean).join(" ");
+    const price = formatUsd(unit.price);
+    const town = unit.location || "";
+    return [name, price, town].filter(Boolean).join(", ");
+  });
+  const more = units.length > shown.length ? ` And ${units.length - shown.length} more.` : "";
+  return ` Named: ${lines.join(". ")}.${more}`;
+}
+
 function oneLine(
   matched: LotQueryUnit[],
   counts: LotQueryCounts,
@@ -861,10 +891,16 @@ function oneLine(
   didYouMean?: string,
   sort?: Parsed["sort"],
   top?: LotQueryUnit,
+  named?: LotQueryUnit[],
 ): string {
   if (!matched.length && didYouMean) return `None. Did you mean ${didYouMean}?`;
   if (!matched.length) return "None.";
-  const topBit = matched.length > 1 ? topClause(top) : "";
+  const topBit =
+    named && named.length > 1
+      ? namedClause(named)
+      : matched.length > 1
+        ? topClause(top)
+        : "";
   if (body.kind === "labels" && sameLabelSet(body.labels, TOWABLE_LABELS) && matched.length > 1) {
     const travel = counts.body_type["Travel Trailer"] || 0;
     const fifth = counts.body_type["Fifth Wheel"] || 0;
@@ -1140,6 +1176,76 @@ function unitSleeps(unit: LotQueryUnit): number | undefined {
   return n;
 }
 
+/** "2020 or newer" is a year floor. The last bound in the sentence wins. */
+export function consumeYear(tokens: string[]): {
+  tokens: string[];
+  yearMin?: number;
+  yearMax?: number;
+} {
+  const kept: string[] = [];
+  let yearMin: number | undefined;
+  let yearMax: number | undefined;
+  const isYear = (token: string) => /^(?:19[8-9]\d|20[0-3]\d)$/.test(token);
+  for (let i = 0; i < tokens.length; ) {
+    const token = tokens[i] || "";
+    const next = tokens[i + 1] || "";
+    const third = tokens[i + 2] || "";
+    if (
+      (token === "newer" || token === "later" || token === "after") &&
+      (next === "than" ? isYear(third) : isYear(next))
+    ) {
+      const year = Number(next === "than" ? third : next);
+      yearMin = token === "after" ? year + 1 : year;
+      yearMax = undefined;
+      i += next === "than" ? 3 : 2;
+      continue;
+    }
+    if (
+      (token === "older" || token === "before") &&
+      (next === "than" ? isYear(third) : isYear(next))
+    ) {
+      const year = Number(next === "than" ? third : next);
+      yearMax = token === "before" ? year - 1 : year;
+      yearMin = undefined;
+      i += next === "than" ? 3 : 2;
+      continue;
+    }
+    if (
+      isYear(token) &&
+      (next === "or" || next === "and") &&
+      (third === "newer" || third === "later" || third === "up")
+    ) {
+      yearMin = Number(token);
+      yearMax = undefined;
+      i += 3;
+      continue;
+    }
+    if (isYear(token) && next === "plus") {
+      yearMin = Number(token);
+      yearMax = undefined;
+      i += 2;
+      continue;
+    }
+    if (
+      isYear(token) &&
+      (next === "or" || next === "and") &&
+      (third === "older" || third === "earlier")
+    ) {
+      yearMax = Number(token);
+      yearMin = undefined;
+      i += 3;
+      continue;
+    }
+    if ((token === "i" || token === "im") && next === "mean") {
+      i += 2;
+      continue;
+    }
+    kept.push(token);
+    i += 1;
+  }
+  return { tokens: kept, yearMin, yearMax };
+}
+
 /** "Family of five" and "sleeps five" rank the sheet. They are not a model name. */
 function consumeSleeps(tokens: string[]): { tokens: string[]; sleepsMin?: number } {
   const kept: string[] = [];
@@ -1391,6 +1497,7 @@ type Parsed = {
   sort?: "price" | "length" | "year" | "type";
   order: "asc" | "desc";
   limit: number;
+  listAll?: boolean;
 };
 
 type LooseArgs = LotQueryArgs & Record<string, unknown>;
@@ -1586,11 +1693,18 @@ export function reconcileLotArgs(args: LotQueryArgs = {}): LotQueryArgs {
     next.length_ft_max = args.carry_length_ft_max;
   }
 
-  if (next.year_min == null && followUp && args.carry_year_min != null) {
-    next.year_min = args.carry_year_min;
-  }
-  if (next.year_max == null && followUp && args.carry_year_max != null) {
-    next.year_max = args.carry_year_max;
+  const yeared = consumeYear(words);
+  const saidYear = yeared.yearMin != null || yeared.yearMax != null;
+  if (saidYear) {
+    next.year_min = yeared.yearMin;
+    next.year_max = yeared.yearMax;
+  } else {
+    if (next.year_min == null && followUp && args.carry_year_min != null) {
+      next.year_min = args.carry_year_min;
+    }
+    if (next.year_max == null && followUp && args.carry_year_max != null) {
+      next.year_max = args.carry_year_max;
+    }
   }
 
   if (sorted.sort) {
@@ -1605,6 +1719,25 @@ export function reconcileLotArgs(args: LotQueryArgs = {}): LotQueryArgs {
   const model = str(base.model);
   if (model && !said.includes(normalizeLotQueryText(model))) {
     next.model = followUp ? str(args.carry_model) || model : "";
+  }
+  if (isLotListExpansion(utterance)) {
+    next.list_all = true;
+    next.make = followUp ? str(args.carry_make) : "";
+    next.model = followUp ? str(args.carry_model) : "";
+    if (followUp) {
+      next.body_type = str(args.carry_body_type);
+      next.length_ft_min = args.carry_length_ft_min;
+      next.length_ft_max = args.carry_length_ft_max;
+      next.year_min = args.carry_year_min;
+      next.year_max = args.carry_year_max;
+      next.price_min = args.carry_price_min;
+      next.price_max = args.carry_price_max;
+      next.miles_min = args.carry_miles_min;
+      next.miles_max = args.carry_miles_max;
+      if (args.carry_fuel === "diesel" || args.carry_fuel === "gas") {
+        next.fuel = args.carry_fuel;
+      }
+    }
   }
   return next;
 }
@@ -1636,9 +1769,11 @@ function parseArgs(units: LotQueryUnit[], args: LotQueryArgs): Parsed {
   const spec = consumeSheetSpec(fueled.tokens);
   const bedded = consumeBedTokens(spec.tokens);
   const slept = consumeSleeps(bedded.tokens);
-  const band = saidGarage ? {} : spokenLengthBand(statused.rest);
-  const queryTokens = identityTokens(slept.tokens.join(" "), places);
-  const tokens = [...new Set([...queryTokens, ...fieldTokens])];
+  const yeared = consumeYear(slept.tokens);
+  const expansion = Boolean(args.list_all) || isLotListExpansion(str(args.query));
+  const band = saidGarage || expansion ? {} : spokenLengthBand(statused.rest);
+  const queryTokens = expansion ? [] : identityTokens(yeared.tokens.join(" "), places);
+  const tokens = expansion ? [] : [...new Set([...queryTokens, ...fieldTokens])];
   const namedPlaces = mentionedPlaces(statused.rest, places);
   const argFuel = str(args.fuel).toLowerCase();
   const carriedFuel = argFuel === "diesel" || argFuel === "gas" ? argFuel : "";
@@ -1666,8 +1801,8 @@ function parseArgs(units: LotQueryUnit[], args: LotQueryArgs): Parsed {
     location: namedPlaces.length ? "" : str(args.location),
     places: namedPlaces,
     tokens,
-    yearMin: num(args.year_min),
-    yearMax: num(args.year_max),
+    yearMin: yeared.yearMin != null || yeared.yearMax != null ? yeared.yearMin : num(args.year_min),
+    yearMax: yeared.yearMin != null || yeared.yearMax != null ? yeared.yearMax : num(args.year_max),
     // A spoken odometer wins over a model price band on the same number.
     priceMin: saidMiles ? priced.priceMin : num(args.price_min) ?? priced.priceMin,
     priceMax: saidMiles ? priced.priceMax : num(args.price_max) ?? priced.priceMax,
@@ -1692,6 +1827,7 @@ function parseArgs(units: LotQueryUnit[], args: LotQueryArgs): Parsed {
     sort,
     order,
     limit,
+    listAll: expansion,
   };
 }
 
@@ -1702,6 +1838,7 @@ function parseArgs(units: LotQueryUnit[], args: LotQueryArgs): Parsed {
  */
 export function lotQueryIsBareCount(query: string): boolean {
   if (isToyHaulerRejection(query)) return false;
+  if (isLotListExpansion(query)) return false;
   const parsed = parseArgs([], { query });
   const lengthBounded = parsed.lengthMin != null || parsed.lengthMax != null;
   return (
@@ -1715,6 +1852,7 @@ export function lotQueryIsBareCount(query: string): boolean {
 /** True when the free-text question names a coach, type, condition, or status. */
 export function lotQueryHasSubject(query: string): boolean {
   if (isToyHaulerRejection(query)) return true;
+  if (isLotListExpansion(query)) return false;
   const parsed = parseArgs([], { query });
   return (
     parsed.tokens.length > 0 ||
@@ -1865,9 +2003,16 @@ function withSheetNotes(
     garageMax?: number;
     garageSkipped: number;
     garageMissingSheet: boolean;
+    lengthMin?: number;
+    lengthMax?: number;
   },
 ): string {
   const bits: string[] = [];
+  if (notes.lengthMax != null && notes.lengthMin == null) {
+    bits.push(`${notes.lengthMax} foot and under`);
+  } else if (notes.lengthMin != null && notes.lengthMax == null) {
+    bits.push(`${notes.lengthMin} foot and over`);
+  }
   if (notes.milesMin != null || notes.milesMax != null) {
     const band =
       notes.milesMin != null && notes.milesMax != null
@@ -2070,7 +2215,15 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
     summary: withSheetNotes(
       specSummary(
         closeLine(
-          oneLine(matched, counts, parsed.body, didYouMean, parsed.sort, sorted[0]),
+          oneLine(
+            matched,
+            counts,
+            parsed.body,
+            didYouMean,
+            parsed.sort,
+            sorted[0],
+            parsed.listAll ? sorted : undefined,
+          ),
           parsed.close,
           matched.length,
         ),
@@ -2086,6 +2239,8 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
         garageMax: parsed.garageMax,
         garageSkipped,
         garageMissingSheet,
+        lengthMin: parsed.lengthMin,
+        lengthMax: parsed.lengthMax,
       },
     ),
     lot_total: units.length,

@@ -514,13 +514,114 @@ export function consumeSheetSpec(tokens: string[]): {
   return { tokens: kept, horsepower, displacement };
 }
 
-/** "40 ft" / "40 foot" → [N-2, N+2]. Shared by the page and query_lot. */
+const LENGTH_UNIT = String.raw`(?:-?\s*)?(?:ft|foot|feet|footer|footers)`;
+
+/**
+ * "around 40 ft" is 38–42. "40 foot and under" and "under 40 foot" are a
+ * ceiling at 40, not that band. "over 40 foot" is a floor. Shared by the
+ * Lot page and query_lot.
+ */
 export function spokenLengthBand(phrase: string): { min?: number; max?: number } {
-  const match = (phrase || "").toLowerCase().match(/\b(\d{2})\s*(?:ft|foot|feet|footer|footers)\b/);
+  const t = (phrase || "").toLowerCase();
+  const take = (raw: string | undefined): number | undefined => {
+    const n = Number(raw);
+    if (!Number.isInteger(n) || n < 18 || n > 50) return undefined;
+    return n;
+  };
+  const ceiling =
+    t.match(
+      new RegExp(
+        String.raw`\b(?:under|below|less than|no more than|at most|up to)\s+(\d{2})\s*${LENGTH_UNIT}\b`,
+      ),
+    ) ||
+    t.match(
+      new RegExp(
+        String.raw`\b(\d{2})\s*${LENGTH_UNIT}\s+(?:and|or)\s+(?:under|less|shorter|below)\b`,
+      ),
+    );
+  if (ceiling) {
+    const n = take(ceiling[1]);
+    if (n != null) return { max: n };
+  }
+  const floor =
+    t.match(
+      new RegExp(
+        String.raw`\b(?:over|above|more than|at least|no less than)\s+(\d{2})\s*${LENGTH_UNIT}\b`,
+      ),
+    ) ||
+    t.match(
+      new RegExp(
+        String.raw`\b(\d{2})\s*${LENGTH_UNIT}\s+(?:and|or)\s+(?:over|longer|above|more)\b`,
+      ),
+    );
+  if (floor) {
+    const n = take(floor[1]);
+    if (n != null) return { min: n };
+  }
+  const match = t.match(new RegExp(String.raw`\b(\d{2})\s*${LENGTH_UNIT}\b`));
   if (!match) return {};
-  const n = Number(match[1]);
-  if (n < 18 || n > 50) return {};
+  const n = take(match[1]);
+  if (n == null) return {};
   return { min: n - 2, max: n + 2 };
+}
+
+const LIST_EXPANSION_WORDS = new Set([
+  "yeah",
+  "yes",
+  "yep",
+  "yup",
+  "ok",
+  "okay",
+  "please",
+  "give",
+  "me",
+  "show",
+  "read",
+  "name",
+  "tell",
+  "see",
+  "the",
+  "a",
+  "an",
+  "of",
+  "them",
+  "those",
+  "these",
+  "full",
+  "whole",
+  "entire",
+  "complete",
+  "rest",
+  "list",
+  "all",
+  "more",
+  "every",
+  "one",
+  "ones",
+  "everyone",
+  "just",
+  "can",
+  "you",
+  "i",
+  "want",
+  "wanna",
+]);
+
+/**
+ * "Give me the full list" asks for the units already matched.
+ * It is not a search for the Full House.
+ */
+export function isLotListExpansion(text: string): boolean {
+  const tokens = normalizeLotSearchQuery(text).split(/\s+/).filter(Boolean);
+  if (tokens.length < 2 || tokens.length > 24) return false;
+  if (!tokens.every((token) => LIST_EXPANSION_WORDS.has(token))) return false;
+  return (
+    tokens.includes("list") ||
+    tokens.includes("rest") ||
+    (tokens.includes("all") && (tokens.includes("them") || tokens.includes("ones"))) ||
+    (tokens.includes("name") && tokens.includes("more")) ||
+    (tokens.includes("read") && tokens.includes("them"))
+  );
 }
 
 const MILE_WORDS = new Set(["mile", "miles", "mi"]);

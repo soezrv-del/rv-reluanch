@@ -119,6 +119,9 @@ test("lot energy coaches one spoken line and stays out of chat", () => {
   assert.match(session.instructions, /this one will be gone/);
   assert.match(session.instructions, /your wife will love it/);
   assert.match(session.instructions, /Never invent a number to get them in the chair/);
+  assert.match(session.instructions, /not a truck question/);
+  assert.match(session.instructions, /Ask "what's their truck\?" only when he named a towable or a truck/);
+  assert.match(session.instructions, /It is not their truck/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /VOICE LOT ENERGY/);
   assert.doesNotMatch(RV_SYSTEM_PROMPT, /VOICE LOT ENERGY/);
   assert.doesNotMatch(RV_SYSTEM_PROMPT, /just looking/);

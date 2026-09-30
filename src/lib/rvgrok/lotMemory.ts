@@ -26,6 +26,7 @@ import {
   parseLotRank,
   type OwnLotSort,
 } from "./ownLotAsk.ts";
+import { isLotListExpansion } from "../lot/lotSearch.ts";
 
 export type LotMemory = {
   filter: OwnLotFilter;
@@ -389,20 +390,22 @@ export function answerQueryLotFromSnapshot(
   // "in inventory" is the same full-lot count as "in stock" / "on the lot".
   // A model price or make stuffed onto that sentence does not shrink it.
   const wordsBare = Boolean(text) && lotQueryIsBareCount(text);
+  const listAll = isLotListExpansion(text);
   const isBare =
-    wordsBare ||
-    (!hasIdentityArg &&
-      !hasConstraintArg &&
-      !sort &&
-      !saidRank.sort &&
-      lotQueryIsBareCount(query || text) &&
-      (!text || lotQueryIsBareCount(text)));
+    !listAll &&
+    (wordsBare ||
+      (!hasIdentityArg &&
+        !hasConstraintArg &&
+        !sort &&
+        !saidRank.sort &&
+        lotQueryIsBareCount(query || text) &&
+        (!text || lotQueryIsBareCount(text))));
   // A follow-up, or a sort/length/price tool call with no new coach, keeps
-  // the last filter. A bare "how many RVs" does not.
+  // the last filter. A bare "how many RVs" does not. "The full list" keeps it.
   const followUp = Boolean(
     previous &&
       !isBare &&
-      (looksLikeOwnLotFollowUp(text) || (!textHasSubject && !hasIdentityArg)),
+      (listAll || looksLikeOwnLotFollowUp(text) || (!textHasSubject && !hasIdentityArg)),
   );
   const limit =
     toolRank.limit ?? saidRank.limit ?? (followUp ? previous?.limit : undefined) ?? 12;

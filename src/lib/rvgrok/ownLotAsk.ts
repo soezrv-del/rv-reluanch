@@ -15,6 +15,7 @@ import {
   looksLikeSpecQuestion,
   normalizeAskText,
 } from "./webIntent.ts";
+import { isLotListExpansion } from "../lot/lotSearch.ts";
 
 /**
  * Own-lot listing prices / budget / "show prices too" — not nationwide
@@ -438,6 +439,7 @@ export function looksLikeBareLotConfirm(text: string): boolean {
 export function looksLikeOwnLotFollowUp(text: string): boolean {
   const t = normalizeAskText(text);
   if (!t.trim()) return false;
+  if (isLotListExpansion(t)) return true;
   if (looksLikeLotCorrection(t)) return false;
   if (looksLikeBareLotConfirm(t)) return true;
   if (looksLikeOwnLotRankQuestion(t) || looksLikeOwnLotPriceOnThose(t)) return true;

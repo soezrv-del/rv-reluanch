@@ -81,15 +81,17 @@ export function spokenLotPayload<
   summary = summary
     .replace(/\s*No length on file \(not guessed\):.*$/i, "")
     .trim();
-  if (matched > SPOKEN_LOT_UNIT_CAP && !/i can name more/i.test(summary)) {
+  const named = /\bNamed:/i.test(summary);
+  if (matched > SPOKEN_LOT_UNIT_CAP && !/i can name more/i.test(summary) && !named) {
     summary = `${summary.replace(/\.$/, "")}. I can name more.`;
   }
   summary = summary.replace(/,?\s*\bstk\s+[a-z0-9]+\b/gi, "");
   summary = summary.replace(/\s{2,}/g, " ").replace(/\s+,/g, ",").replace(/,\s*\./g, ".").trim();
+  const cap = named ? Math.min(8, Math.max(matched, 1)) : SPOKEN_LOT_UNIT_CAP;
   return {
     ...answer,
-    units: answer.units.slice(0, SPOKEN_LOT_UNIT_CAP),
-    no_length: (answer.no_length || []).slice(0, SPOKEN_LOT_UNIT_CAP),
+    units: answer.units.slice(0, cap),
+    no_length: (answer.no_length || []).slice(0, cap),
     summary,
     speech: summary,
     none: matched === 0,

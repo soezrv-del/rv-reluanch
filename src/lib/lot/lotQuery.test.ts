@@ -838,3 +838,86 @@ test("slides, generator, solar, kitchen, and engine filter the sheet", () => {
   const king = searchLot(snap.units, { query: "king bed" });
   assert.ok(king.matched > 0 && king.matched < snap.units.length);
 });
+
+test("40 foot and under is a ceiling, and the full list is not a Full House", () => {
+  const snap = units();
+  const ask =
+    "What about an older couple looking for a 2020 or newer diesel pusher that sleeps two, that's 40 foot and under?";
+  const hit = answerQueryLotFromSnapshot(
+    snap,
+    {
+      query: ask,
+      length_ft_min: 38,
+      length_ft_max: 42,
+      body_type: "Fifth Wheel",
+      model: "Full House",
+      year_min: 2000,
+      year_max: 2000,
+    },
+    null,
+    ask,
+  );
+  assert.equal(hit.lotMemory?.filter.bodyType, "Class A Diesel");
+  assert.equal(hit.lotMemory?.filter.lengthFtMax, 40);
+  assert.equal(hit.lotMemory?.filter.lengthFtMin, undefined);
+  assert.equal(hit.lotMemory?.filter.yearMin, 2020);
+  assert.equal(hit.lotMemory?.filter.yearMax, undefined);
+  assert.ok(hit.matched > 0, hit.summary);
+  assert.equal(hit.none, false);
+  assert.doesNotMatch(hit.summary || "", /^None\./);
+  assert.match(hit.summary || "", /40 foot and under/);
+  assert.doesNotMatch(hit.summary || "", /38 to 42/);
+  assert.ok(
+    hit.units.every((unit) => unit.length_ft == null || unit.length_ft <= 40),
+    hit.units.map((unit) => `${unit.stock_number}:${unit.length_ft}`).join(","),
+  );
+  assert.ok(hit.units.every((unit) => Number(unit.year) >= 2020));
+  assert.ok(hit.units.every((unit) => unit.body_type === "Class A Diesel"));
+  assert.ok(!hit.units.some((unit) => /full house/i.test(unit.model)));
+
+  const corrected =
+    "2000 and newer, I mean 2020 or newer diesel pusher, 40 foot and under";
+  const meant = searchLot(snap.units, { query: corrected, utterance: corrected });
+  assert.equal(meant.applied.year_min, 2020);
+  assert.equal(meant.applied.year_max, undefined);
+  assert.equal(meant.applied.length_ft_max, 40);
+  assert.equal(meant.applied.length_ft_min, undefined);
+
+  const around = searchLot(snap.units, {
+    query: "diesel pusher around 40 foot",
+    utterance: "diesel pusher around 40 foot",
+  });
+  assert.equal(around.applied.length_ft_min, 38);
+  assert.equal(around.applied.length_ft_max, 42);
+
+  const under = searchLot(snap.units, {
+    query: "diesel pusher under 40 feet",
+    utterance: "diesel pusher under 40 feet",
+  });
+  assert.equal(under.applied.length_ft_max, 40);
+  assert.equal(under.applied.length_ft_min, undefined);
+
+  const list = answerQueryLotFromSnapshot(
+    snap,
+    {
+      query: "Full House",
+      model: "Full House",
+      body_type: "Fifth Wheel Toy Hauler",
+      length_ft_min: 38,
+      length_ft_max: 42,
+    },
+    hit.lotMemory,
+    "Yeah, give me, give, give me the full list.",
+  );
+  assert.equal(list.matched, hit.matched, list.summary);
+  assert.equal(list.lotMemory?.filter.bodyType, "Class A Diesel");
+  assert.equal(list.lotMemory?.filter.lengthFtMax, 40);
+  assert.equal(list.lotMemory?.filter.lengthFtMin, undefined);
+  assert.ok(!list.units.some((unit) => /full house/i.test(unit.model)));
+  assert.doesNotMatch(list.summary || "", /^None\./);
+  if (hit.matched >= 2) {
+    assert.match(list.summary || "", /Named:/);
+    const second = hit.units[1];
+    if (second?.make) assert.match(list.summary || "", new RegExp(second.make));
+  }
+});
