@@ -84,6 +84,8 @@ export function spokenLotPayload<
   if (matched > SPOKEN_LOT_UNIT_CAP && !/i can name more/i.test(summary)) {
     summary = `${summary.replace(/\.$/, "")}. I can name more.`;
   }
+  summary = summary.replace(/,?\s*\bstk\s+[a-z0-9]+\b/gi, "");
+  summary = summary.replace(/\s{2,}/g, " ").replace(/\s+,/g, ",").replace(/,\s*\./g, ".").trim();
   return {
     ...answer,
     units: answer.units.slice(0, SPOKEN_LOT_UNIT_CAP),

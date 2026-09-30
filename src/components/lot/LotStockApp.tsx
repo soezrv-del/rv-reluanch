@@ -37,6 +37,16 @@ import { buildUnitShareReport } from "@/lib/rv/shareReport";
 
 const PAGE_SIZE = 40;
 
+const SALES_FILTERS = [
+  { id: "mi30", label: "Under 30k mi", query: "under 30000 miles" },
+  { id: "mi50", label: "Around 50k mi", query: "around 50000 miles" },
+  { id: "gen", label: "Generator", query: "generator" },
+  { id: "solar", label: "Solar", query: "solar" },
+  { id: "kitchen", label: "Outdoor kitchen", query: "outdoor kitchen" },
+  { id: "slides", label: "2+ slides", query: "at least 2 slides" },
+  { id: "king", label: "King bed", query: "king bed" },
+] as const;
+
 export function LotStockApp({
   onAsk,
 }: {
@@ -49,6 +59,7 @@ export function LotStockApp({
   const [appliedQuery, setAppliedQuery] = useState("");
   const [type, setType] = useState("");
   const [condition, setCondition] = useState<"" | "New" | "Used">("");
+  const [sales, setSales] = useState<string[]>([]);
   const chipRailRef = useRef<HTMLDivElement>(null);
   useCenterSelectedTab(chipRailRef, type);
   const [openKey, setOpenKey] = useState<string | null>(null);
@@ -95,9 +106,13 @@ export function LotStockApp({
   }, [query]);
 
   const chips = useMemo(() => lotTypeChips(snap?.units ?? []), [snap]);
+  const salesQuery = SALES_FILTERS.filter((chip) => sales.includes(chip.id))
+    .map((chip) => chip.query)
+    .join(" ");
+  const browseQuery = [appliedQuery, salesQuery].filter(Boolean).join(" ");
   const filtered = useMemo(
-    () => filterLotBrowse(snap?.units ?? [], { query: appliedQuery, type, condition }),
-    [snap, appliedQuery, type, condition],
+    () => filterLotBrowse(snap?.units ?? [], { query: browseQuery, type, condition }),
+    [snap, browseQuery, type, condition],
   );
 
   useEffect(() => {
@@ -105,7 +120,7 @@ export function LotStockApp({
     if (!wantOpen.current) setOpenKey(null);
     const scroller = sentinelRef.current?.closest("[data-app-scroll]");
     if (scroller instanceof HTMLElement) scroller.scrollTop = 0;
-  }, [appliedQuery, type, condition]);
+  }, [appliedQuery, type, condition, salesQuery]);
 
   useEffect(() => {
     const wanted = wantOpen.current;
@@ -143,7 +158,7 @@ export function LotStockApp({
     ? error
     : !snap
       ? "Loading lot…"
-      : query.trim() || type || condition
+      : query.trim() || type || condition || sales.length
         ? `${shown} of ${total} shown`
         : `${total} shown`;
 
@@ -186,7 +201,7 @@ export function LotStockApp({
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Impression, Entegra, 45282, Fife…"
+              placeholder="Impression, 50k miles, generator, Fife…"
               autoComplete="off"
               autoCorrect="off"
               spellCheck={false}
@@ -258,6 +273,25 @@ export function LotStockApp({
             ))}
           </div>
         ) : null}
+
+        <div className="lot-chip-rail" data-lot-sales aria-label="Sales filters">
+          {SALES_FILTERS.map((chip) => (
+            <Chip
+              key={chip.id}
+              label={chip.label}
+              on={sales.includes(chip.id)}
+              onClick={() =>
+                setSales((cur) => {
+                  const on = cur.includes(chip.id);
+                  if (on) return cur.filter((id) => id !== chip.id);
+                  const miles = chip.id === "mi30" || chip.id === "mi50";
+                  const next = miles ? cur.filter((id) => id !== "mi30" && id !== "mi50") : cur;
+                  return [...next, chip.id];
+                })
+              }
+            />
+          ))}
+        </div>
 
         <p
           className="text-[12px] text-white/70"

@@ -5,16 +5,23 @@
 
 import {
   consumeBedTokens,
+  consumeGenerator,
+  consumeMiles,
+  consumePhrases,
   consumeSheetSpec,
+  consumeSlides,
   displacementHits,
   lotTextScore,
   lotTokenMatchesUnit,
   normalizeLotSearchQuery,
   parseSheetHorsepower,
+  salesmanFilterActive,
   singularizeLotToken,
   spokenLengthBand,
   tokenizeLotQuery,
   unitHasBed,
+  unitMatchesSalesman,
+  unitOdometerMiles,
   type LotSearchable,
 } from "./lotSearch.ts";
 
@@ -105,6 +112,8 @@ export type LotQueryRow = {
   location: string;
   stock_number: string;
   price: number | null;
+  /** Printed odometer. Null when the sheet has none. Never guessed. */
+  mileage: number | null;
   length_ft: number | null;
   length_source: "printed" | "floorplan" | "none";
 };
@@ -202,6 +211,8 @@ const STOP = new Set([
   "did",
   "do",
   "does",
+  "family",
+  "find",
   "first",
   "foot",
   "footer",
@@ -224,6 +235,7 @@ const STOP = new Set([
   "it",
   "its",
   "just",
+  "kid",
   "know",
   "least",
   "list",
@@ -243,14 +255,19 @@ const STOP = new Set([
   "or",
   "order",
   "our",
+  "people",
+  "person",
   "please",
   "price",
   "priciest",
   "probably",
+  "recommendation",
   "right",
   "shortest",
   "show",
   "showed",
+  "sleep",
+  "sleeping",
   "sort",
   "stock",
   "tell",
@@ -268,6 +285,7 @@ const STOP = new Set([
   "top",
   "total",
   "try",
+  "trying",
   "type",
   "want",
   "we",
@@ -328,10 +346,19 @@ function sameLabelSet(labels: string[], expected: string[]): boolean {
   return expected.every((label) => have.has(label));
 }
 
+function dropMotorhome(rest: string): string {
+  return rest.replace(/\bmotorhome\b/g, " ").replace(/\s+/g, " ").trim();
+}
+
 export function bodySpecFromText(raw: string): { spec: BodySpec; rest: string } {
   let rest = normalizeLotQueryText(raw);
-  const motor = take(rest, /\bmotorhome\b/);
-  if (motor.hit) return { spec: { kind: "motorhome" }, rest: motor.rest };
+  if (isToyHaulerRejection(raw)) {
+    rest = rest
+      .replace(/\btoy hauler\b/g, " ")
+      .replace(/\b(?:arent|not|isnt|those|these|they|them)\b/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
 
   // A garage in a fifth wheel is a fifth-wheel toy hauler, not every fifth wheel
   // and not a travel trailer that happens to mention a garage.
@@ -359,35 +386,38 @@ export function bodySpecFromText(raw: string): { spec: BodySpec; rest: string } 
 
   const superC = take(rest, /\b(?:class\s+)?super c\b/);
   if (superC.hit) {
-    return { spec: { kind: "labels", labels: ["Class Super C"] }, rest: superC.rest };
+    return { spec: { kind: "labels", labels: ["Class Super C"] }, rest: dropMotorhome(superC.rest) };
   }
   const diesel = take(rest, /\b(?:class a diesel|diesel pusher)\b/);
   if (diesel.hit) {
-    return { spec: { kind: "labels", labels: ["Class A Diesel"] }, rest: diesel.rest };
+    return { spec: { kind: "labels", labels: ["Class A Diesel"] }, rest: dropMotorhome(diesel.rest) };
   }
   const gas = take(rest, /\bclass a gas\b/);
   if (gas.hit) {
     // The scrape prints a gas Class A as "Class A", not "Class A Gas".
-    return { spec: { kind: "labels", labels: ["Class A"] }, rest: gas.rest };
+    return { spec: { kind: "labels", labels: ["Class A"] }, rest: dropMotorhome(gas.rest) };
   }
   const classA = take(rest, /\bclass a\b/);
   if (classA.hit) {
     return {
       spec: { kind: "labels", labels: ["Class A", "Class A Gas", "Class A Diesel"] },
-      rest: classA.rest,
+      rest: dropMotorhome(classA.rest),
     };
   }
   const classB = take(rest, /\bclass b\b/);
   if (classB.hit) {
-    return { spec: { kind: "labels", labels: ["Class B"] }, rest: classB.rest };
+    return { spec: { kind: "labels", labels: ["Class B"] }, rest: dropMotorhome(classB.rest) };
   }
   const classC = take(rest, /\bclass c\b/);
   if (classC.hit) {
     return {
       spec: { kind: "labels", labels: ["Class C", "Class Super C"] },
-      rest: classC.rest,
+      rest: dropMotorhome(classC.rest),
     };
   }
+
+  const motor = take(rest, /\bmotorhome\b/);
+  if (motor.hit) return { spec: { kind: "motorhome" }, rest: motor.rest };
 
   const towable = take(rest, /\b(?:towable|pull behind|trailer)\b/);
   if (towable.hit) {
@@ -791,6 +821,7 @@ function toRow(unit: LotQueryUnit): LotQueryRow {
     location: unit.location || "",
     stock_number: unit.stock_number || "",
     price: unit.price ?? null,
+    mileage: unitOdometerMiles(unit),
     length_ft: length.ft,
     length_source: length.source,
   };
@@ -817,7 +848,8 @@ function topClause(unit: LotQueryUnit | undefined): string {
   const name = [unit.year, unit.make, unit.model].filter(Boolean).join(" ");
   const stock = unit.stock_number ? `stk ${unit.stock_number}` : "";
   const price = formatUsd(unit.price);
-  const bits = [name, stock, price].filter(Boolean);
+  const town = unit.location || "";
+  const bits = [name, stock, price, town].filter(Boolean);
   if (!bits.length) return "";
   return ` Top: ${bits.join(", ")}.`;
 }
@@ -854,8 +886,9 @@ function oneLine(
     const name = [unit.year, unit.make, unit.model, unit.trim].filter(Boolean).join(" ");
     const price = formatUsd(unit.price);
     const priceBit = price ? `, ${price}` : "";
+    const town = unit.location ? `, ${unit.location}` : "";
     const status = unit.lot_status ? `, ${unit.lot_status}` : "";
-    return `Matching units: 1 ${name}, stk ${unit.stock_number}${priceBit}${status}.`;
+    return `Matching units: 1 ${name}, stk ${unit.stock_number}${priceBit}${town}${status}.`;
   }
   const classC = counts.body_type["Class C"] || 0;
   const superC = counts.body_type["Class Super C"] || 0;
@@ -1007,91 +1040,22 @@ function tryReadMoney(
 }
 
 /**
- * "Those aren't toy haulers" means the last list was wrong.
- * Apply the toy-hauler filter. Do not drop it, and do not read "aren't" as "exclude".
+ * "Those aren't toy haulers" drops toy haulers.
+ * It does not apply the toy-hauler filter.
  */
-export function isToyHaulerCorrection(text: string): boolean {
+export function isToyHaulerRejection(text: string): boolean {
   const t = normalizeLotQueryText(text);
   if (!/\btoy hauler\b/.test(t)) return false;
-  return /\b(?:those|these|they|them|that)\b/.test(t) && /\b(?:arent|not|no)\b/.test(t);
+  if (/\b(?:those|these|they|that|them)\b.*\b(?:arent|not|no)\b.*\btoy hauler\b/.test(t)) {
+    return true;
+  }
+  return /\b(?:arent|not|no|isnt)\b(?:\s+\w+){0,2}\s+toy hauler\b/.test(t);
 }
 
-/** Keep the fifth-wheel or travel-trailer cut and add toy hauler. */
-export function toyBodyForCarry(carry: string): string {
+function plainBodyAfterToyRejection(carry: string): string {
   const c = (carry || "").toLowerCase();
-  if (/fifth/.test(c)) return "Fifth Wheel Toy Hauler";
-  if (/travel trailer/.test(c)) return "Travel Trailer Toy Hauler";
-  return "toy hauler";
-}
-
-function readSpokenCount(
-  tokens: string[],
-  start: number,
-): { value: number; end: number } | null {
-  const token = tokens[start] || "";
-  const k = token.match(/^(\d+)k$/);
-  if (k) return { value: Number(k[1]) * 1000, end: start + 1 };
-  if (/^\d{1,3}$/.test(token) && tokens[start + 1] === "000") {
-    return { value: Number(token) * 1000, end: start + 2 };
-  }
-  if (/^\d{4,7}$/.test(token)) return { value: Number(token), end: start + 1 };
-  const word: Record<string, number> = {
-    twenty: 20,
-    thirty: 30,
-    forty: 40,
-    fifty: 50,
-    sixty: 60,
-    seventy: 70,
-    eighty: 80,
-    ninety: 90,
-  };
-  if (word[token] && tokens[start + 1] === "thousand") {
-    return { value: word[token]! * 1000, end: start + 2 };
-  }
-  return null;
-}
-
-/** "around 50,000 miles" is an odometer band (±15%), not a price. */
-export function consumeMiles(tokens: string[]): {
-  tokens: string[];
-  min?: number;
-  max?: number;
-} {
-  const kept: string[] = [];
-  let min: number | undefined;
-  let max: number | undefined;
-  for (let i = 0; i < tokens.length; ) {
-    const token = tokens[i] || "";
-    const around = token === "around" || token === "about" || token === "roughly";
-    const under = token === "under" || token === "below" || token === "less";
-    const over = token === "over" || token === "above" || token === "more";
-    let start = i;
-    let mode: "around" | "under" | "over" | "exact" = "exact";
-    if (around || under || over) {
-      mode = around ? "around" : under ? "under" : "over";
-      start = i + 1;
-      if ((token === "less" || token === "more") && tokens[start] === "than") start += 1;
-    }
-    const count = readSpokenCount(tokens, start);
-    const after = count ? tokens[count.end] || "" : "";
-    if (count && (after === "mile" || after === "miles" || after === "mi")) {
-      const n = count.value;
-      if (n >= 1000) {
-        if (mode === "under") max = n;
-        else if (mode === "over") min = n;
-        else {
-          const span = Math.round(n * 0.15);
-          min = Math.max(0, n - span);
-          max = n + span;
-        }
-      }
-      i = count.end + 1;
-      continue;
-    }
-    kept.push(token);
-    i += 1;
-  }
-  return { tokens: kept, min, max };
+  if (/travel/.test(c)) return "Travel Trailer";
+  return "Fifth Wheel";
 }
 
 /** "12-foot garage" on the original sentence, even after body words are stripped. */
@@ -1163,17 +1127,63 @@ export function parseGarageFeet(raw: string): number | undefined {
   return bare;
 }
 
-export function unitOdometerMiles(unit: LotQueryUnit): number | undefined {
-  const raw = unit.printed?.mileage || unit.printed?.odometer || "";
-  const n = Number(String(raw).replace(/,/g, "").replace(/[^\d.]/g, ""));
-  if (!Number.isFinite(n) || n <= 0) return undefined;
-  return n;
-}
-
 export function sheetGarageFeet(unit: LotQueryUnit): number | undefined {
   return parseGarageFeet(
     unit.printed?.garage_length || unit.printed?.cargo_area_length || "",
   );
+}
+
+function unitSleeps(unit: LotQueryUnit): number | undefined {
+  const raw = unit.printed?.max_sleeping_count || unit.printed?.sleeps || "";
+  const n = Number(String(raw).replace(/[^\d]/g, ""));
+  if (!Number.isFinite(n) || n <= 0) return undefined;
+  return n;
+}
+
+/** "Family of five" and "sleeps five" rank the sheet. They are not a model name. */
+function consumeSleeps(tokens: string[]): { tokens: string[]; sleepsMin?: number } {
+  const kept: string[] = [];
+  let sleepsMin: number | undefined;
+  for (let i = 0; i < tokens.length; ) {
+    const token = tokens[i] || "";
+    const next = tokens[i + 1] || "";
+    const third = tokens[i + 2] || "";
+    if (
+      (token === "family" || token === "sleep" || token === "sleeps") &&
+      (next === "of" || next === "for") &&
+      SMALL_NUMBER[third] != null
+    ) {
+      sleepsMin = SMALL_NUMBER[third];
+      i += 3;
+      continue;
+    }
+    if ((token === "family" || token === "sleep" || token === "sleeps") && SMALL_NUMBER[next] != null) {
+      sleepsMin = SMALL_NUMBER[next];
+      i += 2;
+      continue;
+    }
+    if (
+      SMALL_NUMBER[token] != null &&
+      (next === "people" || next === "person" || next === "kid" || next === "sleep" || next === "sleeps")
+    ) {
+      sleepsMin = SMALL_NUMBER[token];
+      i += 2;
+      continue;
+    }
+    if (
+      token === "family" ||
+      token === "sleep" ||
+      token === "sleeps" ||
+      token === "sleeping" ||
+      token === "recommendation"
+    ) {
+      i += 1;
+      continue;
+    }
+    kept.push(token);
+    i += 1;
+  }
+  return { tokens: kept, sleepsMin };
 }
 
 function consumePrice(tokens: string[]): {
@@ -1367,10 +1377,17 @@ type Parsed = {
   horsepower?: number;
   displacement?: string;
   bed?: "king" | "queen" | "bunk" | "full";
+  sleepsMin?: number;
   milesMin?: number;
   milesMax?: number;
   garageMin?: number;
   garageMax?: number;
+  slidesMin?: number;
+  slidesMax?: number;
+  generator?: boolean;
+  generatorFuel?: "" | "gas" | "diesel" | "propane";
+  engine?: string;
+  features?: string[];
   sort?: "price" | "length" | "year" | "type";
   order: "asc" | "desc";
   limit: number;
@@ -1484,10 +1501,15 @@ export function reconcileLotArgs(args: LotQueryArgs = {}): LotQueryArgs {
   const band = spokenLengthBand(utterance);
   const said = normalizeLotQueryText(utterance);
   const next: LotQueryArgs = { ...stripCarry(base), query: utterance };
-  const toyCorrection = isToyHaulerCorrection(utterance);
+  const toyRejection = isToyHaulerRejection(utterance);
 
-  if (toyCorrection) {
-    next.body_type = toyBodyForCarry(str(args.carry_body_type) || str(base.body_type));
+  if (toyRejection) {
+    const carry = `${str(args.carry_body_type)} ${str(base.body_type)}`.toLowerCase();
+    if (/travel|fifth|5th|fiver|toy/.test(carry)) {
+      next.body_type = plainBodyAfterToyRejection(carry);
+    } else {
+      next.body_type = "";
+    }
   } else if (saidBody) next.body_type = "";
   else if (!str(next.body_type) && followUp && str(args.carry_body_type)) {
     next.body_type = str(args.carry_body_type);
@@ -1502,21 +1524,28 @@ export function reconcileLotArgs(args: LotQueryArgs = {}): LotQueryArgs {
     next.condition = args.carry_condition;
   }
 
-  if (saidPrice && !saidMiles) {
-    next.price_min = priced.priceMin;
-    next.price_max = priced.priceMax;
-  } else if (saidMiles) {
+  if (saidMiles) {
     next.price_min = undefined;
     next.price_max = undefined;
     next.miles_min = milled.min;
     next.miles_max = milled.max;
+  } else if (saidPrice) {
+    next.price_min = priced.priceMin;
+    next.price_max = priced.priceMax;
+    next.miles_min = undefined;
+    next.miles_max = undefined;
   } else if (next.price_min == null && next.price_max == null && followUp) {
     next.price_min = args.carry_price_min;
     next.price_max = args.carry_price_max;
   }
-  if (!saidMiles && followUp && (args.carry_miles_min != null || args.carry_miles_max != null)) {
-    next.miles_min = args.carry_miles_min;
-    next.miles_max = args.carry_miles_max;
+  if (!saidMiles) {
+    if (followUp && (args.carry_miles_min != null || args.carry_miles_max != null)) {
+      next.miles_min = args.carry_miles_min;
+      next.miles_max = args.carry_miles_max;
+    } else {
+      next.miles_min = undefined;
+      next.miles_max = undefined;
+    }
   }
 
   if (saidGarage) {
@@ -1594,17 +1623,21 @@ function parseArgs(units: LotQueryUnit[], args: LotQueryArgs): Parsed {
   );
   const milled = consumeMiles(statused.rest.split(/\s+/).filter(Boolean));
   const garaged = consumeGarageLength(milled.tokens);
+  const slides = consumeSlides(garaged.tokens);
+  const generated = consumeGenerator(slides.tokens);
+  const phrases = consumePhrases(generated.tokens);
   const garageSpoken = spokenGarageBand(`${str(args.query)} ${str(args.utterance)}`);
   const saidMiles = milled.min != null || milled.max != null;
   const saidGarage =
     garaged.min != null || garaged.max != null || garageSpoken.min != null || garageSpoken.max != null;
-  const priced = consumePrice(garaged.tokens);
+  const priced = consumePrice(phrases.tokens);
   const sortedWords = consumeSort(priced.tokens);
   const fueled = consumeFuel(sortedWords.tokens);
   const spec = consumeSheetSpec(fueled.tokens);
   const bedded = consumeBedTokens(spec.tokens);
+  const slept = consumeSleeps(bedded.tokens);
   const band = saidGarage ? {} : spokenLengthBand(statused.rest);
-  const queryTokens = identityTokens(bedded.tokens.join(" "), places);
+  const queryTokens = identityTokens(slept.tokens.join(" "), places);
   const tokens = [...new Set([...queryTokens, ...fieldTokens])];
   const namedPlaces = mentionedPlaces(statused.rest, places);
   const argFuel = str(args.fuel).toLowerCase();
@@ -1621,8 +1654,8 @@ function parseArgs(units: LotQueryUnit[], args: LotQueryArgs): Parsed {
     argOrder === "desc" || argOrder === "asc"
       ? argOrder
       : sortedWords.order || "asc";
-  const milesMin = saidMiles ? milled.min : num(args.miles_min) ?? milled.min;
-  const milesMax = saidMiles ? milled.max : num(args.miles_max) ?? milled.max;
+  const milesMin = saidMiles ? milled.min : num(args.miles_min);
+  const milesMax = saidMiles ? milled.max : num(args.miles_max);
   const garageMin = garageSpoken.min ?? (saidGarage ? garaged.min : num(args.garage_ft_min) ?? garaged.min);
   const garageMax = garageSpoken.max ?? (saidGarage ? garaged.max : num(args.garage_ft_max) ?? garaged.max);
   return {
@@ -1644,6 +1677,13 @@ function parseArgs(units: LotQueryUnit[], args: LotQueryArgs): Parsed {
     milesMax,
     garageMin,
     garageMax,
+    slidesMin: slides.slidesMin,
+    slidesMax: slides.slidesMax,
+    generator: generated.generator,
+    generatorFuel: generated.generatorFuel,
+    engine: phrases.engine,
+    features: phrases.features,
+    sleepsMin: slept.sleepsMin,
     fuel: fueled.fuel || carriedFuel,
     close: fueled.close,
     horsepower: spec.horsepower,
@@ -1661,6 +1701,7 @@ function parseArgs(units: LotQueryUnit[], args: LotQueryArgs): Parsed {
  * "How many RVs do we have on the lot right now" is a bare count.
  */
 export function lotQueryIsBareCount(query: string): boolean {
+  if (isToyHaulerRejection(query)) return false;
   const parsed = parseArgs([], { query });
   const lengthBounded = parsed.lengthMin != null || parsed.lengthMax != null;
   return (
@@ -1673,6 +1714,7 @@ export function lotQueryIsBareCount(query: string): boolean {
 
 /** True when the free-text question names a coach, type, condition, or status. */
 export function lotQueryHasSubject(query: string): boolean {
+  if (isToyHaulerRejection(query)) return true;
   const parsed = parseArgs([], { query });
   return (
     parsed.tokens.length > 0 ||
@@ -1692,6 +1734,22 @@ function passesStructured(unit: LotQueryUnit, parsed: Parsed, lengthRequired: bo
   if (!fuelMatches(unit, parsed.fuel)) return false;
   if (!powerMatches(unit, parsed.horsepower, parsed.displacement)) return false;
   if (parsed.bed && !unitHasBed(unit, parsed.bed)) return false;
+  if (parsed.sleepsMin != null) {
+    const sleeps = unitSleeps(unit);
+    if (sleeps != null && sleeps < parsed.sleepsMin) return false;
+  }
+  if (
+    !unitMatchesSalesman(unit, {
+      slidesMin: parsed.slidesMin,
+      slidesMax: parsed.slidesMax,
+      generator: parsed.generator,
+      generatorFuel: parsed.generatorFuel,
+      engine: parsed.engine,
+      features: parsed.features,
+    })
+  ) {
+    return false;
+  }
   if (lengthRequired) {
     const length = lotUnitLength(unit).ft;
     if (length == null) return false;
@@ -1724,6 +1782,8 @@ function hasRecognizedFilter(parsed: Parsed, lengthRequired: boolean): boolean {
     parsed.milesMax != null ||
     parsed.garageMin != null ||
     parsed.garageMax != null ||
+    parsed.sleepsMin != null ||
+    salesmanFilterActive(parsed) ||
     lengthRequired
   );
 }
@@ -1886,6 +1946,21 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
       if (plain.length) matched = plain;
     }
   }
+  // A blank length is unknown, not a miss, when class, price, or sleeps
+  // already picked a coach. Known lengths outside the band stay out.
+  if (
+    !matched.length &&
+    lengthRequired &&
+    (parsed.body.kind !== "any" ||
+      parsed.priceMin != null ||
+      parsed.priceMax != null ||
+      parsed.sleepsMin != null)
+  ) {
+    const blanks = units.filter(
+      (unit) => passesStructured(unit, parsed, false) && lotUnitLength(unit).ft == null,
+    );
+    if (blanks.length) matched = blanks;
+  }
   const milesBounded = parsed.milesMin != null || parsed.milesMax != null;
   let milesSkipped = 0;
   if (milesBounded) {
@@ -1929,6 +2004,28 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
   const sorted = matched
     .map((unit, index) => ({ unit, index }))
     .sort((a, b) => {
+      if (parsed.sort !== "length" && parsed.sort !== "price" && parsed.sort !== "year" && parsed.sort !== "type") {
+        const lengthRank = (unit: LotQueryUnit): number => {
+          if (parsed.lengthMin == null && parsed.lengthMax == null) return 0;
+          const length = lotUnitLength(unit);
+          if (length.ft == null) return 2;
+          const inBand =
+            (parsed.lengthMin == null || length.ft >= parsed.lengthMin) &&
+            (parsed.lengthMax == null || length.ft <= parsed.lengthMax);
+          if (!inBand) return 3;
+          return length.source === "printed" ? 0 : 1;
+        };
+        const byLength = lengthRank(a.unit) - lengthRank(b.unit);
+        if (byLength !== 0) return byLength;
+        if (parsed.sleepsMin != null) {
+          const rank = (unit: LotQueryUnit) => {
+            const sleeps = unitSleeps(unit);
+            return sleeps != null && sleeps >= (parsed.sleepsMin as number) ? 0 : 1;
+          };
+          const bySleep = rank(a.unit) - rank(b.unit);
+          if (bySleep !== 0) return bySleep;
+        }
+      }
       if (parsed.tokens.length) {
         const rank = lotTextScore(b.unit, parsed.tokens) - lotTextScore(a.unit, parsed.tokens);
         if (rank !== 0) return rank;

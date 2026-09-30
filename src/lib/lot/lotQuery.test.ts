@@ -614,30 +614,32 @@ test("12-foot garage in a fifth wheel is fifth-wheel toy haulers, not a travel t
   const follow = answerQueryLotFromSnapshot(
     snap,
     { query: "those aren't toy haulers" },
-    hit.applied ? answerQueryLotFromSnapshot(snap, { query: "a 12-foot garage in a fifth wheel" }, null).lotMemory : null,
+    hit.applied
+      ? answerQueryLotFromSnapshot(snap, { query: "a 12-foot garage in a fifth wheel" }, null).lotMemory
+      : null,
     "those aren't toy haulers",
   );
-  assert.equal(follow.lotMemory?.filter.bodyType, "Fifth Wheel Toy Hauler");
+  assert.equal(follow.lotMemory?.filter.bodyType, "Fifth Wheel");
   assert.ok(follow.matched > 0);
-  assert.ok(follow.matched < 256);
-  assert.ok((follow.units[0]?.body_type || "").includes("Toy Hauler"));
+  assert.ok(follow.units.every((unit) => unit.body_type === "Fifth Wheel"));
+  assert.ok(!follow.units.some((unit) => /toy hauler/i.test(unit.body_type)));
   assert.ok(!follow.units.some((unit) => unit.body_type === "Travel Trailer"));
 });
 
-test("those aren't toy haulers applies the fifth-wheel toy hauler filter", () => {
+test("those aren't toy haulers drops toy haulers", () => {
   const snap = units();
   const fifth = answerQueryLotFromSnapshot(snap, { query: "fifth wheels" }, null, "fifth wheels");
   assert.equal(fifth.matched, 256);
-  const toys = answerQueryLotFromSnapshot(
+  const kept = answerQueryLotFromSnapshot(
     snap,
     { body_type: "Fifth Wheel" },
     fifth.lotMemory,
     "those aren't toy haulers",
   );
-  assert.equal(toys.matched, 88);
-  assert.equal(toys.lotMemory?.filter.bodyType, "Fifth Wheel Toy Hauler");
-  assert.ok(toys.units.every((unit) => unit.body_type === "Fifth Wheel Toy Hauler"));
-  assert.ok(!toys.units.some((unit) => unit.body_type === "Travel Trailer"));
+  assert.equal(kept.matched, 256);
+  assert.equal(kept.lotMemory?.filter.bodyType, "Fifth Wheel");
+  assert.ok(kept.units.every((unit) => unit.body_type === "Fifth Wheel"));
+  assert.ok(!kept.units.some((unit) => /toy hauler/i.test(unit.body_type)));
 });
 
 test("Class A around 50,000 miles is the odometer, not a price, and skips a blank sheet", () => {
@@ -705,4 +707,134 @@ test("spoken lot line names at most 3 units and does not open a hit with None", 
   });
   assert.doesNotMatch(glued.speech, /^None\./);
   assert.match(glued.speech, /Matching units: 8/);
+  assert.doesNotMatch(spoken.speech, /\bstk\b/i);
+});
+
+test("family of five around 30 foot and $50,000 names a coach, not None", () => {
+  const snap = units();
+  const ask =
+    "Hi, I'm trying to find a family of five a 30-foot motorhome, around 30-foot motorhome, around $50,000 that sleeps five. Do you have any recommendations in our inventory?";
+  const hit = searchLot(snap.units, {
+    query: ask,
+    utterance: ask,
+    miles_min: 0,
+    miles_max: 100000,
+    price_min: 0,
+    price_max: 100000,
+    body_type: "Class C",
+  });
+  assert.ok(hit.matched > 0, hit.summary);
+  assert.equal(hit.none, false);
+  assert.equal(hit.applied.miles_min, undefined);
+  assert.equal(hit.applied.miles_max, undefined);
+  assert.equal(hit.applied.price_min, 42500);
+  assert.equal(hit.applied.price_max, 57500);
+  assert.equal(hit.applied.length_ft_min, 28);
+  assert.equal(hit.applied.length_ft_max, 32);
+  assert.equal(hit.applied.body_type, "motorhome");
+  assert.ok(hit.units.every((unit) => /class [abc]/i.test(unit.body_type)));
+  assert.ok(!hit.units.some((unit) => unit.stock_number === "43377A"));
+  assert.doesNotMatch(hit.summary, /^None\./);
+  assert.doesNotMatch(hit.summary, /miles on the sheet/i);
+  const top = hit.units[0]!;
+  assert.ok(top.year && top.make && top.model);
+  assert.ok((top.price ?? 0) >= 42500 && (top.price ?? 0) <= 57500);
+  assert.ok(top.location);
+  const spoken = spokenLotPayload(hit);
+  assert.match(spoken.speech, new RegExp(top.year));
+  assert.match(spoken.speech, new RegExp(top.make.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  assert.match(spoken.speech, /\$[\d,]+/);
+  assert.match(spoken.speech, new RegExp(top.location.split(/\s+/)[0]!));
+  assert.doesNotMatch(spoken.speech, /^None\./);
+  assert.doesNotMatch(spoken.speech, /\bmiles\b/i);
+  assert.doesNotMatch(spoken.speech, /\bstk\b/i);
+  assert.doesNotMatch(spoken.speech, /No length on file/i);
+
+  const pricedAsk = "do we have a 30 foot motorhome around $50,000";
+  const priced = answerQueryLotFromSnapshot(
+    snap,
+    { query: pricedAsk, model: "RV", body_type: "Travel Trailer" },
+    null,
+    pricedAsk,
+  );
+  assert.notEqual(priced.matched, snap.units.length);
+  assert.ok(priced.matched > 0);
+  assert.equal(priced.lotMemory?.filter.minPrice, 42500);
+  assert.equal(priced.lotMemory?.filter.maxPrice, 57500);
+});
+
+test("Class A motorhomes around 50,000 miles stays Class A and ±15 percent", () => {
+  const snap = units();
+  const ask = "Do we have any Class A motorhomes with around 50,000 miles on them?";
+  const hit = searchLot(snap.units, {
+    query: ask,
+    utterance: ask,
+    price_min: 42500,
+    price_max: 57500,
+    limit: 24,
+  });
+  assert.equal(hit.matched, 11, hit.summary);
+  assert.equal(hit.applied.body_type, "Class A");
+  assert.equal(hit.applied.miles_min, 42500);
+  assert.equal(hit.applied.miles_max, 57500);
+  assert.equal(hit.applied.price_min, undefined);
+  assert.equal(hit.applied.price_max, undefined);
+  const forza = hit.units.find((unit) => unit.stock_number === "46343A");
+  assert.ok(forza, hit.units.map((unit) => unit.stock_number).join(","));
+  assert.equal(forza.mileage, 55892);
+  assert.ok((forza.price ?? 0) > 100000);
+  assert.ok(
+    hit.units.every(
+      (unit) => unit.body_type === "Class A" || unit.body_type === "Class A Diesel",
+    ),
+  );
+  assert.doesNotMatch(hit.summary, /^None\./);
+});
+
+test("slides, generator, solar, kitchen, and engine filter the sheet", () => {
+  const snap = units();
+  const slideOf = (unit: (typeof snap.units)[number]) =>
+    unit.slides ??
+    (unit.printed?.number_of_slideouts
+      ? Number(String(unit.printed.number_of_slideouts).replace(/[^\d]/g, ""))
+      : null);
+  const two = snap.units.filter((unit) => slideOf(unit) === 2).length;
+  const none = snap.units.filter((unit) => slideOf(unit) === 0).length;
+  assert.ok(two > 0 && none > 0);
+  assert.equal(searchLot(snap.units, { query: "2 slides" }).matched, two);
+  assert.equal(searchLot(snap.units, { query: "no slides" }).matched, none);
+  assert.equal(
+    searchLot(snap.units, { query: "at least 2 slides" }).matched,
+    snap.units.filter((unit) => (slideOf(unit) ?? -1) >= 2).length,
+  );
+
+  const generatorText = (unit: (typeof snap.units)[number]) =>
+    `${unit.generator || ""} ${unit.printed?.generator || ""} ${unit.printed?.generator_type || ""}`;
+  const gens = snap.units.filter((unit) => generatorText(unit).trim()).length;
+  assert.ok(gens > 0);
+  assert.equal(searchLot(snap.units, { query: "with a generator" }).matched, gens);
+  const dieselGens = snap.units.filter((unit) => /diesel/i.test(generatorText(unit))).length;
+  assert.ok(dieselGens > 0 && dieselGens < gens);
+  assert.equal(searchLot(snap.units, { query: "diesel generator" }).matched, dieselGens);
+  const dieselFuel = searchLot(snap.units, { query: "diesel" }).matched;
+  assert.ok(dieselGens < dieselFuel);
+
+  const featureText = (unit: (typeof snap.units)[number]) =>
+    `${unit.printed?.floorplan_feature || ""} ${unit.printed?.flags || ""}`;
+  const solar = snap.units.filter((unit) => /\bsolar\b/i.test(featureText(unit))).length;
+  assert.ok(solar > 0);
+  assert.equal(searchLot(snap.units, { query: "solar" }).matched, solar);
+  const kitchen = snap.units.filter((unit) => /outdoor kitchen/i.test(featureText(unit))).length;
+  assert.ok(kitchen > 0);
+  assert.equal(searchLot(snap.units, { query: "outdoor kitchen" }).matched, kitchen);
+
+  const cummins = snap.units.filter((unit) => /cummins/i.test(unit.printed?.engine || "")).length;
+  assert.ok(cummins > 0);
+  assert.equal(searchLot(snap.units, { query: "Cummins" }).matched, cummins);
+  const stroke = snap.units.filter((unit) => /power stroke/i.test(unit.printed?.engine || "")).length;
+  assert.ok(stroke > 0);
+  assert.equal(searchLot(snap.units, { query: "Power Stroke" }).matched, stroke);
+
+  const king = searchLot(snap.units, { query: "king bed" });
+  assert.ok(king.matched > 0 && king.matched < snap.units.length);
 });
