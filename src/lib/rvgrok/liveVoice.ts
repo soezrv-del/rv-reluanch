@@ -29,6 +29,7 @@ import {
 } from "./screenGuides.ts";
 import { DAVID_HANSEN_STORY, PEOPLE_FACTS_RULE } from "./originStory.ts";
 import { liveVoiceOutputFor, preferIosLoudspeaker, releaseLiveVoiceOutput } from "./voiceOutput.ts";
+import { ensurePcmWorklet } from "./pcmWorklet.ts";
 import { PCM_SAMPLE_RATE, RV_VOICE_INSTRUCTIONS, VOICE_LOT_ENERGY, VOICE_MIC_RULES } from "./voice.ts";
 
 export type LiveVoicePrewarm = {
@@ -77,6 +78,26 @@ export function getAudioContextCtor(): (typeof AudioContext) | null {
 }
 
 /**
+ * Android Chrome/WebView: ask for the larger "playback" output buffer. The
+ * default "interactive" hint picks the smallest buffer the device claims,
+ * which underruns on budget phones and the emulator. iOS ignores the hint.
+ * Never forces sampleRate (see below).
+ */
+export function createLiveAudioContext(
+  AC: typeof AudioContext,
+  ua: string = typeof navigator !== "undefined" ? navigator.userAgent : "",
+): AudioContext {
+  if (/Android/i.test(ua)) {
+    try {
+      return new AC({ latencyHint: "playback" });
+    } catch {
+      /* old WebView: fall through to the default context */
+    }
+  }
+  return new AC();
+}
+
+/**
  * Call this synchronously from the mic / Live Voice tap — no awaits above it.
  * Does NOT force sampleRate: 24000 (iOS often rejects or silently ignores that).
  */
@@ -100,6 +121,7 @@ export function beginLiveVoiceFromUserGesture(): LiveVoicePrewarm {
   if (existing) {
     if (existing.ctx.state === "suspended") void existing.ctx.resume();
     liveVoiceOutputFor(existing.ctx);
+    void ensurePcmWorklet(existing.ctx);
     return {
       audioCtx: existing.ctx,
       streamPromise: Promise.resolve(existing.stream),
@@ -111,9 +133,11 @@ export function beginLiveVoiceFromUserGesture(): LiveVoicePrewarm {
   try {
     const AC = getAudioContextCtor();
     if (AC) {
-      audioCtx = new AC();
+      audioCtx = createLiveAudioContext(AC);
       if (audioCtx.state === "suspended") void audioCtx.resume();
       liveVoiceOutputFor(audioCtx);
+      // Start loading the worklets now so the first reply does not wait.
+      void ensurePcmWorklet(audioCtx);
     }
   } catch (e) {
     error = e instanceof Error ? e : new Error(String(e));
