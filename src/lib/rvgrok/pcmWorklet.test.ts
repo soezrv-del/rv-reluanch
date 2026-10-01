@@ -96,8 +96,9 @@ test("underrun goes silent, reports, and re-buffers instead of clicking", () => 
   push(sine(4800, 200, 24000)); // 200 ms
   render(48000 * 0.3);
   const msgs = p.port.posted as { type: string }[];
-  assert.ok(msgs.some((m) => m.type === "underrun"));
-  push(sine(480, 200, 24000)); // 20 ms < prebuffer
+  assert.ok(!msgs.some((m) => m.type === "underrun"), "a drain alone is just the end of a reply");
+  push(sine(480, 200, 24000)); // 20 ms < prebuffer, arrives late mid-reply
+  assert.ok(msgs.some((m) => m.type === "underrun"), "late audio after a drain is an underrun");
   const wait = render(48000 * 0.05);
   assert.ok(wait.every((v) => v === 0), "re-buffers before resuming");
   const after = render(48000 * 0.2);
@@ -144,4 +145,12 @@ test("old iOS (before 16.4) keeps the fallback player", () => {
   assert.equal(workletSafeForUa("Mozilla/5.0 (iPhone; CPU iPhone OS 16_4 like Mac OS X)"), true);
   assert.equal(workletSafeForUa("Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X)"), true);
   assert.equal(workletSafeForUa("Mozilla/5.0 (Linux; Android 15; sdk_gphone64_x86_64)"), true);
+});
+
+test("end of reply (no audio for 500 ms+) is not an underrun", () => {
+  const { p, push, render } = player(48000, 50);
+  push(sine(2400, 200, 24000));
+  render(48000 * 1.2);
+  push(sine(2400, 200, 24000));
+  assert.ok(!(p.port.posted as { type: string }[]).some((m) => m.type === "underrun"));
 });

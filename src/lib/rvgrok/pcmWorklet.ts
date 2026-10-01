@@ -10,7 +10,8 @@
  * carries state across chunks. Playback starts once `prebufferMs` is queued,
  * or once that long has passed with anything queued (short tails still play).
  * On underrun it outputs silence and re-buffers, so a late packet is a clean
- * pause and not a click.
+ * pause and not a click. A drain only counts as an underrun when more audio
+ * arrives within 500 ms (otherwise it was just the end of the reply).
  *
  * Capture ("rv-pcm-capture"): downsamples the mic to 24 kHz on the audio
  * thread (box-filter decimation, stateful) and posts fixed-size chunks.
@@ -42,6 +43,8 @@ class RvPcmPlayer extends AudioWorkletProcessor {
     this.playing = false;
     this.waited = 0;
     this.underruns = 0;
+    this.frames = 0;
+    this.drainedAt = -1;
     this.statsEvery = Math.round(sampleRate / 10);
     this.sinceStats = 0;
     this.port.onmessage = (e) => {
@@ -52,6 +55,13 @@ class RvPcmPlayer extends AudioWorkletProcessor {
     };
   }
   push(s) {
+    if (this.drainedAt >= 0) {
+      if (this.frames - this.drainedAt < sampleRate / 2) {
+        this.underruns++;
+        this.port.postMessage({ type: "underrun", count: this.underruns });
+      }
+      this.drainedAt = -1;
+    }
     const keepFrom = Math.max(0, Math.floor(this.readPos) - 2);
     const need = this.writePos + s.length - keepFrom;
     if (need > this.cap) {
@@ -69,6 +79,7 @@ class RvPcmPlayer extends AudioWorkletProcessor {
     this.readPos = this.writePos;
     this.playing = false;
     this.waited = 0;
+    this.drainedAt = -1;
     this.sendStats();
   }
   available() {
@@ -105,12 +116,11 @@ class RvPcmPlayer extends AudioWorkletProcessor {
       for (; i < n; i++) {
         const idx = Math.floor(this.readPos);
         if (idx >= this.writePos) {
-          // Mid-stream underrun: stop at a sample edge and re-buffer.
+          // Ran dry: stop at a sample edge and re-buffer.
           this.playing = false;
           this.waited = 0;
-          this.underruns++;
           this.readPos = this.writePos;
-          this.port.postMessage({ type: "underrun", count: this.underruns });
+          this.drainedAt = this.frames + i;
           break;
         }
         const t = this.readPos - idx;
@@ -128,6 +138,7 @@ class RvPcmPlayer extends AudioWorkletProcessor {
     }
     for (; i < n; i++) out[i] = 0;
     for (let ch = 1; ch < outputs[0].length; ch++) outputs[0][ch].set(out);
+    this.frames += n;
     this.sinceStats += n;
     if (this.sinceStats >= this.statsEvery) this.sendStats();
     return true;
@@ -363,8 +374,8 @@ export function createBufferSourcePlayer(
       src.connect(dest);
       const now = ctx.currentTime;
       if (playhead < now + 0.005) {
-        // A gap after audio already played this reply = a re-buffer.
-        if (started && playhead > 0) underruns++;
+        // Ran dry less than 500 ms ago = a mid-reply re-buffer.
+        if (started && playhead > 0 && now - playhead < 0.5) underruns++;
         playhead = now + prebufferMs / 1000;
       }
       started = true;
