@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import {
   LIVE_VOICE_LIMITER,
   LIVE_VOICE_OUTPUT_GAIN,
+  LIVE_VOICE_SPEAKER_GAIN,
   configureLiveVoiceLimiter,
   playbackNeedsSpeakerElement,
   preferIosLoudspeaker,
@@ -15,6 +16,8 @@ const root = dirname(fileURLToPath(import.meta.url));
 
 test("output gain and limiter constants are the playback chain", () => {
   assert.equal(LIVE_VOICE_OUTPUT_GAIN, 2.5);
+  assert.equal(LIVE_VOICE_SPEAKER_GAIN, 1);
+  assert.ok(LIVE_VOICE_SPEAKER_GAIN <= 1);
   assert.equal(LIVE_VOICE_LIMITER.thresholdDb, -3);
   assert.equal(LIVE_VOICE_LIMITER.kneeDb, 0);
   assert.ok(LIVE_VOICE_LIMITER.ratio >= 12);
@@ -80,10 +83,15 @@ test("playback connects through the gain and the mic mute stays silent", () => {
   assert.match(live, /echoCancellation: true/);
   assert.match(live, /noiseSuppression: true/);
   assert.match(live, /autoGainControl: true/);
-  assert.match(output, /gain\.gain\.value = LIVE_VOICE_OUTPUT_GAIN/);
+  assert.match(
+    output,
+    /gain\.gain\.value = useSpeaker \? LIVE_VOICE_SPEAKER_GAIN : LIVE_VOICE_OUTPUT_GAIN/,
+  );
   assert.match(output, /configureLiveVoiceLimiter\(limiter\)/);
   assert.match(output, /gain\.connect\(limiter\)/);
+  assert.match(output, /gain\.connect\(dest\)/);
   assert.match(output, /createMediaStreamDestination/);
   assert.match(output, /playsInline = true/);
+  assert.match(output, /audio\.volume = LIVE_VOICE_SPEAKER_GAIN/);
   assert.match(output, /audioSession\.type = "play-and-record"|session\.type = "play-and-record"/);
 });
