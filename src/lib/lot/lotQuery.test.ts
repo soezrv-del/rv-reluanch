@@ -984,6 +984,19 @@ test("a misspoken model stays on the sheet coach and does not open the new book"
   assert.equal(unknown.none, true);
   assert.equal(unknown.did_you_mean, undefined);
 
+  const saidNew = searchLot(snap.units, { query: "new Qwertyplugh" });
+  assert.equal(saidNew.matched, 0);
+  assert.equal(saidNew.none, true);
+  assert.notEqual(saidNew.matched, 752);
+
+  const newAscenta = searchLot(snap.units, { query: "new Ascenta" });
+  assert.equal(newAscenta.matched, 0);
+  assert.equal(newAscenta.none, true);
+
+  const junkMake = searchLot(snap.units, { query: "Dynamax Zzqxplinth" });
+  assert.equal(junkMake.matched, 0);
+  assert.equal(junkMake.none, true);
+
   const fresh = searchLot(snap.units, { query: "How many new units" });
   const newCount = snap.units.filter((unit) => /^new$/i.test(unit.condition || "")).length;
   assert.equal(fresh.matched, newCount);

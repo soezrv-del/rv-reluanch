@@ -193,6 +193,9 @@ export function lotTokenMatchesUnit(
 ): boolean {
   const t = singularizeLotToken(token);
   if (!t) return true;
+  // "Isata 5" / "Asada 5". A 1–2 digit token is a series on the name,
+  // not a stock or VIN prefix (those match half the book).
+  if (/^\d{1,2}$/.test(t)) return seriesDigitMatchesUnit(unit, t);
   const stock = compactId(unit.stock_number);
   const vin = compactId(unit.vin);
   if (stock === t || vin === t) return true;
@@ -202,6 +205,17 @@ export function lotTokenMatchesUnit(
   if (BED_WORDS.has(t)) return cacheLotSearchIndex(unit).bedSet.has(t === "bunks" ? "bunk" : t);
   if (stock.startsWith(t) && !isEngineCode(t)) return true;
   return tokenTier(cacheLotSearchIndex(unit), t) > 0;
+}
+
+/** Series digit glued to a coach name. Make, model, trim, and title only. */
+export function seriesDigitMatchesUnit(unit: LotSearchable, token: string): boolean {
+  if (!/^\d{1,2}$/.test(token)) return false;
+  const words = [unit.make, unit.model, unit.trim, unit.title]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase()
+    .split(/[^a-z0-9]+/);
+  return words.includes(token);
 }
 
 /** Empty search returns the full lot. A query AND-matches, then ranks. */

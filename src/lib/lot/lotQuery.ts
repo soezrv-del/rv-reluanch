@@ -2035,6 +2035,14 @@ function hasRecognizedFilter(parsed: Parsed, lengthRequired: boolean): boolean {
     Boolean(parsed.status) ||
     Boolean(parsed.location) ||
     parsed.places.length > 0 ||
+    strongContentFilter(parsed, lengthRequired)
+  );
+}
+
+/** Fuel, type, price, year, length, and the sheet specs. Not condition, status, or store. */
+function strongContentFilter(parsed: Parsed, lengthRequired: boolean): boolean {
+  return (
+    parsed.body.kind !== "any" ||
     parsed.yearMin != null ||
     parsed.yearMax != null ||
     parsed.priceMin != null ||
@@ -2051,6 +2059,12 @@ function hasRecognizedFilter(parsed: Parsed, lengthRequired: boolean): boolean {
     salesmanFilterActive(parsed) ||
     lengthRequired
   );
+}
+
+/** A coach-shaped word that is not on any sheet row. "Looking" is not one of these. */
+function modelWordMiss(token: string, units: LotQueryUnit[]): boolean {
+  if (!/^[a-z]{4,}$/.test(token) || STOP.has(token)) return false;
+  return !units.some((unit) => tokenHitsIdentity(unit, token));
 }
 
 const TYPE_ORDER = [
@@ -2232,7 +2246,12 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
     const names = parsed.tokens.filter((token) =>
       units.some((unit) => tokenIsCoachName(unit, token)),
     );
-    if (names.length) {
+    // Condition, status, and store are not enough to throw away a model word.
+    // "New Qwertyplugh" is none, not the new book. Diesel plus a junk token
+    // still keeps the diesel set.
+    const misses = parsed.tokens.filter((token) => modelWordMiss(token, units));
+    const openBook = misses.length === 0 || strongContentFilter(parsed, lengthRequired);
+    if (openBook && names.length) {
       const byName = units.filter(
         (unit) =>
           names.every((token) => tokenIsCoachName(unit, token)) &&
@@ -2246,7 +2265,7 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
           (!parsed.bed || listingFeatureState(unit, parsed.bed) === "yes"),
       );
       if (byName.length) matched = byName;
-    } else {
+    } else if (openBook) {
       matched = structured;
     }
   }
