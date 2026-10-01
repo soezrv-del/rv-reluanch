@@ -6,18 +6,30 @@
  * iOS play-and-record sends that destination to the earpiece.
  *
  * The chain is: source → output gain → limiter → speaker.
- * On iPhone/iPad the limiter feeds a MediaStream into an <audio playsinline>
- * element, which is the WebKit workaround that keeps the loudspeaker.
+ * On iPhone/iPad the limiter is skipped and unity gain feeds a
+ * MediaStream into an <audio playsinline> element. That element is the
+ * WebKit workaround that keeps the loudspeaker. A boost (or a
+ * DynamicsCompressor into that stream) clips on the iPhone speaker and
+ * sounds like static. The hardware volume button is the loudness knob.
  * There is no API that reports earpiece vs speaker, so iOS always takes
- * that path. Other browsers use AudioContext.destination.
+ * that path. Other browsers use AudioContext.destination with the boost.
  */
 
-/** Boost applied before the limiter. One knob for how loud Live Voice is. */
+/** Boost on laptop / desktop speakers. Not used on the iPhone speaker path. */
 export const LIVE_VOICE_OUTPUT_GAIN = 2.5;
 
 /**
- * DynamicsCompressor used as a limiter so the boost cannot clip.
+ * iPhone / iPad loudspeaker. Full-scale voice times anything above 1
+ * clips in the speaker element and the cone rattles. Unity stays clean
+ * with the phone volume up.
+ */
+export const LIVE_VOICE_SPEAKER_GAIN = 1;
+
+/**
+ * DynamicsCompressor used as a limiter so the desktop boost cannot clip.
  * Threshold near -3 dB, hard knee, high ratio, fast attack.
+ * Not wired on the iOS speaker element. WebKit crackles when this node
+ * feeds a MediaStreamDestination.
  */
 export const LIVE_VOICE_LIMITER = {
   thresholdDb: -3,
@@ -87,7 +99,8 @@ export function playbackNeedsSpeakerElement(
 
 export type LiveVoiceOutput = {
   gain: GainNode;
-  limiter: DynamicsCompressorNode;
+  /** Null on the iOS speaker element. Desktop uses it as a limiter. */
+  limiter: DynamicsCompressorNode | null;
   /** Set only on the iOS loudspeaker workaround. */
   speakerEl: HTMLAudioElement | null;
 };
@@ -103,21 +116,22 @@ export function liveVoiceOutputFor(ctx: AudioContext): LiveVoiceOutput {
   }
 
   preferIosLoudspeaker();
+  const useSpeaker =
+    playbackNeedsSpeakerElement() && typeof document !== "undefined";
   const gain = ctx.createGain();
-  gain.gain.value = LIVE_VOICE_OUTPUT_GAIN;
-  const limiter = ctx.createDynamicsCompressor();
-  configureLiveVoiceLimiter(limiter);
-  gain.connect(limiter);
+  gain.gain.value = useSpeaker ? LIVE_VOICE_SPEAKER_GAIN : LIVE_VOICE_OUTPUT_GAIN;
 
+  let limiter: DynamicsCompressorNode | null = null;
   let speakerEl: HTMLAudioElement | null = null;
-  if (playbackNeedsSpeakerElement() && typeof document !== "undefined") {
+  if (useSpeaker) {
     const dest = ctx.createMediaStreamDestination();
-    limiter.connect(dest);
+    gain.connect(dest);
     const audio = document.createElement("audio");
     audio.setAttribute("playsinline", "true");
     audio.setAttribute("webkit-playsinline", "true");
     audio.playsInline = true;
     audio.autoplay = true;
+    audio.volume = LIVE_VOICE_SPEAKER_GAIN;
     audio.setAttribute("data-live-voice-speaker", "");
     audio.style.cssText =
       "position:fixed;left:0;top:0;width:0;height:0;opacity:0;pointer-events:none;";
@@ -126,6 +140,9 @@ export function liveVoiceOutputFor(ctx: AudioContext): LiveVoiceOutput {
     void audio.play().catch(() => {});
     speakerEl = audio;
   } else {
+    limiter = ctx.createDynamicsCompressor();
+    configureLiveVoiceLimiter(limiter);
+    gain.connect(limiter);
     limiter.connect(ctx.destination);
   }
 
@@ -145,7 +162,7 @@ export function releaseLiveVoiceOutput(ctx: AudioContext | null): void {
     /* already disconnected */
   }
   try {
-    chain.limiter.disconnect();
+    chain.limiter?.disconnect();
   } catch {
     /* already disconnected */
   }
