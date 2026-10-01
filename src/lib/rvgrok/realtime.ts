@@ -12,6 +12,7 @@ import {
 import {
   beginLiveVoiceFromUserGesture,
   buildRealtimeSessionUpdate,
+  createLiveAudioContext,
   buildSessionIntroResponse,
   getRetainedLiveCapture,
   isNativeRealtimeTool,
@@ -46,6 +47,14 @@ import {
   type ScreenCalloutState,
 } from "./screenGuides";
 import { liveVoiceOutputFor } from "./voiceOutput";
+import {
+  PCM_CAPTURE_PROCESSOR,
+  createBufferSourcePlayer,
+  createWorkletPlayer,
+  ensurePcmWorklet,
+  pcm16ToFloat32,
+  type LivePcmPlayer,
+} from "./pcmWorklet";
 import { looksLikeCompanyOrPlantAsk } from "./webIntent";
 import { looksLikeCoachReportAsk } from "./coachReport";
 import { looksLikeRepairQuestion, REPAIR_VOICE_PLAYBOOK } from "./repairMode";
@@ -139,11 +148,17 @@ export class GrokRealtimeSession {
   private ws: WebSocket | null = null;
   private mediaStream: MediaStream | null = null;
   private audioCtx: AudioContext | null = null;
-  private processor: ScriptProcessorNode | null = null;
+  /** Mic tap: AudioWorkletNode, or ScriptProcessorNode where no worklet. */
+  private processor: AudioWorkletNode | ScriptProcessorNode | null = null;
+  private micGraphPending = false;
   private source: MediaStreamAudioSourceNode | null = null;
   private mute: GainNode | null = null;
-  private nextPlayTime = 0;
-  private playSources: AudioBufferSourceNode[] = [];
+  /** Jitter-buffered PCM player (worklet ring buffer or fallback). */
+  private player: LivePcmPlayer | null = null;
+  private playerPromise: Promise<LivePcmPlayer | null> | null = null;
+  private playerCtx: AudioContext | null = null;
+  /** Bumped on barge-in so chunks still in flight are dropped. */
+  private playGeneration = 0;
   private assistantText = "";
   private closed = false;
   private intentionalStop = false;
@@ -376,7 +391,7 @@ export class GrokRealtimeSession {
       this.audioCtx = kept.ctx;
       this.mediaStream = kept.stream;
       if (kept.ctx.state === "suspended") await kept.ctx.resume();
-      this.connectMicGraph();
+      await this.connectMicGraph();
       return;
     }
 
@@ -392,7 +407,7 @@ export class GrokRealtimeSession {
             ).webkitAudioContext
           : undefined;
       if (!AC) throw new Error("Audio is not available in this WebView.");
-      ctx = new AC();
+      ctx = createLiveAudioContext(AC);
     }
     if (ctx.state === "suspended") await ctx.resume();
     this.audioCtx = ctx;
@@ -410,42 +425,74 @@ export class GrokRealtimeSession {
         });
     this.mediaStream = stream;
     retainLiveCapture(stream, ctx);
-    this.connectMicGraph();
+    await this.connectMicGraph();
   }
 
-  private connectMicGraph() {
+  /** 24 kHz mic samples from either capture path → PCM16 → socket. */
+  private onMicSamples(samples24k: Float32Array) {
+    if (this.closed || this.intentionalStop) return;
+    if (this.suppressMic) return;
+    const pcm = floatTo16BitPCM(samples24k);
+
+    const ws = this.ws;
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      this.earlyPcm.push(pcm);
+      if (this.earlyPcm.length > this.maxEarlyChunks) this.earlyPcm.shift();
+      return;
+    }
+
+    this.sendPcm(pcm);
+  }
+
+  private async connectMicGraph() {
     const ctx = this.audioCtx;
     const stream = this.mediaStream;
     if (!ctx || !stream) return;
-    if (this.processor) return;
+    if (this.processor || this.micGraphPending) return;
+    this.micGraphPending = true;
+    let useWorklet = false;
+    try {
+      useWorklet = await ensurePcmWorklet(ctx);
+    } finally {
+      this.micGraphPending = false;
+    }
+    if (this.processor || this.audioCtx !== ctx || this.mediaStream !== stream) {
+      return;
+    }
 
     const source = ctx.createMediaStreamSource(stream);
     this.source = source;
 
-    const bufferSize = 4096;
-    const processor = ctx.createScriptProcessor(bufferSize, 1, 1);
+    let processor: AudioWorkletNode | ScriptProcessorNode;
+    if (useWorklet) {
+      // Audio-thread capture: no main-thread audio callback to underrun.
+      const node = new AudioWorkletNode(ctx, PCM_CAPTURE_PROCESSOR, {
+        numberOfInputs: 1,
+        numberOfOutputs: 1,
+        outputChannelCount: [1],
+        processorOptions: { dstRate: PCM_SAMPLE_RATE, chunkMs: 80 },
+      });
+      node.port.onmessage = (e: MessageEvent) => {
+        if (e.data instanceof Float32Array) this.onMicSamples(e.data);
+      };
+      processor = node;
+    } else {
+      // Fallback for browsers without AudioWorklet (deprecated API).
+      const bufferSize = 4096;
+      const sp = ctx.createScriptProcessor(bufferSize, 1, 1);
+      sp.onaudioprocess = (e) => {
+        const input = e.inputBuffer.getChannelData(0);
+        this.onMicSamples(
+          resampleFloat32(input, ctx.sampleRate, PCM_SAMPLE_RATE),
+        );
+      };
+      processor = sp;
+    }
     this.processor = processor;
-
-    processor.onaudioprocess = (e) => {
-      if (this.closed || this.intentionalStop) return;
-      if (this.suppressMic) return;
-
-      const input = e.inputBuffer.getChannelData(0);
-      const resampled = resampleFloat32(input, ctx.sampleRate, PCM_SAMPLE_RATE);
-      const pcm = floatTo16BitPCM(resampled);
-
-      const ws = this.ws;
-      if (!ws || ws.readyState !== WebSocket.OPEN) {
-        this.earlyPcm.push(pcm);
-        if (this.earlyPcm.length > this.maxEarlyChunks) this.earlyPcm.shift();
-        return;
-      }
-
-      this.sendPcm(pcm);
-    };
+    logLiveVoiceAudio(ctx, useWorklet ? "worklet" : "script-processor");
 
     source.connect(processor);
-    // ScriptProcessor only fires if it reaches destination.
+    // The capture node only runs reliably if it reaches destination.
     const mute = ctx.createGain();
     mute.gain.value = 0;
     this.mute = mute;
@@ -954,10 +1001,7 @@ export class GrokRealtimeSession {
 
     const waitMs = (() => {
       if (!this.audioCtx || this.audioCtx.state === "closed") return 450;
-      const remaining = Math.max(
-        0,
-        (this.nextPlayTime - this.audioCtx.currentTime) * 1000,
-      );
+      const remaining = (this.player?.remainingSec() ?? 0) * 1000;
       return Math.min(Math.max(remaining + 350, 450), 12000);
     })();
 
@@ -976,39 +1020,48 @@ export class GrokRealtimeSession {
     }, waitMs);
   }
 
-  private async enqueuePcmPlayback(pcm: ArrayBuffer) {
-    try {
-      const ctx = this.audioCtx;
-      if (!ctx || ctx.state === "closed") return;
-      if (ctx.state === "suspended") await ctx.resume();
-
-      const int16 = new Int16Array(pcm);
-      if (int16.length === 0) return;
-      const float32 = new Float32Array(int16.length);
-      for (let i = 0; i < int16.length; i++) {
-        float32[i] = (int16[i] ?? 0) / 0x8000;
-      }
-
-      const play = resampleFloat32(float32, PCM_SAMPLE_RATE, ctx.sampleRate);
-      const buffer = ctx.createBuffer(1, play.length, ctx.sampleRate);
-      buffer.getChannelData(0).set(play);
-
-      const src = ctx.createBufferSource();
-      src.buffer = buffer;
+  /** One player per session + context; worklet when available. */
+  private playerFor(ctx: AudioContext): Promise<LivePcmPlayer | null> {
+    if (this.playerPromise && this.playerCtx === ctx) return this.playerPromise;
+    this.player?.dispose();
+    this.player = null;
+    this.playerCtx = ctx;
+    this.playerPromise = ensurePcmWorklet(ctx).then((ok) => {
+      if (this.playerCtx !== ctx || ctx.state === "closed") return null;
       const output = liveVoiceOutputFor(ctx);
-      src.connect(output.gain);
+      let player: LivePcmPlayer;
+      try {
+        player = ok
+          ? createWorkletPlayer(ctx, output.gain, PCM_SAMPLE_RATE)
+          : createBufferSourcePlayer(ctx, output.gain, PCM_SAMPLE_RATE);
+      } catch {
+        player = createBufferSourcePlayer(ctx, output.gain, PCM_SAMPLE_RATE);
+      }
+      console.info(
+        `[LiveVoice] player=${player.kind} route=${output.route} ctxRate=${ctx.sampleRate} pcmRate=${PCM_SAMPLE_RATE}`,
+      );
+      this.player = player;
+      return player;
+    });
+    return this.playerPromise;
+  }
 
-      const now = ctx.currentTime;
-      const startAt = Math.max(now + 0.02, this.nextPlayTime);
-      src.start(startAt);
-      this.nextPlayTime = startAt + buffer.duration;
-      this.playSources.push(src);
-      src.onended = () => {
-        this.playSources = this.playSources.filter((s) => s !== src);
-      };
-    } catch {
-      /* ignore playback glitches */
-    }
+  private enqueuePcmPlayback(pcm: ArrayBuffer) {
+    const ctx = this.audioCtx;
+    if (!ctx || ctx.state === "closed") return;
+    if (ctx.state !== "running") void ctx.resume().catch(() => {});
+    const samples = pcm16ToFloat32(pcm);
+    if (samples.length === 0) return;
+    // Promise callbacks run in order, so chunks stay in order while the
+    // worklet module is still loading.
+    const generation = this.playGeneration;
+    void this.playerFor(ctx)
+      .then((player) => {
+        if (generation === this.playGeneration) player?.push(samples);
+      })
+      .catch(() => {
+        /* ignore playback glitches */
+      });
   }
 
   stop(opts?: { keepCapture?: boolean }) {
@@ -2345,24 +2398,8 @@ export class GrokRealtimeSession {
       clearTimeout(this.rearmTimer);
       this.rearmTimer = null;
     }
-    for (const src of this.playSources) {
-      try {
-        src.stop(0);
-      } catch {
-        /* already stopped */
-      }
-      try {
-        src.disconnect();
-      } catch {
-        /* */
-      }
-    }
-    this.playSources = [];
-    if (this.audioCtx && this.audioCtx.state !== "closed") {
-      this.nextPlayTime = this.audioCtx.currentTime;
-    } else {
-      this.nextPlayTime = 0;
-    }
+    this.playGeneration++;
+    this.player?.clear();
   }
 
   private disconnectGraph() {
@@ -2390,15 +2427,10 @@ export class GrokRealtimeSession {
   private teardownCapture(release: boolean) {
     this.disconnectGraph();
 
-    for (const src of this.playSources) {
-      try {
-        src.stop(0);
-      } catch {
-        /* */
-      }
-    }
-    this.playSources = [];
-    this.nextPlayTime = 0;
+    this.player?.dispose();
+    this.player = null;
+    this.playerPromise = null;
+    this.playerCtx = null;
 
     if (release) {
       this.mediaStream = null;
@@ -2406,6 +2438,18 @@ export class GrokRealtimeSession {
       releaseLiveCapture();
     }
   }
+}
+
+/** One console line per capture start: objective signal for device tests. */
+function logLiveVoiceAudio(ctx: AudioContext, capture: string) {
+  const c = ctx as AudioContext & { outputLatency?: number };
+  console.info(
+    `[LiveVoice] capture=${capture} ctxRate=${ctx.sampleRate} baseLatency=${
+      typeof ctx.baseLatency === "number" ? ctx.baseLatency.toFixed(4) : "n/a"
+    } outputLatency=${
+      typeof c.outputLatency === "number" ? c.outputLatency.toFixed(4) : "n/a"
+    }`,
+  );
 }
 
 function arrayBufferToBase64Safe(buf: ArrayBuffer): string {

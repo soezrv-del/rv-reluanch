@@ -4,37 +4,55 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  LIVE_VOICE_LIMITER,
   LIVE_VOICE_OUTPUT_GAIN,
-  LIVE_VOICE_SPEAKER_GAIN,
-  configureLiveVoiceLimiter,
+  LIVE_VOICE_ROUTE_KEY,
+  LIVE_VOICE_SOFT_CLIP,
+  liveVoiceRouteOverride,
   playbackNeedsSpeakerElement,
   preferIosLoudspeaker,
+  shouldUseSpeakerElement,
+  softClipCurve,
 } from "./voiceOutput.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-test("output gain and limiter constants are the playback chain", () => {
-  assert.equal(LIVE_VOICE_OUTPUT_GAIN, 2.5);
-  assert.equal(LIVE_VOICE_SPEAKER_GAIN, 1);
-  assert.ok(LIVE_VOICE_SPEAKER_GAIN <= 1);
-  assert.equal(LIVE_VOICE_LIMITER.thresholdDb, -3);
-  assert.equal(LIVE_VOICE_LIMITER.kneeDb, 0);
-  assert.ok(LIVE_VOICE_LIMITER.ratio >= 12);
-  assert.ok(LIVE_VOICE_LIMITER.attackSec > 0 && LIVE_VOICE_LIMITER.attackSec <= 0.01);
-  const node = {
-    threshold: { value: 0 },
-    knee: { value: 30 },
-    ratio: { value: 1 },
-    attack: { value: 1 },
-    release: { value: 1 },
+test("output gain is a small boost with a soft clipper, not 2.5x into a hard limiter", () => {
+  assert.ok(LIVE_VOICE_OUTPUT_GAIN >= 1 && LIVE_VOICE_OUTPUT_GAIN <= 1.2);
+  const curve = softClipCurve();
+  assert.equal(curve.length, LIVE_VOICE_SOFT_CLIP.points);
+  const at = (x: number) => curve[Math.round(((x + 1) / 2) * (curve.length - 1))]!;
+  // Linear (unity) below the knee.
+  assert.ok(Math.abs(at(0.5) - 0.5) < 0.002);
+  assert.ok(Math.abs(at(-0.5) + 0.5) < 0.002);
+  // Never reaches full scale, even at the boosted peak.
+  assert.ok(curve[curve.length - 1]! < LIVE_VOICE_SOFT_CLIP.ceiling);
+  assert.ok(curve[0]! > -LIVE_VOICE_SOFT_CLIP.ceiling);
+  // Monotonic and smooth: no step bigger than a linear slope would make.
+  const step = 2 / (curve.length - 1);
+  for (let i = 1; i < curve.length; i++) {
+    const d = curve[i]! - curve[i - 1]!;
+    assert.ok(d >= 0 && d <= step + 1e-6, `curve step ${i}`);
+  }
+});
+
+test("lvroute override persists and defaults to the device rule", () => {
+  const store = new Map<string, string>();
+  const storage = {
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => void store.set(k, v),
+    removeItem: (k: string) => void store.delete(k),
   };
-  configureLiveVoiceLimiter(node);
-  assert.equal(node.threshold.value, LIVE_VOICE_LIMITER.thresholdDb);
-  assert.equal(node.knee.value, LIVE_VOICE_LIMITER.kneeDb);
-  assert.equal(node.ratio.value, LIVE_VOICE_LIMITER.ratio);
-  assert.equal(node.attack.value, LIVE_VOICE_LIMITER.attackSec);
-  assert.equal(node.release.value, LIVE_VOICE_LIMITER.releaseSec);
+  assert.equal(liveVoiceRouteOverride("", storage), "auto");
+  assert.equal(liveVoiceRouteOverride("?lvroute=destination", storage), "destination");
+  assert.equal(store.get(LIVE_VOICE_ROUTE_KEY), "destination");
+  assert.equal(liveVoiceRouteOverride("", storage), "destination");
+  assert.equal(liveVoiceRouteOverride("?lvroute=bogus", storage), "destination");
+  assert.equal(liveVoiceRouteOverride("?lvroute=auto", storage), "auto");
+  assert.equal(store.has(LIVE_VOICE_ROUTE_KEY), false);
+  assert.equal(shouldUseSpeakerElement("auto", true), true);
+  assert.equal(shouldUseSpeakerElement("auto", false), false);
+  assert.equal(shouldUseSpeakerElement("destination", true), false);
+  assert.equal(shouldUseSpeakerElement("element", false), true);
 });
 
 test("iOS uses the speaker element; play-and-record is set when the session exists", () => {
@@ -67,31 +85,33 @@ test("iOS uses the speaker element; play-and-record is set when the session exis
   assert.equal(preferIosLoudspeaker({} as Navigator), false);
 });
 
-test("playback connects through the gain and the mic mute stays silent", () => {
+test("playback goes through the jitter-buffered player and the output gain", () => {
   const realtime = readFileSync(join(root, "realtime.ts"), "utf8");
   const live = readFileSync(join(root, "liveVoice.ts"), "utf8");
   const output = readFileSync(join(root, "voiceOutput.ts"), "utf8");
   assert.match(realtime, /const output = liveVoiceOutputFor\(ctx\)/);
-  assert.match(realtime, /src\.connect\(output\.gain\)/);
-  assert.doesNotMatch(realtime, /src\.connect\(ctx\.destination\)/);
+  assert.match(realtime, /createWorkletPlayer\(ctx, output\.gain, PCM_SAMPLE_RATE\)/);
+  assert.match(realtime, /createBufferSourcePlayer\(ctx, output\.gain, PCM_SAMPLE_RATE\)/);
+  assert.doesNotMatch(realtime, /resampleFloat32\(float32, PCM_SAMPLE_RATE, ctx\.sampleRate\)/);
+  // Capture: worklet first, ScriptProcessor only as the fallback.
+  assert.match(realtime, /new AudioWorkletNode\(ctx, PCM_CAPTURE_PROCESSOR/);
+  assert.match(realtime, /if \(useWorklet\)/);
   assert.match(realtime, /mute\.gain\.value = 0/);
   assert.match(realtime, /mute\.connect\(ctx\.destination\)/);
   assert.doesNotMatch(realtime, /mute\.connect\(output/);
+  assert.match(realtime, /this\.player\?\.clear\(\)/);
   assert.match(live, /preferIosLoudspeaker\(\)/);
   assert.match(live, /liveVoiceOutputFor\(/);
+  assert.match(live, /void ensurePcmWorklet\(audioCtx\)/);
   assert.match(live, /if \(audioCtx\.state === "suspended"\) void audioCtx\.resume\(\)/);
   assert.match(live, /echoCancellation: true/);
   assert.match(live, /noiseSuppression: true/);
   assert.match(live, /autoGainControl: true/);
-  assert.match(
-    output,
-    /gain\.gain\.value = useSpeaker \? LIVE_VOICE_SPEAKER_GAIN : LIVE_VOICE_OUTPUT_GAIN/,
-  );
-  assert.match(output, /configureLiveVoiceLimiter\(limiter\)/);
-  assert.match(output, /gain\.connect\(limiter\)/);
-  assert.match(output, /gain\.connect\(dest\)/);
+  assert.doesNotMatch(live, /new AC\(\{[^}]*sampleRate/);
+  assert.match(output, /gain\.gain\.value = LIVE_VOICE_OUTPUT_GAIN/);
+  assert.match(output, /gain\.connect\(clipper\)/);
+  assert.doesNotMatch(output, /createDynamicsCompressor/);
   assert.match(output, /createMediaStreamDestination/);
   assert.match(output, /playsInline = true/);
-  assert.match(output, /audio\.volume = LIVE_VOICE_SPEAKER_GAIN/);
   assert.match(output, /audioSession\.type = "play-and-record"|session\.type = "play-and-record"/);
 });
