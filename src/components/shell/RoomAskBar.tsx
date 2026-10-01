@@ -6,6 +6,7 @@ import {
   roomAskMic,
   roomAskSend,
   subscribeRoomVoice,
+  subscribeRoomVoiceError,
   type RoomVoicePhase,
 } from "@/lib/rvgrok/roomAsk";
 import { markAskBarGrokEntry } from "@/lib/rvgrok/screenContext";
@@ -28,7 +29,17 @@ export function RoomAskBar({
   const hidePinnedAsk = !homeOpen && tab === "rvgrok";
   const live = voice !== "idle";
 
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+
   useEffect(() => subscribeRoomVoice(setVoice), []);
+  // A Live Voice failure (e.g. mic permission) started from this bar would
+  // otherwise only render inside the hidden Grok pane. Show it briefly here.
+  useEffect(() => subscribeRoomVoiceError(setVoiceError), []);
+  useEffect(() => {
+    if (!voiceError) return;
+    const t = window.setTimeout(() => setVoiceError(null), 8000);
+    return () => window.clearTimeout(t);
+  }, [voiceError]);
 
   const send = () => {
     const q = draft.trim();
@@ -50,6 +61,15 @@ export function RoomAskBar({
             send();
           }}
         >
+          {voiceError && !live ? (
+            <p
+              role="alert"
+              data-room-voice-error
+              className="showroom-voice-error"
+            >
+              {voiceError}
+            </p>
+          ) : null}
           <div className="showroom-ask showroom-float">
             <input
               data-room-ask-input
@@ -82,6 +102,7 @@ export function RoomAskBar({
               }
               title={live ? "Stop Live Voice" : "Start Live Voice"}
               onClick={() => {
+                setVoiceError(null);
                 roomAskMic();
               }}
             >

@@ -334,6 +334,17 @@ export function tokenMintPlan(hasXaiKey: boolean): Array<"xai" | "worker"> {
 const PERMISSION_MSG =
   "Microphone is blocked. On iPhone: Settings → RVFAX → Microphone → On, then tap the mic again.";
 
+const ANDROID_PERMISSION_MSG =
+  "Microphone is blocked. On Android: Settings → Apps → RVFAX → Permissions → Microphone → Allow, then tap the mic again.";
+
+/** Android WebView reports the same NotAllowedError; give it Android steps. */
+export function livePermissionMessage(userAgent?: string): string {
+  const ua =
+    userAgent ??
+    (typeof navigator !== "undefined" ? navigator.userAgent || "" : "");
+  return /android/i.test(ua) ? ANDROID_PERMISSION_MSG : PERMISSION_MSG;
+}
+
 const TOKEN_MSG =
   "Could not start Live Voice (connection token). Stay on this screen and tap the mic again in a few seconds.";
 
@@ -352,10 +363,10 @@ export function classifyLiveVoiceError(raw: unknown): ClassifiedLiveVoiceError {
       text,
     )
   ) {
-    return { kind: "permission", message: PERMISSION_MSG };
+    return { kind: "permission", message: livePermissionMessage() };
   }
   if (/securityerror|the request is not allowed/i.test(text)) {
-    return { kind: "permission", message: PERMISSION_MSG };
+    return { kind: "permission", message: livePermissionMessage() };
   }
 
   if (

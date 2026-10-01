@@ -5,12 +5,15 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   publishRoomVoice,
+  publishRoomVoiceError,
   registerRoomAsk,
   roomAskMic,
   roomAskSend,
   roomVoicePhaseFromStatus,
   subscribeRoomVoice,
+  subscribeRoomVoiceError,
 } from "./roomAsk.ts";
+import { classifyLiveVoiceError, livePermissionMessage } from "./liveVoice.ts";
 import { readActiveScreen, setActiveScreen } from "./screenContext.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -178,4 +181,33 @@ test("Premium menu reaches RV GPS once, from the activity tile", () => {
   assert.match(more, /title="VIN Decoder"/);
   assert.match(more, /title="RvGrok Voice Settings"/);
   assert.doesNotMatch(more, /onNavigate\?\.\("rvlot"\)/);
+});
+
+test("a Live Voice error reaches the ask bar on another room", () => {
+  const seen: Array<string | null> = [];
+  const off = subscribeRoomVoiceError((m) => seen.push(m));
+  publishRoomVoiceError("Microphone is blocked.");
+  publishRoomVoiceError("   ");
+  off();
+  publishRoomVoiceError("after off");
+  publishRoomVoiceError(null);
+  assert.deepEqual(seen, [null, "Microphone is blocked.", null]);
+
+  const app = read("../../components/rvgrok/RvGrokApp.tsx");
+  assert.match(app, /publishRoomVoiceError\(voiceError\)/);
+  // The Grok landing hides the composer dock, so its hint carries the error.
+  assert.match(app, /: voiceError\s*\? voiceError/);
+  const bar = read("../../components/shell/RoomAskBar.tsx");
+  assert.match(bar, /subscribeRoomVoiceError\(setVoiceError\)/);
+  assert.match(bar, /role="alert"/);
+});
+
+test("Android mic denial gets Android steps, iPhone keeps iPhone steps", () => {
+  const android =
+    "Mozilla/5.0 (Linux; Android 17; sdk_gphone64_arm64; wv) AppleWebKit/537.36";
+  const iphone = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)";
+  assert.match(livePermissionMessage(android), /On Android: Settings → Apps → RVFAX/);
+  assert.match(livePermissionMessage(iphone), /On iPhone: Settings → RVFAX/);
+  const denied = classifyLiveVoiceError(new Error("NotAllowedError: Permission denied"));
+  assert.equal(denied.kind, "permission");
 });

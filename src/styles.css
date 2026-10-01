@@ -3289,6 +3289,17 @@ button.showroom-hero {
 .showroom-ask input::placeholder {
   color: #d3dbe8;
 }
+.showroom-voice-error {
+  margin: 0 0 0.45rem;
+  border-radius: 0.75rem;
+  padding: 0.45rem 0.8rem;
+  background: rgba(11, 16, 28, 0.9);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: center;
+  color: #ffffff;
+}
 .showroom-live {
   flex: 0 0 auto;
   font-size: 0.7rem;
