@@ -4,6 +4,7 @@
  */
 
 import {
+  bestCloseModelWord,
   consumeBedTokens,
   consumeGenerator,
   consumeMiles,
@@ -523,13 +524,32 @@ function stripLengthTalk(phrase: string): string {
     .trim();
 }
 
+function gluedToCoachName(token: string): boolean {
+  if (!token || STOP.has(token)) return false;
+  return /^[a-z]{3,}$/.test(token);
+}
+
+function coachWordIn(text: string): boolean {
+  return text.split(/\s+/).some((word) => {
+    const token = singularizeLotToken(word);
+    return /^[a-z]{4,}$/.test(token) && !STOP.has(token);
+  });
+}
+
 function identityTokens(phrase: string, places: Set<string>): string[] {
   const cleaned = stripLengthTalk(phrase);
+  const raw = cleaned.split(/\s+/).filter(Boolean);
   const out: string[] = [];
-  for (const token of cleaned.split(/\s+/)) {
+  for (let i = 0; i < raw.length; i++) {
+    const token = raw[i] || "";
     if (!token || STOP.has(token)) continue;
     if (places.has(token)) continue;
-    if (/^\d{1,2}$/.test(token)) continue;
+    // "5" in "Isata 5" / "Asada 5" is the series, not a length.
+    if (/^\d{1,2}$/.test(token)) {
+      const prev = raw[i - 1] || "";
+      const next = raw[i + 1] || "";
+      if (!gluedToCoachName(prev) && !gluedToCoachName(next)) continue;
+    }
     if (/^\d{2}(?:ft|foot|feet|footer|footers)$/.test(token)) continue;
     if (/^\d{1,2}(?:\.\d+)?(?:ft|foot|feet)$/.test(token)) continue;
     if (token.length < 2 && !/\d/.test(token)) continue;
@@ -1743,7 +1763,7 @@ export function reconcileLotArgs(args: LotQueryArgs = {}): LotQueryArgs {
       }
     }
   }
-  return next;
+  return { ...next, ...(followUp ? { follow_up: true } : {}) };
 }
 
 function parseArgs(units: LotQueryUnit[], args: LotQueryArgs): Parsed {
@@ -1922,8 +1942,90 @@ function bedLabel(bed: string): string {
   return "King bed";
 }
 
-function passesTokens(unit: LotQueryUnit, tokens: string[]): boolean {
-  return tokens.every((token) => tokenHitsIdentity(unit, token));
+function nameWords(unit: LotQueryUnit): string[] {
+  return normalizeLotQueryText(
+    `${unit.make || ""} ${unit.model || ""} ${unit.series || ""} ${unit.trim || ""} ${unit.title || ""}`,
+  )
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+/** "5" in Isata 5 is a series word. It is not a stock-number prefix. */
+function seriesDigitHits(unit: LotQueryUnit, digit: string): boolean {
+  return nameWords(unit).includes(digit);
+}
+
+function nameHasWord(unit: LotQueryUnit, token: string): boolean {
+  const words = nameWords(unit);
+  if (words.includes(token)) return true;
+  if (token.length >= 4) return words.some((word) => word.startsWith(token));
+  return false;
+}
+
+function tokenHitsMake(unit: LotQueryUnit, token: string): boolean {
+  const words = normalizeLotQueryText(unit.make || "").split(/\s+/);
+  return words.some((word) => word === token || (token.length >= 4 && word.startsWith(token)));
+}
+
+type ModelAlias = { spoken: string; key: string; display: string; distance: number };
+
+/**
+ * A model word that is not on the sheet, mapped to the sheet word.
+ * Make-scoped when a make token already hit, so Ascenta is Isata on a
+ * Dynamax row and not Aspen on the rest of the book.
+ */
+function modelAlias(units: LotQueryUnit[], tokens: string[]): ModelAlias | undefined {
+  const misses = tokens.filter(
+    (token) => /^[a-z]{4,}$/.test(token) && !units.some((unit) => tokenHitsIdentity(unit, token)),
+  );
+  if (!misses.length) return undefined;
+  const makeAnchors = tokens.filter((token) => units.some((unit) => tokenHitsMake(unit, token)));
+  const pool = makeAnchors.length
+    ? units.filter((unit) => makeAnchors.every((token) => tokenHitsMake(unit, token)))
+    : units;
+  const loose = makeAnchors.length > 0 && pool.length > 0 && pool.length < units.length;
+  for (const miss of misses) {
+    const close = bestCloseModelWord(miss, pool.length ? pool : units, loose);
+    if (close) {
+      return { spoken: miss, key: close.key, display: close.display, distance: close.distance };
+    }
+  }
+  return undefined;
+}
+
+function tokenSatisfied(unit: LotQueryUnit, token: string, alias?: ModelAlias): boolean {
+  if (/^\d{1,2}$/.test(token)) return seriesDigitHits(unit, token);
+  if (tokenHitsIdentity(unit, token)) return true;
+  return Boolean(alias && alias.spoken === token && nameHasWord(unit, alias.key));
+}
+
+function passesTokens(unit: LotQueryUnit, tokens: string[], alias?: ModelAlias): boolean {
+  return tokens.every((token) => tokenSatisfied(unit, token, alias));
+}
+
+/** Series digit on the model line. Year and floorplan stay out. */
+function modelSeriesNumber(unit: LotQueryUnit): number | undefined {
+  const words = normalizeLotQueryText(`${unit.model || ""} ${unit.series || ""}`).split(/\s+/);
+  const nums = words.filter((word) => /^\d{1,2}$/.test(word)).map(Number);
+  if (!nums.length) return undefined;
+  return Math.max(...nums);
+}
+
+/**
+ * A one- or two-edit miss returns every sheet unit of that model.
+ * A looser sound-alike (Ascenta → Isata) is one series: the highest on
+ * the sheet. The other series is similar, not this match.
+ */
+function keepCloseSeries(units: LotQueryUnit[], alias: ModelAlias | undefined): LotQueryUnit[] {
+  if (!alias || alias.distance <= 2 || units.length < 2) return units;
+  let best = -1;
+  for (const unit of units) {
+    const n = modelSeriesNumber(unit);
+    if (n != null && n > best) best = n;
+  }
+  if (best < 0) return units;
+  const narrowed = units.filter((unit) => modelSeriesNumber(unit) === best);
+  return narrowed.length ? narrowed : units;
 }
 
 function hasRecognizedFilter(parsed: Parsed, lengthRequired: boolean): boolean {
@@ -2064,24 +2166,69 @@ function withSheetNotes(
 }
 
 /**
+ * A fresh coach question searches the whole snapshot.
+ * "In stock" is not "new", and a store the salesman did not name is not a filter.
+ * A follow-up keeps the filters it carried.
+ */
+function dropUnspokenCoachNarrowing(args: LotQueryArgs): LotQueryArgs {
+  if (args.follow_up) return args;
+  const text = normalizeLotQueryText(`${str(args.query)} ${str(args.utterance)}`);
+  if (!coachWordIn(text)) return args;
+  const next: LotQueryArgs = { ...args };
+  if (!/\bnew\b/.test(text) && !/\bused\b/.test(text)) next.condition = "";
+  if (!STATUS_PHRASES.some((phrase) => text.includes(phrase))) next.status = "";
+  if (str(next.location)) {
+    const head =
+      normalizeLotQueryText(str(next.location))
+        .split(/\s+/)
+        .find((word) => word.length >= 4) || "";
+    if (head && !text.includes(head)) next.location = "";
+  }
+  return next;
+}
+
+function capitalizeWord(word: string): string {
+  if (!word) return word;
+  return word.charAt(0).toUpperCase() + word.slice(1);
+}
+
+function cityOnly(location: string): string {
+  const parts = location.trim().split(/\s+/);
+  const last = parts[parts.length - 1] || "";
+  if (parts.length >= 2 && /^[A-Za-z]{2}$/.test(last)) return parts.slice(0, -1).join(" ");
+  return location;
+}
+
+function oneCloseLine(unit: LotQueryUnit, sheet: string, spoken: string): string {
+  const make = (unit.make || "").replace(/\s+corp\.?$/i, "");
+  const model = (unit.model || "").replace(/\s+series$/i, "");
+  const name = [unit.year, make, model, unit.trim].filter(Boolean).join(" ");
+  const bits = [name, formatUsd(unit.price), cityOnly(unit.location || ""), (unit.lot_status || "").toLowerCase()]
+    .filter(Boolean);
+  return `One close match. ${bits.join(", ")}. Sheet says ${sheet}, not ${capitalizeWord(spoken)}.`;
+}
+
+/**
  * Search the caller's own-lot units. `matched` is the full hit count.
- * `units` is the top N rows. A one-edit make/model miss sets `did_you_mean`
- * instead of a bare zero.
+ * `units` is the top N rows. A close make/model miss returns those sheet
+ * units and sets `did_you_mean`. It does not open the rest of the book.
  */
 export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQueryResult {
-  const clean = reconcileLotArgs(args);
+  const clean = dropUnspokenCoachNarrowing(reconcileLotArgs(args));
   const parsed = parseArgs(units, clean);
   const lengthBounded = parsed.lengthMin != null || parsed.lengthMax != null;
   const lengthRequired = lengthBounded || parsed.sort === "length";
   const structured = units.filter((unit) => passesStructured(unit, parsed, lengthRequired));
+  const alias = modelAlias(units, parsed.tokens);
   let matched = parsed.tokens.length
-    ? structured.filter((unit) => passesTokens(unit, parsed.tokens))
+    ? structured.filter((unit) => passesTokens(unit, parsed.tokens, alias))
     : structured;
-  // Spare words ("looking", "right", "try again") are not a coach name.
+  // Spare words ("looking", "right", "try again", "anything") are not a coach name.
   // If used / diesel / class / price already picked a set, keep that set.
   // A real name that the class filter missed (Class A Lineage) still returns that coach.
+  // A model word that is one sound off stays on that sheet coach. It does not open the book.
   const recognized = hasRecognizedFilter(parsed, lengthRequired);
-  if (!matched.length && parsed.tokens.length && recognized) {
+  if (!matched.length && parsed.tokens.length && recognized && !alias) {
     const names = parsed.tokens.filter((token) =>
       units.some((unit) => tokenIsCoachName(unit, token)),
     );
@@ -2104,8 +2251,9 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
     }
   }
   // A name with no class, fuel, or price can still use the plain bar.
-  // Do not run that bar over a sentence that already named a real filter.
-  if (!matched.length && !recognized) {
+  // Do not run that bar over a sentence that already named a real filter,
+  // and do not use it to throw away a model word that missed.
+  if (!matched.length && !recognized && !alias) {
     const plainTokens = plainTypeaheadTokens(
       [clean.query, clean.make, clean.model].filter(Boolean).join(" "),
     );
@@ -2168,7 +2316,7 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
     let pool = units.filter((unit) =>
       passesStructured(unit, { ...parsed, bed: undefined }, lengthRequired),
     );
-    if (parsed.tokens.length) pool = pool.filter((unit) => passesTokens(unit, parsed.tokens));
+    if (parsed.tokens.length) pool = pool.filter((unit) => passesTokens(unit, parsed.tokens, alias));
     else if (pool.length !== 1) pool = [];
     if (milesBounded) {
       pool = pool.filter((unit) => {
@@ -2199,6 +2347,7 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
       }
     }
   }
+  matched = keepCloseSeries(matched, alias);
   const noLength = lengthRequired
     ? units.filter((unit) => {
         if (lotUnitLength(unit).ft != null) return false;
@@ -2206,7 +2355,8 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
       })
     : [];
   const didYouMean =
-    matched.length || recognized ? undefined : suggestName(parsed.tokens, units);
+    alias?.display ||
+    (matched.length || recognized ? undefined : suggestName(parsed.tokens, units));
   const counts = countsFor(matched);
   const sorted = matched
     .map((unit, index) => ({ unit, index }))
@@ -2306,6 +2456,14 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
     const name = [named.year, named.make, named.model].filter(Boolean).join(" ");
     summary = `No ${bedLabel(parsed.bed).toLowerCase()} on the ${name}, stk ${named.stock_number}.`;
   }
+  if (alias && matched.length === 1 && sorted[0] && !featureBlank && !featureNo) {
+    summary = oneCloseLine(sorted[0], alias.display, alias.spoken);
+  } else if (alias && matched.length && !featureBlank && !featureNo) {
+    const note = `Sheet says ${alias.display}, not ${capitalizeWord(alias.spoken)}.`;
+    if (!summary.includes(note)) {
+      summary = `${summary.replace(/\s+$/, "").replace(/\.$/, "")}. ${note}`;
+    }
+  }
   return {
     ok: true,
     matched: matched.length,
@@ -2329,7 +2487,11 @@ export function formatLotQueryNotes(result: LotQueryResult): string {
     lines.push(`Close match: ${result.close}.`);
   }
   if (result.did_you_mean) {
-    lines.push(`Did you mean ${result.did_you_mean}? Say none only when matched is 0.`);
+    if (result.matched) {
+      lines.push(`Sheet says ${result.did_you_mean}. These units are the match. Do not say none.`);
+    } else {
+      lines.push(`Did you mean ${result.did_you_mean}? Say none only when matched is 0.`);
+    }
   }
   for (const unit of result.units) {
     lines.push(

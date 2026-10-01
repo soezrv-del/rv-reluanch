@@ -138,12 +138,12 @@ test("structured zero falls back to the plain type-ahead match", () => {
   assert.ok(hit.units.every((unit) => /lineage/i.test(unit.model)));
 });
 
-test("Linage suggests Lineage instead of a bare zero", () => {
+test("Linage returns the Lineage coaches and names the sheet model", () => {
   const hit = searchLot(units().units, { query: "Linage" });
-  assert.equal(hit.matched, 0);
+  assert.equal(hit.matched, 27);
   assert.equal(hit.did_you_mean, "Lineage");
-  assert.match(hit.summary, /Did you mean Lineage/);
-  assert.doesNotMatch(hit.summary, /stk /);
+  assert.match(hit.summary, /Sheet says Lineage, not Linage/);
+  assert.ok(hit.units.every((unit) => /lineage/i.test(unit.model)));
 });
 
 test("how about used Super Cs after a Lineage question still calls the tool and returns 12", () => {
@@ -920,4 +920,72 @@ test("40 foot and under is a ceiling, and the full list is not a Full House", ()
     const second = hit.units[1];
     if (second?.make) assert.match(list.summary || "", new RegExp(second.make));
   }
+});
+
+test("a misspoken model stays on the sheet coach and does not open the new book", () => {
+  const snap = units();
+  const sparks = "UPS9882";
+  const asada = searchLot(snap.units, { query: "Asada 5" });
+  assert.equal(asada.matched, 1);
+  assert.equal(asada.units[0]?.stock_number, sparks);
+  assert.equal(asada.did_you_mean, "Isata");
+  assert.match(
+    asada.summary,
+    /One close match\. 2018 Dynamax Isata 5 30FW, \$129,995, Sparks, available\. Sheet says Isata, not Asada\./,
+  );
+
+  const ascenta = searchLot(snap.units, { query: "Dynamax Ascenta" });
+  assert.equal(ascenta.matched, 1);
+  assert.equal(ascenta.units[0]?.stock_number, sparks);
+  assert.equal(ascenta.did_you_mean, "Isata");
+  assert.match(
+    ascenta.summary,
+    /One close match\. 2018 Dynamax Isata 5 30FW, \$129,995, Sparks, available\. Sheet says Isata, not Ascenta\./,
+  );
+
+  for (const query of ["Isada", "Esada"]) {
+    const hit = searchLot(snap.units, { query });
+    assert.equal(hit.did_you_mean, "Isata", query);
+    assert.ok(hit.units.some((unit) => unit.stock_number === sparks), query);
+    assert.ok(hit.units.every((unit) => /isata/i.test(unit.model)), query);
+    assert.notEqual(hit.matched, 752, query);
+  }
+
+  const exact = searchLot(snap.units, { query: "Dynamax Isata 5" });
+  assert.equal(exact.matched, 1);
+  assert.equal(exact.units[0]?.stock_number, sparks);
+  assert.equal(exact.did_you_mean, undefined);
+
+  const inSparks = searchLot(snap.units, { query: "Asada 5 in Sparks" });
+  assert.equal(inSparks.matched, 1);
+  assert.equal(inSparks.units[0]?.stock_number, sparks);
+  assert.equal(inSparks.did_you_mean, "Isata");
+
+  const voiced = searchLot(snap.units, { query: "Do we have an Asada 5 in stock?" });
+  assert.equal(voiced.matched, 1);
+  assert.equal(voiced.units[0]?.stock_number, sparks);
+
+  const stuffed = searchLot(snap.units, {
+    query: "Asada 5",
+    condition: "new",
+    status: "available",
+    location: "Mesa",
+  });
+  assert.equal(stuffed.matched, 1);
+  assert.equal(stuffed.units[0]?.stock_number, sparks);
+  assert.notEqual(stuffed.matched, 752);
+
+  const unknown = searchLot(snap.units, {
+    query: "Zzqxplinth",
+    condition: "new",
+    status: "available",
+  });
+  assert.equal(unknown.matched, 0);
+  assert.equal(unknown.none, true);
+  assert.equal(unknown.did_you_mean, undefined);
+
+  const fresh = searchLot(snap.units, { query: "How many new units" });
+  const newCount = snap.units.filter((unit) => /^new$/i.test(unit.condition || "")).length;
+  assert.equal(fresh.matched, newCount);
+  assert.equal(searchLot(snap.units, { query: "new available" }).matched, 752);
 });

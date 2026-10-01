@@ -1192,6 +1192,116 @@ export function oneLetterOff(a: string, b: string): boolean {
   return true;
 }
 
+/** Cap the walk. A longer gap is not a close coach name. */
+function editDistance(a: string, b: string): number {
+  const m = a.length;
+  const n = b.length;
+  if (Math.abs(m - n) > 4) return 9;
+  const row = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    let prev = i - 1;
+    row[0] = i;
+    const ca = a[i - 1];
+    for (let j = 1; j <= n; j++) {
+      const tmp = row[j]!;
+      const cost = ca === b[j - 1] ? 0 : 1;
+      row[j] = Math.min(row[j]! + 1, row[j - 1]! + 1, prev + cost);
+      prev = tmp;
+    }
+  }
+  return row[n]!;
+}
+
+/**
+ * Consonant skeleton. Vowels drop, c/k and s/z fold, doubles collapse.
+ * Ascenta → scnt, Isata → st. Not a list of nicknames.
+ */
+function consonantShape(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[aeiouy]/g, "")
+    .replace(/k/g, "c")
+    .replace(/z/g, "s")
+    .replace(/(.)\1+/g, "$1");
+}
+
+const GENERIC_MODEL_WORDS = new Set([
+  "series",
+  "corp",
+  "motor",
+  "coach",
+  "class",
+  "diesel",
+  "super",
+  "wheel",
+  "trailer",
+  "fifth",
+  "travel",
+  "model",
+  "type",
+  "line",
+  "plus",
+  "sport",
+  "available",
+]);
+
+/**
+ * Closest make/model/trim word on these units.
+ * A one- or two-edit miss is enough on its own (Asada → Isata, Linage → Lineage).
+ * When the make already matched, a shared consonant shape still counts
+ * (Ascenta → Isata). The word is the sheet's, not a hardcoded coach.
+ */
+export function bestCloseModelWord(
+  token: string,
+  units: readonly LotSearchable[],
+  loose: boolean,
+): { key: string; display: string; distance: number } | undefined {
+  const spoken = singularizeLotToken(token);
+  if (!/^[a-z]{4,}$/.test(spoken)) return undefined;
+  const counts = new Map<string, { display: string; count: number }>();
+  const take = (raw: string | undefined) => {
+    for (const part of (raw || "").split(/[^A-Za-z0-9]+/)) {
+      const key = singularizeLotToken(part);
+      if (!/^[a-z]{4,}$/.test(key) || GENERIC_MODEL_WORDS.has(key) || key === spoken) continue;
+      const hit = counts.get(key);
+      if (hit) hit.count += 1;
+      else counts.set(key, { display: part, count: 1 });
+    }
+  };
+  for (const unit of units) {
+    take(unit.make);
+    take(unit.model);
+    take(unit.trim);
+  }
+  const shapeA = consonantShape(spoken);
+  let best: { key: string; display: string; count: number; d: number; sd: number } | undefined;
+  for (const [key, info] of counts) {
+    const d = editDistance(spoken, key);
+    if (d === 0 || d > 4) continue;
+    const shapeB = consonantShape(key);
+    const sd = shapeA && shapeB ? editDistance(shapeA, shapeB) : 9;
+    const lenDelta = Math.abs(spoken.length - key.length);
+    const strict = d <= 2 && lenDelta <= 1;
+    const phonetic =
+      loose && d <= 4 && sd <= 2 && lenDelta <= 2 && Boolean(shapeA) && shapeA[0] === shapeB[0];
+    if (!strict && !phonetic) continue;
+    const row = { key, display: info.display, count: info.count, d, sd };
+    if (
+      !best ||
+      row.d < best.d ||
+      (row.d === best.d && row.sd < best.sd) ||
+      (row.d === best.d && row.sd === best.sd && row.count > best.count) ||
+      (row.d === best.d &&
+        row.sd === best.sd &&
+        row.count === best.count &&
+        row.display.localeCompare(best.display) < 0)
+    ) {
+      best = row;
+    }
+  }
+  return best ? { key: best.key, display: best.display, distance: best.d } : undefined;
+}
+
 const BED_PHRASE: Record<string, RegExp> = {
   king: /\bking(?:\s|-)?(?:size\s+)?beds?\b/gi,
   queen: /\bqueen(?:\s|-)?(?:size\s+)?beds?\b/gi,
