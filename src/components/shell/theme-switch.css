@@ -76,6 +76,13 @@ html[data-theme="light"] .theme-switch-label {
   gap: 0.45rem;
 }
 
-.sapphire-header-inner .z-\[2\] {
-  padding-right: 6.2rem;
+.sapphire-header-copy {
+  box-sizing: border-box;
+  width: 100%;
+}
+
+/* Tools sit on the top-right. The title stack starts under them so
+   the ice title, verified line, and tagline share one center. */
+html[data-theme="dark"] .sapphire-header-copy {
+  padding-top: 2.55rem;
 }

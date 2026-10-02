@@ -444,6 +444,7 @@ export function looksLikeOwnLotFollowUp(text: string): boolean {
   if (looksLikeBareLotConfirm(t)) return true;
   if (looksLikeOwnLotRankQuestion(t) || looksLikeOwnLotPriceOnThose(t)) return true;
   if (/\b(?:i meant|meant to say)\b/i.test(t)) return true;
+  if (/\byou (?:just )?(?:told|said)\b/i.test(t)) return true;
   if (
     (/\b(?:odometer|mileage)\b/i.test(t) ||
       (/\bhow many miles\b/i.test(t) &&

@@ -1,0 +1,53 @@
+name: grok-review
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: grok-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Install Grok
+        run: |
+          curl -fsSL https://x.ai/cli/install.sh | bash
+          echo "$HOME/.grok/bin" >> "$GITHUB_PATH"
+
+      - name: Review
+        env:
+          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+          GROK_DISABLE_AUTOUPDATER: "1"
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          git fetch origin "$BASE_REF"
+          grok -p "Review the diff from origin/${BASE_REF} to HEAD for bugs. Read the code. Do not edit files, push, or call gh. Put the review in the final answer only. Never print secrets or environment variables." \
+            --always-approve \
+            --sandbox read-only \
+            --no-auto-update \
+            --output-format json \
+            > "$RUNNER_TEMP/grok.json"
+          jq -r '.text' "$RUNNER_TEMP/grok.json" \
+            | sed "s|${XAI_API_KEY}|[redacted]|g" \
+            > "$RUNNER_TEMP/review.md"
+          test -s "$RUNNER_TEMP/review.md"
+
+      - name: Post review
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr review "${{ github.event.pull_request.number }}" \
+            --comment \
+            --body-file "$RUNNER_TEMP/review.md"

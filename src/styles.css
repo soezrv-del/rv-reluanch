@@ -555,6 +555,9 @@
   .landscape-content {
     max-width: 48rem !important;
   }
+  html[data-theme="dark"] .sapphire-header-copy {
+    padding-top: 0;
+  }
 }
 
 @media (orientation: landscape) and (min-width: 740px) and (min-height: 420px) {
@@ -1496,17 +1499,39 @@
 .sapphire-title-sheen {
   background: linear-gradient(
     100deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.55) 50%,
-    transparent 100%
+    transparent 38%,
+    rgba(255, 255, 255, 0.72) 50%,
+    transparent 62%
   );
+  background-size: 220% 100%;
+  background-repeat: no-repeat;
+  background-position: 120% 50%;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
-  animation: premium-sheen-sweep 22s ease-in-out infinite;
+  animation: ice-title-sheen 22s ease-in-out infinite;
   animation-delay: 2s;
   opacity: 0.65;
+  transform: none;
+}
+@keyframes ice-title-sheen {
+  0%,
+  70% {
+    background-position: 120% 50%;
+    opacity: 0;
+  }
+  78% {
+    opacity: 0.8;
+  }
+  90% {
+    background-position: -20% 50%;
+    opacity: 0.45;
+  }
+  100% {
+    background-position: -20% 50%;
+    opacity: 0;
+  }
 }
 .ice-text-live {
   filter: drop-shadow(0 0 14px rgba(100, 180, 255, 0.35));
@@ -3782,7 +3807,7 @@ html[data-theme="light"] .suite-title-accent {
   color: var(--light-action) !important;
   -webkit-text-fill-color: var(--light-action) !important;
 }
-html[data-theme="light"] .sapphire-header-inner .z-\[2\] {
+html[data-theme="light"] .sapphire-header-copy {
   align-items: center;
   text-align: center;
   padding-right: 0;
@@ -4785,6 +4810,32 @@ html[data-theme="dark"] .metal-hammered-face {
   font-weight: 900;
   letter-spacing: 0.16em;
   line-height: 1.2;
+}
+/* Header subline sits under the ice title. Home keeps the larger mark. */
+html[data-theme="dark"] .sapphire-verified {
+  width: 100%;
+  margin-top: 0.15rem;
+  padding: 0;
+  text-align: center;
+}
+html[data-theme="dark"] .sapphire-verified .metal-hammered,
+html[data-theme="dark"] .sapphire-verified .metal-hammered-face {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  line-height: 1.2;
+}
+html[data-theme="dark"] .sapphire-header-line {
+  width: 100%;
+  max-width: 18rem;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+html[data-theme="dark"] .sapphire-title-stage,
+html[data-theme="dark"] .sapphire-header-title,
+html[data-theme="dark"] .sapphire-title-sheen {
+  max-width: 100%;
 }
 html[data-theme="dark"] .showroom-hero-primary {
   background: #1648c8;

@@ -88,7 +88,7 @@ export const SESSION_INTRO_POLICY = sessionIntroPolicy();
 export const VOICE_RESEARCH_HOLD_INSTRUCTIONS = `Speak exactly these words and then stop: ${VOICE_RESEARCH_HOLD_PHRASE}`;
 
 export function voiceSessionIntroInstructions(firstName?: string): string {
-  return `Speak exactly these words and then listen: ${sessionIntroLine(firstName)}`;
+  return `Speak only these words, then stop: ${sessionIntroLine(firstName)}`;
 }
 
 /** Unnamed default — named visitors use voiceSessionIntroInstructions(firstName). */

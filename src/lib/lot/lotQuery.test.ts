@@ -23,6 +23,8 @@ test("singularize shares the lot tokenizer: lineages and super cs", () => {
   assert.equal(singularizeLotToken("lineages"), "lineage");
   assert.equal(singularizeLotToken("cs"), "c");
   assert.equal(singularizeLotToken("class"), "class");
+  assert.equal(singularizeLotToken("series"), "series");
+  assert.equal(singularizeLotToken("5s"), "5");
 });
 
 test("Grand Design Lineages and Lineage are the same 27 new coaches", () => {
@@ -170,12 +172,12 @@ test("structured zero falls back to the plain type-ahead match", () => {
   assert.ok(hit.units.every((unit) => /lineage/i.test(unit.model)));
 });
 
-test("Linage suggests Lineage instead of a bare zero", () => {
+test("Linage returns the Lineage coaches and names the sheet model", () => {
   const hit = searchLot(units().units, { query: "Linage" });
-  assert.equal(hit.matched, 0);
+  assert.equal(hit.matched, 27);
   assert.equal(hit.did_you_mean, "Lineage");
-  assert.match(hit.summary, /Did you mean Lineage/);
-  assert.doesNotMatch(hit.summary, /stk /);
+  assert.match(hit.summary, /Sheet says Lineage, not Linage/);
+  assert.ok(hit.units.every((unit) => /lineage/i.test(unit.model)));
 });
 
 test("how about used Super Cs after a Lineage question still calls the tool and returns 12", () => {
@@ -240,9 +242,9 @@ test("fuel, spoken price, sort, and chassis match the lot sheet", () => {
   assert.match(cheapNames, /2003 Fleetwood Expedition/);
   assert.match(cheapNames, /2001 Winnebago ULTIMATE ADVANTAGE/i);
 
-  assert.equal(searchLot(snap.units, { query: "diesels" }).matched, 161);
+  assert.equal(searchLot(snap.units, { query: "diesels" }).matched, 160);
   const typo = searchLot(snap.units, { query: "deisel" });
-  assert.equal(typo.matched, 161);
+  assert.equal(typo.matched, 160);
   assert.equal(typo.close, "diesel");
   assert.equal(searchLot(snap.units, { query: "freightliner" }).matched, 34);
 
@@ -376,8 +378,8 @@ test("a sentence is read off the lot sheet, not turned into another coach", () =
   const looking = searchLot(snap.units, {
     query: "I'm just looking at Class A diesels",
   });
-  assert.equal(looking.matched, 48);
-  assert.equal(looking.counts.body_type["Class A Diesel"], 48);
+  assert.equal(looking.matched, 49);
+  assert.equal(looking.counts.body_type["Class A Diesel"], 49);
   assert.equal(looking.did_you_mean, undefined);
 
   const said = searchLot(snap.units, {
@@ -385,7 +387,7 @@ test("a sentence is read off the lot sheet, not turned into another coach", () =
       "you're probably right about a hundred Class As. I'm just looking at Class A diesels",
     body_type: "Class A",
   });
-  assert.equal(said.matched, 48);
+  assert.equal(said.matched, 49);
   assert.equal(said.did_you_mean, undefined);
   assert.doesNotMatch(said.summary, /Light/);
 
@@ -394,21 +396,21 @@ test("a sentence is read off the lot sheet, not turned into another coach", () =
     body_type: "Class A Diesel",
     condition: "used",
   });
-  assert.equal(again.matched, 44);
-  assert.equal(again.counts.condition.Used, 44);
+  assert.equal(again.matched, 45);
+  assert.equal(again.counts.condition.Used, 45);
   assert.equal(again.did_you_mean, undefined);
-  assert.match(again.summary, /Matching units: 44/);
+  assert.match(again.summary, /Matching units: 45/);
 
   const hundred = searchLot(snap.units, {
     query: "you're probably right about a hundred Class As",
   });
-  assert.equal(hundred.matched, 108);
+  assert.equal(hundred.matched, 106);
   assert.equal(hundred.did_you_mean, undefined);
 
   const byType = searchLot(snap.units, { query: "diesels sort by type" });
-  assert.equal(byType.matched, 161);
+  assert.equal(byType.matched, 160);
   assert.match(byType.summary, /By type:/);
-  assert.match(byType.summary, /48 Class A Diesel/);
+  assert.match(byType.summary, /49 Class A Diesel/);
   assert.equal(byType.units[0]?.body_type, "Class A Diesel");
 });
 
@@ -519,24 +521,24 @@ test("category words are body filters, not a fuzzy name", () => {
   const snap = units();
   const total = snap.units.length;
   const trailers = searchLot(snap.units, { query: "how many trailers" });
-  assert.equal(trailers.matched, 1053);
+  assert.equal(trailers.matched, 1034);
   assert.equal(trailers.lot_total, total);
   assert.match(
     trailers.summary,
-    /Matching units: 1053\. 582 travel trailers, 256 fifth wheels, 94 travel trailer toy haulers, 88 fifth wheel toy haulers, plus 33 others\./,
+    /Matching units: 1034\. 569 travel trailers, 251 fifth wheels, 94 travel trailer toy haulers, 87 fifth wheel toy haulers, plus 33 others\./,
   );
   assert.match(trailers.summary, /Top: \d{4} .+ stk \S+, \$[\d,]+/);
   assert.equal(trailers.did_you_mean, undefined);
-  assert.equal(searchLot(snap.units, { query: "towables" }).matched, 1053);
-  assert.equal(searchLot(snap.units, { query: "pull behinds" }).matched, 1053);
+  assert.equal(searchLot(snap.units, { query: "towables" }).matched, 1034);
+  assert.equal(searchLot(snap.units, { query: "pull behinds" }).matched, 1034);
 
   const fivers = searchLot(snap.units, { query: "fivers" });
-  assert.equal(fivers.matched, 256);
-  assert.equal(fivers.counts.body_type["Fifth Wheel"], 256);
+  assert.equal(fivers.matched, 251);
+  assert.equal(fivers.counts.body_type["Fifth Wheel"], 251);
   assert.equal(fivers.did_you_mean, undefined);
   assert.doesNotMatch(fivers.summary, /River/i);
-  assert.equal(searchLot(snap.units, { query: "fifth wheels" }).matched, 256);
-  assert.equal(searchLot(snap.units, { query: "5th wheels" }).matched, 256);
+  assert.equal(searchLot(snap.units, { query: "fifth wheels" }).matched, 251);
+  assert.equal(searchLot(snap.units, { query: "5th wheels" }).matched, 251);
 
   const popups = searchLot(snap.units, { query: "pop ups" });
   assert.equal(popups.matched, 3);
@@ -544,19 +546,19 @@ test("category words are body filters, not a fuzzy name", () => {
   assert.equal(searchLot(snap.units, { query: "popups" }).matched, 3);
 
   const toys = searchLot(snap.units, { query: "toy haulers" });
-  assert.equal(toys.matched, 182);
+  assert.equal(toys.matched, 181);
   assert.equal(toys.counts.body_type["Travel Trailer Toy Hauler"], 94);
-  assert.equal(toys.counts.body_type["Fifth Wheel Toy Hauler"], 88);
+  assert.equal(toys.counts.body_type["Fifth Wheel Toy Hauler"], 87);
 
   const gas = searchLot(snap.units, { query: "Class A gas" });
-  assert.equal(gas.matched, 60);
-  assert.equal(gas.counts.body_type["Class A"], 60);
+  assert.equal(gas.matched, 57);
+  assert.equal(gas.counts.body_type["Class A"], 57);
   assert.equal(gas.counts.body_type["Class A Diesel"], undefined);
 
   const pushers = searchLot(snap.units, { query: "diesel pushers" });
-  assert.equal(pushers.matched, 48);
-  assert.equal(pushers.counts.body_type["Class A Diesel"], 48);
-  assert.equal(searchLot(snap.units, { query: "Class A diesel" }).matched, 48);
+  assert.equal(pushers.matched, 49);
+  assert.equal(pushers.counts.body_type["Class A Diesel"], 49);
+  assert.equal(searchLot(snap.units, { query: "Class A diesel" }).matched, 49);
 
   for (const ask of ["units", "coaches", "how many units", "how many coaches"]) {
     const hit = searchLot(snap.units, { query: ask });
@@ -573,7 +575,7 @@ test("follow-ups keep fuel, store, and the coach already named", () => {
   const snap = units();
   const usedAll = searchLot(snap.units, { query: "used" }).matched;
   const fife = answerQueryLotFromSnapshot(snap, { query: "diesels in Fife" }, null);
-  assert.equal(fife.matched, 20);
+  assert.equal(fife.matched, 14);
   assert.equal(fife.lot_total, snap.units.length);
   assert.match(fife.filter_label, /diesel/i);
   assert.match(fife.filter_label, /fife/i);
@@ -589,7 +591,7 @@ test("follow-ups keep fuel, store, and the coach already named", () => {
   assert.match(usedFife.filter_label, /used/i);
 
   const diesels = answerQueryLotFromSnapshot(snap, { query: "diesels" }, null);
-  assert.equal(diesels.matched, 161);
+  assert.equal(diesels.matched, 160);
   const cheap = answerQueryLotFromSnapshot(snap, {}, diesels.lotMemory, "the cheapest one");
   assert.equal(cheap.units[0]?.price, 29995);
   assert.ok(
@@ -641,7 +643,7 @@ test("12-foot garage in a fifth wheel is fifth-wheel toy haulers, not a travel t
   assert.notEqual(hit.matched, 256);
   assert.ok(hit.units.every((unit) => unit.body_type === "Fifth Wheel Toy Hauler"));
   assert.ok(!hit.units.some((unit) => unit.stock_number === "43377A"));
-  assert.match(hit.summary, /Skipped 38 with no garage length on the sheet/);
+  assert.match(hit.summary, /Skipped 37 with no garage length on the sheet/);
   assert.doesNotMatch(hit.summary, /^None\./);
   const follow = answerQueryLotFromSnapshot(
     snap,
@@ -661,14 +663,14 @@ test("12-foot garage in a fifth wheel is fifth-wheel toy haulers, not a travel t
 test("those aren't toy haulers drops toy haulers", () => {
   const snap = units();
   const fifth = answerQueryLotFromSnapshot(snap, { query: "fifth wheels" }, null, "fifth wheels");
-  assert.equal(fifth.matched, 256);
+  assert.equal(fifth.matched, 251);
   const kept = answerQueryLotFromSnapshot(
     snap,
     { body_type: "Fifth Wheel" },
     fifth.lotMemory,
     "those aren't toy haulers",
   );
-  assert.equal(kept.matched, 256);
+  assert.equal(kept.matched, 251);
   assert.equal(kept.lotMemory?.filter.bodyType, "Fifth Wheel");
   assert.ok(kept.units.every((unit) => unit.body_type === "Fifth Wheel"));
   assert.ok(!kept.units.some((unit) => /toy hauler/i.test(unit.body_type)));
@@ -688,7 +690,7 @@ test("Class A around 50,000 miles is the odometer, not a price, and skips a blan
   assert.equal(hit.applied.miles_max, 57500);
   assert.equal(hit.applied.price_min, undefined);
   assert.equal(hit.applied.price_max, undefined);
-  assert.equal(hit.applied.miles_skipped, 28);
+  assert.equal(hit.applied.miles_skipped, 27);
   assert.equal(hit.applied.body_type, "Class A");
   assert.ok(hit.units.some((unit) => unit.stock_number === "46343A"));
   assert.ok(
@@ -697,7 +699,7 @@ test("Class A around 50,000 miles is the odometer, not a price, and skips a blan
     ),
   );
   assert.match(hit.summary, /42,500 to 57,500 miles on the sheet/);
-  assert.match(hit.summary, /Skipped 28 with no mileage on the sheet/);
+  assert.match(hit.summary, /Skipped 27 with no mileage on the sheet/);
   assert.doesNotMatch(hit.summary, /price band/i);
   assert.doesNotMatch(hit.summary, /^None\./);
 });
@@ -728,7 +730,7 @@ test("spoken lot line names at most 3 units and does not open a hit with None", 
   const snap = units();
   const fifth = answerQueryLotFromSnapshot(snap, { query: "fifth wheels" }, null);
   const spoken = spokenLotPayload(fifth);
-  assert.equal(spoken.matched, 256);
+  assert.equal(spoken.matched, 251);
   assert.equal(spoken.units.length, 3);
   assert.match(spoken.speech, /I can name more/);
   assert.doesNotMatch(spoken.speech, /^None\./);
@@ -952,4 +954,158 @@ test("40 foot and under is a ceiling, and the full list is not a Full House", ()
     const second = hit.units[1];
     if (second?.make) assert.match(list.summary || "", new RegExp(second.make));
   }
+});
+
+test("a misspoken model stays on the sheet coach and does not open the new book", () => {
+  const snap = units();
+  const sparks = "UPS9882";
+  const asada = searchLot(snap.units, { query: "Asada 5" });
+  assert.equal(asada.matched, 1);
+  assert.equal(asada.units[0]?.stock_number, sparks);
+  assert.equal(asada.did_you_mean, "Isata");
+  assert.match(
+    asada.summary,
+    /One close match\. 2018 Dynamax Isata 5 30FW, \$129,995, Sparks, available\. Sheet says Isata, not Asada\./,
+  );
+
+  const ascenta = searchLot(snap.units, { query: "Dynamax Ascenta" });
+  assert.equal(ascenta.matched, 1);
+  assert.equal(ascenta.units[0]?.stock_number, sparks);
+  assert.equal(ascenta.did_you_mean, "Isata");
+  assert.match(
+    ascenta.summary,
+    /One close match\. 2018 Dynamax Isata 5 30FW, \$129,995, Sparks, available\. Sheet says Isata, not Ascenta\./,
+  );
+
+  for (const query of ["Isada", "Esada"]) {
+    const hit = searchLot(snap.units, { query });
+    assert.equal(hit.did_you_mean, "Isata", query);
+    assert.ok(hit.units.some((unit) => unit.stock_number === sparks), query);
+    assert.ok(hit.units.every((unit) => /isata/i.test(unit.model)), query);
+    assert.notEqual(hit.matched, 752, query);
+  }
+
+  const exact = searchLot(snap.units, { query: "Dynamax Isata 5" });
+  assert.equal(exact.matched, 1);
+  assert.equal(exact.units[0]?.stock_number, sparks);
+  assert.equal(exact.did_you_mean, undefined);
+
+  const seriesWord = searchLot(snap.units, { query: "Isata 5 series" });
+  assert.equal(seriesWord.matched, 1);
+  assert.equal(seriesWord.units[0]?.stock_number, sparks);
+  assert.equal(seriesWord.did_you_mean, undefined);
+
+  const bareSeries = searchLot(snap.units, { query: "5 series" });
+  assert.notEqual(bareSeries.did_you_mean, "Terry");
+  assert.notEqual(bareSeries.did_you_mean, "Wolf");
+  assert.notEqual(bareSeries.did_you_mean, "Series");
+  assert.ok(
+    bareSeries.units.some((unit) => unit.stock_number === sparks),
+    bareSeries.summary,
+  );
+
+  const inSparks = searchLot(snap.units, { query: "Asada 5 in Sparks" });
+  assert.equal(inSparks.matched, 1);
+  assert.equal(inSparks.units[0]?.stock_number, sparks);
+  assert.equal(inSparks.did_you_mean, "Isata");
+
+  const voiced = searchLot(snap.units, { query: "Do we have an Asada 5 in stock?" });
+  assert.equal(voiced.matched, 1);
+  assert.equal(voiced.units[0]?.stock_number, sparks);
+
+  const stuffed = searchLot(snap.units, {
+    query: "Asada 5",
+    condition: "new",
+    status: "available",
+    location: "Mesa",
+  });
+  assert.equal(stuffed.matched, 1);
+  assert.equal(stuffed.units[0]?.stock_number, sparks);
+  assert.notEqual(stuffed.matched, 752);
+
+  const unknown = searchLot(snap.units, {
+    query: "Zzqxplinth",
+    condition: "new",
+    status: "available",
+  });
+  assert.equal(unknown.matched, 0);
+  assert.equal(unknown.none, true);
+  assert.equal(unknown.did_you_mean, undefined);
+
+  const saidNew = searchLot(snap.units, { query: "new Qwertyplugh" });
+  assert.equal(saidNew.matched, 0);
+  assert.equal(saidNew.none, true);
+  assert.notEqual(saidNew.matched, 752);
+
+  const newAscenta = searchLot(snap.units, { query: "new Ascenta" });
+  assert.equal(newAscenta.matched, 0);
+  assert.equal(newAscenta.none, true);
+
+  const junkMake = searchLot(snap.units, { query: "Dynamax Zzqxplinth" });
+  assert.equal(junkMake.matched, 0);
+  assert.equal(junkMake.none, true);
+
+  const fresh = searchLot(snap.units, { query: "How many new units" });
+  const newCount = snap.units.filter((unit) => /^new$/i.test(unit.condition || "")).length;
+  assert.equal(fresh.matched, newCount);
+  assert.equal(searchLot(snap.units, { query: "new available" }).matched, 752);
+});
+
+test("a 5 series follow-up stays on Isata, and yes does not open the lot", () => {
+  const snap = units();
+  const sparks = "UPS9882";
+  const first = answerQueryLotFromSnapshot(
+    snap,
+    { query: "Isatas" },
+    null,
+    "Do we have any Isatas in stock?",
+  );
+  assert.equal(first.matched, 3);
+  const next = answerQueryLotFromSnapshot(
+    snap,
+    { query: "5 series" },
+    first.lotMemory,
+    "Are any of those a 5 or 5 series?",
+  );
+  assert.equal(next.matched, 1, next.summary);
+  assert.equal(next.units[0]?.stock_number, sparks);
+  assert.equal(next.did_you_mean, undefined);
+
+  const yes = answerQueryLotFromSnapshot(
+    snap,
+    { query: "Yes." },
+    { filter: {}, limit: 12 },
+    "Yes.",
+  );
+  assert.equal(yes.matched, 0);
+  assert.match(yes.speech, /does not open the whole lot/);
+  assert.notEqual(yes.matched, snap.units.length);
+
+  const plural = searchLot(snap.units, { query: "Dynamax Isata 5s" });
+  assert.equal(plural.matched, 1, plural.summary);
+  assert.equal(plural.units[0]?.stock_number, sparks);
+  assert.equal(plural.did_you_mean, undefined);
+
+  const told = answerQueryLotFromSnapshot(
+    snap,
+    {},
+    next.lotMemory,
+    "You just told me we had one.",
+  );
+  assert.equal(told.matched, 1, told.summary);
+  assert.equal(told.units[0]?.stock_number, sparks);
+  assert.equal(told.did_you_mean, undefined);
+
+  const roadtrek = answerQueryLotFromSnapshot(snap, { query: "Roadtrek" }, null, "Roadtrek");
+  assert.ok((roadtrek.matched ?? 0) > 0);
+  const stockOfThose = answerQueryLotFromSnapshot(
+    snap,
+    { query: "those" },
+    roadtrek.lotMemory,
+    "Can you tell me if we have any of those in stock?",
+    "I'll pull the details on that 2018 Dynamax Isata 5. It's a Super C on the Ram 5500.",
+  );
+  assert.equal(stockOfThose.matched, 1, stockOfThose.summary);
+  assert.equal(stockOfThose.units[0]?.stock_number, sparks);
+  assert.doesNotMatch(stockOfThose.summary || "", /Roadtrek/);
 });
