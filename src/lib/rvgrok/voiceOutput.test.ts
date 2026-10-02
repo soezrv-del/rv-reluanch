@@ -117,6 +117,7 @@ test("playback goes through the jitter-buffered player and the output gain", () 
   assert.match(output, /clipper\.connect\(makeup\)/);
   assert.match(output, /setSpeakingSession/);
   assert.match(realtime, /setSpeakingSession\(closed\)/);
+  assert.match(realtime, /reviveMicAfterPlayback/);
   assert.doesNotMatch(output, /createDynamicsCompressor/);
   assert.match(output, /createMediaStreamDestination/);
   assert.match(output, /playsInline = true/);

@@ -58,7 +58,7 @@ export type RetainedLiveCapture = {
 
 let retained: RetainedLiveCapture | null = null;
 
-const MIC_CONSTRAINTS: MediaStreamConstraints = {
+export const MIC_CONSTRAINTS: MediaStreamConstraints = {
   audio: {
     // Off on purpose. On an iPhone loudspeaker these turn on a voice
     // processor that pops while she talks. Headphones do not leak into

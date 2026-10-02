@@ -17,6 +17,7 @@ import {
   getRetainedLiveCapture,
   isNativeRealtimeTool,
   LOT_FEATURE_WEB_CLAUSE,
+  MIC_CONSTRAINTS,
   releaseLiveCapture,
   retainLiveCapture,
   type LiveVoicePrewarm,
@@ -46,7 +47,7 @@ import {
   type ScreenCalloutEvent,
   type ScreenCalloutState,
 } from "./screenGuides";
-import { liveVoiceOutputFor, resumeLiveVoiceSpeaker, setSpeakingSession } from "./voiceOutput";
+import { liveVoiceOutputFor, playbackNeedsSpeakerElement, resumeLiveVoiceSpeaker, setSpeakingSession } from "./voiceOutput";
 import {
   PCM_CAPTURE_PROCESSOR,
   createBufferSourcePlayer,
@@ -184,6 +185,10 @@ export class GrokRealtimeSession {
   private rearmTimer: ReturnType<typeof setTimeout> | null = null;
   /** Wall clock when this reply's drain wait started. Caps a stuck queue. */
   private rearmSince = 0;
+  /** Bumps when she starts talking so a late mic reopen cannot unmute her. */
+  private micRevive = 0;
+  /** playback mode on iPhone ends the live mic. Reopen has to ask again. */
+  private playbackStoleMic = false;
   private earlyPcm: ArrayBuffer[] = [];
   private readonly maxEarlyChunks = 48;
   private researchAbort: AbortController | null = null;
@@ -418,15 +423,7 @@ export class GrokRealtimeSession {
 
     const stream = prewarm.streamPromise
       ? await prewarm.streamPromise
-      : await navigator.mediaDevices.getUserMedia({
-          audio: {
-            echoCancellation: false,
-            noiseSuppression: false,
-            autoGainControl: false,
-            channelCount: 1,
-          },
-          video: false,
-        });
+      : await navigator.mediaDevices.getUserMedia(MIC_CONSTRAINTS);
     this.mediaStream = stream;
     retainLiveCapture(stream, ctx);
     await this.connectMicGraph();
@@ -1002,14 +999,71 @@ export class GrokRealtimeSession {
    */
   private setMicGate(closed: boolean) {
     this.suppressMic = closed;
+    if (closed) this.micRevive++;
     const tracks = this.mediaStream?.getAudioTracks() ?? [];
+    // The loudspeaker path sets playback while she talks. On the Xcode
+    // WebView that ends the microphone. Turning the old track back on
+    // leaves it silent, so ask for the mic again after she finishes.
+    if (!closed && this.playbackStoleMic && tracks.length > 0) {
+      this.playbackStoleMic = false;
+      setSpeakingSession(false);
+      void this.reviveMicAfterPlayback(this.micRevive);
+      resumeLiveVoiceSpeaker(this.audioCtx);
+      return;
+    }
     for (const track of tracks) {
       if (track.enabled === closed) track.enabled = !closed;
     }
-    // play-and-record ducks the loudspeaker. playback is full volume,
-    // and it is safe only while the mic track is off.
     setSpeakingSession(closed);
+    if (closed && playbackNeedsSpeakerElement()) this.playbackStoleMic = true;
     resumeLiveVoiceSpeaker(this.audioCtx);
+  }
+
+  private async reviveMicAfterPlayback(gen: number) {
+    const ctx = this.audioCtx;
+    if (!ctx || ctx.state === "closed") return;
+    if (ctx.state === "suspended") {
+      try {
+        await ctx.resume();
+      } catch {
+        /* */
+      }
+    }
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia(MIC_CONSTRAINTS);
+    } catch {
+      if (gen !== this.micRevive || this.suppressMic) return;
+      for (const track of this.mediaStream?.getAudioTracks() ?? []) {
+        track.enabled = true;
+      }
+      return;
+    }
+    if (gen !== this.micRevive || this.suppressMic || this.closed) {
+      stream.getTracks().forEach((t) => {
+        try {
+          t.stop();
+        } catch {
+          /* */
+        }
+      });
+      return;
+    }
+    const previous = this.mediaStream;
+    this.mediaStream = stream;
+    retainLiveCapture(stream, ctx);
+    previous?.getTracks().forEach((t) => {
+      try {
+        t.stop();
+      } catch {
+        /* */
+      }
+    });
+    this.disconnectGraph();
+    await this.connectMicGraph();
+    if (this.suppressMic) {
+      for (const track of stream.getAudioTracks()) track.enabled = false;
+    }
   }
 
   private beginSpeaking() {
