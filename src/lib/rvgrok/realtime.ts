@@ -154,8 +154,6 @@ export class GrokRealtimeSession {
   private micGraphPending = false;
   private source: MediaStreamAudioSourceNode | null = null;
   private mute: GainNode | null = null;
-  /** Silent sink so the mic worklet keeps running without touching the speaker. */
-  private micSink: MediaStreamAudioDestinationNode | null = null;
   /** Jitter-buffered PCM player (worklet ring buffer or fallback). */
   private player: LivePcmPlayer | null = null;
   private playerPromise: Promise<LivePcmPlayer | null> | null = null;
@@ -425,7 +423,7 @@ export class GrokRealtimeSession {
           audio: {
             echoCancellation: false,
             noiseSuppression: false,
-            autoGainControl: false,
+            autoGainControl: true,
             channelCount: 1,
           },
           video: false,
@@ -499,16 +497,16 @@ export class GrokRealtimeSession {
     logLiveVoiceAudio(ctx, useWorklet ? "worklet" : "script-processor");
 
     source.connect(processor);
-    // The capture node only runs if it reaches a destination. A silent
-    // MediaStream keeps it pulling. ctx.destination is a second speaker
-    // output on iPhone and that is the pop.
+    // The capture node only runs if something is playing it. A private
+    // silent stream is not played, so iOS sometimes never sends samples
+    // and Listening never turns into Hearing. Zero gain into the same
+    // output that already plays her voice keeps one speaker route.
+    const output = liveVoiceOutputFor(ctx);
     const mute = ctx.createGain();
     mute.gain.value = 0;
     this.mute = mute;
     processor.connect(mute);
-    const sink = ctx.createMediaStreamDestination();
-    this.micSink = sink;
-    mute.connect(sink);
+    mute.connect(output.pull);
   }
 
   private sendPcm(pcm: ArrayBuffer) {
@@ -2462,7 +2460,6 @@ export class GrokRealtimeSession {
     this.processor = null;
     this.source = null;
     this.mute = null;
-    this.micSink = null;
     this.earlyPcm = [];
   }
 

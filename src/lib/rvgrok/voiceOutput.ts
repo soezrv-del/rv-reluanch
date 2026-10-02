@@ -178,6 +178,11 @@ export type LiveVoiceOutput = {
   /** Set only on the iOS loudspeaker workaround. */
   speakerEl: HTMLAudioElement | null;
   route: "element" | "destination";
+  /**
+   * The node that is actually playing. Mic capture has to join this or
+   * iOS sometimes never pulls samples, so Listening never becomes Hearing.
+   */
+  pull: AudioNode;
 };
 
 const chains = new WeakMap<AudioContext, LiveVoiceOutput>();
@@ -202,9 +207,11 @@ export function liveVoiceOutputFor(ctx: AudioContext): LiveVoiceOutput {
   clipper.connect(makeup);
 
   let speakerEl: HTMLAudioElement | null = null;
+  let pull: AudioNode;
   if (shouldUseSpeakerElement() && typeof document !== "undefined") {
     const dest = ctx.createMediaStreamDestination();
     makeup.connect(dest);
+    pull = dest;
     const audio = document.createElement("audio");
     audio.setAttribute("playsinline", "true");
     audio.setAttribute("webkit-playsinline", "true");
@@ -219,6 +226,7 @@ export function liveVoiceOutputFor(ctx: AudioContext): LiveVoiceOutput {
     speakerEl = audio;
   } else {
     makeup.connect(ctx.destination);
+    pull = ctx.destination;
   }
 
   const chain: LiveVoiceOutput = {
@@ -226,6 +234,7 @@ export function liveVoiceOutputFor(ctx: AudioContext): LiveVoiceOutput {
     clipper,
     speakerEl,
     route: speakerEl ? "element" : "destination",
+    pull,
   };
   chains.set(ctx, chain);
   return chain;
