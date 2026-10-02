@@ -169,6 +169,37 @@ function compactId(value: string | undefined): string {
   return (value || "").toLowerCase().replace(/^#/, "").trim();
 }
 
+const PRINTED_SKIP = /^(photo|image|images|url|source_page|floorplan_image|price)/;
+
+type SearchInput = LotSearchable & { printed?: Record<string, string> };
+
+/** Named fields plus printed scrape text and raw feature lines. */
+function expandSearchable(unit: SearchInput): LotSearchable {
+  const printed = unit.printed || {};
+  const pick = (...keys: string[]): string => {
+    for (const key of keys) {
+      const direct = unit[key as keyof LotSearchable];
+      if (typeof direct === "string" && direct.trim()) return direct.trim();
+      const fromPrinted = printed[key];
+      if (fromPrinted && fromPrinted.trim()) return fromPrinted.trim();
+    }
+    return "";
+  };
+  const printedBlob = Object.entries(printed)
+    .filter(([key]) => !PRINTED_SKIP.test(key))
+    .map(([, value]) => value)
+    .join(" ");
+  return {
+    ...unit,
+    fuel_type: pick("fuel_type", "fuel"),
+    engine: pick("engine"),
+    chassis: pick("chassis", "chassis_brand"),
+    chassis_brand: pick("chassis_brand", "chassis"),
+    transmission: pick("transmission"),
+    features: [unit.features || "", printedBlob].filter(Boolean).join(" "),
+  };
+}
+
 function typeaheadWords(unit: LotSearchable): string[] {
   const words: string[] = [];
   for (const key of TYPEAHEAD_FIELDS) {
@@ -185,6 +216,47 @@ function typeaheadBlob(unit: LotSearchable): string {
     .toLowerCase();
 }
 
+/** One substitution, insertion, deletion, or adjacent swap. Equals is not close. */
+export function editDistanceAtMost1(a: string, b: string): boolean {
+  if (a === b) return false;
+  const delta = a.length - b.length;
+  if (Math.abs(delta) > 1) return false;
+  if (a.length === b.length) {
+    let diffs = 0;
+    let first = -1;
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) {
+        diffs += 1;
+        if (first < 0) first = i;
+      }
+    }
+    if (diffs === 1) return true;
+    return (
+      diffs === 2 &&
+      first >= 0 &&
+      first + 1 < a.length &&
+      a[first] === b[first + 1] &&
+      a[first + 1] === b[first] &&
+      a.slice(first + 2) === b.slice(first + 2)
+    );
+  }
+  const [shorter, longer] = a.length < b.length ? [a, b] : [b, a];
+  let i = 0;
+  let j = 0;
+  let skips = 0;
+  while (i < shorter.length && j < longer.length) {
+    if (shorter[i] === longer[j]) {
+      i++;
+      j++;
+    } else {
+      skips++;
+      j++;
+      if (skips > 1) return false;
+    }
+  }
+  return true;
+}
+
 function tokenMatchesFloorplanFields(unit: LotSearchable, token: string): boolean {
   if (floorplanTokensAlign(token, unit.trim || "")) return true;
   const blob = `${unit.model || ""} ${unit.trim || ""}`.trim();
@@ -192,36 +264,156 @@ function tokenMatchesFloorplanFields(unit: LotSearchable, token: string): boolea
   return lotUnitFloorplanText(unit).includes(token);
 }
 
+export type LotTokenKind = "exact" | "close" | "none";
+
 /**
  * Type-ahead token. After singularize: a prefix of any word in make, model,
- * trim, stock, year, title, or body, or a substring when the token is long
- * enough ("Linea" in Lineage, "31Z" in 31ZW / 31ZW5). A floorplan token
- * matches the floorplan fields only, so 27A does not hitch stock UCO9527A.
+ * trim, stock, year, title, body, fuel, engine, chassis, transmission, or
+ * features, or a substring when the token is long enough ("Linea" in Lineage,
+ * "31Z" in 31ZW / 31ZW5). A floorplan token matches the floorplan fields only,
+ * so 27A does not hitch stock UCO9527A. One-edit words are "close", not exact.
  */
-export function lotTokenMatchesUnit(
-  unit: LotSearchable,
-  token: string,
-): boolean {
+export function lotTokenMatchKind(unit: SearchInput, token: string): LotTokenKind {
+  const view = expandSearchable(unit);
   const t = singularizeLotToken(token);
-  if (!t) return true;
-  const stock = compactId(unit.stock_number);
-  const vin = compactId(unit.vin);
-  if (stock === t || vin === t) return true;
+  if (!t) return "exact";
+  const stock = compactId(view.stock_number);
+  const vin = compactId(view.vin);
+  if (stock === t || vin === t) return "exact";
   if (isFloorplanLikeToken(t)) {
-    return tokenMatchesFloorplanFields(unit, t);
+    return tokenMatchesFloorplanFields(view, t) ? "exact" : "none";
   }
-  if (stock.startsWith(t)) return true;
-  if (typeaheadWords(unit).some((word) => word.startsWith(t))) return true;
-  if (t.length >= 4 || /\d/.test(t)) return typeaheadBlob(unit).includes(t);
-  return false;
+  if (stock.startsWith(t)) return "exact";
+  if (typeaheadWords(view).some((word) => word.startsWith(t) || singularizeLotToken(word) === t)) {
+    return "exact";
+  }
+  if ((t.length >= 4 || /\d/.test(t)) && typeaheadBlob(view).includes(t)) return "exact";
+  if (t.length < 4 || /\d/.test(t)) return "none";
+  for (const word of typeaheadWords(view)) {
+    const singular = singularizeLotToken(word);
+    if (singular.length < 4) continue;
+    if (editDistanceAtMost1(t, singular)) return "close";
+  }
+  return "none";
 }
 
-/** Empty search returns the full lot. Tokens are AND-matched. */
-export function searchLotUnits<T extends LotSearchable>(
-  units: T[],
-  query: string,
-): T[] {
+export function lotTokenMatchesUnit(unit: SearchInput, token: string): boolean {
+  return lotTokenMatchKind(unit, token) === "exact";
+}
+
+/**
+ * Fuel from `fuel_type`. Engine text is used only when that field is blank
+ * ("Diesel Pusher"). A generator note that says diesel does not count.
+ */
+export function lotUnitFuel(unit: SearchInput): "" | "diesel" | "gas" {
+  const view = expandSearchable(unit);
+  const typed = (view.fuel_type || "").toLowerCase();
+  const engine = (view.engine || "").toLowerCase();
+  if (/\bdiesel\b/.test(typed)) return "diesel";
+  if (/\bgas/.test(typed)) return "gas";
+  if (typed.trim()) return "";
+  if (/\bdiesel\b/.test(engine)) return "diesel";
+  if (/\bgas/.test(engine)) return "gas";
+  return "";
+}
+
+/** True when a scanned word is exactly `word` after singularize. */
+export function lotUnitHasWord(unit: SearchInput, word: string): boolean {
+  const ask = singularizeLotToken(word);
+  if (!ask) return false;
+  return typeaheadWords(expandSearchable(unit)).some((part) => singularizeLotToken(part) === ask);
+}
+
+/** The field word a close token almost spells, if the lot has one. */
+export function lotCloseWord(units: SearchInput[], token: string): string {
+  const ask = singularizeLotToken(token);
+  const counts = new Map<string, number>();
+  for (const unit of units) {
+    const seen = new Set<string>();
+    for (const word of typeaheadWords(expandSearchable(unit))) {
+      const singular = singularizeLotToken(word);
+      if (singular.length < 4 || seen.has(singular)) continue;
+      if (!editDistanceAtMost1(ask, singular)) continue;
+      seen.add(singular);
+      counts.set(singular, (counts.get(singular) || 0) + 1);
+    }
+  }
+  let best = "";
+  let n = 0;
+  for (const [word, count] of counts) {
+    if (count > n) {
+      best = word;
+      n = count;
+    }
+  }
+  return best;
+}
+
+/** Empty search returns the full lot. Tokens are AND-matched. A token with no exact hit may match one edit. */
+export function searchLotUnits<T extends SearchInput>(units: T[], query: string): T[] {
   const tokens = tokenizeLotQuery(query);
   if (!tokens.length) return units;
-  return units.filter((unit) => tokens.every((t) => lotTokenMatchesUnit(unit, t)));
+  const modes = tokens.map((token) => {
+    let close = false;
+    for (const unit of units) {
+      const kind = lotTokenMatchKind(unit, token);
+      if (kind === "exact") return "exact" as const;
+      if (kind === "close") close = true;
+    }
+    return close ? ("close" as const) : ("none" as const);
+  });
+  const closeWords = tokens.map((token, index) =>
+    modes[index] === "close" ? lotCloseWord(units, token) : "",
+  );
+  return units.filter((unit) =>
+    tokens.every((token, index) => {
+      const mode = modes[index];
+      if (mode === "exact") return lotTokenMatchKind(unit, token) === "exact";
+      if (mode === "close") {
+        const word = closeWords[index] || "";
+        if (word === "diesel") return lotUnitFuel(unit) === "diesel";
+        if (word === "gas" || word === "gasoline") return lotUnitFuel(unit) === "gas";
+        return lotUnitHasWord(unit, word);
+      }
+      return false;
+    }),
+  );
+}
+
+/** Raw attribute, flag, and floorplan feature lines. Not prices or photo URLs. */
+export function lotFeatureText(row: Record<string, unknown>): string {
+  const raw = row.raw;
+  if (!raw || typeof raw !== "object") return "";
+  const parts: string[] = [];
+  const push = (value: unknown) => {
+    if (typeof value === "string") {
+      const text = value.trim();
+      if (text && !/^https?:/i.test(text)) parts.push(text);
+      return;
+    }
+    if (Array.isArray(value)) {
+      for (const item of value) push(item);
+      return;
+    }
+    if (value && typeof value === "object") {
+      for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+        if (key === "url" || key === "photo") continue;
+        if (key !== "attributes") parts.push(key.replace(/_/g, " "));
+        push(child);
+      }
+    }
+  };
+  const bag = raw as Record<string, unknown>;
+  for (const key of [
+    "flags",
+    "floorplan_feature",
+    "floorplan_lifestyle",
+    "floorplan_style",
+    "exterior_colors",
+    "custom_fields",
+    "attributes",
+  ]) {
+    push(bag[key]);
+  }
+  return parts.join(" ");
 }

@@ -137,12 +137,15 @@ test("structured zero falls back to the plain type-ahead match", () => {
   assert.ok(hit.units.every((unit) => /lineage/i.test(unit.model)));
 });
 
-test("Linage suggests Lineage instead of a bare zero", () => {
-  const hit = searchLot(units().units, { query: "Linage" });
-  assert.equal(hit.matched, 0);
-  assert.equal(hit.did_you_mean, "Lineage");
-  assert.match(hit.summary, /Did you mean Lineage/);
-  assert.doesNotMatch(hit.summary, /stk /);
+test("Linage returns the Lineage coaches flagged as a close match", () => {
+  const snap = units();
+  const hit = searchLot(snap.units, { query: "Linage" });
+  assert.equal(hit.matched, 27);
+  assert.equal(hit.none, false);
+  assert.match(hit.close || "", /lineage/i);
+  assert.match(hit.summary, /Close match/i);
+  assert.match(hit.summary, /27/);
+  assert.equal(hit.did_you_mean, undefined);
 });
 
 test("how about used Super Cs after a Lineage question still calls the tool and returns 12", () => {
@@ -212,6 +215,12 @@ test("fuel, spoken price, sort, and chassis match the lot sheet", () => {
   assert.equal(typo.matched, 161);
   assert.equal(typo.close, "diesel");
   assert.equal(searchLot(snap.units, { query: "freightliner" }).matched, 34);
+  assert.equal(searchLotUnits(snap.units, "freightliner").length, 34);
+  assert.equal(searchLotUnits(snap.units, "deisel").length, 161);
+  const murphy = searchLot(snap.units, { query: "murphy bed" });
+  assert.equal(murphy.matched, 9);
+  assert.ok(murphy.units.some((unit) => unit.stock_number === "UPB9941"));
+  assert.ok(murphy.units.some((unit) => /murphy suite/i.test(unit.trim)));
 
   const junk = searchLot(snap.units, { query: "diesel around a hundred thousand zzznomatch" });
   assert.equal(junk.matched, 11);

@@ -47,7 +47,7 @@ import {
   parseOwnLotStockNumber,
   type OwnLotSort,
 } from "./ownLotAsk.ts";
-import { searchLotUnits } from "../lot/lotSearch.ts";
+import { lotFeatureText, searchLotUnits } from "../lot/lotSearch.ts";
 
 export {
   isBareFloorplanCode,
@@ -109,6 +109,12 @@ export type OwnLotUnit = {
   condition?: string;
   /** Scrape `lot_status` (Available, Sale Pending, …). */
   lot_status?: string;
+  /** Scrape `fuel_type` (Regular Diesel, Diesel, Gasoline). Blank when the row has none. */
+  fuel_type?: string;
+  /** Scrape engine text. Fuel is inferred from this when `fuel_type` is blank. */
+  engine?: string;
+  chassis_brand?: string;
+  transmission?: string;
   /** Printed length in feet. Null when the sheet has no length. Never a floorplan. */
   lengthFt: number | null;
   /**
@@ -116,6 +122,8 @@ export type OwnLotUnit = {
    * A blank key is absent. Nothing here is filled from a brochure.
    */
   printed?: Record<string, string>;
+  /** Raw flags, floorplan features, and attribute text. Lot search reads this. */
+  features?: string;
 };
 
 export type OwnLotFilter = {
@@ -654,6 +662,11 @@ export function rowToUnit(row: Record<string, unknown>): OwnLotUnit {
     lengthFt: pickPrintedLengthFt(row),
     condition: pickStr(row, "condition"),
     lot_status: pickStr(row, "lot_status", "status"),
+    fuel_type: pickStr(row, "fuel_type", "fuel"),
+    engine: pickStr(row, "engine"),
+    chassis_brand: pickStr(row, "chassis_brand", "chassis"),
+    transmission: pickStr(row, "transmission"),
+    features: lotFeatureText(row),
     printed,
   };
 }

@@ -4,6 +4,10 @@
  */
 
 import {
+  editDistanceAtMost1,
+  lotCloseWord,
+  lotTokenMatchKind,
+  lotUnitHasWord,
   lotTokenMatchesUnit,
   normalizeLotSearchQuery,
   singularizeLotToken,
@@ -538,46 +542,6 @@ function tokenIsCoachName(unit: LotQueryUnit, token: string): boolean {
 /** Stop-word-free tokens for the dumb bar. Same matcher the Lot page uses. */
 function plainTypeaheadTokens(text: string): string[] {
   return tokenizeLotQuery(text).filter((token) => !STOP.has(token));
-}
-
-function editDistanceAtMost1(a: string, b: string): boolean {
-  if (a === b) return false;
-  const delta = a.length - b.length;
-  if (Math.abs(delta) > 1) return false;
-  if (a.length === b.length) {
-    let diffs = 0;
-    let first = -1;
-    for (let i = 0; i < a.length; i++) {
-      if (a[i] !== b[i]) {
-        diffs += 1;
-        if (first < 0) first = i;
-      }
-    }
-    if (diffs === 1) return true;
-    // One adjacent swap: deisel → diesel.
-    return (
-      diffs === 2 &&
-      first >= 0 &&
-      first + 1 < a.length &&
-      a[first] === b[first + 1] &&
-      a[first + 1] === b[first]
-    );
-  }
-  const [shorter, longer] = a.length < b.length ? [a, b] : [b, a];
-  let i = 0;
-  let j = 0;
-  let skips = 0;
-  while (i < shorter.length && j < longer.length) {
-    if (shorter[i] === longer[j]) {
-      i++;
-      j++;
-    } else {
-      skips++;
-      j++;
-      if (skips > 1) return false;
-    }
-  }
-  return true;
 }
 
 type CatalogName = { key: string; display: string; count: number };
@@ -1324,6 +1288,41 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
   let matched = parsed.tokens.length
     ? structured.filter((unit) => passesTokens(unit, parsed.tokens))
     : structured;
+  let closeNote = parsed.close;
+  // One-edit spellings (linage → lineage) return those units, flagged close.
+  if (!matched.length && parsed.tokens.length) {
+    const pool = structured.length ? structured : units;
+    const modes = parsed.tokens.map((token) => {
+      let close = false;
+      for (const unit of pool) {
+        const kind = lotTokenMatchKind(unit, token);
+        if (kind === "exact") return "exact" as const;
+        if (kind === "close") close = true;
+      }
+      return close ? ("close" as const) : ("none" as const);
+    });
+    if (modes.every((mode) => mode !== "none") && modes.some((mode) => mode === "close")) {
+      const closeWords = parsed.tokens.map((token, index) =>
+        modes[index] === "close" ? lotCloseWord(pool, token) : "",
+      );
+      const closeMatched = pool.filter((unit) =>
+        parsed.tokens.every((token, index) => {
+          if (modes[index] === "exact") return lotTokenMatchKind(unit, token) === "exact";
+          return lotUnitHasWord(unit, closeWords[index] || "");
+        }),
+      );
+      if (closeMatched.length) {
+        matched = closeMatched;
+        if (!closeNote) {
+          const words = parsed.tokens
+            .filter((_, index) => modes[index] === "close")
+            .map((token) => lotCloseWord(pool, token))
+            .filter(Boolean);
+          if (words.length) closeNote = words.join(", ");
+        }
+      }
+    }
+  }
   // Spare words ("looking", "right", "try again") are not a coach name.
   // If used / diesel / class / price already picked a set, keep that set.
   // A real name that the class filter missed (Class A Lineage) still returns that coach.
@@ -1384,9 +1383,9 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
     counts,
     units: sorted.slice(0, parsed.limit).map(toRow),
     no_length: noLength.map(toRow),
-    summary: closeLine(oneLine(matched, counts, parsed.body, didYouMean, parsed.sort), parsed.close, matched.length),
+    summary: closeLine(oneLine(matched, counts, parsed.body, didYouMean, parsed.sort), closeNote, matched.length),
     ...(didYouMean ? { did_you_mean: didYouMean } : {}),
-    ...(parsed.close && matched.length ? { close: parsed.close } : {}),
+    ...(closeNote && matched.length ? { close: closeNote } : {}),
   };
 }
 

@@ -11,6 +11,7 @@
 import {
   floorplanTokensAlign,
   isFloorplanLikeToken,
+  lotFeatureText,
   lotUnitSearchText,
   normalizeLotSearchToken,
   searchLotUnits,
@@ -73,6 +74,9 @@ export type LotUnit = {
   engine: string;
   chassis: string;
   fuel_type: string;
+  transmission: string;
+  /** Raw flags, floorplan features, and attribute text. */
+  features: string;
   /** Every non-empty printed scrape field. Blank keys are absent. */
   printed: Record<string, string>;
 };
@@ -344,6 +348,8 @@ function emptySpecs(): Pick<
   | "engine"
   | "chassis"
   | "fuel_type"
+  | "transmission"
+  | "features"
 > {
   return {
     mileage: "",
@@ -364,6 +370,8 @@ function emptySpecs(): Pick<
     engine: "",
     chassis: "",
     fuel_type: "",
+    transmission: "",
+    features: "",
   };
 }
 
@@ -442,6 +450,8 @@ function rowToLotUnit(row: Record<string, unknown>): LotUnit {
     engine: pickStr(row, "engine"),
     chassis: pickStr(row, "chassis", "chassis_brand"),
     fuel_type: pickStr(row, "fuel_type", "fuel"),
+    transmission: pickStr(row, "transmission"),
+    features: lotFeatureText(row),
     printed: printedLotFields(row),
   };
   if (!unit.title) unit.title = composedTitle(unit);
