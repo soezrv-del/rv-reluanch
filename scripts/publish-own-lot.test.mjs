@@ -4,6 +4,7 @@ import {
   decidePublish,
   describeSnapshot,
   formatSyncLine,
+  gh,
   MIN_UNITS,
   pickFresher,
 } from "./publish-own-lot.mjs";
@@ -52,6 +53,10 @@ test("decidePublish skips identical and older, publishes newer, blocks a collaps
   const halved = snap(1000, "2026-09-25T08:40:00-07:00");
   const big = snap(2000, "2026-09-24T08:41:12-07:00");
   assert.match(decidePublish(halved, big).reason, /refusing shrink/);
+});
+
+test("gh shells out", () => {
+  assert.match(gh(["--version"]), /gh version/);
 });
 
 test("formatSyncLine stays one line", () => {

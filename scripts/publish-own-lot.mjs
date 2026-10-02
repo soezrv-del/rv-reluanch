@@ -9,13 +9,15 @@
  *   node scripts/publish-own-lot.mjs          # commit the JSON if newer
  *   node scripts/publish-own-lot.mjs --check  # report only
  *
- * Only that one file is committed. An older scrape, a non-array file, a lot
- * under 900 coaches, or a drop of more than 40% vs production is refused.
+ * The snapshot is committed, then the listing dump from that same scrape.
+ * An older scrape, a non-array file, a lot under 900 coaches, or a drop of
+ * more than 40% vs production is refused.
  * A newer file at OWN_LOT_INVENTORY_PATH (default the midnight agent-data
  * path) is copied into public/ first, then published.
  */
 
 import { listingDumpBytes, FULLTEXT_REPO_PATH } from "./build-own-lot-fulltext.mjs";
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
