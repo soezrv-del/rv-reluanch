@@ -1136,3 +1136,70 @@ test("a 5 series follow-up stays on Isata, and yes does not open the lot", () =>
   assert.equal(stockOfThose.units[0]?.stock_number, sparks);
   assert.doesNotMatch(stockOfThose.summary || "", /Roadtrek/);
 });
+
+test("series, complaint, king beds, and all the stores stay on the question he asked", () => {
+  const snap = units();
+  const isata = answerQueryLotFromSnapshot(snap, { query: "Isata" }, null, "I said Isata.");
+  assert.equal(isata.matched, 3, isata.summary);
+
+  const fiveAsk = "Do we have a five?";
+  const five = answerQueryLotFromSnapshot(snap, { query: fiveAsk }, isata.lotMemory, fiveAsk);
+  assert.equal(five.matched, 1, five.summary);
+  assert.equal(five.units[0]?.stock_number, "UPS9882");
+  assert.notEqual(five.did_you_mean, "Cave");
+  assert.doesNotMatch(five.summary, /man cave/i);
+
+  const bareFive = searchLot(snap.units, { query: fiveAsk });
+  assert.notEqual(bareFive.did_you_mean, "Cave");
+  assert.doesNotMatch(bareFive.summary, /man cave/i);
+
+  const complaint =
+    "Yeah, that's not even close. I was talking about the Isata. Do we have an Isata 5?";
+  const again = answerQueryLotFromSnapshot(snap, { query: complaint }, five.lotMemory, complaint);
+  assert.equal(again.matched, 1, again.summary);
+  assert.equal(again.units[0]?.stock_number, "UPS9882");
+  assert.notEqual(again.did_you_mean, "Open");
+
+  const sparksLine =
+    "Not even close. We have a Dynamax Isata 5 in Sparks. Why can't you see that?";
+  const seen = answerQueryLotFromSnapshot(snap, { query: sparksLine }, again.lotMemory, sparksLine);
+  assert.equal(seen.matched, 1, seen.summary);
+  assert.equal(seen.units[0]?.stock_number, "UPS9882");
+  assert.match(seen.units[0]?.location || "", /Spark/i);
+  assert.equal(searchLot(snap.units, { query: sparksLine }).units[0]?.stock_number, "UPS9882");
+
+  const carson = answerQueryLotFromSnapshot(
+    snap,
+    { query: "How many Class Cs do we have at the Carson show?" },
+    null,
+    "How many Class Cs do we have at the Carson show?",
+  );
+  assert.ok((carson.matched ?? 0) > 0, carson.summary);
+
+  const kingAsk = "Do any of 'em have king-size beds?";
+  const king = answerQueryLotFromSnapshot(snap, { query: kingAsk }, carson.lotMemory, kingAsk);
+  const kingDirect = searchLot(snap.units, {
+    query: "How many Class Cs have king-size beds at the Carson RV show?",
+  });
+  assert.equal(king.matched, kingDirect.matched, king.summary);
+  assert.ok((king.matched ?? 0) > 0 && (king.matched ?? 0) < (carson.matched ?? 0), king.summary);
+  assert.ok(king.units.every((unit) => /carson/i.test(unit.location)));
+  assert.doesNotMatch(king.summary, /Mesa/);
+
+  const cheapAsk = "What is the cheapest Class A we have in inventory?";
+  const cheapDirect = searchLot(snap.units, { query: cheapAsk });
+  const cheap = answerQueryLotFromSnapshot(snap, { query: cheapAsk }, carson.lotMemory, cheapAsk);
+  assert.equal(cheap.matched, cheapDirect.matched, cheap.summary);
+  assert.equal(cheap.units[0]?.stock_number, cheapDirect.units[0]?.stock_number);
+  assert.doesNotMatch(cheap.units[0]?.location || "", /Carson/);
+
+  const storesAsk = "No, I mean in all the stores, what's the cheapest Class A?";
+  const stores = answerQueryLotFromSnapshot(snap, { query: storesAsk }, carson.lotMemory, storesAsk);
+  assert.notEqual(stores.did_you_mean, "Star");
+  assert.equal(stores.matched, cheapDirect.matched, stores.summary);
+  assert.equal(stores.units[0]?.stock_number, cheapDirect.units[0]?.stock_number);
+
+  const winds = searchLot(snap.units, { query: "Four Winds" });
+  assert.ok(winds.matched > 0, winds.summary);
+  assert.ok(winds.units.every((unit) => /winds/i.test(`${unit.make} ${unit.model}`)));
+});
