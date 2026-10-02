@@ -3,12 +3,8 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  RV_GROK_ATTITUDE,
-  RV_GROK_CONFIDENCE,
-  RV_GROK_PROTECTIVE,
-  RV_GROK_SOLVE_IT,
-} from "./attitude.ts";
+import { RV_GROK_ATTITUDE } from "./attitude.ts";
+import { RV_GROK_LEAN_CORE } from "./speechPolicy.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
@@ -16,58 +12,18 @@ function src(name: string) {
   return readFileSync(join(root, name), "utf8");
 }
 
-function assertNoDoom(text: string, label: string) {
-  assert.match(text, /Never doom/, `${label} forbids doom`);
-  assert.match(
-    text,
-    /Never "that's a problem."/,
-    `${label} forbids that's-a-problem default`,
-  );
-  assert.doesNotMatch(
-    text,
-    /(?:lead with|default to|open with) (?:doom|bad news|that's a problem)/i,
-    `${label} must not default to doom`,
-  );
-}
-
-function assertProtectiveFraming(text: string, label: string) {
-  assert.match(text, /good thing you checked/, `${label} protective phrase`);
-  assert.match(text, /protective, not scary/, `${label} protective not scary`);
-  assert.match(text, /Relieved, not anxious/, `${label} relieved not anxious`);
-}
-
-function assertAttitudeVoice(text: string, label: string) {
-  assert.match(text, /We'll figure this out/, `${label} confidence energy`);
-  assert.match(text, /here's how we solve it/, `${label} solve-it framing`);
-  assert.match(text, /brings the fun back/, `${label} fun-bringing mission`);
-  assert.match(text, /not just camping/, `${label} whole buying experience`);
-  assert.match(text, /compliance lecture/, `${label} not a lecture`);
-  assert.match(text, /dodge a bullet/, `${label} celebrates good finds`);
-  assert.match(text, /corporate-speak/, `${label} bans corporate-speak`);
-  assert.match(text, /showroom, phone in hand/, `${label} tight showroom answers`);
-  assert.match(text, /hype past credibility/, `${label} no hype past credibility`);
-  assert.match(
-    text,
-    /sharpest tool in the room/,
-    `${label} stays the sharpest tool`,
-  );
-  assert.match(
-    text,
-    /never invent facts to stay upbeat/i,
-    `${label} never invents to stay upbeat`,
-  );
-  assertNoDoom(text, label);
-  assertProtectiveFraming(text, label);
-}
-
-test("attitude is optimistic lot-friend — no doom, protective framing", () => {
-  assert.equal(RV_GROK_CONFIDENCE, "We'll figure this out");
-  assert.equal(RV_GROK_SOLVE_IT, "here's how we solve it");
-  assert.equal(RV_GROK_PROTECTIVE, "good thing you checked");
-  assertAttitudeVoice(RV_GROK_ATTITUDE, "RV_GROK_ATTITUDE");
-  assert.match(RV_GROK_ATTITUDE, /ATTITUDE \(every answer — behavioral, not facts\)/);
-  assert.match(RV_GROK_ATTITUDE, /Hansen/);
-  assert.match(RV_GROK_ATTITUDE, /CARFAX/);
+test("one voice: fun, playful, and the same words in the core", () => {
+  assert.match(RV_GROK_ATTITUDE, /fun and playful/);
+  assert.match(RV_GROK_ATTITUDE, /enjoy knowing the coach/);
+  assert.match(RV_GROK_ATTITUDE, /enjoy buying/);
+  assert.match(RV_GROK_ATTITUDE, /Never invent a weight/);
+  assert.match(RV_GROK_LEAN_CORE, /fun and playful/);
+  assert.match(RV_GROK_LEAN_CORE, /enjoy knowing the coach/);
+  assert.match(RV_GROK_LEAN_CORE, /The first sentence is the answer/);
+  assert.doesNotMatch(RV_GROK_LEAN_CORE, /Dry, not cute/);
+  assert.doesNotMatch(RV_GROK_LEAN_CORE, /No hype/);
+  assert.doesNotMatch(RV_GROK_ATTITUDE, /We'll figure this out/);
+  assert.doesNotMatch(RV_GROK_LEAN_CORE, /We'll figure this out/);
 });
 
 test("attitude module stays intact; standing prompts stay lean", () => {

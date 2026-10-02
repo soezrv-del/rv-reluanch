@@ -75,6 +75,11 @@ test("query_lot tells the voice to speak only the units this tool returned", () 
   assert.match(src, /If units came back, those are the answer/);
   assert.match(src, /Say none only when matched is 0/);
   assert.match(src, /Do not mention web notes/);
+  assert.match(src, /NAME_ROSTER_SPEAK/);
+  assert.match(src, /hasRoster \? NAME_ROSTER_SPEAK/);
+  const gate = readFileSync(new URL("./voiceTurnGate.ts", import.meta.url), "utf8");
+  assert.match(gate, /Do not read the whole roster out loud/);
+  assert.match(gate, /A Super C is a Class C body on a truck, not a van/);
 });
 
 test("a fixture cheapest Class A speaks the Mirada, not a market Bounder", () => {

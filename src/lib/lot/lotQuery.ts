@@ -122,6 +122,10 @@ export type LotQueryRow = {
   mileage: number | null;
   length_ft: number | null;
   length_source: "printed" | "floorplan" | "none";
+  /** Printed chassis. Blank when the sheet left it blank. */
+  chassis: string;
+  /** Printed GVWR. Blank when the sheet left it blank. */
+  gvwr: string;
 };
 
 export type LotQueryCounts = {
@@ -149,6 +153,11 @@ export type LotQueryResult = {
   feature_blank?: string;
   /** Filters the search actually applied. Memory and filter_label read this. */
   applied: LotQueryApplied;
+  /**
+   * Every motorhome in the same store and filter, with sheet label, chassis,
+   * and GVWR. The sheet count stays `matched`. Empty on a ranked or measured ask.
+   */
+  name_roster?: string[];
 };
 
 export type LotQueryApplied = {
@@ -241,6 +250,22 @@ const STOP = new Set([
   "in",
   "inventory",
   "is",
+  "isnt",
+  "arent",
+  "wasnt",
+  "werent",
+  "dont",
+  "doesnt",
+  "didnt",
+  "cant",
+  "wont",
+  "wouldnt",
+  "couldnt",
+  "shouldnt",
+  "hasnt",
+  "havent",
+  "aint",
+  "not",
   "it",
   "its",
   "just",
@@ -705,7 +730,7 @@ function tokenHitsIdentity(unit: LotQueryUnit, token: string): boolean {
   return lotTokenMatchesUnit(unit, token);
 }
 
-function tokenIsCoachName(unit: LotQueryUnit, token: string): boolean {
+function tokenIsCoachName(unit: LotQueryUnit, token: string, modelOnly = false): boolean {
   if (/^\d+$/.test(token)) return false;
   if (token.length < 4 && !/\d/.test(token)) return false;
   if (
@@ -728,11 +753,11 @@ function tokenIsCoachName(unit: LotQueryUnit, token: string): boolean {
   }
   const named = asSearchable({
     year: "",
-    make: unit.make,
+    make: modelOnly ? "" : unit.make,
     model: unit.model,
     trim: unit.trim,
     series: unit.series,
-    stock_number: unit.stock_number,
+    stock_number: modelOnly ? "" : unit.stock_number,
   });
   return lotTokenMatchesUnit(named, token);
 }
@@ -853,6 +878,20 @@ function countsFor(units: LotQueryUnit[]): LotQueryCounts {
   };
 }
 
+function sheetChassis(unit: LotQueryUnit): string {
+  return (
+    unit.chassis_brand ||
+    unit.chassis ||
+    unit.printed?.chassis_brand ||
+    unit.printed?.chassis ||
+    ""
+  ).trim();
+}
+
+function sheetGvwr(unit: LotQueryUnit): string {
+  return (unit.printed?.gvwr || "").trim();
+}
+
 function toRow(unit: LotQueryUnit): LotQueryRow {
   const length = lotUnitLength(unit);
   return {
@@ -869,6 +908,8 @@ function toRow(unit: LotQueryUnit): LotQueryRow {
     mileage: unitOdometerMiles(unit),
     length_ft: length.ft,
     length_source: length.source,
+    chassis: sheetChassis(unit),
+    gvwr: sheetGvwr(unit),
   };
 }
 
@@ -2228,6 +2269,118 @@ function oneCloseLine(unit: LotQueryUnit, sheet: string, spoken: string): string
   return `One close match. ${bits.join(", ")}. Sheet says ${sheet}, not ${capitalizeWord(spoken)}.`;
 }
 
+const MOTORHOME_CLASS_LABELS = new Set([
+  "Class A",
+  "Class A Gas",
+  "Class A Diesel",
+  "Class B",
+  "Class C",
+  "Class Super C",
+]);
+
+/**
+ * Motorhome class questions keep the sheet count, and also list every
+ * motorhome in that same store and filter. The sheet label is a filing.
+ * She reads the names and the chassis.
+ */
+function measuredClassAsk(parsed: Parsed): boolean {
+  return Boolean(
+    parsed.sort ||
+      parsed.listAll ||
+      parsed.lengthMin != null ||
+      parsed.lengthMax != null ||
+      parsed.priceMin != null ||
+      parsed.priceMax != null ||
+      parsed.milesMin != null ||
+      parsed.milesMax != null ||
+      parsed.horsepower != null ||
+      parsed.displacement ||
+      parsed.bed ||
+      parsed.sleepsMin != null ||
+      parsed.garageMin != null ||
+      parsed.garageMax != null ||
+      parsed.slidesMin != null ||
+      parsed.slidesMax != null ||
+      parsed.generator ||
+      parsed.generatorFuel ||
+      parsed.engine ||
+      parsed.features?.length,
+  );
+}
+
+function motorhomeRoster(units: LotQueryUnit[], parsed: Parsed): LotQueryUnit[] {
+  if (parsed.body.kind !== "labels") return [];
+  if (!parsed.body.labels.every((label) => MOTORHOME_CLASS_LABELS.has(label))) return [];
+  if (measuredClassAsk(parsed)) return [];
+  const namedCoach = parsed.tokens.some((token) =>
+    units.some((unit) => tokenIsCoachName(unit, token)),
+  );
+  if (namedCoach) return [];
+  const open: Parsed = { ...parsed, body: { kind: "motorhome" } };
+  return units.filter((unit) => passesStructured(unit, open, false));
+}
+
+/** A named coach the sheet filed under a different motorhome class stays in the answer. */
+function sameNameMotorhomes(
+  units: LotQueryUnit[],
+  matched: LotQueryUnit[],
+  parsed: Parsed,
+): LotQueryUnit[] {
+  if (parsed.body.kind !== "labels") return matched;
+  if (!parsed.body.labels.every((label) => MOTORHOME_CLASS_LABELS.has(label))) return matched;
+  const names = parsed.tokens.filter((token) =>
+    units.some((unit) => tokenIsCoachName(unit, token, true)),
+  );
+  if (!names.length) return matched;
+  const seen = new Set(matched.map((unit) => unit.stock_number || ""));
+  const extra = units.filter((unit) => {
+    const stock = unit.stock_number || "";
+    if (stock && seen.has(stock)) return false;
+    if (!isMotorhome(unit.body_type || "")) return false;
+    if (!names.every((token) => tokenIsCoachName(unit, token, true))) return false;
+    if (!conditionMatches(unit, parsed.condition)) return false;
+    if (!statusMatches(unit, parsed.status)) return false;
+    if (!locationMatches(unit, parsed.location, parsed.places)) return false;
+    if (!yearMatches(unit, parsed.yearMin, parsed.yearMax)) return false;
+    if (!priceMatches(unit, parsed.priceMin, parsed.priceMax)) return false;
+    if (!fuelMatches(unit, parsed.fuel)) return false;
+    if (!powerMatches(unit, parsed.horsepower, parsed.displacement)) return false;
+    if (parsed.bed && listingFeatureState(unit, parsed.bed) !== "yes") return false;
+    return true;
+  });
+  return extra.length ? matched.concat(extra) : matched;
+}
+
+function sheetDisagreement(units: LotQueryUnit[], body: BodySpec): string {
+  if (body.kind !== "labels" || !units.length) return "";
+  const asked = new Set(body.labels);
+  const off = units.filter((unit) => {
+    const label = (unit.body_type || "").trim();
+    return Boolean(label) && !asked.has(label);
+  });
+  if (!off.length) return "";
+  return `Sheet label disagrees with the question.\n${off
+    .slice(0, 6)
+    .map((unit) => rosterLine(unit))
+    .join("\n")}\nThe name and the chassis are the coach.`;
+}
+
+function rosterLine(unit: LotQueryUnit): string {
+  const name = [unit.year, unit.make, unit.model, unit.trim].filter(Boolean).join(" ");
+  const chassis = sheetChassis(unit);
+  const gvwr = sheetGvwr(unit);
+  return [
+    name,
+    `sheet ${unit.body_type || "unlabeled"}`,
+    chassis ? `chassis ${chassis}` : "chassis blank",
+    gvwr ? `gvwr ${gvwr}` : "",
+    unit.location || "",
+    unit.stock_number ? `stk ${unit.stock_number}` : "",
+  ]
+    .filter(Boolean)
+    .join(" | ");
+}
+
 /**
  * Search the caller's own-lot units. `matched` is the full hit count.
  * `units` is the top N rows. A close make/model miss returns those sheet
@@ -2304,6 +2457,7 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
     );
     if (blanks.length) matched = blanks;
   }
+  matched = sameNameMotorhomes(units, matched, parsed);
   const milesBounded = parsed.milesMin != null || parsed.milesMax != null;
   let milesSkipped = 0;
   if (milesBounded) {
@@ -2489,6 +2643,12 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
       summary = `${summary.replace(/\s+$/, "").replace(/\.$/, "")}. ${note}`;
     }
   }
+  const disagreed = sheetDisagreement(sorted, parsed.body);
+  if (disagreed) summary += `\n${disagreed}`;
+  const nameRoster = motorhomeRoster(units, parsed).map(rosterLine);
+  if (nameRoster.length) {
+    summary += `\nNAME ROSTER (${nameRoster.length} motorhomes in this search). The sheet count above is only how the dealer filed them. A Super C is a Class C body on a truck, not a van. You know these names. Count the ones you know fit what he asked. When the sheet disagrees, say both. If the chassis is blank and you do not know the name, say you are not sure. Do not invent a coach that is not on this roster.`;
+  }
   return {
     ok: true,
     matched: matched.length,
@@ -2499,6 +2659,7 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
     summary,
     lot_total: units.length,
     applied,
+    ...(nameRoster.length ? { name_roster: nameRoster } : {}),
     ...(featureBlank ? { feature_blank: featureBlank } : {}),
     ...(didYouMean ? { did_you_mean: didYouMean } : {}),
     ...(parsed.close && matched.length ? { close: parsed.close } : {}),
@@ -2508,6 +2669,7 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
 /** Chat context block. One summary line, then the top rows. */
 export function formatLotQueryNotes(result: LotQueryResult): string {
   const lines = [result.summary];
+  if (result.name_roster?.length) lines.push(result.name_roster.join("\n"));
   if (result.close) {
     lines.push(`Close match: ${result.close}.`);
   }
@@ -2530,6 +2692,8 @@ export function formatLotQueryNotes(result: LotQueryResult): string {
         unit.lot_status,
         unit.location,
         unit.stock_number ? `stk ${unit.stock_number}` : "",
+        unit.chassis ? `chassis ${unit.chassis}` : "",
+        unit.gvwr ? `gvwr ${unit.gvwr}` : "",
       ]
         .filter(Boolean)
         .join(" · "),
