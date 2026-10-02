@@ -23,7 +23,7 @@
  */
 
 /** Makeup after the soft clipper. Peaks stay under full scale. */
-export const LIVE_VOICE_OUTPUT_GAIN = 1.45;
+export const LIVE_VOICE_OUTPUT_GAIN = 2;
 
 /**
  * Soft clipper runs at unity, then the makeup gain above lifts the
@@ -32,7 +32,7 @@ export const LIVE_VOICE_OUTPUT_GAIN = 1.45;
  */
 export const LIVE_VOICE_SOFT_CLIP = {
   kneeStart: 0.4,
-  ceiling: 0.68,
+  ceiling: 0.49,
   points: 2048,
 } as const;
 

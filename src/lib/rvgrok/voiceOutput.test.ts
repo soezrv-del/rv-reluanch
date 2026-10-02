@@ -17,7 +17,7 @@ import {
 const root = dirname(fileURLToPath(import.meta.url));
 
 test("output gain is a small boost with a soft clipper, not 2.5x into a hard limiter", () => {
-  assert.ok(LIVE_VOICE_OUTPUT_GAIN > 1 && LIVE_VOICE_OUTPUT_GAIN <= 1.5);
+  assert.ok(LIVE_VOICE_OUTPUT_GAIN > 1 && LIVE_VOICE_OUTPUT_GAIN <= 2);
   assert.ok(LIVE_VOICE_SOFT_CLIP.ceiling * LIVE_VOICE_OUTPUT_GAIN < 1);
   const curve = softClipCurve();
   assert.equal(curve.length, LIVE_VOICE_SOFT_CLIP.points);
