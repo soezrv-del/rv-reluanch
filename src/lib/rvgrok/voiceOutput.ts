@@ -22,16 +22,17 @@
  * `?lvroute=auto` to reset.
  */
 
-/** Boost before the soft clipper. One knob for how loud Live Voice is. */
-export const LIVE_VOICE_OUTPUT_GAIN = 1.2;
+/** Makeup after the soft clipper. Peaks stay under full scale. */
+export const LIVE_VOICE_OUTPUT_GAIN = 1.45;
 
 /**
- * Soft clipper: linear up to `kneeStart`, then a tanh curve that approaches
- * `ceiling` without a hard corner. No attack/release, so no pumping.
+ * Soft clipper runs at unity, then the makeup gain above lifts the
+ * quiet parts. Ceiling times the makeup stays under 1, so the speaker
+ * is not slammed the way the old 2.5x boost was.
  */
 export const LIVE_VOICE_SOFT_CLIP = {
-  kneeStart: 0.7,
-  ceiling: 0.98,
+  kneeStart: 0.4,
+  ceiling: 0.68,
   points: 2048,
 } as const;
 
@@ -63,9 +64,30 @@ function audioSessionOf(nav: Navigator): AudioSessionLike | null {
 }
 
 /**
- * Safari 17+ Audio Session. `play-and-record` is the web equivalent of
- * AVAudioSessionCategoryPlayAndRecord. Returns false when the API is missing.
+ * Safari 17+ Audio Session. `play-and-record` keeps the mic and the
+ * loudspeaker, but iOS ducks that route so she sounds far away.
+ * `playback` is normal media volume. Use it only while the mic track is off.
  */
+export function setSpeakingSession(
+  speaking: boolean,
+  nav: Navigator | null = typeof navigator !== "undefined" ? navigator : null,
+): void {
+  const session = audioSessionOf(nav);
+  if (!session) return;
+  const next = speaking ? "playback" : "play-and-record";
+  try {
+    if (session.type !== next) session.type = next;
+  } catch {
+    /* older Safari */
+  }
+}
+
+export function resumeLiveVoiceSpeaker(ctx: AudioContext | null): void {
+  if (!ctx) return;
+  void chains.get(ctx)?.speakerEl?.play().catch(() => {});
+}
+
+/** Open the session for mic + loudspeaker. Call again when she stops. */
 export function preferIosLoudspeaker(
   nav: Navigator | null = typeof navigator !== "undefined" ? navigator : null,
 ): boolean {
@@ -150,16 +172,19 @@ export function liveVoiceOutputFor(ctx: AudioContext): LiveVoiceOutput {
 
   preferIosLoudspeaker();
   const gain = ctx.createGain();
-  gain.gain.value = LIVE_VOICE_OUTPUT_GAIN;
+  gain.gain.value = 1;
   const clipper = ctx.createWaveShaper();
   clipper.curve = softClipCurve();
   clipper.oversample = "none";
   gain.connect(clipper);
+  const makeup = ctx.createGain();
+  makeup.gain.value = LIVE_VOICE_OUTPUT_GAIN;
+  clipper.connect(makeup);
 
   let speakerEl: HTMLAudioElement | null = null;
   if (shouldUseSpeakerElement() && typeof document !== "undefined") {
     const dest = ctx.createMediaStreamDestination();
-    clipper.connect(dest);
+    makeup.connect(dest);
     const audio = document.createElement("audio");
     audio.setAttribute("playsinline", "true");
     audio.setAttribute("webkit-playsinline", "true");
@@ -173,7 +198,7 @@ export function liveVoiceOutputFor(ctx: AudioContext): LiveVoiceOutput {
     void audio.play().catch(() => {});
     speakerEl = audio;
   } else {
-    clipper.connect(ctx.destination);
+    makeup.connect(ctx.destination);
   }
 
   const chain: LiveVoiceOutput = {

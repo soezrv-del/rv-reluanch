@@ -46,7 +46,7 @@ import {
   type ScreenCalloutEvent,
   type ScreenCalloutState,
 } from "./screenGuides";
-import { liveVoiceOutputFor } from "./voiceOutput";
+import { liveVoiceOutputFor, resumeLiveVoiceSpeaker, setSpeakingSession } from "./voiceOutput";
 import {
   PCM_CAPTURE_PROCESSOR,
   createBufferSourcePlayer,
@@ -1004,6 +1004,10 @@ export class GrokRealtimeSession {
     for (const track of tracks) {
       if (track.enabled === closed) track.enabled = !closed;
     }
+    // play-and-record ducks the loudspeaker. playback is full volume,
+    // and it is safe only while the mic track is off.
+    setSpeakingSession(closed);
+    resumeLiveVoiceSpeaker(this.audioCtx);
   }
 
   private beginSpeaking() {

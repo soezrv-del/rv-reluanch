@@ -17,13 +17,14 @@ import {
 const root = dirname(fileURLToPath(import.meta.url));
 
 test("output gain is a small boost with a soft clipper, not 2.5x into a hard limiter", () => {
-  assert.ok(LIVE_VOICE_OUTPUT_GAIN >= 1 && LIVE_VOICE_OUTPUT_GAIN <= 1.2);
+  assert.ok(LIVE_VOICE_OUTPUT_GAIN > 1 && LIVE_VOICE_OUTPUT_GAIN <= 1.5);
+  assert.ok(LIVE_VOICE_SOFT_CLIP.ceiling * LIVE_VOICE_OUTPUT_GAIN < 1);
   const curve = softClipCurve();
   assert.equal(curve.length, LIVE_VOICE_SOFT_CLIP.points);
   const at = (x: number) => curve[Math.round(((x + 1) / 2) * (curve.length - 1))]!;
   // Linear (unity) below the knee.
-  assert.ok(Math.abs(at(0.5) - 0.5) < 0.002);
-  assert.ok(Math.abs(at(-0.5) + 0.5) < 0.002);
+  assert.ok(Math.abs(at(0.2) - 0.2) < 0.002);
+  assert.ok(Math.abs(at(-0.2) + 0.2) < 0.002);
   // Never reaches full scale, even at the boosted peak.
   assert.ok(curve[curve.length - 1]! < LIVE_VOICE_SOFT_CLIP.ceiling);
   assert.ok(curve[0]! > -LIVE_VOICE_SOFT_CLIP.ceiling);
@@ -111,8 +112,11 @@ test("playback goes through the jitter-buffered player and the output gain", () 
   assert.match(live, /noiseSuppression: false/);
   assert.match(live, /autoGainControl: false/);
   assert.doesNotMatch(live, /new AC\(\{[^}]*sampleRate/);
-  assert.match(output, /gain\.gain\.value = LIVE_VOICE_OUTPUT_GAIN/);
+  assert.match(output, /makeup\.gain\.value = LIVE_VOICE_OUTPUT_GAIN/);
   assert.match(output, /gain\.connect\(clipper\)/);
+  assert.match(output, /clipper\.connect\(makeup\)/);
+  assert.match(output, /setSpeakingSession/);
+  assert.match(realtime, /setSpeakingSession\(closed\)/);
   assert.doesNotMatch(output, /createDynamicsCompressor/);
   assert.match(output, /createMediaStreamDestination/);
   assert.match(output, /playsInline = true/);
