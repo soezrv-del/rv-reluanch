@@ -195,6 +195,8 @@ export class GrokRealtimeSession {
   private lastLessonLotNotes = "";
   /** Last own-lot filter. Follow-ups that name no new filter keep it. */
   private lotMemory: LotMemory | null = null;
+  /** Last finished reply, kept so "those in stock" can name the coach she just described. */
+  private priorAssistantForLot = "";
   /** Last thing the salesman said. query_lot runs only for a lot question. */
   private lastUserTranscript = "";
   /** Last lot line spoken, so a noise echo does not say it again. */
@@ -596,6 +598,7 @@ export class GrokRealtimeSession {
       }
 
       case "response.created":
+        if (this.assistantText.trim()) this.priorAssistantForLot = this.assistantText;
         this.assistantText = "";
         this.finishedAssistantOnce = false;
         this.handlers.onStatus("thinking", "Grok is responding…");
@@ -799,6 +802,7 @@ export class GrokRealtimeSession {
           args,
           lotMemory: this.lotMemory,
           utterance: this.lastUserTranscript,
+          priorAssistant: this.priorAssistantForLot,
         }),
       });
       const data = (await res.json()) as { lotMemory?: LotMemory | null } | null;
@@ -818,15 +822,10 @@ export class GrokRealtimeSession {
         return;
       }
       if (summary) this.lastSpokenLotLine = summary;
-      const listed = /\bNamed:/i.test(summary);
       this.sendToolOutput(
         callId,
         data,
-        summary
-          ? listed
-            ? `Say this once, then stop: ${summary} He asked for the list. Read the Named units. Do not add None. Do not repeat it. Do not read a stock number.`
-            : `Say this once, then stop: ${summary} Do not add None. Do not repeat it. Do not read more than 3 units.`
-          : undefined,
+        summary ? `Speak only these words, then stop: ${summary}` : undefined,
       );
     } catch (err) {
       console.warn("[rvgrok] query_lot failed", { name, payload: err });

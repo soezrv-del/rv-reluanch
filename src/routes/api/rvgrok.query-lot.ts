@@ -17,6 +17,7 @@ type Body = {
   args?: Record<string, unknown>;
   lotMemory?: LotMemory | null;
   utterance?: string;
+  priorAssistant?: string;
 };
 
 function readMemory(value: unknown): LotMemory | null {
@@ -47,12 +48,15 @@ export const Route = createFileRoute("/api/rvgrok/query-lot")({
         const args =
           body.args && typeof body.args === "object" ? body.args : {};
         const utterance = typeof body.utterance === "string" ? body.utterance : "";
+        const priorAssistant =
+          typeof body.priorAssistant === "string" ? body.priorAssistant : "";
         const snapshot = await loadOwnLotSnapshot({ requestOrigin });
         const answer = answerQueryLotFromSnapshot(
           snapshot,
           args,
           readMemory(body.lotMemory),
           utterance,
+          priorAssistant,
         );
         return Response.json(spokenLotPayload(answer));
       },

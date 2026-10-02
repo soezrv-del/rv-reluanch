@@ -229,6 +229,7 @@ const STOP = new Set([
   "for",
   "ft",
   "got",
+  "had",
   "have",
   "has",
   "hello",
@@ -286,6 +287,7 @@ const STOP = new Set([
   "probably",
   "recommendation",
   "right",
+  "said",
   "shortest",
   "show",
   "showed",
@@ -305,6 +307,7 @@ const STOP = new Set([
   "thousand",
   "time",
   "to",
+  "told",
   "top",
   "total",
   "try",
@@ -1615,7 +1618,10 @@ export function reconcileLotArgs(args: LotQueryArgs = {}): LotQueryArgs {
     length_ft_max: looseNum(loose, "length_ft_max", "lengthFtMax"),
   };
   const utterance = str(args.utterance);
-  if (!utterance) return stripCarry(base);
+  if (!utterance) {
+    const stripped = stripCarry(base);
+    return args.follow_up ? { ...stripped, follow_up: true } : stripped;
+  }
 
   const followUp = Boolean(args.follow_up);
   const words = normalizeLotQueryText(utterance).split(/\s+/).filter(Boolean);
