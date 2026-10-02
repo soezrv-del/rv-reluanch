@@ -73,6 +73,65 @@ test("used Super Cs are 12 and Super Cs are 27 Class Super C", () => {
   assert.equal(all.counts.condition.Used, 12);
 });
 
+test("Carson Super Cs keep the Omni count and still show the Seneca", () => {
+  const ask = "what Super Cs do we have at the Carson RV show?";
+  const hit = searchLot(units().units, { query: ask, utterance: ask });
+  assert.equal(hit.matched, 1);
+  assert.match(hit.units[0]?.model || "", /Omni/i);
+  assert.equal(hit.counts.body_type["Class Super C"], 1);
+  const roster = (hit.name_roster || []).join("\n");
+  assert.ok(hit.name_roster && hit.name_roster.length > 1);
+  assert.match(roster, /2019 Jayco Seneca/);
+  assert.match(roster, /sheet Class C/);
+  assert.match(roster, /Freightliner/);
+  assert.match(roster, /29000/);
+  assert.match(roster, /Four Winds/);
+  assert.match(roster, /Odyssey/);
+  assert.doesNotMatch(roster, /Travel Trailer/);
+  const spoken = spokenLotPayload({ ...hit, speech: hit.summary });
+  assert.equal(spoken.matched, 1);
+  assert.doesNotMatch(spoken.speech, /NAME ROSTER/);
+  assert.doesNotMatch(spoken.speech, /Seneca/);
+  assert.match((spoken.name_roster || []).join("\n"), /Seneca/);
+  const answer = answerQueryLotFromSnapshot(units(), { query: ask }, null, ask);
+  assert.equal(answer.matched, 1);
+  assert.match((answer.name_roster || []).join("\n"), /Seneca/);
+  const voiced = spokenLotPayload(answer);
+  assert.doesNotMatch(voiced.speech, /NAME ROSTER/);
+  assert.match((voiced.name_roster || []).join("\n"), /Omni/);
+});
+
+test("asking if the Seneca is a Super C returns the Seneca, not Isata", () => {
+  const ask = "Isn't the Seneca a Super C?";
+  const hit = searchLot(units().units, { query: ask, utterance: ask });
+  assert.ok(hit.matched > 0, hit.summary);
+  assert.notEqual(hit.did_you_mean, "Isata");
+  assert.doesNotMatch(hit.summary, /Did you mean Isata/);
+  const seneca = hit.units.find((unit) => unit.stock_number === "UPAUH9435A");
+  assert.ok(seneca);
+  assert.equal(seneca.year, "2019");
+  assert.match(seneca.model, /Seneca/i);
+  assert.equal(seneca.body_type, "Class C");
+  assert.match(seneca.location, /Carson/);
+  assert.match(seneca.chassis, /Freightliner/i);
+  assert.match(seneca.gvwr, /29000/);
+  assert.match(hit.summary, /Sheet label disagrees/);
+  assert.match(hit.summary, /Freightliner/);
+  assert.equal(hit.name_roster, undefined);
+});
+
+test("a ranked or mileage class ask does not open the motorhome roster", () => {
+  const snap = units();
+  const ranked = searchLot(snap.units, { query: "top 10 cheapest Class C" });
+  assert.equal(ranked.name_roster, undefined);
+  assert.ok(ranked.units.every((unit) => unit.body_type === "Class C" || unit.body_type === "Class Super C"));
+  const miles = searchLot(snap.units, {
+    query: "Do we have any Class A motorhomes with around 50,000 miles on them?",
+  });
+  assert.equal(miles.name_roster, undefined);
+  assert.doesNotMatch(miles.summary, /NAME ROSTER/);
+});
+
 test("Class C reports 180 as 153 Class C plus 27 Class Super C", () => {
   const hit = searchLot(units().units, { query: "Class C" });
   assert.equal(hit.matched, 180);

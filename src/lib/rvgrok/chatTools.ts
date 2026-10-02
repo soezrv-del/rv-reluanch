@@ -512,6 +512,7 @@ async function getOwnLot(
     counts: found.counts,
     ...(found.did_you_mean ? { did_you_mean: found.did_you_mean } : {}),
     ...(found.feature_blank ? { feature_blank: found.feature_blank } : {}),
+    ...(found.name_roster?.length ? { name_roster: found.name_roster } : {}),
     units: found.units.map((u) => ({
       year: u.year,
       make: u.make,
@@ -523,6 +524,8 @@ async function getOwnLot(
       body_type: u.body_type,
       condition: u.condition,
       lot_status: u.lot_status,
+      chassis: u.chassis,
+      gvwr: u.gvwr,
     })),
   };
 }

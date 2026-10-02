@@ -277,6 +277,8 @@ export type QueryLotUnit = {
   price: number | null;
   length_ft: number | null;
   length_source: "printed" | "floorplan" | "none";
+  chassis?: string;
+  gvwr?: string;
 };
 
 export type QueryLotAnswer = {
@@ -290,6 +292,8 @@ export type QueryLotAnswer = {
   units: QueryLotUnit[];
   no_length: QueryLotUnit[];
   summary?: string;
+  /** Motorhome names with sheet label, chassis, and GVWR. The sheet count stays `matched`. */
+  name_roster?: string[];
   did_you_mean?: string;
   close?: string;
   speech: string;
@@ -607,6 +611,7 @@ export function answerQueryLotFromSnapshot(
     })),
     no_length: found.no_length,
     summary: found.summary,
+    ...(found.name_roster?.length ? { name_roster: found.name_roster } : {}),
     ...(found.did_you_mean ? { did_you_mean: found.did_you_mean } : {}),
     ...(found.close ? { close: found.close } : {}),
     ...(found.feature_blank ? { feature_blank: found.feature_blank } : {}),

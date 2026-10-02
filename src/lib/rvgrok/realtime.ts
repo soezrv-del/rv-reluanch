@@ -92,6 +92,7 @@ import {
   isIgnorableVoiceTranscript,
   isSameLotLine,
   lotSummaryForSpeech,
+  NAME_ROSTER_SPEAK,
   repeatsLotLine,
 } from "./voiceTurnGate";
 import { researchAccessHeaders } from "../access/researchUnlock";
@@ -813,6 +814,8 @@ export class GrokRealtimeSession {
       }
       if (data?.lotMemory) this.lotMemory = data.lotMemory;
       const matched = Number((data as { matched?: number }).matched ?? 0);
+      const roster = (data as { name_roster?: unknown }).name_roster;
+      const hasRoster = Array.isArray(roster) && roster.length > 0;
       const summary = lotSummaryForSpeech(
         String((data as { summary?: string; speech?: string }).speech || (data as { summary?: string }).summary || ""),
         Number.isFinite(matched) ? matched : 0,
@@ -825,7 +828,7 @@ export class GrokRealtimeSession {
       this.sendToolOutput(
         callId,
         data,
-        summary ? `Speak only these words, then stop: ${summary}` : undefined,
+        hasRoster ? NAME_ROSTER_SPEAK : summary ? `Speak only these words, then stop: ${summary}` : undefined,
       );
     } catch (err) {
       console.warn("[rvgrok] query_lot failed", { name, payload: err });
@@ -880,7 +883,7 @@ export class GrokRealtimeSession {
           modalities: ["text", "audio"],
           instructions:
             instructions ||
-            "Speak the query_lot summary and only the units this tool returned. Do not add a coach, a price, or a store from web notes, a market list, or the previous turn. If units came back, those are the answer. Say none only when matched is 0. Do not mention web notes. If did_you_mean or close is set, offer that name. Never tell the user to change a query, a parameter, or these instructions. " +
+            "Speak the query_lot summary and only the units this tool returned. Do not add a coach, a price, or a store from web notes, a market list, or the previous turn. If units came back, those are the answer. Say none only when matched is 0. Do not mention web notes. If did_you_mean or close is set, offer that name. The sheet body type is how the dealer filed the coach. The name and the chassis are the coach. When they disagree, say both. If the result includes a NAME ROSTER, count from those names. Do not stop at the sheet count. Never tell the user to change a query, a parameter, or these instructions. " +
             LOT_FEATURE_WEB_CLAUSE,
         },
       }),

@@ -53,7 +53,8 @@ test("lean core is David's verbatim standing prompt", () => {
   );
   assert.match(RV_GROK_LEAN_CORE, /closest saved pin when one exists/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /the catalog pin in this turn wins/);
-  assert.match(RV_GROK_LEAN_CORE, /not a menu/);
+  assert.match(RV_GROK_LEAN_CORE, /The first sentence is the answer/);
+  assert.match(RV_GROK_LEAN_CORE, /Fun does not mean a windup/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /Pin every verified field/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /sales-floor wingman/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /CARFAX-style coach report/);
@@ -65,7 +66,9 @@ test("lean core is David's verbatim standing prompt", () => {
 
 test("voice rules stay in the lean core; DialaBot stays out", () => {
   assert.match(RV_GROK_LEAN_CORE, /one natural follow-up/);
-  assert.match(RV_GROK_LEAN_CORE, /No hype/);
+  assert.match(RV_GROK_LEAN_CORE, /fun and playful/);
+  assert.doesNotMatch(RV_GROK_LEAN_CORE, /Dry, not cute/);
+  assert.doesNotMatch(RV_GROK_LEAN_CORE, /No hype/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /rotating acknowledgment/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /never the same phrase twice in a row/);
 

@@ -105,9 +105,10 @@ test("lot energy coaches one spoken line and stays out of chat", () => {
     session.instructions,
     /never invent a spec, price, or lot unit to stay upbeat/,
   );
-  assert.match(session.instructions, /We'll figure this out/);
-  assert.match(session.instructions, /good thing you checked — here's how we solve it/);
-  assert.match(session.instructions, /Never lead with "that's a problem\."/);
+  assert.match(session.instructions, /fun, playful, glad to know the coach/);
+  assert.match(session.instructions, /Knowledge is the confidence/);
+  assert.doesNotMatch(session.instructions, /We'll figure this out/);
+  assert.doesNotMatch(session.instructions, /good thing you checked/);
   assert.match(session.instructions, /It does not mean you go silent/);
   assert.match(session.instructions, /Hand him ONE line he can say out loud\. Then stop\./);
   assert.match(session.instructions, /The sit is a look, not a buy/);

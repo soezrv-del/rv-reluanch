@@ -53,7 +53,10 @@ export function repeatsLotLine(text: string): boolean {
  * A real miss stays "None."
  */
 export function lotSummaryForSpeech(summary: string, matched: number): string {
-  let line = (summary || "").replace(/\s+/g, " ").trim();
+  let line = (summary || "")
+    .replace(/\nNAME ROSTER\b[\s\S]*$/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
   if (matched > 0) {
     line = line.replace(/^none\.\s*/i, "");
     line = line.replace(/\bnone\.\s+(?=matching units\b)/i, "");
@@ -65,6 +68,10 @@ export function lotSummaryForSpeech(summary: string, matched: number): string {
 }
 
 export const SPOKEN_LOT_UNIT_CAP = 3;
+
+/** Spoken when the tool result includes a motorhome name roster. Not a verbatim script. */
+export const NAME_ROSTER_SPEAK =
+  "The first sentence is the answer. Fun and playful. The sheet count is only how the dealer filed them. name_roster lists every motorhome in this search with the sheet label, the chassis, and the GVWR. A Super C is a Class C body on a truck, not a van. You know these names. Name the ones that fit what he asked, and say when the sheet disagrees. If the chassis is blank and you do not know the name, say you are not sure. Do not invent a coach that is not on this roster. Do not read the whole roster out loud. Do not stop at the sheet count.";
 
 export function spokenLotPayload<
   T extends {
