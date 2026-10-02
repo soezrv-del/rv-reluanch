@@ -53,24 +53,26 @@ test("Grand Design Lineages and Lineage are the same 27 new coaches", () => {
   }
 });
 
-test("used Super Cs are 12 and Super Cs are 27 Class Super C", () => {
+test("used Super Cs are 14 and Super Cs are 31 with the chassis overrides", () => {
   const snap = units();
   const used = searchLot(snap.units, { query: "used Super Cs" });
-  assert.equal(used.matched, 12);
+  assert.equal(used.matched, 14);
   assert.equal(used.counts.body_type["Class Super C"], 12);
-  assert.equal(used.counts.condition.Used, 12);
+  assert.equal(used.counts.condition.Used, 14);
 
   const typed = searchLot(snap.units, {
     body_type: "Class Super C",
     condition: "used",
   });
-  assert.equal(typed.matched, 12);
+  assert.equal(typed.matched, 14);
 
   const all = searchLot(snap.units, { query: "Super Cs" });
-  assert.equal(all.matched, 27);
+  assert.equal(all.matched, 31);
   assert.equal(all.counts.body_type["Class Super C"], 27);
-  assert.equal(all.counts.condition.New, 15);
-  assert.equal(all.counts.condition.Used, 12);
+  assert.equal(all.counts.condition.New, 17);
+  assert.equal(all.counts.condition.Used, 14);
+  assert.match(all.summary, /Seneca/);
+  assert.match(all.summary, /fourteen thousand five hundred/);
 });
 
 test("Class C reports 180 as 153 Class C plus 27 Class Super C", () => {
@@ -148,7 +150,7 @@ test("Linage returns the Lineage coaches and names the sheet model", () => {
   assert.ok(hit.units.every((unit) => /lineage/i.test(unit.model)));
 });
 
-test("how about used Super Cs after a Lineage question still calls the tool and returns 12", () => {
+test("how about used Super Cs after a Lineage question still calls the tool and returns 14", () => {
   const realtime = readFileSync(
     join(process.cwd(), "src/lib/rvgrok/realtime.ts"),
     "utf8",
@@ -173,10 +175,10 @@ test("how about used Super Cs after a Lineage question still calls the tool and 
     { query: "how about used Super Cs, how many?" },
     { filter: { make: "Grand Design", model: "Lineage" } },
   );
-  assert.equal(follow.matched, 12);
+  assert.equal(follow.matched, 14);
   assert.equal(follow.none, false);
   assert.equal(follow.counts?.body_type["Class Super C"], 12);
-  assert.equal(follow.counts?.condition.Used, 12);
+  assert.equal(follow.counts?.condition.Used, 14);
 });
 
 test("fuel, spoken price, sort, and chassis match the lot sheet", () => {
@@ -285,7 +287,7 @@ test("the salesman's words beat a bad model filter on the first ask", () => {
     { filter: { make: "Grand Design", model: "Lineage" } },
     "how about used Super Cs, how many?",
   );
-  assert.equal(follow.matched, 12);
+  assert.equal(follow.matched, 14);
 
   for (const said of [
     "how many diesels do we have",

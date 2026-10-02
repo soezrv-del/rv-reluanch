@@ -26,6 +26,7 @@ import {
   unitOdometerMiles,
   type LotSearchable,
 } from "./lotSearch.ts";
+import { classifyCoach, coachTypeLabel } from "./coachType.ts";
 
 export type LotQueryUnit = {
   year?: string;
@@ -1893,7 +1894,7 @@ export function lotQueryHasSubject(query: string): boolean {
 }
 
 function passesStructured(unit: LotQueryUnit, parsed: Parsed, lengthRequired: boolean): boolean {
-  if (!bodyMatches(unit.body_type || "", parsed.body)) return false;
+  if (!bodyMatches(coachTypeLabel(unit), parsed.body)) return false;
   if (!conditionMatches(unit, parsed.condition)) return false;
   if (!statusMatches(unit, parsed.status)) return false;
   if (!locationMatches(unit, parsed.location, parsed.places)) return false;
@@ -2487,6 +2488,19 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
     const note = `Sheet says ${alias.display}, not ${capitalizeWord(alias.spoken)}.`;
     if (!summary.includes(note)) {
       summary = `${summary.replace(/\s+$/, "").replace(/\.$/, "")}. ${note}`;
+    }
+  }
+  if (parsed.body.kind === "labels" && !featureBlank && !featureNo) {
+    const flags = matched
+      .map((unit) => {
+        const call = classifyCoach(unit);
+        if (!call.override || !call.sentence) return "";
+        const name = [unit.year, unit.make, unit.model, unit.trim].filter(Boolean).join(" ");
+        return `${name}. ${call.sentence}`;
+      })
+      .filter(Boolean);
+    if (flags.length) {
+      summary = `${summary.replace(/\s+$/, "").replace(/\.$/, "")}. ${flags.join(" ")}`;
     }
   }
   return {
