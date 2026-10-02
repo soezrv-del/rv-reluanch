@@ -21,7 +21,7 @@ export function RoomAskBar({
 }: {
   tab: AppTab;
   homeOpen?: boolean;
-  onOpen: (tab: AppTab) => void;
+  onOpen: (tab: AppTab, opts?: { skipVoice?: boolean }) => void;
 }) {
   const [draft, setDraft] = useState("");
   const [voice, setVoice] = useState<RoomVoicePhase>("idle");
@@ -36,7 +36,7 @@ export function RoomAskBar({
     setDraft("");
     roomAskSend(q);
     markAskBarGrokEntry();
-    onOpen("rvgrok");
+    onOpen("rvgrok", { skipVoice: true });
   };
 
   return (

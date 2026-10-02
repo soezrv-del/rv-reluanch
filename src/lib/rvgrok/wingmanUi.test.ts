@@ -43,6 +43,11 @@ test("Grok tab landing is Lot wingman on Raidho — no family camping plate", ()
   assert.doesNotMatch(app, /or name a year, make, and model/);
   assert.match(composer, /data-rvgrok-mic/);
   assert.match(composer, /Start live voice/);
+  const pillStart = composer.indexOf("grok-composer-pill");
+  const sendStart = composer.indexOf("grok-send-btn");
+  assert.ok(pillStart > 0 && sendStart > pillStart);
+  assert.match(composer.slice(pillStart, sendStart), /data-rvgrok-mic/);
+  assert.doesNotMatch(composer.slice(0, pillStart), /data-rvgrok-mic/);
   assert.match(avatar, /icon-rvgrok\.png/);
 
   assert.match(css, /\[data-rvgrok-wingman\]/);

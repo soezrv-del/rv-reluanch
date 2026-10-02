@@ -47,6 +47,13 @@ import {
   clearGrokSeedOnDockTap,
   grokSeedFromAskHandoff,
 } from "@/lib/rvgrok/tabEntry";
+import { beginLiveVoiceFromUserGesture } from "@/lib/rvgrok/liveVoice";
+import {
+  greetRoomVoice,
+  planGrokTabVoice,
+  roomVoiceIsOpen,
+  stopRoomVoice,
+} from "@/lib/rvgrok/roomAsk";
 import { onRouteChange } from "@/lib/rvgrok/screenContext";
 
 /**
@@ -305,7 +312,8 @@ export function AppShell({
   }, [markVisited]);
 
   const onTabChange = useCallback(
-    (next: AppTab) => {
+    (next: AppTab, opts?: { skipVoice?: boolean }) => {
+      const alreadyOnGrok = !homeOpen && tab === "rvgrok";
       setHomeOpen(false);
       // Hidden Grok composer can keep focus after a swipe — that sticks
       // html.kb-open and used to unmount the dock on re-entry.
@@ -322,6 +330,16 @@ export function AppShell({
       }
       if (next === "rvsold" && !isProfessionalTier()) return;
       if (next === "rvgrok") {
+        const voicePlan = planGrokTabVoice({
+          alreadyOnGrok,
+          voiceOpen: roomVoiceIsOpen(),
+          skipVoice: opts?.skipVoice,
+        });
+        // Capture has to start inside this tap. A later effect is too late.
+        if (voicePlan === "stop") stopRoomVoice();
+        else if (voicePlan === "greet") {
+          greetRoomVoice(beginLiveVoiceFromUserGesture());
+        }
         // Dock tap / swipe / More — never restore a leftover Ask-Grok seed.
         // The open thread stays; only a Facts Ask Grok seed starts fresh.
         setGrokSeed(clearGrokSeedOnDockTap());
@@ -331,7 +349,7 @@ export function AppShell({
       markVisited(next);
       if (next === "rvcal") requestCleanCal();
     },
-    [markVisited, openFactsShare, openFactsPicker, requestCleanCal],
+    [markVisited, openFactsShare, openFactsPicker, requestCleanCal, tab, homeOpen],
   );
 
   useEffect(() => {

@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  planGrokTabVoice,
   publishRoomVoice,
   registerRoomAsk,
   roomAskMic,
@@ -73,14 +74,14 @@ test("room tabs sit above the ask bar and the old dock is not mounted", () => {
   assert.match(landing, /starters\.length > 0/);
   assert.match(bar, /roomAskMic\(\)/);
   assert.match(bar, /roomAskSend\(q\)/);
-  assert.match(bar, /onOpen\("rvgrok"\)/);
+  assert.match(bar, /onOpen\("rvgrok", \{ skipVoice: true \}\)/);
   assert.match(bar, /"Start live voice"/);
   assert.match(bar, /const hidePinnedAsk = !homeOpen && tab === "rvgrok"/);
   assert.match(bar, /hidePinnedAsk \? null/);
   assert.match(more, /label="RV GPS"/);
   assert.doesNotMatch(more, /title="RV GPS"/);
   assert.match(more, /title="VIN Decoder"/);
-  assert.match(bar, /onOpen\("rvgrok"\)/);
+  assert.match(bar, /onOpen\("rvgrok", \{ skipVoice: true \}\)/);
   assert.doesNotMatch(bar, /requestAnimationFrame|nextPillScroll|shouldLoopPills|PILL_LOOP/);
   assert.doesNotMatch(bar, /aria-hidden="true"/);
   const ask = read("./roomAsk.ts");
@@ -115,7 +116,7 @@ test("mic press on Tow does not open Grok and does call the bridge mic", () => {
   assert.match(mic, /roomAskMic\(\)/);
   assert.doesNotMatch(mic, /onOpen\(/);
   assert.doesNotMatch(mic, /markAskBarGrokEntry/);
-  assert.match(bar, /markAskBarGrokEntry\(\);\s*onOpen\("rvgrok"\)/);
+  assert.match(bar, /markAskBarGrokEntry\(\);\s*onOpen\("rvgrok", \{ skipVoice: true \}\)/);
 
   const app = read("../../components/rvgrok/RvGrokApp.tsx");
   const hidden = app.match(/if \(!active\) return;[\s\S]{0,500}/)?.[0] ?? "";
@@ -138,6 +139,40 @@ test("mic press on Tow does not open Grok and does call the bridge mic", () => {
   assert.equal(readActiveScreen(), "Tow");
   registerRoomAsk(null);
   setActiveScreen("");
+});
+
+test("opening RV Grok says hello only when she is not already on", () => {
+  assert.equal(
+    planGrokTabVoice({ alreadyOnGrok: false, voiceOpen: false }),
+    "greet",
+  );
+  assert.equal(
+    planGrokTabVoice({ alreadyOnGrok: false, voiceOpen: true }),
+    "keep",
+  );
+  assert.equal(
+    planGrokTabVoice({ alreadyOnGrok: true, voiceOpen: true }),
+    "stop",
+  );
+  assert.equal(
+    planGrokTabVoice({ alreadyOnGrok: true, voiceOpen: false }),
+    "keep",
+  );
+  assert.equal(
+    planGrokTabVoice({
+      alreadyOnGrok: false,
+      voiceOpen: false,
+      skipVoice: true,
+    }),
+    "keep",
+  );
+  const shell = read("../../components/shell/AppShell.tsx");
+  assert.match(shell, /planGrokTabVoice\(/);
+  assert.match(shell, /greetRoomVoice\(beginLiveVoiceFromUserGesture\(\)\)/);
+  assert.match(shell, /if \(voicePlan === "stop"\) stopRoomVoice\(\)/);
+  const app = read("../../components/rvgrok/RvGrokApp.tsx");
+  assert.match(app, /takePendingGrokGreeting\(\)/);
+  assert.match(app, /stop: \(\) => stopLiveFromTabRef\.current\(\)/);
 });
 
 test("ask bar voice phase follows the live session", () => {

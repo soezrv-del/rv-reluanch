@@ -89,26 +89,6 @@ export function GrokComposer({
       ) : null}
 
       <div className="flex items-center gap-2 sm:gap-2.5">
-        <button
-          type="button"
-          data-rvgrok-mic=""
-          onClick={onMic}
-          className={cn(
-            "grok-mic-btn flex size-12 shrink-0 items-center justify-center rounded-full transition",
-            liveActive && "is-live",
-            waitingToResumeLive && "is-armed",
-            isRecording && "is-rec",
-          )}
-          aria-label={liveActive ? "Stop live voice" : "Start live voice"}
-          title={liveActive ? "Stop Live Voice" : "Start Live Voice"}
-        >
-          {liveActive ? (
-            <Radio className="size-5 animate-pulse" />
-          ) : (
-            <Mic className="size-5" />
-          )}
-        </button>
-
         <div className="grok-composer-pill relative flex min-h-12 min-w-0 flex-1 items-end gap-1 rounded-full px-1.5 py-1">
           {!landing && cameraInputRef && libraryInputRef && onPickImage ? (
             <>
@@ -193,6 +173,26 @@ export function GrokComposer({
             className="max-h-28 min-h-10 flex-1 resize-none bg-transparent px-2 py-2.5 text-[15px] text-fg outline-none placeholder:text-muted"
             readOnly={isRecording || liveActive}
           />
+
+          <button
+            type="button"
+            data-rvgrok-mic=""
+            onClick={onMic}
+            className={cn(
+              "grok-mic-btn mb-0.5 flex size-10 shrink-0 items-center justify-center self-center rounded-full transition",
+              liveActive && "is-live",
+              waitingToResumeLive && "is-armed",
+              isRecording && "is-rec",
+            )}
+            aria-label={liveActive ? "Stop live voice" : "Start live voice"}
+            title={liveActive ? "Stop Live Voice" : "Start Live Voice"}
+          >
+            {liveActive ? (
+              <Radio className="size-5 animate-pulse" />
+            ) : (
+              <Mic className="size-5" />
+            )}
+          </button>
         </div>
 
         <button
