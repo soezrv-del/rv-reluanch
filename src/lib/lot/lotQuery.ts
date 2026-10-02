@@ -491,6 +491,31 @@ function bodyMatches(body: string, spec: BodySpec): boolean {
   return spec.labels.some((label) => n === label.toLowerCase());
 }
 
+function sheetPounds(raw: string | undefined): number | undefined {
+  const match = String(raw || "").replace(/,/g, "").match(/\d{4,6}/);
+  if (!match) return undefined;
+  const n = Number(match[0]);
+  return n >= 4000 && n <= 60000 ? n : undefined;
+}
+
+/** The sheet's own chassis, not the catalog. A Freightliner or a 19k+ diesel is a Super C the dealer filed as Class C. */
+function sheetLooksLikeSuperC(unit: LotQueryUnit): boolean {
+  const body = (unit.body_type || "").toLowerCase();
+  if (!body || /super/.test(body) || body !== "class c") return false;
+  const printed = unit.printed || {};
+  const chassis = `${printed.chassis_brand || ""} ${printed.chassis_model || ""}`.toLowerCase();
+  if (/sprinter|transit|promaster|e-?\s?450|e-?\s?350/.test(chassis)) return false;
+  const fuel = `${printed.fuel_type || ""} ${printed.engine || ""}`.toLowerCase();
+  if (!/diesel|cummins|power stroke|duramax/.test(fuel)) return false;
+  const heavyName = /freightliner|international|spartan|hino|kodiak|s2rv|\bf-?\s?5[05]0\b|\bf-?\s?600\b|\b[45]500\b/.test(chassis);
+  const gvwr = sheetPounds(printed.gvwr);
+  return heavyName || (gvwr != null && gvwr >= 19000);
+}
+
+function superCOnly(body: BodySpec): boolean {
+  return body.kind === "labels" && body.labels.length === 1 && body.labels[0] === "Class Super C";
+}
+
 function consumeCondition(phrase: string, arg: string): { condition: string; rest: string } {
   let rest = phrase;
   let condition = arg.toLowerCase();
@@ -829,6 +854,15 @@ const CHATTER = new Set([
   "er",
   "look",
   "no",
+  "isnt",
+  "isn",
+  "arent",
+  "aint",
+  "dont",
+  "doesnt",
+  "wasnt",
+  "werent",
+  "thats",
   "would",
   "like",
   "liked",
@@ -2032,7 +2066,7 @@ type ModelAlias = { spoken: string; key: string; display: string; distance: numb
  */
 function modelAlias(units: LotQueryUnit[], tokens: string[]): ModelAlias | undefined {
   const misses = tokens.filter(
-    (token) => /^[a-z]{4,}$/.test(token) && !units.some((unit) => tokenHitsIdentity(unit, token)),
+    (token) => /^[a-z]{4,}$/.test(token) && !CHATTER.has(token) && !units.some((unit) => tokenHitsIdentity(unit, token)),
   );
   if (!misses.length) return undefined;
   const makeAnchors = tokens.filter((token) => units.some((unit) => tokenHitsMake(unit, token)));
@@ -2544,6 +2578,29 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
     const note = `Sheet says ${alias.display}, not ${capitalizeWord(alias.spoken)}.`;
     if (!summary.includes(note)) {
       summary = `${summary.replace(/\s+$/, "").replace(/\.$/, "")}. ${note}`;
+    }
+  }
+  if (superCOnly(parsed.body) && !featureBlank && !featureNo) {
+    const seen = new Set(matched.map((unit) => unit.stock_number));
+    const openBody = { ...parsed, body: { kind: "any" as const } };
+    const heavy = units.filter((unit) => {
+      if (seen.has(unit.stock_number) || !sheetLooksLikeSuperC(unit)) return false;
+      if (!passesStructured(unit, openBody, false)) return false;
+      if (matchTokens.length && !passesTokens(unit, matchTokens)) return false;
+      return true;
+    });
+    if (heavy.length) {
+      const namedHeavy = heavy.slice(0, 4).map((unit) => {
+        const name = [unit.year, unit.make, unit.model, unit.trim].filter(Boolean).join(" ");
+        const chassis = (unit.printed?.chassis_brand || "").trim();
+        const chassisBit = chassis && !/^none$/i.test(chassis) ? `, ${chassis}` : "";
+        return unit.location ? `${name}${chassisBit}, ${unit.location}` : `${name}${chassisBit}`;
+      });
+      const more = heavy.length > 4 ? `, and ${heavy.length - 4} more` : "";
+      const clause = `Also a Super C on the sheet's chassis, filed as Class C: ${namedHeavy.join("; ")}${more}.`;
+      summary = /^none\b/i.test(summary)
+        ? clause
+        : `${summary.replace(/\s+$/, "").replace(/\.$/, "")}. ${clause}`;
     }
   }
   return {

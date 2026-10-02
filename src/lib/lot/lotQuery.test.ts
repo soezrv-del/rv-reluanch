@@ -73,6 +73,23 @@ test("used Super Cs are 12 and Super Cs are 27 Class Super C", () => {
   assert.equal(all.counts.condition.Used, 12);
 });
 
+test("a Super C ask still shows a Class C the sheet put on a heavy chassis", () => {
+  const snap = units();
+  const carson = searchLot(snap.units, { query: "Super Cs at the Carson show" });
+  assert.equal(carson.matched, 1);
+  assert.match(carson.summary, /Omni/);
+  assert.match(carson.summary, /Seneca/);
+  assert.match(carson.summary, /Freightliner/);
+  assert.match(carson.summary, /filed as Class C/);
+  assert.doesNotMatch(carson.summary, /Odyssey|Four Winds|Sunseeker/);
+
+  const asked = searchLot(snap.units, { query: "isn't the Seneca a Super C" });
+  assert.equal(asked.did_you_mean, undefined);
+  assert.doesNotMatch(asked.summary, /Did you mean/i);
+  assert.match(asked.summary, /Seneca/);
+  assert.match(asked.summary, /Carson/);
+});
+
 test("Class C reports 180 as 153 Class C plus 27 Class Super C", () => {
   const hit = searchLot(units().units, { query: "Class C" });
   assert.equal(hit.matched, 180);
