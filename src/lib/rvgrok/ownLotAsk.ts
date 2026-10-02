@@ -15,7 +15,7 @@ import {
   looksLikeSpecQuestion,
   normalizeAskText,
 } from "./webIntent.ts";
-import { isLotListExpansion } from "../lot/lotSearch.ts";
+import { isLotListExpansion, normalizeLotSearchQuery } from "../lot/lotSearch.ts";
 
 /**
  * Own-lot listing prices / budget / "show prices too" — not nationwide
@@ -454,13 +454,52 @@ export function looksLikeOwnLotFollowUp(text: string): boolean {
     return true;
   }
   if (
-    /\b(?:the ones|those|these|them|'em|’em|that's there|that show|the show|(?:the\s+)?(?:used|new)\s+ones)\b/i.test(
+    /\b(?:the ones|those|these|them|em|that's there|that show|the show|(?:the\s+)?(?:used|new)\s+ones)\b/i.test(
       t,
-    )
+    ) ||
+    /['’]em\b/i.test(t)
   ) {
     return true;
   }
+  if (looksLikeSeriesOnlyAsk(text)) return true;
   return false;
+}
+
+/** "Do we have a five?" is the series on the coach already in hand. */
+function looksLikeSeriesOnlyAsk(text: string): boolean {
+  const noise = new Set([
+    "do",
+    "we",
+    "have",
+    "has",
+    "any",
+    "of",
+    "a",
+    "an",
+    "the",
+    "those",
+    "these",
+    "them",
+    "em",
+    "are",
+    "is",
+    "it",
+    "or",
+    "in",
+    "stock",
+    "our",
+    "inventory",
+    "yeah",
+    "yes",
+    "yep",
+    "series",
+  ]);
+  const words = normalizeLotSearchQuery(text).split(/\s+/).filter(Boolean);
+  const content = words.filter((word) => !noise.has(word));
+  if (!content.length) return false;
+  return content.every((word) =>
+    /^(?:[2-9]|10|two|three|four|five|six|seven|eight|nine|ten)$/.test(word),
+  );
 }
 
 /** Lot mode for a fresh question: an inventory phrase, a cheapest ask, or a correction. */

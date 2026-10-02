@@ -266,6 +266,18 @@ const STOP = new Set([
   "havent",
   "aint",
   "not",
+  "em",
+  "store",
+  "even",
+  "close",
+  "talking",
+  "talk",
+  "see",
+  "saw",
+  "was",
+  "were",
+  "notice",
+  "figure",
   "it",
   "its",
   "just",
@@ -564,19 +576,53 @@ function coachWordIn(text: string): boolean {
   });
 }
 
+/** "five" in "a five" / "Isata five" is the series digit. "Four Winds" stays a name. */
+const SERIES_DIGIT: Record<string, string> = {
+  two: "2",
+  three: "3",
+  four: "4",
+  five: "5",
+  six: "6",
+  seven: "7",
+  eight: "8",
+  nine: "9",
+  ten: "10",
+};
+
+function isSeriesOnlyTokens(raw: string[]): boolean {
+  if (raw.includes("top") || raw.includes("first")) return false;
+  const content = raw.filter((word) => word !== "series" && !STOP.has(word));
+  if (!content.length) return false;
+  return content.every((word) => SERIES_DIGIT[word] != null || /^\d{1,2}$/.test(word));
+}
+
 function identityTokens(phrase: string, places: Set<string>): string[] {
   const cleaned = stripLengthTalk(phrase);
   const raw = cleaned.split(/\s+/).filter(Boolean);
+  const seriesOnly = isSeriesOnlyTokens(raw);
   const out: string[] = [];
   for (let i = 0; i < raw.length; i++) {
     const token = raw[i] || "";
     if (!token || STOP.has(token)) continue;
     if (places.has(token)) continue;
-    // "5" in "Isata 5" / "Asada 5" is the series, not a length.
-    if (/^\d{1,2}$/.test(token)) {
+    // "5" in "Isata 5" is the series. A bare "five" is that same digit.
+    // "top 10" is a list size. "Four Winds" is a name.
+    const seriesDigit = SERIES_DIGIT[token];
+    if (seriesDigit || /^\d{1,2}$/.test(token)) {
       const prev = raw[i - 1] || "";
       const next = raw[i + 1] || "";
-      if (!gluedToCoachName(prev) && !gluedToCoachName(next)) continue;
+      const nextIsName = Boolean(seriesDigit) && gluedToCoachName(next) && next !== "series";
+      if (nextIsName) {
+        out.push(token);
+        continue;
+      }
+      const glued =
+        (gluedToCoachName(prev) && prev !== "series") ||
+        gluedToCoachName(next) ||
+        next === "series" ||
+        prev === "series";
+      if (glued || seriesOnly) out.push(seriesDigit || token);
+      continue;
     }
     if (/^\d{2}(?:ft|foot|feet|footer|footers)$/.test(token)) continue;
     if (/^\d{1,2}(?:\.\d+)?(?:ft|foot|feet)$/.test(token)) continue;
@@ -843,7 +889,7 @@ function suggestName(tokens: string[], units: LotQueryUnit[]): string | undefine
   const exact = new Set(names.map((name) => name.key));
   let best: CatalogName | undefined;
   for (const token of tokens) {
-    if (token.length < 4 || exact.has(token) || STOP.has(token)) continue;
+    if (token.length < 4 || exact.has(token) || STOP.has(token) || SERIES_DIGIT[token]) continue;
     for (const name of names) {
       if (!editDistanceAtMost1(token, name.key)) continue;
       if (
@@ -1638,11 +1684,35 @@ export function spokenLotBody(raw: string): string {
 }
 
 /**
+ * "Not even close, I was talking about the Isata" is a question about the Isata.
+ * The complaint around it is not a coach name.
+ */
+export function stripLotAside(raw: string): string {
+  let s = normalizeLotQueryText(raw);
+  if (!s) return "";
+  s = s.replace(/\bnot even close\b/g, " ");
+  s = s.replace(/\bi (?:was|am) talking about\b/g, " ");
+  s = s.replace(/\bwhy cant you see(?: that)?\b/g, " ");
+  s = s.replace(/\bwhy didnt you(?: see(?: that)?| notice(?: that)?| find (?:that|it|this))?\b/g, " ");
+  s = s.replace(/\b(?:yeah|yep|yup|nah|nope)\b/g, " ");
+  s = s.replace(/\bno i mean\b/g, " ");
+  s = s.replace(/\bi mean\b/g, " ");
+  return s.replace(/\s+/g, " ").trim();
+}
+
+/** "In inventory" and "all the stores" are the whole company, not the last lot. */
+function asksWholeCompany(raw: string): boolean {
+  const t = normalizeLotQueryText(raw);
+  if (/\binventory\b/.test(t)) return true;
+  return /\b(?:all|every|across)\b(?:\s+\w+){0,3}\s+store\b/.test(t);
+}
+
+/**
  * Spoken words fill filters the model left blank. They replace only the
  * filter they name. Body, fuel, location, year, length, and price the
  * model passed stay when the words do not name a different one.
- * A fresh make or model that is not in the words is still dropped so
- * "coaches" and "RVs" cannot stick as Coachmen.
+ * A make or model that is not in the words is dropped. A follow-up keeps
+ * the carried make, not a new word he did not say.
  */
 export function reconcileLotArgs(args: LotQueryArgs = {}): LotQueryArgs {
   const loose = args as LooseArgs;
@@ -1658,9 +1728,17 @@ export function reconcileLotArgs(args: LotQueryArgs = {}): LotQueryArgs {
     length_ft_min: looseNum(loose, "length_ft_min", "lengthFtMin"),
     length_ft_max: looseNum(loose, "length_ft_max", "lengthFtMax"),
   };
-  const utterance = str(args.utterance);
+  const hadUtterance = Boolean(str(args.utterance));
+  const spoken = stripLotAside(str(args.utterance));
+  const queryText = stripLotAside(str(args.query));
+  // No separate spoken line: keep the tool filters and search the stripped question.
+  if (!hadUtterance) {
+    const stripped = stripCarry({ ...base, query: queryText });
+    return args.follow_up ? { ...stripped, follow_up: true } : stripped;
+  }
+  const utterance = spoken || queryText;
   if (!utterance) {
-    const stripped = stripCarry(base);
+    const stripped = stripCarry({ ...base, query: "" });
     return args.follow_up ? { ...stripped, follow_up: true } : stripped;
   }
 
@@ -1753,6 +1831,13 @@ export function reconcileLotArgs(args: LotQueryArgs = {}): LotQueryArgs {
   if (!str(next.location) && followUp && str(args.carry_location)) {
     next.location = str(args.carry_location);
   }
+  if (str(next.location) && asksWholeCompany(utterance)) {
+    const head =
+      normalizeLotQueryText(str(next.location))
+        .split(/\s+/)
+        .find((word) => word.length >= 4) || "";
+    if (!head || !normalizeLotQueryText(utterance).includes(head)) next.location = "";
+  }
 
   if (saidGarage) {
     // The foot figure belongs to the garage, not the coach.
@@ -1785,11 +1870,11 @@ export function reconcileLotArgs(args: LotQueryArgs = {}): LotQueryArgs {
 
   const make = str(base.make);
   if (make && !said.includes(normalizeLotQueryText(make))) {
-    next.make = followUp ? str(args.carry_make) || make : "";
+    next.make = followUp ? str(args.carry_make) : "";
   }
   const model = str(base.model);
   if (model && !said.includes(normalizeLotQueryText(model))) {
-    next.model = followUp ? str(args.carry_model) || model : "";
+    next.model = followUp ? str(args.carry_model) : "";
   }
   if (isLotListExpansion(utterance)) {
     next.list_all = true;
@@ -2023,7 +2108,10 @@ type ModelAlias = { spoken: string; key: string; display: string; distance: numb
  */
 function modelAlias(units: LotQueryUnit[], tokens: string[]): ModelAlias | undefined {
   const misses = tokens.filter(
-    (token) => /^[a-z]{4,}$/.test(token) && !units.some((unit) => tokenHitsIdentity(unit, token)),
+    (token) =>
+      /^[a-z]{4,}$/.test(token) &&
+      !SERIES_DIGIT[token] &&
+      !units.some((unit) => tokenHitsIdentity(unit, token)),
   );
   if (!misses.length) return undefined;
   const makeAnchors = tokens.filter((token) => units.some((unit) => tokenHitsMake(unit, token)));
