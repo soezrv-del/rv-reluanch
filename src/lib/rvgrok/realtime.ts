@@ -182,6 +182,8 @@ export class GrokRealtimeSession {
   private introFinished = false;
   private facts: ActiveCoach | null;
   private rearmTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Wall clock when this reply's drain wait started. Caps a stuck queue. */
+  private rearmSince = 0;
   private earlyPcm: ArrayBuffer[] = [];
   private readonly maxEarlyChunks = 48;
   private researchAbort: AbortController | null = null;
@@ -1012,6 +1014,7 @@ export class GrokRealtimeSession {
 
   private beginSpeaking() {
     this.setMicGate(true);
+    this.rearmSince = 0;
     this.handlers.onStatus("speaking", "RvGrok speaking…");
     if (this.rearmTimer) {
       clearTimeout(this.rearmTimer);
@@ -1019,29 +1022,37 @@ export class GrokRealtimeSession {
     }
   }
 
-  /** After Grok finishes, wait for audio queue to drain, then open mic again */
+  /** After Grok finishes, wait for the audio queue to drain, then open the mic.
+   * Do not cap a long answer: opening early switches the phone back to the
+   * quiet call volume while she is still talking. */
   private scheduleRearm() {
     if (this.rearmTimer) clearTimeout(this.rearmTimer);
+    if (!this.rearmSince) this.rearmSince = Date.now();
 
-    const waitMs = (() => {
-      if (!this.audioCtx || this.audioCtx.state === "closed") return 450;
-      const remaining = (this.player?.remainingSec() ?? 0) * 1000;
-      return Math.min(Math.max(remaining + 350, 450), 12000);
-    })();
+    const remainingMs = Math.max(0, (this.player?.remainingSec() ?? 0) * 1000);
+    const stuck = Date.now() - this.rearmSince > 180000;
+    if (remainingMs > 250 && !stuck) {
+      this.handlers.onStatus("speaking", "Finishing reply…");
+      const waitMs = Math.min(Math.max(remainingMs, 300), 1000);
+      this.rearmTimer = setTimeout(() => {
+        this.rearmTimer = null;
+        if (this.closed || this.intentionalStop) return;
+        this.scheduleRearm();
+      }, waitMs);
+      return;
+    }
 
-    this.handlers.onStatus("speaking", "Finishing reply…");
-    this.rearmTimer = setTimeout(() => {
-      this.rearmTimer = null;
-      if (this.closed || this.intentionalStop) return;
-      this.setMicGate(false);
-      if (this.introSpoken) this.introFinished = true;
-      this.flushQueuedCallout();
-      this.pushCallout({ type: "reply-done", now: Date.now() });
-      this.handlers.onStatus(
-        "listening",
-        "Listening continuously — your turn",
-      );
-    }, waitMs);
+    this.rearmTimer = null;
+    this.rearmSince = 0;
+    if (this.closed || this.intentionalStop) return;
+    this.setMicGate(false);
+    if (this.introSpoken) this.introFinished = true;
+    this.flushQueuedCallout();
+    this.pushCallout({ type: "reply-done", now: Date.now() });
+    this.handlers.onStatus(
+      "listening",
+      "Listening continuously — your turn",
+    );
   }
 
   /** One player per session + context; worklet when available. */

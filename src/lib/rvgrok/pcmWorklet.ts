@@ -308,7 +308,11 @@ export function createWorkletPlayer(
     };
     if (m?.type === "stats" && typeof m.bufferedMs === "number") {
       const wait = m.playing || m.bufferedMs === 0 ? 0 : prebufferMs / 1000;
-      endAt = ctx.currentTime + m.bufferedMs / 1000 + wait;
+      const fromStats = ctx.currentTime + m.bufferedMs / 1000 + wait;
+      // A late stats note must not shorten the queue. That was opening the
+      // mic, dropping the loudspeaker, and leaving the rest of a long
+      // answer quiet.
+      if (fromStats > endAt) endAt = fromStats;
     } else if (m?.type === "underrun") {
       underruns = m.count ?? underruns + 1;
       console.warn(`[LiveVoice] playback underrun #${underruns} (re-buffering)`);
