@@ -46,7 +46,7 @@ import {
   type ScreenCalloutEvent,
   type ScreenCalloutState,
 } from "./screenGuides";
-import { liveVoiceOutputFor, resumeLiveVoiceSpeaker, setSpeakingSession } from "./voiceOutput";
+import { liveVoiceOutputFor, nativeShellLeavesMicHardwareOn, resumeLiveVoiceSpeaker, setSpeakingSession } from "./voiceOutput";
 import {
   PCM_CAPTURE_PROCESSOR,
   createBufferSourcePlayer,
@@ -1004,6 +1004,10 @@ export class GrokRealtimeSession {
    */
   private setMicGate(closed: boolean) {
     this.suppressMic = closed;
+    // The app shell: samples stop, the hardware track stays on. Flipping
+    // the track or the audio session here leaves WKWebView deaf for a
+    // long stretch after she says hello. Safari can still flip both.
+    if (nativeShellLeavesMicHardwareOn()) return;
     const tracks = this.mediaStream?.getAudioTracks() ?? [];
     for (const track of tracks) {
       if (track.enabled === closed) track.enabled = !closed;

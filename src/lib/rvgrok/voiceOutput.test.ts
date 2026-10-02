@@ -8,6 +8,7 @@ import {
   LIVE_VOICE_ROUTE_KEY,
   LIVE_VOICE_SOFT_CLIP,
   liveVoiceRouteOverride,
+  nativeShellLeavesMicHardwareOn,
   playbackNeedsSpeakerElement,
   preferIosLoudspeaker,
   shouldUseSpeakerElement,
@@ -86,6 +87,27 @@ test("iOS uses the speaker element; play-and-record is set when the session exis
   assert.equal(preferIosLoudspeaker({} as Navigator), false);
 });
 
+test("the native shell does not flip the mic hardware", () => {
+  assert.equal(nativeShellLeavesMicHardwareOn(null), false);
+  assert.equal(nativeShellLeavesMicHardwareOn({}), false);
+  assert.equal(
+    nativeShellLeavesMicHardwareOn({ isNativePlatform: () => false }),
+    false,
+  );
+  assert.equal(
+    nativeShellLeavesMicHardwareOn({ isNativePlatform: () => true }),
+    true,
+  );
+  assert.equal(
+    nativeShellLeavesMicHardwareOn({
+      isNativePlatform: () => {
+        throw new Error("bridge down");
+      },
+    }),
+    false,
+  );
+});
+
 test("playback goes through the jitter-buffered player and the output gain", () => {
   const realtime = readFileSync(join(root, "realtime.ts"), "utf8");
   const live = readFileSync(join(root, "liveVoice.ts"), "utf8");
@@ -101,6 +123,7 @@ test("playback goes through the jitter-buffered player and the output gain", () 
   assert.match(realtime, /mute\.connect\(sink\)/);
   assert.doesNotMatch(realtime, /mute\.connect\(ctx\.destination\)/);
   assert.match(realtime, /setMicGate\(true\)/);
+  assert.match(realtime, /nativeShellLeavesMicHardwareOn\(\)/);
   assert.match(realtime, /track\.enabled = !closed/);
   assert.doesNotMatch(realtime, /mute\.connect\(output/);
   assert.match(realtime, /this\.player\?\.clear\(\)/);

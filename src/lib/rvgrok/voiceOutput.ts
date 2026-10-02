@@ -63,6 +63,26 @@ function audioSessionOf(nav: Navigator): AudioSessionLike | null {
   return session;
 }
 
+type NativeShell = { isNativePlatform?: () => boolean };
+
+/**
+ * The installed app and the simulator. Safari on rvmax.app is not this.
+ * WKWebView takes a long time to hear again after the mic track or the
+ * audio session is flipped, so the shell leaves both alone.
+ */
+export function nativeShellLeavesMicHardwareOn(
+  cap: NativeShell | null | undefined =
+    typeof window !== "undefined"
+      ? (window as { Capacitor?: NativeShell }).Capacitor
+      : null,
+): boolean {
+  try {
+    return Boolean(cap?.isNativePlatform?.());
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Safari 17+ Audio Session. `play-and-record` keeps the mic and the
  * loudspeaker, but iOS ducks that route so she sounds far away.
