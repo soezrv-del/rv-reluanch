@@ -88,8 +88,13 @@ export function normalizeLotSearchToken(token: string): string {
 export function singularizeLotToken(token: string): string {
   const t = normalizeLotSearchToken(token);
   if (!t) return "";
+  // "5s" is the series digit, not a floorplan.
+  if (/^\d{1,2}s$/.test(t)) return t.slice(0, -1);
   if (isFloorplanLikeToken(t) || /\d/.test(t)) return t;
   if (/^[abc]s$/.test(t)) return t[0] || t;
+  // "series" is already singular. Stripping the s made "5 series" a
+  // different coach (Terry, Wolf) instead of the series on the name.
+  if (t === "series") return t;
   if (t.length < 4 || !/^[a-z]+$/.test(t)) return t;
   if (t.endsWith("ss")) return t;
   if (t.endsWith("ies") && t.length > 4) return `${t.slice(0, -3)}y`;

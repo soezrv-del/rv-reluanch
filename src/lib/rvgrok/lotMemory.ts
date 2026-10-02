@@ -22,11 +22,13 @@ import {
   type LotQueryCounts,
 } from "../lot/lotQuery.ts";
 import {
+  looksLikeBareLotConfirm,
   looksLikeOwnLotFollowUp,
   parseLotRank,
   type OwnLotSort,
 } from "./ownLotAsk.ts";
 import { isLotListExpansion } from "../lot/lotSearch.ts";
+import { parseCoachFromText } from "./parseCoach.ts";
 
 export type LotMemory = {
   filter: OwnLotFilter;
@@ -39,6 +41,8 @@ export type LotMemory = {
   milesMax?: number;
   garageFtMin?: number;
   garageFtMax?: number;
+  /** The one unit the last question landed on. "You just told me we had one." */
+  pinnedStock?: string;
 };
 
 export type LotTurn = LotMemory & {
@@ -312,6 +316,25 @@ function structuredSubject(args: Record<string, unknown>): boolean {
   );
 }
 
+function coachRecallFromAside(prior: string, previous: LotMemory | null): string {
+  const text = prior.trim();
+  if (!text || /^matching units\b/i.test(text) || /^none\b/i.test(text)) return "";
+  const parsed = parseCoachFromText(text);
+  const make = parsed.make.trim();
+  const model = (parsed.model.trim().split(/\s+/)[0] || "").replace(/[^a-z0-9]/gi, "");
+  if (!make || model.length < 3) return "";
+  const carried = `${previous?.filter.make || ""} ${previous?.filter.model || ""}`.toLowerCase();
+  if (carried.includes(model.toLowerCase())) return "";
+  return [parsed.year.trim(), make, model].filter(Boolean).join(" ");
+}
+
+/** "Any of those in stock" after a spec answer, not after a lot readout. */
+function looksLikeThoseStockAsk(text: string): boolean {
+  const t = text.trim();
+  if (!/\b(?:those|these|them|that one|the one)\b/i.test(t)) return false;
+  return /\b(?:in stock|on (?:the |our )?lot|inventory|do we have|have any)\b/i.test(t);
+}
+
 function queryFilterLabel(applied: LotQueryApplied): string {
   const bits = [
     applied.condition,
@@ -340,6 +363,7 @@ export function answerQueryLotFromSnapshot(
   args: Record<string, unknown>,
   previous: LotMemory | null,
   utterance = "",
+  priorAssistant = "",
 ): QueryLotAnswer {
   if (ownLotIsUnavailable(snapshot)) {
     return {
@@ -363,8 +387,23 @@ export function answerQueryLotFromSnapshot(
   if (args.price_max == null && (args.maxPrice != null || args.priceMax != null)) {
     args.price_max = args.maxPrice ?? args.priceMax;
   }
-  const query = str(args.query);
-  const spoken = str(utterance) || str(args.utterance);
+  let query = str(args.query);
+  let spoken = str(utterance) || str(args.utterance);
+  let prior = previous;
+  const recalled = coachRecallFromAside(priorAssistant, prior);
+  if (recalled && looksLikeThoseStockAsk(spoken || query)) {
+    spoken = recalled;
+    query = recalled;
+    prior = null;
+    args = { ...args, query: recalled, make: "", model: "", body_type: "" };
+  }
+  if (prior?.pinnedStock && /\byou (?:just )?(?:told|said)\b/i.test(`${spoken} ${query}`)) {
+    const stock = prior.pinnedStock;
+    spoken = stock;
+    query = stock;
+    prior = null;
+    args = { ...args, query: stock, make: "", model: "", body_type: "" };
+  }
   const text = spoken || query;
   const saidRank = parseLotRank(text);
   const toolRank = rankFromToolArgs(args);
@@ -389,10 +428,12 @@ export function answerQueryLotFromSnapshot(
   );
   // "in inventory" is the same full-lot count as "in stock" / "on the lot".
   // A model price or make stuffed onto that sentence does not shrink it.
-  const wordsBare = Boolean(text) && lotQueryIsBareCount(text);
+  const referBack = looksLikeOwnLotFollowUp(text);
+  const wordsBare = Boolean(text) && lotQueryIsBareCount(text) && !referBack;
   const listAll = isLotListExpansion(text);
   const isBare =
     !listAll &&
+    !referBack &&
     (wordsBare ||
       (!hasIdentityArg &&
         !hasConstraintArg &&
@@ -403,18 +444,37 @@ export function answerQueryLotFromSnapshot(
   // A follow-up, or a sort/length/price tool call with no new coach, keeps
   // the last filter. A bare "how many RVs" does not. "The full list" keeps it.
   const followUp = Boolean(
-    previous &&
+    prior &&
       !isBare &&
       (listAll || looksLikeOwnLotFollowUp(text) || (!textHasSubject && !hasIdentityArg)),
   );
   const limit =
-    toolRank.limit ?? saidRank.limit ?? (followUp ? previous?.limit : undefined) ?? 12;
+    toolRank.limit ?? saidRank.limit ?? (followUp ? prior?.limit : undefined) ?? 12;
   const fresh = !followUp && !isBare && (textHasSubject || structuredSubject(args));
   // A bare count ("how many RVs do we have on the lot right now") names no
   // filter and does not follow up on the last one: count the whole lot, as
   // before #556. Do not search the spoken words or carry a stale filter.
-  const bareCount = isBare && Boolean(text || !previous);
-  const carried = followUp ? previous : null;
+  const bareCount = isBare && Boolean(text || !prior);
+  const carried = followUp ? prior : null;
+  const carriedCoach = Boolean(
+    carried?.filter.make || carried?.filter.model || carried?.filter.bodyType,
+  );
+  // "Yes" after a miss is not permission to read every coach on the lot.
+  if (looksLikeBareLotConfirm(text) && !carriedCoach) {
+    const speech = "Which coach? Yes does not open the whole lot.";
+    return {
+      ok: true,
+      none: true,
+      matched: 0,
+      filter_label: "",
+      units: [],
+      no_length: [],
+      summary: speech,
+      speech,
+      lotMemory: prior ?? { filter: {}, limit },
+      lot_total: snapshot.units.length,
+    };
+  }
   const searchArgs = reconcileLotArgs({
     query: bareCount ? "" : text,
     make: str(args.make) || carried?.filter.make,
@@ -517,10 +577,13 @@ export function answerQueryLotFromSnapshot(
                 dir: searchArgs.order === "desc" ? ("desc" as const) : ("asc" as const),
               },
             }
-          : followUp && previous?.sort
-            ? { sort: previous.sort }
+          : followUp && prior?.sort
+            ? { sort: prior.sort }
             : {}),
         limit,
+        ...(found.matched === 1 && found.units[0]?.stock_number
+          ? { pinnedStock: found.units[0].stock_number }
+          : {}),
       };
   let speech = found.summary;
   if (found.no_length.length) {

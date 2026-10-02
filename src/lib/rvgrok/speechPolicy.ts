@@ -88,7 +88,7 @@ export const SESSION_INTRO_POLICY = sessionIntroPolicy();
 export const VOICE_RESEARCH_HOLD_INSTRUCTIONS = `Say only this one short beat, then stop: ${VOICE_RESEARCH_HOLD_PHRASE}. Do not answer the question. Do not guess a location or spec.`;
 
 export function voiceSessionIntroInstructions(firstName?: string): string {
-  return `Say only this one line, then stop and listen: ${sessionIntroLine(firstName)} Do not add a second sentence. Do not answer a question yet.`;
+  return `Speak only these words, then stop: ${sessionIntroLine(firstName)}`;
 }
 
 /** Unnamed default — named visitors use voiceSessionIntroInstructions(firstName). */
