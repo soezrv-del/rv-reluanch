@@ -14,8 +14,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // SceneDelegate owns the window and the single CAPBridgeViewController.
         // Live Grok Voice needs mic + speaker at the same time. WKWebView
         // defaults to playback-only, so getUserMedia succeeds but Grok is
-        // silent or the earpiece is used. playAndRecord + voiceChat is the
-        // closest iOS session to the real Grok app inside a WebView.
+        // silent or the earpiece is used, hence playAndRecord.
+        // Mode is .default, not .voiceChat: voiceChat adds a second voice
+        // processing unit (AEC/AGC, narrow-band output, lower playback level)
+        // on top of the one WebKit already runs for getUserMedia
+        // (echoCancellation: true); suspected cause of squeaky/crackly audio.
         configureVoiceAudioSession()
         NotificationCenter.default.addObserver(
             self,
@@ -52,9 +55,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         do {
             try session.setCategory(
                 .playAndRecord,
-                mode: .voiceChat,
-                options: [.defaultToSpeaker, .allowBluetooth]
+                mode: .default,
+                options: [.defaultToSpeaker, .allowBluetooth, .allowBluetoothA2DP]
             )
+            // 48 kHz / ~20 ms IO buffer: matches the Web Audio context and
+            // gives the renderer headroom. Preferences only; iOS may refuse.
+            try? session.setPreferredSampleRate(48_000)
+            try? session.setPreferredIOBufferDuration(0.02)
             try session.setActive(true, options: [])
         } catch {
             NSLog("RVFAX AVAudioSession: \(error.localizedDescription)")

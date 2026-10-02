@@ -5,42 +5,53 @@
  * straight to destination at unity gain, so the phone stayed quiet, and
  * iOS play-and-record sends that destination to the earpiece.
  *
- * The chain is: source → output gain → limiter → speaker.
- * On iPhone/iPad the limiter feeds a MediaStream into an <audio playsinline>
- * element, which is the WebKit workaround that keeps the loudspeaker.
- * There is no API that reports earpiece vs speaker, so iOS always takes
- * that path. Other browsers use AudioContext.destination.
+ * The chain is: player → output gain → soft clipper → speaker.
+ * On iPhone/iPad the clipper feeds a MediaStream into an <audio playsinline>
+ * element, which is the WebKit workaround that keeps the loudspeaker (PR
+ * #536). There is no API that reports earpiece vs speaker, so iOS takes that
+ * path by default. Other browsers use AudioContext.destination.
+ *
+ * Crackle fix: the old chain boosted 2.5x (+8 dB) into a hard-knee 20:1
+ * DynamicsCompressor with a 3 ms attack. Server speech already peaks near
+ * full scale, so the compressor clamped every loud syllable (fast-attack
+ * distortion, pumping) and its lookahead overshoot still clipped. Now the
+ * boost is small and a stateless WaveShaper rounds peaks off instead.
+ *
+ * A/B switch for the iOS route (no redeploy): open the app once with
+ * `?lvroute=destination` or `?lvroute=element` (stored in localStorage),
+ * `?lvroute=auto` to reset.
  */
 
-/** Boost applied before the limiter. One knob for how loud Live Voice is. */
-export const LIVE_VOICE_OUTPUT_GAIN = 2.5;
+/** Makeup after the soft clipper. Peaks stay under full scale. */
+export const LIVE_VOICE_OUTPUT_GAIN = 2;
 
 /**
- * DynamicsCompressor used as a limiter so the boost cannot clip.
- * Threshold near -3 dB, hard knee, high ratio, fast attack.
+ * Soft clipper runs at unity, then the makeup gain above lifts the
+ * quiet parts. Ceiling times the makeup stays under 1, so the speaker
+ * is not slammed the way the old 2.5x boost was.
  */
-export const LIVE_VOICE_LIMITER = {
-  thresholdDb: -3,
-  kneeDb: 0,
-  ratio: 20,
-  attackSec: 0.003,
-  releaseSec: 0.05,
+export const LIVE_VOICE_SOFT_CLIP = {
+  kneeStart: 0.4,
+  ceiling: 0.49,
+  points: 2048,
 } as const;
 
-export type LimiterAudioParams = {
-  threshold: { value: number };
-  knee: { value: number };
-  ratio: { value: number };
-  attack: { value: number };
-  release: { value: number };
-};
-
-export function configureLiveVoiceLimiter(node: LimiterAudioParams): void {
-  node.threshold.value = LIVE_VOICE_LIMITER.thresholdDb;
-  node.knee.value = LIVE_VOICE_LIMITER.kneeDb;
-  node.ratio.value = LIVE_VOICE_LIMITER.ratio;
-  node.attack.value = LIVE_VOICE_LIMITER.attackSec;
-  node.release.value = LIVE_VOICE_LIMITER.releaseSec;
+/** Transfer curve for the WaveShaperNode (input -1..1 → output). */
+export function softClipCurve(
+  points: number = LIVE_VOICE_SOFT_CLIP.points,
+  kneeStart: number = LIVE_VOICE_SOFT_CLIP.kneeStart,
+  ceiling: number = LIVE_VOICE_SOFT_CLIP.ceiling,
+) {
+  const curve = new Float32Array(points);
+  const range = ceiling - kneeStart;
+  for (let i = 0; i < points; i++) {
+    const x = (i / (points - 1)) * 2 - 1;
+    const ax = Math.abs(x);
+    const y =
+      ax <= kneeStart ? ax : kneeStart + range * Math.tanh((ax - kneeStart) / range);
+    curve[i] = Math.sign(x) * y;
+  }
+  return curve;
 }
 
 type AudioSessionLike = { type: string };
@@ -53,9 +64,30 @@ function audioSessionOf(nav: Navigator): AudioSessionLike | null {
 }
 
 /**
- * Safari 17+ Audio Session. `play-and-record` is the web equivalent of
- * AVAudioSessionCategoryPlayAndRecord. Returns false when the API is missing.
+ * Safari 17+ Audio Session. `play-and-record` keeps the mic and the
+ * loudspeaker, but iOS ducks that route so she sounds far away.
+ * `playback` is normal media volume. Use it only while the mic track is off.
  */
+export function setSpeakingSession(
+  speaking: boolean,
+  nav: Navigator | null = typeof navigator !== "undefined" ? navigator : null,
+): void {
+  const session = audioSessionOf(nav);
+  if (!session) return;
+  const next = speaking ? "playback" : "play-and-record";
+  try {
+    if (session.type !== next) session.type = next;
+  } catch {
+    /* older Safari */
+  }
+}
+
+export function resumeLiveVoiceSpeaker(ctx: AudioContext | null): void {
+  if (!ctx) return;
+  void chains.get(ctx)?.speakerEl?.play().catch(() => {});
+}
+
+/** Open the session for mic + loudspeaker. Call again when she stops. */
 export function preferIosLoudspeaker(
   nav: Navigator | null = typeof navigator !== "undefined" ? navigator : null,
 ): boolean {
@@ -85,11 +117,47 @@ export function playbackNeedsSpeakerElement(
   return platform === "MacIntel" && maxTouchPoints > 1;
 }
 
+export type LiveVoiceRoute = "auto" | "element" | "destination";
+export const LIVE_VOICE_ROUTE_KEY = "rvgrok.liveVoiceRoute";
+
+/** Route override from `?lvroute=` (persisted) or localStorage. */
+export function liveVoiceRouteOverride(
+  search: string = typeof location !== "undefined" ? location.search : "",
+  storage: Pick<Storage, "getItem" | "setItem" | "removeItem"> | null =
+    typeof localStorage !== "undefined" ? localStorage : null,
+): LiveVoiceRoute {
+  const valid = (v: string | null): v is LiveVoiceRoute =>
+    v === "auto" || v === "element" || v === "destination";
+  try {
+    const fromUrl = new URLSearchParams(search).get("lvroute");
+    if (valid(fromUrl)) {
+      if (fromUrl === "auto") storage?.removeItem(LIVE_VOICE_ROUTE_KEY);
+      else storage?.setItem(LIVE_VOICE_ROUTE_KEY, fromUrl);
+      return fromUrl;
+    }
+    const stored = storage?.getItem(LIVE_VOICE_ROUTE_KEY) ?? null;
+    return valid(stored) ? stored : "auto";
+  } catch {
+    return "auto";
+  }
+}
+
+/** Whether to use the <audio> speaker element for this device + override. */
+export function shouldUseSpeakerElement(
+  route: LiveVoiceRoute = liveVoiceRouteOverride(),
+  needsElement: boolean = playbackNeedsSpeakerElement(),
+): boolean {
+  if (route === "element") return true;
+  if (route === "destination") return false;
+  return needsElement;
+}
+
 export type LiveVoiceOutput = {
   gain: GainNode;
-  limiter: DynamicsCompressorNode;
+  clipper: WaveShaperNode;
   /** Set only on the iOS loudspeaker workaround. */
   speakerEl: HTMLAudioElement | null;
+  route: "element" | "destination";
 };
 
 const chains = new WeakMap<AudioContext, LiveVoiceOutput>();
@@ -104,15 +172,19 @@ export function liveVoiceOutputFor(ctx: AudioContext): LiveVoiceOutput {
 
   preferIosLoudspeaker();
   const gain = ctx.createGain();
-  gain.gain.value = LIVE_VOICE_OUTPUT_GAIN;
-  const limiter = ctx.createDynamicsCompressor();
-  configureLiveVoiceLimiter(limiter);
-  gain.connect(limiter);
+  gain.gain.value = 1;
+  const clipper = ctx.createWaveShaper();
+  clipper.curve = softClipCurve();
+  clipper.oversample = "none";
+  gain.connect(clipper);
+  const makeup = ctx.createGain();
+  makeup.gain.value = LIVE_VOICE_OUTPUT_GAIN;
+  clipper.connect(makeup);
 
   let speakerEl: HTMLAudioElement | null = null;
-  if (playbackNeedsSpeakerElement() && typeof document !== "undefined") {
+  if (shouldUseSpeakerElement() && typeof document !== "undefined") {
     const dest = ctx.createMediaStreamDestination();
-    limiter.connect(dest);
+    makeup.connect(dest);
     const audio = document.createElement("audio");
     audio.setAttribute("playsinline", "true");
     audio.setAttribute("webkit-playsinline", "true");
@@ -126,10 +198,15 @@ export function liveVoiceOutputFor(ctx: AudioContext): LiveVoiceOutput {
     void audio.play().catch(() => {});
     speakerEl = audio;
   } else {
-    limiter.connect(ctx.destination);
+    makeup.connect(ctx.destination);
   }
 
-  const chain: LiveVoiceOutput = { gain, limiter, speakerEl };
+  const chain: LiveVoiceOutput = {
+    gain,
+    clipper,
+    speakerEl,
+    route: speakerEl ? "element" : "destination",
+  };
   chains.set(ctx, chain);
   return chain;
 }
@@ -145,7 +222,7 @@ export function releaseLiveVoiceOutput(ctx: AudioContext | null): void {
     /* already disconnected */
   }
   try {
-    chain.limiter.disconnect();
+    chain.clipper.disconnect();
   } catch {
     /* already disconnected */
   }
