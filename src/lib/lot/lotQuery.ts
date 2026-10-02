@@ -122,6 +122,10 @@ export type LotQueryRow = {
   mileage: number | null;
   length_ft: number | null;
   length_source: "printed" | "floorplan" | "none";
+  /** Sheet chassis line. Empty when the sheet left it blank. */
+  chassis: string;
+  /** Sheet GVWR as printed. Empty when the sheet left it blank. */
+  gvwr: string;
 };
 
 export type LotQueryCounts = {
@@ -149,6 +153,11 @@ export type LotQueryResult = {
   feature_blank?: string;
   /** Filters the search actually applied. Memory and filter_label read this. */
   applied: LotQueryApplied;
+  /**
+   * Class question with a store or a name. Rows are not dropped for the
+   * sheet label. The model reads them.
+   */
+  open_class?: boolean;
 };
 
 export type LotQueryApplied = {
@@ -853,6 +862,28 @@ function countsFor(units: LotQueryUnit[]): LotQueryCounts {
   };
 }
 
+function sheetChassis(unit: LotQueryUnit): string {
+  const printed = unit.printed || {};
+  const parts = [unit.chassis_brand, unit.chassis, printed.chassis_brand, printed.chassis_model];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const part of parts) {
+    const text = (part || "").trim();
+    if (!text || /^none$/i.test(text)) continue;
+    const key = text.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(text);
+  }
+  return out.join(" ");
+}
+
+function sheetGvwr(unit: LotQueryUnit): string {
+  const raw = (unit.printed?.gvwr || "").trim();
+  if (!raw || /^none$/i.test(raw)) return "";
+  return raw.split("|")[0]?.trim() || "";
+}
+
 function toRow(unit: LotQueryUnit): LotQueryRow {
   const length = lotUnitLength(unit);
   return {
@@ -869,6 +900,8 @@ function toRow(unit: LotQueryUnit): LotQueryRow {
     mileage: unitOdometerMiles(unit),
     length_ft: length.ft,
     length_source: length.source,
+    chassis: sheetChassis(unit),
+    gvwr: sheetGvwr(unit),
   };
 }
 
@@ -2228,6 +2261,17 @@ function oneCloseLine(unit: LotQueryUnit, sheet: string, spoken: string): string
   return `One close match. ${bits.join(", ")}. Sheet says ${sheet}, not ${capitalizeWord(spoken)}.`;
 }
 
+function classRowsStay(parsed: Parsed, units: LotQueryUnit[]): boolean {
+  if (parsed.body.kind !== "labels") return false;
+  if (!parsed.body.labels.some((label) => /^class\b/i.test(label))) return false;
+  if (parsed.location || parsed.places.length > 0) return true;
+  return parsed.tokens.some((token) => units.some((unit) => tokenIsCoachName(unit, token)));
+}
+
+function withoutSheetClass(parsed: Parsed): Parsed {
+  return { ...parsed, body: { kind: "any" } };
+}
+
 /**
  * Search the caller's own-lot units. `matched` is the full hit count.
  * `units` is the top N rows. A close make/model miss returns those sheet
@@ -2238,7 +2282,8 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
   const parsed = parseArgs(units, clean);
   const lengthBounded = parsed.lengthMin != null || parsed.lengthMax != null;
   const lengthRequired = lengthBounded || parsed.sort === "length";
-  const structured = units.filter((unit) => passesStructured(unit, parsed, lengthRequired));
+  const gate = classRowsStay(parsed, units) ? withoutSheetClass(parsed) : parsed;
+  const structured = units.filter((unit) => passesStructured(unit, gate, lengthRequired));
   const alias = modelAlias(units, parsed.tokens);
   let matched = parsed.tokens.length
     ? structured.filter((unit) => passesTokens(unit, parsed.tokens, alias))
@@ -2300,7 +2345,7 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
       parsed.sleepsMin != null)
   ) {
     const blanks = units.filter(
-      (unit) => passesStructured(unit, parsed, false) && lotUnitLength(unit).ft == null,
+      (unit) => passesStructured(unit, gate, false) && lotUnitLength(unit).ft == null,
     );
     if (blanks.length) matched = blanks;
   }
@@ -2339,7 +2384,7 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
   let featureNo = false;
   if (parsed.bed && !matched.length) {
     let pool = units.filter((unit) =>
-      passesStructured(unit, { ...parsed, bed: undefined }, lengthRequired),
+      passesStructured(unit, { ...gate, bed: undefined }, lengthRequired),
     );
     if (parsed.tokens.length) pool = pool.filter((unit) => passesTokens(unit, parsed.tokens, alias));
     else if (pool.length !== 1) pool = [];
@@ -2376,7 +2421,7 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
   const noLength = lengthRequired
     ? units.filter((unit) => {
         if (lotUnitLength(unit).ft != null) return false;
-        return passesStructured(unit, { ...parsed, lengthMin: undefined, lengthMax: undefined }, false);
+        return passesStructured(unit, { ...gate, lengthMin: undefined, lengthMax: undefined }, false);
       })
     : [];
   const didYouMean =
@@ -2489,16 +2534,22 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
       summary = `${summary.replace(/\s+$/, "").replace(/\.$/, "")}. ${note}`;
     }
   }
+  const openClass = classRowsStay(parsed, units);
+  if (openClass && !featureBlank && !featureNo) {
+    summary = `${matched.length} coaches match the store or the name. Sheet label, chassis, and GVWR are on the rows.`;
+  }
+  const rowLimit = openClass ? matched.length : parsed.limit;
   return {
     ok: true,
     matched: matched.length,
     none: matched.length === 0,
     counts,
-    units: sorted.slice(0, parsed.limit).map(toRow),
+    units: sorted.slice(0, rowLimit).map(toRow),
     no_length: noLength.map(toRow),
     summary,
     lot_total: units.length,
     applied,
+    ...(openClass ? { open_class: true } : {}),
     ...(featureBlank ? { feature_blank: featureBlank } : {}),
     ...(didYouMean ? { did_you_mean: didYouMean } : {}),
     ...(parsed.close && matched.length ? { close: parsed.close } : {}),

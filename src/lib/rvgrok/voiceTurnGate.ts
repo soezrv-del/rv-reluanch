@@ -82,12 +82,17 @@ export function spokenLotPayload<
     .replace(/\s*No length on file \(not guessed\):.*$/i, "")
     .trim();
   const named = /\bNamed:/i.test(summary);
-  if (matched > SPOKEN_LOT_UNIT_CAP && !/i can name more/i.test(summary) && !named) {
+  const openClass = Boolean((answer as { open_class?: boolean }).open_class);
+  if (!openClass && matched > SPOKEN_LOT_UNIT_CAP && !/i can name more/i.test(summary) && !named) {
     summary = `${summary.replace(/\.$/, "")}. I can name more.`;
   }
   summary = summary.replace(/,?\s*\bstk\s+[a-z0-9]+\b/gi, "");
   summary = summary.replace(/\s{2,}/g, " ").replace(/\s+,/g, ",").replace(/,\s*\./g, ".").trim();
-  const cap = named ? Math.min(8, Math.max(matched, 1)) : SPOKEN_LOT_UNIT_CAP;
+  const cap = openClass
+    ? answer.units.length
+    : named
+      ? Math.min(8, Math.max(matched, 1))
+      : SPOKEN_LOT_UNIT_CAP;
   return {
     ...answer,
     units: answer.units.slice(0, cap),

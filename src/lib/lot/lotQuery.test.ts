@@ -73,6 +73,26 @@ test("used Super Cs are 12 and Super Cs are 27 Class Super C", () => {
   assert.equal(all.counts.condition.Used, 12);
 });
 
+test("Super Cs at Carson keep every coach, including a Seneca the sheet calls Class C", () => {
+  const hit = searchLot(units().units, { query: "Super Cs at the Carson show" });
+  const omni = hit.units.find((unit) => /omni/i.test(unit.model));
+  const seneca = hit.units.find((unit) => /seneca/i.test(unit.model));
+  assert.ok(omni, "Thor Omni stays on the list");
+  assert.ok(seneca, "Seneca is not dropped for the sheet label");
+  assert.equal(seneca?.body_type, "Class C");
+  assert.match(seneca?.chassis || "", /Freightliner/i);
+  assert.match(seneca?.gvwr || "", /29/);
+  const odyssey = hit.units.filter((unit) => /odyssey/i.test(unit.model));
+  const winds = hit.units.filter((unit) => /four winds/i.test(unit.model));
+  assert.ok(odyssey.length > 0);
+  assert.ok(winds.length > 0);
+  for (const unit of [...odyssey, ...winds]) {
+    assert.equal(unit.body_type, "Class C");
+  }
+  assert.doesNotMatch(hit.summary, /Odyssey|Four Winds|Seneca/);
+  assert.equal(hit.open_class, true);
+});
+
 test("Class C reports 180 as 153 Class C plus 27 Class Super C", () => {
   const hit = searchLot(units().units, { query: "Class C" });
   assert.equal(hit.matched, 180);
