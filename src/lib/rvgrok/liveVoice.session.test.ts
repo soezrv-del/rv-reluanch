@@ -182,7 +182,7 @@ test("catalog lock session.update still ships voice, VAD, audio, and web_search"
     "query_lot",
   );
   assert.equal(session.turn_detection.type, "server_vad");
-  assert.equal(session.turn_detection.threshold, 0.45);
+  assert.equal(session.turn_detection.threshold, 0.3);
   assert.equal(session.audio.output.speed, 1);
   assert.match(session.instructions, /2022 Newmar Dutch Star 4369/);
   assert.match(session.instructions, /native web_search/);
