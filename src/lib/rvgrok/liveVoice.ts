@@ -60,9 +60,13 @@ let retained: RetainedLiveCapture | null = null;
 
 const MIC_CONSTRAINTS: MediaStreamConstraints = {
   audio: {
-    echoCancellation: true,
-    noiseSuppression: true,
-    autoGainControl: true,
+    // Off on purpose. On an iPhone loudspeaker these turn on a voice
+    // processor that pops while she talks. Headphones do not leak into
+    // the mic, so the same call is clean. The mic track is switched off
+    // in code while she speaks, which is the echo guard.
+    echoCancellation: false,
+    noiseSuppression: false,
+    autoGainControl: false,
     channelCount: 1,
   },
   video: false,

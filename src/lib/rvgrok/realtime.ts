@@ -153,6 +153,8 @@ export class GrokRealtimeSession {
   private micGraphPending = false;
   private source: MediaStreamAudioSourceNode | null = null;
   private mute: GainNode | null = null;
+  /** Silent sink so the mic worklet keeps running without touching the speaker. */
+  private micSink: MediaStreamAudioDestinationNode | null = null;
   /** Jitter-buffered PCM player (worklet ring buffer or fallback). */
   private player: LivePcmPlayer | null = null;
   private playerPromise: Promise<LivePcmPlayer | null> | null = null;
@@ -291,7 +293,7 @@ export class GrokRealtimeSession {
   async start(prewarm?: LiveVoicePrewarm | null) {
     this.closed = false;
     this.intentionalStop = false;
-    this.suppressMic = false;
+    this.setMicGate(false);
     this.finishedAssistantOnce = false;
     this.earlyPcm = [];
     this.voiceCachedSheet = null;
@@ -416,9 +418,9 @@ export class GrokRealtimeSession {
       ? await prewarm.streamPromise
       : await navigator.mediaDevices.getUserMedia({
           audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true,
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false,
             channelCount: 1,
           },
           video: false,
@@ -492,12 +494,16 @@ export class GrokRealtimeSession {
     logLiveVoiceAudio(ctx, useWorklet ? "worklet" : "script-processor");
 
     source.connect(processor);
-    // The capture node only runs reliably if it reaches destination.
+    // The capture node only runs if it reaches a destination. A silent
+    // MediaStream keeps it pulling. ctx.destination is a second speaker
+    // output on iPhone and that is the pop.
     const mute = ctx.createGain();
     mute.gain.value = 0;
     this.mute = mute;
     processor.connect(mute);
-    mute.connect(ctx.destination);
+    const sink = ctx.createMediaStreamDestination();
+    this.micSink = sink;
+    mute.connect(sink);
   }
 
   private sendPcm(pcm: ArrayBuffer) {
@@ -713,7 +719,7 @@ export class GrokRealtimeSession {
         }
         if (this.introSpoken) this.introFinished = true;
         this.interruptPlayback();
-        this.suppressMic = false;
+        this.setMicGate(false);
         this.flushQueuedCallout();
         this.pushCallout({ type: "reply-done", now: Date.now() });
         this.handlers.onStatus(
@@ -730,7 +736,7 @@ export class GrokRealtimeSession {
             : err?.message || JSON.stringify(msg).slice(0, 200);
         if (/cancel|interrupt|no active response/i.test(message)) {
           if (this.researchPhase !== "idle") break;
-          this.suppressMic = false;
+          this.setMicGate(false);
           this.handlers.onStatus(
             "listening",
             "Interrupted — listening… speak or 📷",
@@ -986,8 +992,22 @@ export class GrokRealtimeSession {
     });
   }
 
+  /**
+   * Close or open the mic. The flag stops samples from reaching her.
+   * The hardware track has to close too: on the loudspeaker, iOS echo
+   * cancel hears her voice in the mic and chops the speaker into static.
+   * Headphones do not leak, so the same call is clean with the track left on.
+   */
+  private setMicGate(closed: boolean) {
+    this.suppressMic = closed;
+    const tracks = this.mediaStream?.getAudioTracks() ?? [];
+    for (const track of tracks) {
+      if (track.enabled === closed) track.enabled = !closed;
+    }
+  }
+
   private beginSpeaking() {
-    this.suppressMic = true;
+    this.setMicGate(true);
     this.handlers.onStatus("speaking", "RvGrok speaking…");
     if (this.rearmTimer) {
       clearTimeout(this.rearmTimer);
@@ -1009,7 +1029,7 @@ export class GrokRealtimeSession {
     this.rearmTimer = setTimeout(() => {
       this.rearmTimer = null;
       if (this.closed || this.intentionalStop) return;
-      this.suppressMic = false;
+      this.setMicGate(false);
       if (this.introSpoken) this.introFinished = true;
       this.flushQueuedCallout();
       this.pushCallout({ type: "reply-done", now: Date.now() });
@@ -1097,7 +1117,7 @@ export class GrokRealtimeSession {
   prepareForSnapshot(): void {
     const ws = this.ws;
     this.interruptPlayback();
-    this.suppressMic = true;
+    this.setMicGate(true);
     this.handlers.onStatus("thinking", "Looking at your photo…");
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
     try {
@@ -1153,7 +1173,7 @@ export class GrokRealtimeSession {
       );
       return true;
     } catch {
-      this.suppressMic = false;
+      this.setMicGate(false);
       return false;
     }
   }
@@ -1213,7 +1233,7 @@ export class GrokRealtimeSession {
         }),
       );
       if (requestResponse) {
-        this.suppressMic = true;
+        this.setMicGate(true);
         this.handlers.onStatus("thinking", statusDetail);
         try {
           ws.send(JSON.stringify({ type: "response.cancel" }));
@@ -1286,7 +1306,7 @@ export class GrokRealtimeSession {
   private flushLockBreakAnswer(block: string) {
     const ws = this.ws;
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
-    this.suppressMic = true;
+    this.setMicGate(true);
     this.handlers.onStatus("thinking", "Updating coach…");
     const lock = (block || "").trim().slice(0, 1800);
     try {
@@ -1300,7 +1320,7 @@ export class GrokRealtimeSession {
         }),
       );
     } catch {
-      this.suppressMic = false;
+      this.setMicGate(false);
     }
   }
 
@@ -1612,7 +1632,7 @@ export class GrokRealtimeSession {
 
   private cancelAutoResponseForResearch() {
     this.interruptPlayback();
-    this.suppressMic = true;
+    this.setMicGate(true);
     const ws = this.ws;
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
     try {
@@ -1690,7 +1710,7 @@ export class GrokRealtimeSession {
       this.researchPhase = "idle";
       return;
     }
-    this.suppressMic = true;
+    this.setMicGate(true);
     this.handlers.onStatus("thinking", "Answering…");
     const inventoryTurn = /OWN-LOT inventory/.test(injection);
     if (inventoryTurn) this.lastLessonLotNotes = injection;
@@ -1723,7 +1743,7 @@ export class GrokRealtimeSession {
       );
     } catch {
       this.researchPhase = "idle";
-      this.suppressMic = false;
+      this.setMicGate(false);
     }
   }
 
@@ -1985,7 +2005,7 @@ export class GrokRealtimeSession {
       this.researchPhase = "idle";
       return;
     }
-    this.suppressMic = true;
+    this.setMicGate(true);
     this.handlers.onStatus("thinking", "Answering…");
     try {
       ws.send(
@@ -1999,7 +2019,7 @@ export class GrokRealtimeSession {
       );
     } catch {
       this.researchPhase = "idle";
-      this.suppressMic = false;
+      this.setMicGate(false);
     }
   }
 
@@ -2214,7 +2234,7 @@ export class GrokRealtimeSession {
       this.researchPhase = "idle";
       return;
     }
-    this.suppressMic = true;
+    this.setMicGate(true);
     this.handlers.onStatus("thinking", "Answering…");
     try {
       ws.send(
@@ -2228,7 +2248,7 @@ export class GrokRealtimeSession {
       );
     } catch {
       this.researchPhase = "idle";
-      this.suppressMic = false;
+      this.setMicGate(false);
     }
   }
 
@@ -2374,7 +2394,7 @@ export class GrokRealtimeSession {
     }
 
     this.interruptPlayback();
-    this.suppressMic = false;
+    this.setMicGate(false);
     this.finishedAssistantOnce = false;
     this.assistantText = "";
 
@@ -2421,6 +2441,7 @@ export class GrokRealtimeSession {
     this.processor = null;
     this.source = null;
     this.mute = null;
+    this.micSink = null;
     this.earlyPcm = [];
   }
 
