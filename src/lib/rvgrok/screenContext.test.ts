@@ -178,7 +178,7 @@ test("a chip change during Live Voice updates the screen, and the ask bar openin
   assert.match(voice, /type: "navigate"/);
   assert.match(voice, /type: "user-start"/);
   assert.match(voice, /type: "reply-done"/);
-  assert.match(bar, /markAskBarGrokEntry\(\);\s*onOpen\("rvgrok"\)/);
+  assert.match(bar, /markAskBarGrokEntry\(\);\s*onOpen\("rvgrok", \{ skipVoice: true \}\)/);
   off();
   setActiveScreen("");
 });

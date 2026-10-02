@@ -65,6 +65,7 @@ import {
   publishRoomVoice,
   registerRoomAsk,
   roomVoicePhaseFromStatus,
+  takePendingGrokGreeting,
 } from "@/lib/rvgrok/roomAsk";
 import { readActiveScreen, withActiveScreen } from "@/lib/rvgrok/screenContext";
 import { useAccessOptional } from "@/components/access/AccessProvider";
@@ -202,6 +203,10 @@ export function RvGrokApp({
   const liveDeskThisTurnRef = useRef(false);
   const voiceModeRef = useRef(voiceMode);
   const liveVoiceRef = useRef(liveVoice);
+  const armLiveFromTabRef = useRef<(prewarm?: LiveVoicePrewarm | null) => void>(
+    () => {},
+  );
+  const stopLiveFromTabRef = useRef<() => void>(() => {});
   const selectedVoiceRef = useRef(selectedVoice);
   const voicePanelOpenRef = useRef(false);
   const pendingVoiceStartRef = useRef<"live" | "mode" | null>(null);
@@ -1250,7 +1255,8 @@ export function RvGrokApp({
   }, [access?.allowed, access?.name]);
 
   const setLiveVoiceArmed = useCallback(
-    (on: boolean) => {
+    (on: boolean, prewarm?: LiveVoicePrewarm | null) => {
+      if (on && realtimeRef.current) return;
       liveVoiceRef.current = on;
       setLiveVoice(on);
       try {
@@ -1268,12 +1274,12 @@ export function RvGrokApp({
         }
         recognitionRef.current = null;
         setIsRecording(false);
-        if (voicePanelOpenRef.current) {
+        if (!prewarm && voicePanelOpenRef.current) {
           pendingVoiceStartRef.current = "live";
         } else {
           pendingVoiceStartRef.current = null;
-          const prewarm = beginLiveVoiceFromUserGesture();
-          void startLiveSessionRef.current(prewarm);
+          const capture = prewarm ?? beginLiveVoiceFromUserGesture();
+          void startLiveSessionRef.current(capture);
         }
       } else {
         pendingVoiceStartRef.current = null;
@@ -1290,6 +1296,13 @@ export function RvGrokApp({
     },
     [stopLiveSession],
   );
+
+  armLiveFromTabRef.current = (prewarm) => {
+    setLiveVoiceArmed(true, prewarm);
+  };
+  stopLiveFromTabRef.current = () => {
+    stopLiveSession({ disarm: true });
+  };
 
   const setVoiceModeArmed = useCallback((on: boolean) => {
     voiceModeRef.current = on;
@@ -1451,7 +1464,11 @@ export function RvGrokApp({
         void sendMessageRef.current(text);
       },
       mic: () => roomMicRef.current(),
+      greet: (prewarm) => armLiveFromTabRef.current(prewarm),
+      stop: () => stopLiveFromTabRef.current(),
     });
+    const pending = takePendingGrokGreeting();
+    if (pending) armLiveFromTabRef.current(pending);
     return () => registerRoomAsk(null);
   }, []);
 
@@ -1589,7 +1606,7 @@ export function RvGrokApp({
   const composerPlaceholder = isRecording
     ? "Listening… keep talking"
     : liveActive
-      ? "Live continuous — just speak"
+      ? "Just speak"
       : pendingImage
         ? "Ask about this photo…"
         : "Ask RV Grok";
