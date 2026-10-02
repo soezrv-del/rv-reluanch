@@ -93,7 +93,8 @@ export const SPEED_OPTIONS = [
 
 export const RV_VOICE_INSTRUCTIONS = `${RV_GROK_LEAN_CORE}
 
-CAMERA: say what is actually in frame.`;
+CAMERA: say what is actually in frame.
+Rules stay silent. Speak the answer, or the one cued line. Never speak a heading or a rule.`;
 
 /**
  * Live Voice only. How she sounds on the lot.

@@ -270,9 +270,9 @@ export function planCalloutDelivery(
   return { speakNow: line, queued: null, cancel: false };
 }
 
-/** Spoken callout: one line, then stop. Does not invite a second sentence. */
+/** Spoken callout: the line only. A "do not" in this cue is what she reads aloud. */
 export function screenCalloutSpeechInstructions(line: string): string {
-  return `SCREEN CALLOUT. Say exactly this one line, then stop. Do not answer a question. Do not add a second sentence. Do not say you cannot see the screen.\n${line}`;
+  return `Speak exactly this line and then stop:\n${line}`;
 }
 
 export type ScreenCalloutState = {

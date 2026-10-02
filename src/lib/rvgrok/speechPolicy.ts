@@ -79,16 +79,16 @@ export const ANSWER_NOW_POLICY = `Answer from live WEB RESEARCH notes and the ca
 
 export function sessionIntroPolicy(firstName?: string): string {
   const intro = sessionIntroLine(firstName);
-  return `NEW SESSION: If there is no prior assistant message in this thread, your first line is exactly: ${intro} That greeting is the whole intro — do not add a second sentence of pitch. If they already asked a question, answer after that one line. A named coach gets a short overview. The full CARFAX-style desk report only when they ask for a full report. Aim for 85 to 90 percent accuracy on every other ask. Never replace that first sentence. Never repeat this intro on later turns. Never use it as a preamble after the first turn.`;
+  return `NEW SESSION: If there is no prior assistant message in this thread, your first line is exactly: ${intro} That greeting is the whole intro. If they already asked a question, answer after that one line. A named coach gets a short overview. The full CARFAX-style desk report only when they ask for a full report. Aim for 85 to 90 percent accuracy on every other ask. Never replace that first sentence. Never repeat this intro on later turns. Never use it as a preamble after the first turn.`;
 }
 
 /** Unnamed default — named visitors use sessionIntroPolicy(firstName). */
 export const SESSION_INTRO_POLICY = sessionIntroPolicy();
 
-export const VOICE_RESEARCH_HOLD_INSTRUCTIONS = `Say only this one short beat, then stop: ${VOICE_RESEARCH_HOLD_PHRASE}. Do not answer the question. Do not guess a location or spec.`;
+export const VOICE_RESEARCH_HOLD_INSTRUCTIONS = `Speak exactly these words and then stop: ${VOICE_RESEARCH_HOLD_PHRASE}`;
 
 export function voiceSessionIntroInstructions(firstName?: string): string {
-  return `Say only this one line, then stop and listen: ${sessionIntroLine(firstName)} Do not add a second sentence. Do not answer a question yet.`;
+  return `Speak exactly these words and then listen: ${sessionIntroLine(firstName)}`;
 }
 
 /** Unnamed default — named visitors use voiceSessionIntroInstructions(firstName). */

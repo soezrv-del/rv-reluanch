@@ -376,7 +376,7 @@ const XAI_CHAT_TOOLS = [
   ),
   toolFn(
     "get_own_lot",
-    "RV Country own lot. Call for any count or availability question, including a follow-up that changes type or condition. Put their words in query. Say none only when matched is 0. If did_you_mean is set, offer that name. Do not treat a lot row as an OEM spec.",
+    "RV Country own lot. Call for any count or availability question, including a follow-up that changes type or condition. Put their words in query. Say none only when matched is 0. Speak a did-you-mean name only when the tool result includes one. Never invent a name. Do not treat a lot row as an OEM spec.",
     {
       query: { type: "string" },
       make: { type: "string" },

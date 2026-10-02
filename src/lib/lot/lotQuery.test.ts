@@ -81,6 +81,38 @@ test("Class C reports 180 as 153 Class C plus 27 Class Super C", () => {
   assert.match(hit.summary, /27 Class Super C/);
 });
 
+test("filler around a Class B ask is not Lost and the cheapest stays first", () => {
+  const snap = units();
+  const clean = searchLot(snap.units, { query: "cheapest Class B" });
+  const said = [
+    "look at the Class Bs",
+    "No, uh, look at the Class Bs. What's the least expensive Class B?",
+    "can you look at the cheapest Class B",
+    "I would like the cheapest Class B",
+  ];
+  for (const query of said) {
+    const hit = searchLot(snap.units, { query });
+    assert.equal(hit.matched, clean.matched, query);
+    assert.equal(hit.did_you_mean, undefined, query);
+    assert.doesNotMatch(hit.summary, /Did you mean/i, query);
+    assert.doesNotMatch(hit.summary, /Lost/i, query);
+  }
+  const priced = searchLot(snap.units, {
+    query: "No, uh, look at the Class Bs. What's the least expensive Class B?",
+  });
+  assert.equal(priced.units[0]?.stock_number, clean.units[0]?.stock_number);
+  assert.match(priced.summary, /Roadtrek/i);
+
+  const lineage = searchLot(snap.units, { query: "I would like a Lineage" });
+  assert.equal(lineage.matched, 27);
+  assert.equal(lineage.did_you_mean, undefined);
+  assert.doesNotMatch(lineage.summary, /Lite/);
+
+  const onlyLook = searchLot(snap.units, { query: "look" });
+  assert.equal(onlyLook.matched, 0);
+  assert.notEqual(onlyLook.matched, snap.units.length);
+});
+
 test("Odyssey 29V is stock 46573 and sale pending", () => {
   const hit = searchLot(units().units, { query: "Odyssey 29V" });
   assert.equal(hit.matched, 1);

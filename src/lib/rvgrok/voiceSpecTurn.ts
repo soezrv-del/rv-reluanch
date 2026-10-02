@@ -42,7 +42,7 @@ export const VOICE_SPEC_ENGINE_INSTRUCTIONS =
 export const VOICE_COACH_CHOICE_LINE =
   "Would you like a full report or a quick overview?";
 
-export const VOICE_COACH_CHOICE_INSTRUCTIONS = `Say only this, then stop: ${VOICE_COACH_CHOICE_LINE}`;
+export const VOICE_COACH_CHOICE_INSTRUCTIONS = `Speak exactly these words and then stop: ${VOICE_COACH_CHOICE_LINE}`;
 
 export type VoiceCoachDepth = "full" | "quick";
 

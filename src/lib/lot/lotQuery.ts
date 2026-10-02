@@ -790,12 +790,62 @@ function catalogNames(units: LotQueryUnit[]): CatalogName[] {
   return [...map.values()];
 }
 
+/**
+ * Talk around the question. Not a coach name.
+ * "like" is one edit from Lite. "look" sits next to Lost Pines.
+ * A question that is only chatter stays none.
+ */
+const CHATTER = new Set([
+  "uh",
+  "um",
+  "uhh",
+  "umm",
+  "hmm",
+  "huh",
+  "ah",
+  "er",
+  "look",
+  "no",
+  "would",
+  "like",
+  "liked",
+  "want",
+  "wanted",
+  "need",
+  "needs",
+  "needed",
+  "yeah",
+  "yep",
+  "yup",
+  "yes",
+  "okay",
+  "ok",
+  "well",
+  "actually",
+  "wait",
+  "alright",
+  "kinda",
+  "sorta",
+  "see",
+  "if",
+  "gimme",
+  "lemme",
+  "hey",
+  "check",
+]);
+
+function isQueryChatter(token: string, bodyKnown: boolean): boolean {
+  if (CHATTER.has(token)) return true;
+  if (bodyKnown && (token === "class" || token === "classes")) return true;
+  return false;
+}
+
 function suggestName(tokens: string[], units: LotQueryUnit[]): string | undefined {
   const names = catalogNames(units);
   const exact = new Set(names.map((name) => name.key));
   let best: CatalogName | undefined;
   for (const token of tokens) {
-    if (token.length < 4 || exact.has(token) || STOP.has(token)) continue;
+    if (token.length < 4 || exact.has(token) || STOP.has(token) || CHATTER.has(token)) continue;
     for (const name of names) {
       if (!editDistanceAtMost1(token, name.key)) continue;
       if (
@@ -2073,16 +2123,23 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
   const parsed = parseArgs(units, clean);
   const lengthBounded = parsed.lengthMin != null || parsed.lengthMax != null;
   const lengthRequired = lengthBounded || parsed.sort === "length";
+  const recognized = hasRecognizedFilter(parsed, lengthRequired);
+  const bodyKnown = parsed.body.kind !== "any";
+  const matchTokens = parsed.tokens.filter((token) => !isQueryChatter(token, bodyKnown));
   const structured = units.filter((unit) => passesStructured(unit, parsed, lengthRequired));
-  let matched = parsed.tokens.length
-    ? structured.filter((unit) => passesTokens(unit, parsed.tokens))
-    : structured;
+  let matched: LotQueryUnit[];
+  if (matchTokens.length) {
+    matched = structured.filter((unit) => passesTokens(unit, matchTokens));
+  } else if (recognized || parsed.tokens.length === 0) {
+    matched = structured;
+  } else {
+    matched = [];
+  }
   // Spare words ("looking", "right", "try again") are not a coach name.
   // If used / diesel / class / price already picked a set, keep that set.
   // A real name that the class filter missed (Class A Lineage) still returns that coach.
-  const recognized = hasRecognizedFilter(parsed, lengthRequired);
-  if (!matched.length && parsed.tokens.length && recognized) {
-    const names = parsed.tokens.filter((token) =>
+  if (!matched.length && matchTokens.length && recognized) {
+    const names = matchTokens.filter((token) =>
       units.some((unit) => tokenIsCoachName(unit, token)),
     );
     if (names.length) {
@@ -2168,7 +2225,7 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
     let pool = units.filter((unit) =>
       passesStructured(unit, { ...parsed, bed: undefined }, lengthRequired),
     );
-    if (parsed.tokens.length) pool = pool.filter((unit) => passesTokens(unit, parsed.tokens));
+    if (matchTokens.length) pool = pool.filter((unit) => passesTokens(unit, matchTokens));
     else if (pool.length !== 1) pool = [];
     if (milesBounded) {
       pool = pool.filter((unit) => {
@@ -2206,7 +2263,7 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
       })
     : [];
   const didYouMean =
-    matched.length || recognized ? undefined : suggestName(parsed.tokens, units);
+    matched.length || recognized ? undefined : suggestName(matchTokens, units);
   const counts = countsFor(matched);
   const sorted = matched
     .map((unit, index) => ({ unit, index }))
@@ -2233,15 +2290,15 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
           if (bySleep !== 0) return bySleep;
         }
       }
-      if (parsed.tokens.length) {
-        const rank = lotTextScore(b.unit, parsed.tokens) - lotTextScore(a.unit, parsed.tokens);
+      if (!parsed.sort && matchTokens.length) {
+        const rank = lotTextScore(b.unit, matchTokens) - lotTextScore(a.unit, matchTokens);
         if (rank !== 0) return rank;
       }
       const cmp = compareUnits(a.unit, b.unit, parsed);
       return cmp !== 0 ? cmp : a.index - b.index;
     })
     .map((row) => row.unit);
-  const nameTokens = parsed.tokens.filter((token) =>
+  const nameTokens = matchTokens.filter((token) =>
     matched.some((unit) => tokenIsCoachName(unit, token)),
   );
   const applied: LotQueryApplied = {
@@ -2263,7 +2320,7 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
     model:
       str(clean.model) ||
       nameTokens.join(" ") ||
-      (matched.length ? "" : parsed.tokens.join(" ")),
+      (matched.length ? "" : matchTokens.join(" ")),
     horsepower: parsed.horsepower,
     displacement: parsed.displacement,
   };
