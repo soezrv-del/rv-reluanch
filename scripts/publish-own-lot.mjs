@@ -9,11 +9,17 @@
  *   node scripts/publish-own-lot.mjs          # commit the JSON if newer
  *   node scripts/publish-own-lot.mjs --check  # report only
  *
- * The snapshot is committed, then the listing dump from that same scrape.
- * An older scrape, a non-array file, a lot under 900 coaches, or a drop of
- * more than 40% vs production is refused.
- * A newer file at OWN_LOT_INVENTORY_PATH (default the midnight agent-data
- * path) is copied into public/ first, then published.
+ * The snapshot is committed, then the listing dump from that same scrape
+ * (public/inventory/own-lot-fulltext.json). An older scrape, a non-array
+ * file, a lot under 900 coaches, or a drop of more than 40% vs production
+ * is refused. A newer file at OWN_LOT_INVENTORY_PATH (default the midnight
+ * agent-data path) is copied into public/ first, then published.
+ *
+ * Exit status, one line:
+ *   0  published new data
+ *   0  already current — no changes in a fresh scrape (newest scraped_at ≤ 24h)
+ *   1  scrape is stale (newest scrape older than 24h) or failed
+ * A matching blob is not "already current" when that scrape is stale.
  */
 
 import { listingDumpBytes, FULLTEXT_REPO_PATH } from "./build-own-lot-fulltext.mjs";
@@ -31,6 +37,8 @@ export const DEFAULT_UPSTREAM =
 export const MIN_UNITS = 900;
 /** Refuse a newer file that shrinks the lot by more than this fraction. */
 export const MAX_SHRINK = 0.4;
+/** Newest scraped_at older than this is a stale scrape, not "already current". */
+export const STALE_AFTER_MS = 24 * 60 * 60 * 1000;
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -119,6 +127,49 @@ export function decidePublish(local, remote) {
   }
   const when = local.scrapedAt || "undated";
   return { publish: true, reason: `scrape ${when} (${local.units} units)` };
+}
+
+export function scrapeAgeMs(scrapedAt, now = Date.now()) {
+  const t = Date.parse(scrapedAt || "");
+  if (!Number.isFinite(t)) return Number.POSITIVE_INFINITY;
+  return now - t;
+}
+
+/** True when scraped_at parses and is not older than 24h. */
+export function isFreshScrape(scrapedAt, now = Date.now()) {
+  return scrapeAgeMs(scrapedAt, now) <= STALE_AFTER_MS;
+}
+
+/**
+ * Turn a publish decision into the three notice outcomes.
+ * Identical bytes stay "already current" only while the scrape is fresh.
+ */
+export function withScrapeStatus(summary, now = Date.now()) {
+  if (summary.publish) {
+    return { ...summary, status: "published", exitCode: 0 };
+  }
+  if (summary.reason === "already current") {
+    if (isFreshScrape(summary.scrapedAt, now)) {
+      return { ...summary, status: "fresh", reason: "already current", exitCode: 0 };
+    }
+    const when = summary.scrapedAt || "undated";
+    return {
+      ...summary,
+      status: "stale",
+      reason: `scrape is stale (newest scrape ${when} is older than 24h)`,
+      exitCode: 1,
+    };
+  }
+  const reason = summary.reason || "scrape failed";
+  const failed =
+    !summary.units ||
+    /not json|not an array|mixed scraped_at|invalid|no snapshot|no usable|failed/i.test(reason);
+  return {
+    ...summary,
+    reason,
+    status: failed ? "failed" : "refused",
+    exitCode: 1,
+  };
 }
 
 export function gh(args, { input } = {}) {
@@ -234,7 +285,9 @@ export function syncOwnLot({
   root = ROOT,
   upstreamPath = process.env.OWN_LOT_INVENTORY_PATH || DEFAULT_UPSTREAM,
   ghImpl = gh,
+  now = Date.now(),
 } = {}) {
+  const stamp = (summary) => withScrapeStatus(summary, now);
   const dest = publicSnapshotPath(root);
   const local = readSnapshotFile(dest);
   const upstream = readSnapshotFile(upstreamPath);
@@ -261,7 +314,7 @@ export function syncOwnLot({
     publishing?.blobSha &&
     remoteMeta.sha === publishing.blobSha
   ) {
-    return {
+    return stamp({
       copied,
       check,
       units: publishing.units,
@@ -271,7 +324,7 @@ export function syncOwnLot({
       publish: false,
       reason: "already current",
       commit: "",
-    };
+    });
   }
   if (remoteMeta?.sha) {
     try {
@@ -292,7 +345,7 @@ export function syncOwnLot({
     ...decision,
     commit: "",
   };
-  if (!decision.publish || check) return summary;
+  if (!decision.publish || check) return stamp(summary);
   const committed = commitSnapshot({
     bytes: publishing.bytes,
     sha: remote?.sha,
@@ -314,7 +367,7 @@ export function syncOwnLot({
       ghImpl,
     });
   }
-  return summary;
+  return stamp(summary);
 }
 
 export function formatSyncLine(summary) {
@@ -324,6 +377,13 @@ export function formatSyncLine(summary) {
     return `own-lot: published ${local} (${summary.commit.slice(0, 7)})`;
   }
   if (summary.publish) return `own-lot: published ${local}`;
+  if (summary.status === "fresh" || summary.reason === "already current") {
+    return `own-lot: already current — no changes in a fresh scrape — ${local}`;
+  }
+  if (summary.status === "stale") return `own-lot: ${summary.reason} — ${local}`;
+  if (summary.status === "failed") {
+    return `own-lot: scrape failed — ${summary.reason} — ${local}`;
+  }
   return `own-lot: ${summary.reason} — ${local}`;
 }
 
@@ -332,7 +392,7 @@ function main() {
   try {
     const summary = syncOwnLot({ check });
     console.log(formatSyncLine(summary));
-    if (!summary.publish && summary.reason !== "already current") process.exitCode = 1;
+    if (summary.exitCode) process.exitCode = summary.exitCode;
   } catch (err) {
     console.error(`[publish-own-lot] ${err?.stderr || err?.message || err}`);
     process.exitCode = 1;
