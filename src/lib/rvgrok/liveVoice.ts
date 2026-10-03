@@ -60,12 +60,13 @@ let retained: RetainedLiveCapture | null = null;
 
 const MIC_CONSTRAINTS: MediaStreamConstraints = {
   audio: {
-    // Echo cancel and noise suppression stay off. On an iPhone loudspeaker
-    // they turn on a voice processor that pops while she talks. Gain
-    // control stays on so a quiet mic still crosses into Hearing.
+    // All three stay off. On an iPhone loudspeaker any one of them turns
+    // on a voice processor that ducks her and pops while she talks.
+    // A quiet mic still crosses into Hearing: server VAD is 0.3, and the
+    // capture graph stays pulled so the hardware never has to reopen.
     echoCancellation: false,
     noiseSuppression: false,
-    autoGainControl: true,
+    autoGainControl: false,
     channelCount: 1,
   },
   video: false,

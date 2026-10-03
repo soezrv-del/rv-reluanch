@@ -87,6 +87,20 @@ test("iOS uses the speaker element; play-and-record is set when the session exis
   assert.equal(preferIosLoudspeaker({} as Navigator), false);
 });
 
+test("the iPhone shell sends the receiver back to the speaker", () => {
+  const appDelegate = readFileSync(
+    join(root, "../../../ios/App/App/AppDelegate.swift"),
+    "utf8",
+  );
+  assert.match(appDelegate, /mode: \.default/);
+  assert.doesNotMatch(appDelegate, /mode: \.voiceChat/);
+  assert.match(appDelegate, /overrideOutputAudioPort\(\.speaker\)/);
+  assert.match(appDelegate, /\.builtInReceiver/);
+  assert.match(appDelegate, /AVAudioSession\.routeChangeNotification/);
+  assert.match(appDelegate, /AVAudioSession\.interruptionNotification/);
+  assert.match(appDelegate, /RouteChangeReason\.override/);
+});
+
 test("the native shell does not flip the mic hardware", () => {
   assert.equal(nativeShellLeavesMicHardwareOn(null), false);
   assert.equal(nativeShellLeavesMicHardwareOn({}), false);
@@ -133,14 +147,26 @@ test("playback goes through the jitter-buffered player and the output gain", () 
   assert.match(live, /if \(audioCtx\.state === "suspended"\) void audioCtx\.resume\(\)/);
   assert.match(live, /echoCancellation: false/);
   assert.match(live, /noiseSuppression: false/);
-  assert.match(live, /autoGainControl: true/);
+  assert.match(live, /autoGainControl: false/);
+  assert.doesNotMatch(live, /autoGainControl: true/);
+  assert.match(realtime, /autoGainControl: false/);
+  assert.doesNotMatch(realtime, /autoGainControl: true/);
   assert.doesNotMatch(live, /new AC\(\{[^}]*sampleRate/);
   assert.match(output, /makeup\.gain\.value = LIVE_VOICE_OUTPUT_GAIN/);
+  assert.equal(LIVE_VOICE_OUTPUT_GAIN, 2);
   assert.match(output, /gain\.connect\(clipper\)/);
   assert.match(output, /clipper\.connect\(makeup\)/);
   assert.match(output, /setSpeakingSession/);
   assert.match(realtime, /setSpeakingSession\(closed\)/);
   assert.doesNotMatch(output, /createDynamicsCompressor/);
+  // Native shell returns before the Safari track flip and playback session.
+  const gateStart = realtime.indexOf("private setMicGate");
+  const gateEnd = realtime.indexOf("private beginSpeaking");
+  const gate = realtime.slice(gateStart, gateEnd);
+  const leave = gate.indexOf("if (nativeShellLeavesMicHardwareOn()) return;");
+  const flipTrack = gate.indexOf("track.enabled = !closed");
+  const flipSession = gate.indexOf("setSpeakingSession(closed)");
+  assert.ok(leave !== -1 && leave < flipTrack && leave < flipSession);
   assert.match(output, /createMediaStreamDestination/);
   assert.match(output, /playsInline = true/);
   assert.match(output, /audioSession\.type = "play-and-record"|session\.type = "play-and-record"/);

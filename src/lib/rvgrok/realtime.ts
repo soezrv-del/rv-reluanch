@@ -421,9 +421,11 @@ export class GrokRealtimeSession {
       ? await prewarm.streamPromise
       : await navigator.mediaDevices.getUserMedia({
           audio: {
+            // Same as MIC_CONSTRAINTS. Gain control would turn on the
+            // iPhone voice processor, which ducks the speaker and pops.
             echoCancellation: false,
             noiseSuppression: false,
-            autoGainControl: true,
+            autoGainControl: false,
             channelCount: 1,
           },
           video: false,
@@ -1003,8 +1005,10 @@ export class GrokRealtimeSession {
   private setMicGate(closed: boolean) {
     this.suppressMic = closed;
     // The app shell: samples stop, the hardware track stays on. Flipping
-    // the track or the audio session here leaves WKWebView deaf for a
-    // long stretch after she says hello. Safari can still flip both.
+    // the track or this session leaves WKWebView deaf for a long stretch
+    // after she says hello, so the shell stays in play-and-record. The
+    // loudspeaker is put back in AppDelegate when that route lands on the
+    // receiver. Safari can still flip the track and the session.
     if (nativeShellLeavesMicHardwareOn()) return;
     const tracks = this.mediaStream?.getAudioTracks() ?? [];
     for (const track of tracks) {
