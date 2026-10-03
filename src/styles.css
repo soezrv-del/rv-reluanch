@@ -2495,6 +2495,12 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   font-size: 14px;
   font-weight: 600;
 }
+.lot-garage-note {
+  margin: 0.35rem 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1648c8;
+}
 .lot-detail-rows,
 .lot-detail-section dl {
   margin: 0;
@@ -4356,6 +4362,9 @@ html[data-theme="light"] .lot-detail-ask {
   background: #1648c8 !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
+}
+html[data-theme="light"] .lot-garage-note {
+  color: #3e6ae1;
 }
 html[data-theme="light"] .text-sapphire,
 html[data-theme="light"] .text-sapphire-glow {

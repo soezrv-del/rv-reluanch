@@ -135,6 +135,8 @@ test("a lot unit with no photo shows the Raidho mark and a real photo stays", ()
   const css = read("../../styles.css");
 
   assert.match(lot, /const photoUrl = open \? lotDetailPhoto\(unit\) : lotUnitPhoto\(unit\)/);
+  assert.match(lot, /data-ask-missing-spec/);
+  assert.match(lot, /garage length not confirmed/);
   assert.match(lot, /failedSrc !== photoUrl \? photoUrl : null/);
   assert.match(lot, /data-lot-photo="unit"/);
   assert.match(lot, /onError=\{\(\) => setFailedSrc\(photo\)\}/);
