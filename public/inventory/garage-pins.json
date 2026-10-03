@@ -1,0 +1,626 @@
+{
+  "2015|keystone|fuzion|325": {
+    "garage_length_in": 132,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2015-keystone-fuzion-47408a",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2015|prime time|spartan|1239": {
+    "garage_length_in": 144,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2015-prime-time-spartan-ucz9537b",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2016|dutchmen|voltage|4150": {
+    "garage_length_in": 150,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2016-dutchmen-voltage-uco9134a",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2016|eclipse|attitude|pro lite 23sa": {
+    "garage_length_in": 74,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2016-eclipse-attitude-44658b",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2016|genesis supreme|genesis|23ss": {
+    "garage_length_in": 205,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2016-genesis-supreme-genesis-44939b",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2017|forest river|stealth|wa2916": {
+    "garage_length_in": 192,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2017-forest-river-stealth-upt9895a",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2017|forest river|vengeance|320a": {
+    "garage_length_in": 146,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2017-forest-river-vengeance-ucl9467b",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2017|keystone|fuzion|414": {
+    "garage_length_in": 144,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2017-keystone-fuzion-44983a",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2017|prime time|spartan|300 3210": {
+    "garage_length_in": 120,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2017-prime-time-spartan-39397c",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2018|dutchmen|voltage|v3005": {
+    "garage_length_in": 120,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2018-dutchmen-voltage-45711a",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2018|keystone|cougar|east 326srx": {
+    "garage_length_in": 120,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2018-keystone-cougar-45506b",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2019|dutchmen|voltage|v3655": {
+    "garage_length_in": 150,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2019-dutchmen-voltage-upq9263",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2019|forest river|salem cruise lite|west 251ssxl": {
+    "garage_length_in": 170,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2019-forest-river-salem-cruise-lite-47326a",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2019|forest river|sandstorm|t220": {
+    "garage_length_in": 156,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2019-forest-river-sandstorm-46709a",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2019|forest river|shockwave|21rq mx": {
+    "garage_length_in": 160,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2019-forest-river-shockwave-upauh9627",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2019|genesis supreme|vortex|vf 3016vf": {
+    "garage_length_in": 200,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2019-genesis-supreme-vortex-ucf9785",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2019|heartland|torque|tq 327": {
+    "garage_length_in": 150,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2019-heartland-torque-43514a",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2019|keystone|raptor|423": {
+    "garage_length_in": 156,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2019-keystone-raptor-44929c",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2020|heartland|cyclone|cy 4007": {
+    "garage_length_in": 156,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2020-heartland-cyclone-uct9831",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2020|heartland|road warrior|rw 392": {
+    "garage_length_in": 156,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2020-heartland-road-warrior-44231a",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2021|drv|full house|lx455": {
+    "garage_length_in": 144,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2021-drv-full-house-45926b",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2021|forest river|cherokee wolf pack|27pack10": {
+    "garage_length_in": 120,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2021-forest-river-cherokee-wolf-pack-42152b",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2021|forest river|shockwave|25rq mx": {
+    "garage_length_in": 172,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2021-forest-river-shockwave-upauk9666",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2021|forest river|stealth|ks3016g": {
+    "garage_length_in": 192,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2021-forest-river-stealth-uca9794a",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2021|forest river|vengeance rogue|26v": {
+    "garage_length_in": 180,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2021-forest-river-vengeance-rogue-ucz9542a",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2021|forest river|xlr boost|27qb": {
+    "garage_length_in": 174,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2021-forest-river-xlr-boost-ucq9796a",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2021|forest river|xlr boost|36tsx16": {
+    "garage_length_in": 192,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2021-forest-river-xlr-boost-upl9572",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2021|grand design|momentum|397th": {
+    "garage_length_in": 150,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2021-grand-design-momentum-upw9793",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2022|forest river|cherokee wolf pack|23pack15": {
+    "garage_length_in": 180,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2022-forest-river-cherokee-wolf-pack-46151a",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2022|forest river|cherokee wolf pack|315pack12": {
+    "garage_length_in": 144,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2022-forest-river-cherokee-wolf-pack-46082a",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2022|forest river|sandstorm|242gslc": {
+    "garage_length_in": 165,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2022-forest-river-sandstorm-upauk9477",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2022|forest river|sandstorm|304gslr": {
+    "garage_length_in": 192,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2022-forest-river-sandstorm-uco9714a",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2022|forest river|shockwave|27rqgmx": {
+    "garage_length_in": 191,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2022-forest-river-shockwave-upauk9827",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2022|genesis supreme|genesis|cr 28crt": {
+    "garage_length_in": 191,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2022-genesis-supreme-genesis-47315a",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2022|genesis supreme|genesis|prime 1915": {
+    "garage_length_in": 167,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2022-genesis-supreme-genesis-46694a",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2022|grand design|momentum|376ths": {
+    "garage_length_in": 117,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2022-grand-design-momentum-40622b",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2022|heartland|road warrior|rw 3965": {
+    "garage_length_in": 180,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2022-heartland-road-warrior-upd9752",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2022|keystone|fuzion|424": {
+    "garage_length_in": 157,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2022-keystone-fuzion-upb9798",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2022|kz rv|venom|v4113tk": {
+    "garage_length_in": 156,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2022-kz-rv-venom-upauh9626",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2023|forest river|cherokee wolf pack|365pack16": {
+    "garage_length_in": 190,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2023-forest-river-cherokee-wolf-pack-42567c",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2023|forest river|stealth|ks3016g": {
+    "garage_length_in": 192,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2023-forest-river-stealth-43178a",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2023|grand design|momentum|m class 349m": {
+    "garage_length_in": 156,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2023-grand-design-momentum-upw9663",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2023|keystone|outback ultra lite|ultra lite 240urs": {
+    "garage_length_in": 94,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2023-keystone-outback-ultra-lite-upauh9688",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2023|vanleigh|ambition|399th": {
+    "garage_length_in": 156,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2023-vanleigh-ambition-upauh9192",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2024|brinkley rv|model g|3500": {
+    "garage_length_in": 132,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2024-brinkley-rv-model-g-ucs9860",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2024|forest river|cherokee wolf pack|4500pack14d": {
+    "garage_length_in": 168,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2024-forest-river-cherokee-wolf-pack-upauh9686",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2024|grand design|momentum|395ms": {
+    "garage_length_in": 168,
+    "source": "spec_field",
+    "source_url": "https://rvcountry.com/inventory/2024-grand-design-momentum-upw9865",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2024|grand design|momentum|397ths": {
+    "garage_length_in": 162,
+    "source": "spec_field",
+    "source_url": "https://rvcountry.com/inventory/2024-grand-design-momentum-upd9862",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2025|grand design|momentum g class|415g": {
+    "garage_length_in": 168,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2025-grand-design-momentum-g-class-45876",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2025|grand design|momentum m class|344m": {
+    "garage_length_in": 132,
+    "source": "spec_field",
+    "source_url": "https://rvcountry.com/inventory/2025-grand-design-momentum-m-class-45336",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2025|grand design|momentum m class|351ms": {
+    "garage_length_in": 132,
+    "source": "spec_field",
+    "source_url": "https://rvcountry.com/inventory/2025-grand-design-momentum-m-class-45428",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2025|grand design|momentum|m class 395ms": {
+    "garage_length_in": 168,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2025-grand-design-momentum-45877",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2025|grand design|momentum|mav 24mav": {
+    "garage_length_in": 216,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2025-grand-design-momentum-45818",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2026|alliance rv|valor|36v11": {
+    "garage_length_in": 132,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2026-alliance-rv-valor-47485",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2026|genesis supreme|genesis|iks 28iks": {
+    "garage_length_in": 172,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2026-genesis-supreme-genesis-46463",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2026|genesis supreme|genesis|iks 30iks": {
+    "garage_length_in": 196,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2026-genesis-supreme-genesis-45765",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2026|grand design|momentum g class|21g": {
+    "garage_length_in": 168,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2026-grand-design-momentum-g-class-47465",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2026|grand design|momentum g class|23g": {
+    "garage_length_in": 180,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2026-grand-design-momentum-g-class-46364",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2026|grand design|momentum g class|25g": {
+    "garage_length_in": 162,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2026-grand-design-momentum-g-class-46703",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2026|grand design|momentum g class|27g": {
+    "garage_length_in": 169,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2026-grand-design-momentum-g-class-47463",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2026|grand design|momentum g class|29gs": {
+    "garage_length_in": 132,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2026-grand-design-momentum-g-class-46704",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2026|grand design|momentum g class|30g": {
+    "garage_length_in": 247,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2026-grand-design-momentum-g-class-46532",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2026|grand design|momentum g class|31g": {
+    "garage_length_in": 156,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2026-grand-design-momentum-g-class-46926",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2026|grand design|momentum g class|320g": {
+    "garage_length_in": 132,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2026-grand-design-momentum-g-class-46115",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2026|grand design|momentum g class|325g": {
+    "garage_length_in": 180,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2026-grand-design-momentum-g-class-47490",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2026|grand design|momentum m class|344m": {
+    "garage_length_in": 132,
+    "source": "spec_field",
+    "source_url": "https://rvcountry.com/inventory/2026-grand-design-momentum-m-class-46294",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2026|grand design|momentum m class|381ms": {
+    "garage_length_in": 180,
+    "source": "spec_field",
+    "source_url": "https://rvcountry.com/inventory/2026-grand-design-momentum-m-class-46367",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2026|grand design|momentum m class|395ms": {
+    "garage_length_in": 168,
+    "source": "spec_field",
+    "source_url": "https://rvcountry.com/inventory/2026-grand-design-momentum-m-class-46293",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2026|grand design|momentum mav|27mav": {
+    "garage_length_in": 162,
+    "source": "spec_field",
+    "source_url": "https://rvcountry.com/inventory/2026-grand-design-momentum-mav-47549",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2026|grand design|momentum|m class 395ms": {
+    "garage_length_in": 168,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2026-grand-design-momentum-46537",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2026|grand design|momentum|m class 414m": {
+    "garage_length_in": 168,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2026-grand-design-momentum-46444",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2026|grand design|momentum|mav 24mav": {
+    "garage_length_in": 216,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2026-grand-design-momentum-46533",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2026|grand design|momentum|mav 27mav": {
+    "garage_length_in": 162,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2026-grand-design-momentum-47548",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2027|grand design|momentum g class|27g": {
+    "garage_length_in": 169,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2027-grand-design-momentum-g-class-47614",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2027|grand design|momentum g class|350g": {
+    "garage_length_in": 174,
+    "source": "feed",
+    "source_url": "https://rvcountry.com/inventory/2027-grand-design-momentum-g-class-47613",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2027|grand design|momentum mav|17mav": {
+    "garage_length_in": 138,
+    "source": "spec_field",
+    "source_url": "https://rvcountry.com/inventory/2027-grand-design-momentum-mav-47616",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2027|grand design|momentum mav|22mav": {
+    "garage_length_in": 162,
+    "source": "spec_field",
+    "source_url": "https://rvcountry.com/inventory/2027-grand-design-momentum-mav-47823",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  },
+  "2027|grand design|momentum mav|28mav": {
+    "garage_length_in": 124,
+    "source": "spec_field",
+    "source_url": "https://rvcountry.com/inventory/2027-grand-design-momentum-mav-47452",
+    "confidence": "high",
+    "notes": "",
+    "checked_at": "2026-09-30"
+  }
+}
