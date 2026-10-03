@@ -1239,3 +1239,16 @@ test("series, complaint, king beds, and all the stores stay on the question he a
   assert.ok(winds.matched > 0, winds.summary);
   assert.ok(winds.units.every((unit) => /winds/i.test(`${unit.make} ${unit.model}`)));
 });
+
+test("\"are you able\" is not a coach name, so Class Cs still come back", () => {
+  const snap = units();
+  for (const utterance of [
+    "Are you able to search a lot for Class Cs?",
+    "Are you able to find Class Cs?",
+    "Class Cs on the lot, are you able?",
+  ]) {
+    const answer = answerQueryLotFromSnapshot(snap, {}, null, utterance, "");
+    assert.doesNotMatch(String(answer.summary), /Did you mean Eagle/, utterance);
+    assert.match(String(answer.summary), /Matching units: 180 Class C/, utterance);
+  }
+});

@@ -227,6 +227,8 @@ const STOP = new Set([
   "vehicles",
   "whole",
   "a",
+  "able",
+  "unable",
   "about",
   "an",
   "and",
