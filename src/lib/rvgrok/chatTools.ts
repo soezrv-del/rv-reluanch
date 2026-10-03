@@ -21,6 +21,7 @@ import {
   ownLotIsUnavailable,
 } from "./ownLotInventory.ts";
 import { searchLot } from "../lot/lotQuery.ts";
+import { loadGaragePinBook } from "../lot/garagePinFile.ts";
 import { looksLikeListingFeatureAsk } from "../lot/lotSearch.ts";
 import { LOT_FEATURE_WEB_CLAUSE } from "./liveVoice.ts";
 import { evaluateTowMatch } from "../tow/towMatch.ts";
@@ -500,6 +501,7 @@ async function getOwnLot(
     price_max: num(args.price_max) ?? num(args.maxPrice) ?? num(args.priceMax),
     sort: str(args.sort),
     order: str(args.order),
+    garage_pins: loadGaragePinBook(),
     ...(utterance ? { utterance } : {}),
   });
   return {
