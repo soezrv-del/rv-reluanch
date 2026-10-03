@@ -568,13 +568,7 @@ function consumeStatus(phrase: string, arg: string): { status: string; rest: str
 }
 
 function stripLengthTalk(phrase: string): string {
-  return phrase
-    .replace(
-      /\b(?:around|about|under|over|below|above)?\s*\d{1,2}\s*(?:foot|feet|ft|footer|footers)\b/g,
-      " ",
-    )
-    .replace(/\s+/g, " ")
-    .trim();
+  return stripSpokenFeetMeasures(phrase);
 }
 
 function gluedToCoachName(token: string): boolean {
@@ -1222,50 +1216,151 @@ function plainBodyAfterToyRejection(carry: string): string {
 }
 
 /** "12-foot garage" on the original sentence, even after body words are stripped. */
-export function spokenGarageBand(raw: string): { min?: number; max?: number } {
-  const t = normalizeLotQueryText(raw);
-  const ahead = t.match(/\b(\d{1,2}(?:\.\d+)?)(?:\s+|-)?(?:foot|feet|ft)\s+garage\b/);
-  const behind = t.match(/\bgarage\s+(?:of\s+)?(\d{1,2}(?:\.\d+)?)(?:\s+|-)?(?:foot|feet|ft)\b/);
-  const feet = Number(ahead?.[1] || behind?.[1]);
-  if (!Number.isFinite(feet) || feet <= 0) return {};
+const FEET_UNIT = String.raw`(?:foot|feet|ft|footer|footers)`;
+
+function feetWordValue(token: string): number | undefined {
+  if (token === "a" || token === "an") return undefined;
+  const n = SMALL_NUMBER[token];
+  return n != null && n > 0 ? n : undefined;
+}
+
+function feetWordAlt(): string {
+  return Object.keys(SMALL_NUMBER)
+    .filter((word) => word !== "a" && word !== "an")
+    .sort((a, b) => b.length - a.length)
+    .join("|");
+}
+
+function feetFromToken(raw: string): number | undefined {
+  if (/^\d/.test(raw)) {
+    const n = Number(raw);
+    return Number.isFinite(n) && n > 0 ? n : undefined;
+  }
+  return feetWordValue(raw);
+}
+
+/** Coach length, not the garage. "garage length" is still the garage. */
+function overallLengthCue(t: string): boolean {
+  const stripped = t.replace(/\bgarage lengths?\b/g, " ");
+  return /\b(?:long|overall|length)\b/.test(stripped);
+}
+
+type FeetSpan = { feet: number; start: number; end: number };
+
+function feetSpans(t: string): FeetSpan[] {
+  const re = new RegExp(String.raw`\b(\d{1,2}(?:\.\d+)?|${feetWordAlt()})\s*${FEET_UNIT}\b`, "g");
+  const out: FeetSpan[] = [];
+  for (const hit of t.matchAll(re)) {
+    const feet = feetFromToken(hit[1] || "");
+    if (feet == null) continue;
+    out.push({ feet, start: hit.index ?? 0, end: (hit.index ?? 0) + hit[0].length });
+  }
+  return out;
+}
+
+function adjacentToGarage(t: string, span: FeetSpan): boolean {
+  const before = t.slice(0, span.start).trim();
+  const after = t.slice(span.end).trim();
+  if (/^garage\b/.test(after)) return true;
+  return /(?:^|\s)garage(?:\s+of)?$/.test(before);
+}
+
+/** "over", "or larger", "or bigger", "at least", "plus", "and up" are a floor. */
+function garageFloorAsk(t: string, span: FeetSpan): boolean {
+  const before = t.slice(0, span.start).trim().split(/\s+/).slice(-6).join(" ");
+  const after = t.slice(span.end).trim().replace(/^garage\b\s*/, "");
+  if (/\b(?:over|at least)\b/.test(before)) return true;
+  return /^(?:plus\b|and up\b|or (?:larger|bigger)\b)/.test(after);
+}
+
+function bandForGarageFeet(feet: number, floor: boolean): { min?: number; max?: number } {
+  if (floor) return { min: feet };
   return { min: feet - 1, max: feet + 1 };
 }
+
+/**
+ * A feet number in a garage sentence is the garage, even when "ten-foot"
+ * is not glued to the word. A coach cue ("long", "overall", "length",
+ * "under N feet long") keeps that number as overall length unless it
+ * sits on the garage itself.
+ */
+function garageFeetSpan(raw: string): (FeetSpan & { floor: boolean }) | undefined {
+  const t = normalizeLotQueryText(raw);
+  if (!/\bgarage\b/.test(t)) return undefined;
+  const spans = feetSpans(t);
+  if (!spans.length) return undefined;
+  const adjacent = spans.find((span) => adjacentToGarage(t, span));
+  if (!adjacent && overallLengthCue(t)) return undefined;
+  const garageAt = t.search(/\bgarage\b/);
+  const nearest = [...spans].sort(
+    (a, b) => Math.abs(a.start - garageAt) - Math.abs(b.start - garageAt),
+  )[0]!;
+  const chosen = adjacent ?? nearest;
+  return { ...chosen, floor: garageFloorAsk(t, chosen) };
+}
+
+export function spokenGarageBand(raw: string): { min?: number; max?: number } {
+  const hit = garageFeetSpan(raw);
+  if (!hit) return {};
+  return bandForGarageFeet(hit.feet, hit.floor);
+}
+
+/** Drop "ten foot or larger" so the number is not a coach name. */
+function stripSpokenFeetMeasures(phrase: string): string {
+  const re = new RegExp(
+    String.raw`\b(?:around|about|under|over|below|above|at\s+least)?\s*(?:a|an)?\s*(?:\d{1,2}(?:\.\d+)?|${feetWordAlt()})\s*${FEET_UNIT}\b(?:\s+or\s+(?:larger|bigger)|\s+plus|\s+and\s+up)?`,
+    "g",
+  );
+  return phrase.replace(re, " ").replace(/\s+/g, " ").trim();
+}
+
+const FEET_UNIT_TOKEN = /^(?:foot|feet|ft|footer|footers)$/;
+
+function skipFeetMeasure(tokens: string[], index: number): number {
+  let j = index;
+  if (tokens[j] === "over") j += 1;
+  if (tokens[j] === "at" && tokens[j + 1] === "least") j += 2;
+  if (tokens[j] === "a" || tokens[j] === "an") j += 1;
+  const token = tokens[j] || "";
+  const next = tokens[j + 1] || "";
+  const glued = new RegExp(
+    String.raw`^(?:\d{1,2}(?:\.\d+)?|${feetWordAlt()})(?:${FEET_UNIT})$`,
+  );
+  if (glued.test(token)) j += 1;
+  else if (feetFromToken(token) != null && FEET_UNIT_TOKEN.test(next)) j += 2;
+  else return index;
+  if (tokens[j] === "garage") j += 1;
+  if (tokens[j] === "or" && (tokens[j + 1] === "larger" || tokens[j + 1] === "bigger")) return j + 2;
+  if (tokens[j] === "plus") return j + 1;
+  if (tokens[j] === "and" && tokens[j + 1] === "up") return j + 2;
+  return j;
+}
+
 export function consumeGarageLength(tokens: string[]): {
   tokens: string[];
   min?: number;
   max?: number;
 } {
+  const band = spokenGarageBand(tokens.join(" "));
   const kept: string[] = [];
-  let feet: number | undefined;
   for (let i = 0; i < tokens.length; ) {
     const token = tokens[i] || "";
-    const next = tokens[i + 1] || "";
-    const after = tokens[i + 2] || "";
-    const glued = token.match(/^(\d{1,2}(?:\.\d+)?)(?:foot|feet|ft)$/);
-    if (glued && next === "garage") {
-      feet = Number(glued[1]);
-      i += 2;
-      continue;
-    }
-    if (/^\d{1,2}(?:\.\d+)?$/.test(token) && /^(?:foot|feet|ft)$/.test(next) && after === "garage") {
-      feet = Number(token);
-      i += 3;
-      continue;
-    }
-    if (token === "garage" && /^(?:foot|feet|ft)$/.test(next) && /^\d{1,2}(?:\.\d+)?$/.test(after)) {
-      feet = Number(after);
-      i += 3;
-      continue;
-    }
     if (token === "garage") {
       i += 1;
       continue;
     }
+    if (band.min != null || band.max != null) {
+      const next = skipFeetMeasure(tokens, i);
+      if (next !== i) {
+        i = next;
+        continue;
+      }
+    }
     kept.push(token);
     i += 1;
   }
-  if (feet == null || !Number.isFinite(feet)) return { tokens: kept };
-  return { tokens: kept, min: feet - 1, max: feet + 1 };
+  if (band.min == null && band.max == null) return { tokens: kept };
+  return { tokens: kept, ...band };
 }
 
 /** Sheet garage length: 12 ft, 13' 6", or inches when the cell is "144 | 3657". */
@@ -2649,9 +2744,11 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
         return passesStructured(unit, { ...parsed, lengthMin: undefined, lengthMax: undefined }, false);
       })
     : [];
-  const didYouMean =
-    alias?.display ||
-    (matched.length || recognized ? undefined : suggestName(parsed.tokens, units));
+  const garageAsk = parsed.garageMin != null || parsed.garageMax != null;
+  const didYouMean = garageAsk
+    ? undefined
+    : alias?.display ||
+      (matched.length || recognized ? undefined : suggestName(parsed.tokens, units));
   const counts = countsFor(matched);
   const sorted = matched
     .map((unit, index) => ({ unit, index }))
@@ -2759,9 +2856,9 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
     const name = [named.year, named.make, named.model].filter(Boolean).join(" ");
     summary = `No ${bedLabel(parsed.bed).toLowerCase()} on the ${name}, stk ${named.stock_number}.`;
   }
-  if (alias && matched.length === 1 && sorted[0] && !featureBlank && !featureNo) {
+  if (alias && !garageAsk && matched.length === 1 && sorted[0] && !featureBlank && !featureNo) {
     summary = oneCloseLine(sorted[0], alias.display, alias.spoken);
-  } else if (alias && matched.length && !featureBlank && !featureNo) {
+  } else if (alias && !garageAsk && matched.length && !featureBlank && !featureNo) {
     const note = `Sheet says ${alias.display}, not ${capitalizeWord(alias.spoken)}.`;
     if (!summary.includes(note)) {
       summary = `${summary.replace(/\s+$/, "").replace(/\.$/, "")}. ${note}`;

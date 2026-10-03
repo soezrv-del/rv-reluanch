@@ -7,7 +7,7 @@ import { answerQueryLotFromSnapshot } from "../rvgrok/lotMemory.ts";
 import { QUERY_LOT_TOOL } from "../rvgrok/liveVoice.ts";
 import { decideVoiceWebResearch } from "../rvgrok/voiceWeb.ts";
 import { spokenLotPayload } from "../rvgrok/voiceTurnGate.ts";
-import { searchLot } from "./lotQuery.ts";
+import { searchLot, spokenGarageBand } from "./lotQuery.ts";
 import { searchLotUnits, singularizeLotToken } from "./lotSearch.ts";
 import { floorplanPinKey } from "./garagePins.ts";
 import { floorplanKey } from "../../../scripts/pin-garages.mjs";
@@ -721,6 +721,61 @@ test("16-foot garage fifth wheel uses high pins and does not estimate the rest",
     plain.units.some((unit) => /31zw/i.test(`${unit.trim} ${unit.model}`)),
     "31Z still finds 31ZW",
   );
+});
+
+test("a garage length stays a garage when the number is not glued to the word", () => {
+  const snap = units();
+  const toys = searchLot(snap.units, { query: "toy haulers" });
+  assert.equal(toys.matched, 181);
+  const asks: { q: string; min: number; max?: number }[] = [
+    { q: "any toy haulers that have over a ten-foot garage", min: 10 },
+    { q: "a garage toy hauler that's ten foot or larger", min: 10 },
+    { q: "12 foot garage fifth wheel", min: 11, max: 13 },
+    { q: "toy hauler with at least a 14 ft garage", min: 14 },
+  ];
+  for (const { q, min, max } of asks) {
+    assert.equal(spokenGarageBand(q).min, min, q);
+    assert.equal(spokenGarageBand(q).max, max, q);
+    const hit = searchLot(snap.units, {
+      query: q,
+      utterance: q,
+      length_ft_min: 10,
+      length_ft_max: 40,
+      body_type: "Travel Trailer",
+    });
+    assert.equal(hit.applied.length_ft_min, undefined, q);
+    assert.equal(hit.applied.length_ft_max, undefined, q);
+    assert.match(hit.applied.body_type, /toy hauler/i, q);
+    assert.equal(hit.did_you_mean, undefined, q);
+    assert.doesNotMatch(hit.summary, /Did you mean/i, q);
+    assert.doesNotMatch(hit.summary, /foot and over/i, q);
+    assert.ok(hit.matched > 0 && hit.matched <= 181, `${q} matched ${hit.matched} ${hit.summary}`);
+    assert.ok(hit.units.every((unit) => /toy hauler/i.test(unit.body_type)), q);
+  }
+  const fifth = searchLot(snap.units, { query: "12 foot garage fifth wheel" });
+  assert.equal(fifth.applied.body_type, "Fifth Wheel Toy Hauler");
+  assert.equal(fifth.matched, 22, fifth.summary);
+
+  const coach = "travel trailer under 30 feet long";
+  assert.equal(spokenGarageBand(coach).min, undefined);
+  const under = searchLot(snap.units, {
+    query: coach,
+    utterance: coach,
+    length_ft_min: 10,
+  });
+  assert.equal(under.applied.body_type, "Travel Trailer");
+  assert.equal(under.applied.length_ft_min, undefined);
+  assert.equal(under.applied.length_ft_max, 30);
+  assert.doesNotMatch(under.summary, /garage/i);
+
+  const ask = "any toy haulers that have over a ten-foot garage";
+  const first = answerQueryLotFromSnapshot(snap, { query: ask, length_ft_min: 10 }, null, ask);
+  assert.match(first.lotMemory?.filter.bodyType || "", /toy hauler/i);
+  assert.equal(first.lotMemory?.filter.lengthFtMin, undefined);
+  assert.equal(first.did_you_mean, undefined);
+  const used = answerQueryLotFromSnapshot(snap, {}, first.lotMemory, "how many of those are used");
+  assert.match(used.lotMemory?.filter.bodyType || "", /toy hauler/i);
+  assert.ok(used.units.every((unit) => /toy hauler/i.test(unit.body_type)));
 });
 
 test("those aren't toy haulers drops toy haulers", () => {
