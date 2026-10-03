@@ -4,7 +4,11 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { lotOpenSections } from "./lotDetail.ts";
-import { formatLotUpdated, parseLotSnapshotJson } from "./ownLotPage.ts";
+import {
+  formatLotUpdated,
+  lotDetailPhoto,
+  parseLotSnapshotJson,
+} from "./ownLotPage.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
@@ -54,4 +58,26 @@ test("stock 47492 opens as the short buyer report, not the scrape dump", () => {
   const options = (rows.find((row) => row.label === "Options")?.value ?? "").split(" · ");
   assert.ok(options.length > 0 && options.length <= 8);
   assert.equal(formatLotUpdated(snap.asOf).startsWith("Updated "), true);
+});
+
+test("details image uses the floorplan, then the exterior photo", () => {
+  const exterior = "https://cdn.example.com/units/47529.jpg";
+  const floorplan =
+    "https://cdn.coasttechnology.org/vehicle_images/plan/2026_plan.jpg";
+  const [base] = parseLotSnapshotJson([
+    {
+      year: 2026,
+      make: "Thor",
+      model: "Inception",
+      trim: "38DX",
+      stock_number: "47492",
+      photo: exterior,
+      floorplan_image: floorplan,
+    },
+  ]).units;
+  assert.ok(base);
+  assert.equal(lotDetailPhoto(base), floorplan);
+  assert.equal(lotDetailPhoto({ ...base, floorplan_image: undefined }), exterior);
+  assert.equal(lotDetailPhoto({ ...base, floorplan_image: "" }), exterior);
+  assert.equal(lotDetailPhoto({ ...base, floorplan_image: "   " }), exterior);
 });

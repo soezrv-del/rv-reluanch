@@ -56,6 +56,8 @@ export type LotUnit = {
   url: string;
   lot_status: string;
   photo: string;
+  /** Floorplan drawing from the scrape. Empty when the sheet has none. */
+  floorplan_image?: string;
   mileage: string;
   gvwr: number | null;
   dry_weight: number | null;
@@ -402,6 +404,7 @@ function rowToLotUnit(row: Record<string, unknown>): LotUnit {
     url: pickStr(row, "url"),
     lot_status: pickStr(row, "lot_status"),
     photo: pickPhoto(row),
+    floorplan_image: pickStr(row, "floorplan_image"),
     ...emptySpecs(),
     mileage: pickStr(row, "mileage", "odometer", "mileage_from_odometer"),
     gvwr: pickPositive(row, "gvwr"),
@@ -563,6 +566,21 @@ export function lotUnitPhoto(unit: LotUnit): string | null {
     return raw;
   }
   return null;
+}
+
+/** Floorplan drawing only. A blank or non-image URL is not a photo. */
+export function lotFloorplanPhoto(unit: LotUnit): string | null {
+  const raw = (unit.floorplan_image ?? "").trim();
+  if (!raw) return null;
+  return lotUnitPhoto({ ...unit, photo: raw });
+}
+
+/**
+ * Details-page image. The floorplan drawing when the scrape printed one,
+ * otherwise the exterior photo, unchanged.
+ */
+export function lotDetailPhoto(unit: LotUnit): string | null {
+  return lotFloorplanPhoto(unit) || lotUnitPhoto(unit);
 }
 
 export function lotUnitKey(unit: LotUnit, index: number): string {
