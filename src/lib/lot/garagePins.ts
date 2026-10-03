@@ -84,22 +84,9 @@ export function splitPinnedGarages<T extends Named>(
   return { pinned, unpinned, sources };
 }
 
-export function garageSourceSentence(sources: string[]): string {
-  const unique = [...new Set(sources)];
-  const one = unique.length === 1 ? unique[0] : "";
-  const from =
-    one === "spec_field"
-      ? "the spec sheet"
-      : one === "feed"
-        ? "the sheet's cargo length"
-        : one === "floorplan_label"
-          ? "a printed floorplan label"
-          : one === "manufacturer_web"
-            ? "the manufacturer page"
-            : one === "brochure_pdf" || one === "window_sticker_pdf"
-              ? "the brochure"
-              : "the pinned sheet";
-  return `Garage length is from ${from}. Confirm the fit with the dealer or manufacturer before quoting it.`;
+/** One short caveat on every pinned garage answer: confirm the fit before quoting it. */
+export function garageSourceSentence(): string {
+  return "Confirm garage fit with the dealer or manufacturer.";
 }
 
 /** One sentence. Not a guess about a coach that has no pin. */
@@ -114,7 +101,7 @@ export function garageFitSentence(askFeet: number | undefined): string {
   return "";
 }
 
-export function unpinnedGarageLine(count: number): string {
+export function unpinnedGarageLine(count: number, noun = "toy haulers"): string {
   if (!count) return "";
-  return `Another ${count} toy haulers don't have a pinned garage length; check the floorplan.`;
+  return `Another ${count} ${noun} don't have a pinned garage length; check the floorplan.`;
 }
