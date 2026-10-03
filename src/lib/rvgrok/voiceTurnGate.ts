@@ -104,3 +104,69 @@ export function spokenLotPayload<
     none: matched === 0,
   };
 }
+
+/**
+ * The hold ("I'll check the lot") is still an open Realtime response when
+ * query_lot returns. response.create during that response is rejected, and
+ * she goes quiet. Queue the answer and speak it when that response ends.
+ */
+export type ToolSpeakGate = {
+  responseOpen: boolean;
+  queued: string | null;
+  /** Just sent. A rejected create puts it back on the queue. */
+  sent: string | null;
+};
+
+export function initialToolSpeakGate(): ToolSpeakGate {
+  return { responseOpen: false, queued: null, sent: null };
+}
+
+export type ToolSpeakEvent =
+  | { type: "response-start" }
+  | { type: "response-end" }
+  | { type: "tool-ready"; instructions: string }
+  | { type: "create-rejected" };
+
+export function reduceToolSpeak(
+  state: ToolSpeakGate,
+  event: ToolSpeakEvent,
+): { state: ToolSpeakGate; speak: string | null } {
+  switch (event.type) {
+    case "response-start":
+      return {
+        state: { responseOpen: true, queued: state.queued, sent: null },
+        speak: null,
+      };
+    case "response-end": {
+      if (!state.queued) {
+        return {
+          state: { responseOpen: false, queued: null, sent: null },
+          speak: null,
+        };
+      }
+      return {
+        state: { responseOpen: false, queued: null, sent: state.queued },
+        speak: state.queued,
+      };
+    }
+    case "tool-ready":
+      if (state.responseOpen) {
+        return {
+          state: { ...state, queued: event.instructions },
+          speak: null,
+        };
+      }
+      return {
+        state: { ...state, queued: null, sent: event.instructions },
+        speak: event.instructions,
+      };
+    case "create-rejected":
+      if (!state.sent) return { state, speak: null };
+      return {
+        state: { responseOpen: true, queued: state.sent, sent: null },
+        speak: null,
+      };
+    default:
+      return { state, speak: null };
+  }
+}

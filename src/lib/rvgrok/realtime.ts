@@ -93,7 +93,10 @@ import {
   isSameLotLine,
   lotSummaryForSpeech,
   NAME_ROSTER_SPEAK,
+  reduceToolSpeak,
   repeatsLotLine,
+  initialToolSpeakGate,
+  type ToolSpeakGate,
 } from "./voiceTurnGate";
 import { researchAccessHeaders } from "../access/researchUnlock";
 import { GROK_EXTRA_PROMPTS, type GrokExtraKind } from "./grokExtras";
@@ -200,6 +203,8 @@ export class GrokRealtimeSession {
   private lastUserTranscript = "";
   /** Last lot line spoken, so a noise echo does not say it again. */
   private lastSpokenLotLine = "";
+  /** The hold is one response. The lot answer waits until that response ends. */
+  private toolSpeak: ToolSpeakGate = initialToolSpeakGate();
   private handledToolCallIds = new Set<string>();
   private introSpoken = false;
   private lastDeskQuery = "";
@@ -599,6 +604,9 @@ export class GrokRealtimeSession {
       }
 
       case "response.created":
+        this.toolSpeak = reduceToolSpeak(this.toolSpeak, {
+          type: "response-start",
+        }).state;
         if (this.assistantText.trim()) this.priorAssistantForLot = this.assistantText;
         this.assistantText = "";
         this.finishedAssistantOnce = false;
@@ -697,6 +705,7 @@ export class GrokRealtimeSession {
             }
           }
         }
+        const answeringLot = this.flushToolSpeak();
         if (this.finishResearchHoldIfNeeded()) break;
         if (this.assistantText) {
           this.emitAssistantDone(this.assistantText);
@@ -711,6 +720,11 @@ export class GrokRealtimeSession {
           break;
         }
         if (this.introSpoken) this.introFinished = true;
+        if (answeringLot) {
+          this.assistantText = "";
+          this.finishedAssistantOnce = false;
+          break;
+        }
         this.scheduleRearm();
         this.assistantText = "";
         this.finishedAssistantOnce = false;
@@ -718,7 +732,10 @@ export class GrokRealtimeSession {
       }
 
       case "response.cancelled":
-      case "response.cancel":
+      case "response.cancel": {
+        const answeringLot = this.toolSpeak.queued;
+        if (answeringLot) this.interruptPlayback();
+        if (this.flushToolSpeak()) break;
         if (this.researchPhase !== "idle") {
           // Expected: we cancelled the VAD auto-reply to run web research.
           break;
@@ -733,6 +750,7 @@ export class GrokRealtimeSession {
           "Interrupted — listening… speak or 📷",
         );
         break;
+      }
 
       case "error": {
         const err = msg.error as { message?: string } | string | undefined;
@@ -740,6 +758,13 @@ export class GrokRealtimeSession {
           typeof err === "string"
             ? err
             : err?.message || JSON.stringify(msg).slice(0, 200);
+        if (/already has an active response/i.test(message)) {
+          const rejected = reduceToolSpeak(this.toolSpeak, {
+            type: "create-rejected",
+          });
+          this.toolSpeak = rejected.state;
+          break;
+        }
         if (/cancel|interrupt|no active response/i.test(message)) {
           if (this.researchPhase !== "idle") break;
           this.setMicGate(false);
@@ -876,18 +901,45 @@ export class GrokRealtimeSession {
       }),
     );
     if (!speak) return;
-    ws.send(
-      JSON.stringify({
-        type: "response.create",
-        response: {
-          modalities: ["text", "audio"],
-          instructions:
-            instructions ||
-            "Speak the query_lot summary and only the units this tool returned. Do not add a coach, a price, or a store from web notes, a market list, or the previous turn. If units came back, those are the answer. Say none only when matched is 0. Do not mention web notes. If did_you_mean or close is set, offer that name. The sheet body type is how the dealer filed the coach. The name and the chassis are the coach. When they disagree, say both. If the result includes a NAME ROSTER, count from those names. Do not stop at the sheet count. Never tell the user to change a query, a parameter, or these instructions. " +
-            LOT_FEATURE_WEB_CLAUSE,
-        },
-      }),
-    );
+    const planned = reduceToolSpeak(this.toolSpeak, {
+      type: "tool-ready",
+      instructions:
+        instructions ||
+        "Speak the query_lot summary and only the units this tool returned. Do not add a coach, a price, or a store from web notes, a market list, or the previous turn. If units came back, those are the answer. Say none only when matched is 0. Do not mention web notes. If did_you_mean or close is set, offer that name. The sheet body type is how the dealer filed the coach. The name and the chassis are the coach. When they disagree, say both. If the result includes a NAME ROSTER, count from those names. Do not stop at the sheet count. Never tell the user to change a query, a parameter, or these instructions. " +
+          LOT_FEATURE_WEB_CLAUSE,
+    });
+    this.toolSpeak = planned.state;
+    if (planned.speak) this.emitToolSpeak(planned.speak);
+  }
+
+  /** Speak a lot answer that was waiting out the hold line. */
+  private flushToolSpeak(): boolean {
+    const planned = reduceToolSpeak(this.toolSpeak, { type: "response-end" });
+    this.toolSpeak = planned.state;
+    if (!planned.speak) return false;
+    this.emitToolSpeak(planned.speak);
+    return true;
+  }
+
+  private emitToolSpeak(instructions: string) {
+    const ws = this.ws;
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    try {
+      ws.send(
+        JSON.stringify({
+          type: "response.create",
+          response: {
+            modalities: ["text", "audio"],
+            instructions,
+          },
+        }),
+      );
+    } catch {
+      const rejected = reduceToolSpeak(this.toolSpeak, {
+        type: "create-rejected",
+      });
+      this.toolSpeak = rejected.state;
+    }
   }
 
   private emitAssistantDone(text: string) {

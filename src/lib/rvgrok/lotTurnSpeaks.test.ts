@@ -8,9 +8,42 @@ import {
   looksLikeOwnLotStockQuestion,
 } from "./ownLotAsk.ts";
 import {
+  initialToolSpeakGate,
+  reduceToolSpeak,
+} from "./voiceTurnGate.ts";
+import {
   formatOwnLotMissLine,
   snapshotFromJson,
 } from "./ownLotInventory.ts";
+
+test("a lot answer waits until the hold response ends", () => {
+  const answer = "Speak only these words, then stop: Matching units: 75.";
+  let state = initialToolSpeakGate();
+  state = reduceToolSpeak(state, { type: "response-start" }).state;
+  const early = reduceToolSpeak(state, {
+    type: "tool-ready",
+    instructions: answer,
+  });
+  assert.equal(early.speak, null);
+  state = early.state;
+  const done = reduceToolSpeak(state, { type: "response-end" });
+  assert.equal(done.speak, answer);
+  const started = reduceToolSpeak(done.state, { type: "response-start" });
+  assert.equal(started.speak, null);
+  const finished = reduceToolSpeak(started.state, { type: "response-end" });
+  assert.equal(finished.speak, null);
+
+  const idle = reduceToolSpeak(initialToolSpeakGate(), {
+    type: "tool-ready",
+    instructions: answer,
+  });
+  assert.equal(idle.speak, answer);
+  const rejected = reduceToolSpeak(idle.state, { type: "create-rejected" });
+  assert.equal(rejected.speak, null);
+  assert.equal(rejected.state.queued, answer);
+  const retry = reduceToolSpeak(rejected.state, { type: "response-end" });
+  assert.equal(retry.speak, answer);
+});
 
 test("cheapest and least expensive Class A asks are own-lot asks", () => {
   for (const ask of [
@@ -77,6 +110,7 @@ test("query_lot tells the voice to speak only the units this tool returned", () 
   assert.match(src, /Do not mention web notes/);
   assert.match(src, /NAME_ROSTER_SPEAK/);
   assert.match(src, /hasRoster \? NAME_ROSTER_SPEAK/);
+  assert.match(src, /flushToolSpeak/);
   const gate = readFileSync(new URL("./voiceTurnGate.ts", import.meta.url), "utf8");
   assert.match(gate, /Do not read the whole roster out loud/);
   assert.match(gate, /A Super C is a Class C body on a truck, not a van/);
