@@ -18,6 +18,7 @@ import {
   lotQueryIsBareCount,
   reconcileLotArgs,
   searchLot,
+  spokenLotBody,
   type LotQueryApplied,
   type LotQueryCounts,
 } from "../lot/lotQuery.ts";
@@ -44,6 +45,8 @@ export type LotMemory = {
   garageFtMax?: number;
   /** The one unit the last question landed on. "You just told me we had one." */
   pinnedStock?: string;
+  /** The transcript this memory came from. The same words on the next call are stale. */
+  utterance?: string;
 };
 
 export type LotTurn = LotMemory & {
@@ -340,6 +343,34 @@ function looksLikeThoseStockAsk(text: string): boolean {
   return /\b(?:in stock|on (?:the |our )?lot|inventory|do we have|have any)\b/i.test(t);
 }
 
+function wordKey(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+/**
+ * The voice client sends the last finished transcript. When the model calls
+ * the tool before the new transcript lands, that is still the last question.
+ * Explicit tool args win over it: the same words the memory came from, or
+ * words that only restate the carried body while the args name a new one,
+ * or her own last line picked up by the mic.
+ */
+function looksLikeStaleUtterance(
+  spoken: string,
+  args: Record<string, unknown>,
+  previous: LotMemory | null,
+  priorAssistant = "",
+): boolean {
+  if (!previous || !spoken) return false;
+  const said = wordKey(spoken);
+  if (!said) return false;
+  if (previous.utterance && said === wordKey(previous.utterance)) return true;
+  if (said.length > 24 && wordKey(priorAssistant).includes(said)) return true;
+  const argBody = spokenLotBody(str(args.body_type));
+  const saidBody = spokenLotBody(spoken);
+  const carriedBody = spokenLotBody(str(previous.filter.bodyType));
+  return Boolean(argBody && saidBody && saidBody === carriedBody && argBody !== saidBody);
+}
+
 function queryFilterLabel(applied: LotQueryApplied): string {
   const bits = [
     applied.condition,
@@ -394,8 +425,11 @@ export function answerQueryLotFromSnapshot(
     args.price_max = args.maxPrice ?? args.priceMax;
   }
   let query = str(args.query);
-  let spoken = str(utterance) || str(args.utterance);
+  const heard = str(utterance) || str(args.utterance);
+  let spoken = heard;
   let prior = previous;
+  if (looksLikeStaleUtterance(spoken, args, prior, priorAssistant)) spoken = "";
+  if (looksLikeStaleUtterance(query, args, prior)) query = "";
   const recalled = coachRecallFromAside(priorAssistant, prior);
   if (recalled && looksLikeThoseStockAsk(spoken || query)) {
     spoken = recalled;
@@ -446,7 +480,9 @@ export function answerQueryLotFromSnapshot(
         !sort &&
         !saidRank.sort &&
         lotQueryIsBareCount(query || text) &&
-        (!text || lotQueryIsBareCount(text))));
+        (!text || lotQueryIsBareCount(text)) &&
+        // No words and no args after a lot answer keeps the last filter.
+        Boolean(text || !prior)));
   // A follow-up, or a sort/length/price tool call with no new coach, keeps
   // the last filter. A bare "how many RVs" does not. "The full list" keeps it.
   const followUp = Boolean(
@@ -481,8 +517,8 @@ export function answerQueryLotFromSnapshot(
       lot_total: snapshot.units.length,
     };
   }
-  const searchArgs = reconcileLotArgs({
-    query: bareCount ? "" : text,
+  const argsFor = (said: string) => reconcileLotArgs({
+    query: bareCount ? "" : said,
     make: str(args.make) || carried?.filter.make,
     model:
       str(args.model) ||
@@ -517,9 +553,9 @@ export function answerQueryLotFromSnapshot(
     sort: sort?.by,
     order: sort?.dir,
     limit,
-    ...(text && !bareCount
+    ...(said && !bareCount
       ? {
-          utterance: text,
+          utterance: said,
           follow_up: followUp,
           carry_body_type: carried?.filter.bodyType,
           carry_condition: carried?.condition,
@@ -540,10 +576,36 @@ export function answerQueryLotFromSnapshot(
         }
       : {}),
   });
-  const found = searchLot(snapshot.units, bareCount ? { limit } : { ...searchArgs, garage_pins: garagePins });
+  const run = (picked: ReturnType<typeof argsFor>) =>
+    searchLot(snapshot.units, bareCount ? { limit } : { ...picked, garage_pins: garagePins });
+  let searchArgs = argsFor(text);
+  let found = run(searchArgs);
+  // Leftover words the model did not pass (a misheard "fifth wills", a hold
+  // line, an echo) became a coach-name search and zeroed an explicit body
+  // type. When the words do not name that body, trust the tool args.
+  const argBody = spokenLotBody(str(args.body_type)) || spokenLotBody(query);
+  if (
+    found.matched === 0 &&
+    !bareCount &&
+    spoken &&
+    argBody &&
+    spokenLotBody(spoken) !== argBody &&
+    found.applied.model &&
+    !str(args.make) &&
+    !str(args.model) &&
+    !carried?.filter.make &&
+    !carried?.filter.model
+  ) {
+    const fromArgs = argsFor(query);
+    const retry = run(fromArgs);
+    if (retry.matched > 0) {
+      searchArgs = fromArgs;
+      found = retry;
+    }
+  }
   const applied = found.applied;
   const memory: LotMemory = bareCount
-    ? { filter: {}, limit }
+    ? { filter: {}, limit, ...(heard ? { utterance: heard } : {}) }
     : {
         filter: {
           ...(str(searchArgs.make) || applied.make
@@ -590,6 +652,7 @@ export function answerQueryLotFromSnapshot(
         ...(found.matched === 1 && found.units[0]?.stock_number
           ? { pinnedStock: found.units[0].stock_number }
           : {}),
+        ...(heard ? { utterance: heard } : {}),
       };
   let speech = found.summary;
   if (found.no_length.length) {

@@ -327,3 +327,132 @@ test("a tool sort keeps the last filter and a new body type replaces it", () => 
     ["FW"],
   );
 });
+
+function trailersTurn(snap: OwnLotSnapshot) {
+  const first = answerQueryLotFromSnapshot(
+    snap,
+    { query: "trailers" },
+    null,
+    "How many trailers do we have?",
+  );
+  assert.equal(first.matched, 1034);
+  assert.match(first.summary || "", /251 fifth wheels/);
+  assert.match(first.summary || "", /87 fifth wheel toy haulers/);
+  return first;
+}
+
+test("trailers, then how many of those are fifth wheels, trusts the body_type arg over a stale or empty transcript", () => {
+  const snap = productionSnap();
+  const first = trailersTurn(snap);
+  for (const utterance of [
+    "How many of those are fifth wheels?",
+    "How many trailers do we have?",
+    "",
+  ]) {
+    const next = answerQueryLotFromSnapshot(
+      snap,
+      { body_type: "Fifth Wheel" },
+      first.lotMemory,
+      utterance,
+      first.summary,
+    );
+    assert.equal(next.matched, 251, JSON.stringify(utterance));
+    assert.equal(next.none, false);
+    assert.equal(next.lotMemory?.filter.bodyType, "Fifth Wheel");
+  }
+  // The model's own words in query restate trailers too. The body arg still wins.
+  const echoed = answerQueryLotFromSnapshot(
+    snap,
+    { query: "trailers", body_type: "Fifth Wheel" },
+    first.lotMemory,
+    "How many trailers do we have?",
+    first.summary,
+  );
+  assert.equal(echoed.matched, 251);
+});
+
+test("trailers, then fifth wheel toy haulers, gives 87 with a correct, stale, or empty transcript", () => {
+  const snap = productionSnap();
+  const first = trailersTurn(snap);
+  for (const utterance of [
+    "How many of those are fifth wheel toy haulers?",
+    "How many trailers do we have?",
+    "",
+  ]) {
+    const next = answerQueryLotFromSnapshot(
+      snap,
+      { body_type: "Fifth Wheel Toy Hauler" },
+      first.lotMemory,
+      utterance,
+      first.summary,
+    );
+    assert.equal(next.matched, 87, JSON.stringify(utterance));
+  }
+  // Fifth wheels first, then toy haulers, while the transcript is still the fifth wheel ask.
+  const fifth = answerQueryLotFromSnapshot(
+    snap,
+    { body_type: "Fifth Wheel" },
+    first.lotMemory,
+    "How many of those are fifth wheels?",
+    first.summary,
+  );
+  assert.equal(fifth.matched, 251);
+  const toy = answerQueryLotFromSnapshot(
+    snap,
+    { body_type: "Fifth Wheel Toy Hauler" },
+    fifth.lotMemory,
+    "How many of those are fifth wheels?",
+    fifth.summary,
+  );
+  assert.equal(toy.matched, 87);
+});
+
+test("a misheard or hold-line transcript never turns a fifth wheel follow-up into none", () => {
+  const snap = productionSnap();
+  const first = trailersTurn(snap);
+  // Before the fix these leftover words became a coach-name search:
+  // "None. Did you mean Wall?" with body_type Fifth Wheel on the call.
+  for (const utterance of [
+    "How many of those are fifth wills?",
+    "Let me check the lot.",
+    "give me one second",
+  ]) {
+    for (const args of [{ body_type: "Fifth Wheel" }, { query: "fifth wheels" }]) {
+      const next = answerQueryLotFromSnapshot(
+        snap,
+        { ...args },
+        first.lotMemory,
+        utterance,
+        first.summary,
+      );
+      assert.equal(next.matched, 251, `${JSON.stringify(args)} ${utterance}`);
+      assert.doesNotMatch(next.speech, /^none\b/i);
+      assert.equal(next.lotMemory?.filter.model, undefined);
+    }
+  }
+  // A coach name he did say still misses honestly.
+  const zebra = answerQueryLotFromSnapshot(
+    snap,
+    { body_type: "Fifth Wheel" },
+    first.lotMemory,
+    "how many of those are fifth wheels with a zebra stripe",
+    first.summary,
+  );
+  assert.equal(zebra.matched, 0);
+});
+
+test("no words and no args after a lot answer keep the last filter", () => {
+  const snap = productionSnap();
+  const first = trailersTurn(snap);
+  const next = answerQueryLotFromSnapshot(snap, {}, first.lotMemory, "", first.summary);
+  assert.equal(next.matched, 1034);
+  // The same transcript again is stale. It keeps the filter it came from.
+  const stale = answerQueryLotFromSnapshot(
+    snap,
+    {},
+    first.lotMemory,
+    "How many trailers do we have?",
+    first.summary,
+  );
+  assert.equal(stale.matched, 1034);
+});
