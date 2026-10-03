@@ -26,6 +26,14 @@ import {
   unitOdometerMiles,
   type LotSearchable,
 } from "./lotSearch.ts";
+import {
+  garageAskFeet,
+  garageFitSentence,
+  garageSourceSentence,
+  splitPinnedGarages,
+  unpinnedGarageLine,
+  type GaragePinBook,
+} from "./garagePins.ts";
 
 export type LotQueryUnit = {
   year?: string;
@@ -105,6 +113,11 @@ export type LotQueryArgs = {
   list_all?: boolean;
   /** diesel or gas. Spoken fuel fills this when the model left it blank. */
   fuel?: string;
+  /**
+   * Floorplan pins. When set, a garage ask uses high-confidence pins
+   * at or above the spoken length. It does not estimate the rest.
+   */
+  garage_pins?: GaragePinBook;
 };
 
 export type LotQueryRow = {
@@ -2279,6 +2292,7 @@ function withSheetNotes(
     garageMax?: number;
     garageSkipped: number;
     garageMissingSheet: boolean;
+    garagePinMode?: boolean;
     lengthMin?: number;
     lengthMax?: number;
   },
@@ -2301,7 +2315,9 @@ function withSheetNotes(
       bits.push(`Skipped ${notes.milesSkipped} with no mileage on the sheet`);
     }
   }
-  if (notes.garageMissingSheet) {
+  if (notes.garagePinMode && notes.garageSkipped) {
+    bits.push(unpinnedGarageLine(notes.garageSkipped).replace(/\.$/, ""));
+  } else if (notes.garageMissingSheet) {
     bits.push("Garage length isn't on the sheet");
   } else if ((notes.garageMin != null || notes.garageMax != null) && notes.garageSkipped) {
     bits.push(`Skipped ${notes.garageSkipped} with no garage length on the sheet`);
@@ -2562,7 +2578,19 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
   const garageBounded = parsed.garageMin != null || parsed.garageMax != null;
   let garageSkipped = 0;
   let garageMissingSheet = false;
-  if (garageBounded) {
+  let garagePinMode = false;
+  let garagePinSources: string[] = [];
+  const pinBook = args.garage_pins;
+  if (garageBounded && pinBook && Object.keys(pinBook).length) {
+    garagePinMode = true;
+    const ask = garageAskFeet(parsed.garageMin, parsed.garageMax);
+    if (ask != null) {
+      const split = splitPinnedGarages(matched, pinBook, ask);
+      garageSkipped = split.unpinned;
+      garagePinSources = split.sources;
+      matched = split.pinned;
+    }
+  } else if (garageBounded) {
     const known = matched.filter((unit) => sheetGarageFeet(unit) != null);
     garageSkipped = matched.length - known.length;
     if (!known.length) {
@@ -2594,7 +2622,7 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
         return true;
       });
     }
-    if (garageBounded && !garageMissingSheet) {
+    if (garageBounded && !garageMissingSheet && !garagePinMode) {
       pool = pool.filter((unit) => {
         const feet = sheetGarageFeet(unit);
         if (feet == null) return false;
@@ -2712,10 +2740,18 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
       garageMax: parsed.garageMax,
       garageSkipped,
       garageMissingSheet,
+      garagePinMode,
       lengthMin: parsed.lengthMin,
       lengthMax: parsed.lengthMax,
     },
   );
+  if (garagePinMode && matched.length) {
+    const ask = garageAskFeet(parsed.garageMin, parsed.garageMax);
+    const extra = [garageSourceSentence(garagePinSources), garageFitSentence(ask)]
+      .filter(Boolean)
+      .join(" ");
+    if (extra && !summary.includes(extra)) summary = `${summary.replace(/\s+$/, "")} ${extra}`;
+  }
   if (named && featureBlank) {
     const name = [named.year, named.make, named.model].filter(Boolean).join(" ");
     summary = `${name}, stk ${named.stock_number}. ${bedLabel(featureBlank)} is not on our listing.`;

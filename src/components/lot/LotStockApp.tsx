@@ -26,6 +26,11 @@ import {
 import { lotSearchSnippets } from "@/lib/lot/lotSearch";
 import { lotOpenSections } from "@/lib/lot/lotDetail";
 import {
+  garagePinConfirmed,
+  isToyHaulerBody,
+  type GaragePinBook,
+} from "@/lib/lot/garagePins";
+import {
   LOT_UNIT_OPEN_EVENT,
   lotArrivalQuery,
   showroomUnitLabel,
@@ -55,6 +60,7 @@ export function LotStockApp({
 }) {
   const nav = useShellNavOptional();
   const [snap, setSnap] = useState<LotSnapshotView | null>(null);
+  const [garagePins, setGaragePins] = useState<GaragePinBook>({});
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [appliedQuery, setAppliedQuery] = useState("");
@@ -85,6 +91,10 @@ export function LotStockApp({
 
   useEffect(() => {
     load();
+    void fetch("/inventory/garage-pins.json")
+      .then((res) => (res.ok ? res.json() : {}))
+      .then((book: GaragePinBook) => setGaragePins(book && typeof book === "object" ? book : {}))
+      .catch(() => setGaragePins({}));
   }, []);
 
   useEffect(() => {
@@ -330,6 +340,7 @@ export function LotStockApp({
                 <LotUnitCard
                   unit={featured}
                   featured
+                  pins={garagePins}
                   open={openKey === featuredKey}
                   onAsk={onAsk}
                   onToggle={() =>
@@ -362,6 +373,7 @@ export function LotStockApp({
                       <li key={key} className="min-w-0">
                         <LotUnitCard
                           unit={unit}
+                          pins={garagePins}
                           open={openKey === key}
                           onAsk={onAsk}
                           onToggle={() =>
@@ -473,12 +485,14 @@ function LotUnitCard({
   unit,
   featured,
   open,
+  pins,
   onToggle,
   onAsk,
 }: {
   unit: LotUnit;
   featured?: boolean;
   open: boolean;
+  pins: GaragePinBook;
   onToggle: () => void;
   onAsk?: (prompt: string) => void;
 }) {
@@ -570,7 +584,7 @@ function LotUnitCard({
         </div>
       </button>
       {open ? (
-        <LotDetail unit={unit} onAsk={onAsk} />
+        <LotDetail unit={unit} pins={pins} onAsk={onAsk} />
       ) : null}
     </article>
   );
@@ -578,9 +592,11 @@ function LotUnitCard({
 
 function LotDetail({
   unit,
+  pins,
   onAsk,
 }: {
   unit: LotUnit;
+  pins: GaragePinBook;
   onAsk?: (prompt: string) => void;
 }) {
   const stats = lotGlance(unit);
@@ -590,6 +606,11 @@ function LotDetail({
   const price = unit.price != null && unit.price > 0 ? unit.price : 0;
   return (
     <div className="lot-detail" data-lot-detail>
+      {isToyHaulerBody(unit.body_type) && !garagePinConfirmed(pins, unit) ? (
+        <p className="lot-garage-note" data-ask-missing-spec>
+          garage length not confirmed
+        </p>
+      ) : null}
       <div className="lot-share-dock">
         <button
           type="button"
