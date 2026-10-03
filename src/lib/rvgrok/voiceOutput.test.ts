@@ -11,6 +11,7 @@ import {
   nativeShellLeavesMicHardwareOn,
   playbackNeedsSpeakerElement,
   preferIosLoudspeaker,
+  setSpeakingSession,
   shouldUseSpeakerElement,
   softClipCurve,
 } from "./voiceOutput.ts";
@@ -87,18 +88,17 @@ test("iOS uses the speaker element; play-and-record is set when the session exis
   assert.equal(preferIosLoudspeaker({} as Navigator), false);
 });
 
-test("the iPhone shell sends the receiver back to the speaker", () => {
-  const appDelegate = readFileSync(
-    join(root, "../../../ios/App/App/AppDelegate.swift"),
-    "utf8",
-  );
-  assert.match(appDelegate, /mode: \.default/);
-  assert.doesNotMatch(appDelegate, /mode: \.voiceChat/);
-  assert.match(appDelegate, /overrideOutputAudioPort\(\.speaker\)/);
-  assert.match(appDelegate, /\.builtInReceiver/);
-  assert.match(appDelegate, /AVAudioSession\.routeChangeNotification/);
-  assert.match(appDelegate, /AVAudioSession\.interruptionNotification/);
-  assert.match(appDelegate, /RouteChangeReason\.override/);
+test("speaking uses playback volume, then play-and-record when the mic opens", () => {
+  const session = { type: "play-and-record" };
+  const nav = { audioSession: session } as unknown as Navigator;
+  setSpeakingSession(true, nav);
+  assert.equal(session.type, "playback");
+  setSpeakingSession(true, nav);
+  assert.equal(session.type, "playback");
+  setSpeakingSession(false, nav);
+  assert.equal(session.type, "play-and-record");
+  setSpeakingSession(true, {} as Navigator);
+  assert.equal(session.type, "play-and-record");
 });
 
 test("the native shell does not flip the mic hardware", () => {
@@ -159,14 +159,15 @@ test("playback goes through the jitter-buffered player and the output gain", () 
   assert.match(output, /setSpeakingSession/);
   assert.match(realtime, /setSpeakingSession\(closed\)/);
   assert.doesNotMatch(output, /createDynamicsCompressor/);
-  // Native shell returns before the Safari track flip and playback session.
+  // Playback switch runs for the shell too. Only the hardware track flip
+  // stays behind the native return.
   const gateStart = realtime.indexOf("private setMicGate");
   const gateEnd = realtime.indexOf("private beginSpeaking");
   const gate = realtime.slice(gateStart, gateEnd);
   const leave = gate.indexOf("if (nativeShellLeavesMicHardwareOn()) return;");
   const flipTrack = gate.indexOf("track.enabled = !closed");
   const flipSession = gate.indexOf("setSpeakingSession(closed)");
-  assert.ok(leave !== -1 && leave < flipTrack && leave < flipSession);
+  assert.ok(flipSession !== -1 && flipSession < leave && leave < flipTrack);
   assert.match(output, /createMediaStreamDestination/);
   assert.match(output, /playsInline = true/);
   assert.match(output, /audioSession\.type = "play-and-record"|session\.type = "play-and-record"/);

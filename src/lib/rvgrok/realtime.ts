@@ -1004,20 +1004,17 @@ export class GrokRealtimeSession {
    */
   private setMicGate(closed: boolean) {
     this.suppressMic = closed;
-    // The app shell: samples stop, the hardware track stays on. Flipping
-    // the track or this session leaves WKWebView deaf for a long stretch
-    // after she says hello, so the shell stays in play-and-record. The
-    // loudspeaker is put back in AppDelegate when that route lands on the
-    // receiver. Safari can still flip the track and the session.
+    // play-and-record ducks the loudspeaker. playback is full volume
+    // while she talks, then play-and-record again when it is his turn.
+    // The app shell still leaves the hardware track on. Flipping that
+    // track is what left WKWebView deaf after hello.
+    setSpeakingSession(closed);
+    resumeLiveVoiceSpeaker(this.audioCtx);
     if (nativeShellLeavesMicHardwareOn()) return;
     const tracks = this.mediaStream?.getAudioTracks() ?? [];
     for (const track of tracks) {
       if (track.enabled === closed) track.enabled = !closed;
     }
-    // play-and-record ducks the loudspeaker. playback is full volume,
-    // and it is safe only while the mic track is off.
-    setSpeakingSession(closed);
-    resumeLiveVoiceSpeaker(this.audioCtx);
   }
 
   private beginSpeaking() {
