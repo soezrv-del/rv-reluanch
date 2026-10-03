@@ -17,6 +17,7 @@ import {
   lotTypeChips,
   lotUnitKey,
   lotUnitPhoto,
+  lotDetailPhoto,
   shortLotTypeLabel,
   LOT_GAP,
   type LotSnapshotView,
@@ -492,7 +493,7 @@ function LotUnitCard({
     lotTextOrGap(unit.condition),
     ...(miles ? [miles] : []),
   ].join(" · ");
-  const photoUrl = lotUnitPhoto(unit);
+  const photoUrl = open ? lotDetailPhoto(unit) : lotUnitPhoto(unit);
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const photo = photoUrl && failedSrc !== photoUrl ? photoUrl : null;
 
