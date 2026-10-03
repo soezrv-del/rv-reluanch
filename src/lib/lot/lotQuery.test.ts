@@ -9,6 +9,8 @@ import { decideVoiceWebResearch } from "../rvgrok/voiceWeb.ts";
 import { spokenLotPayload } from "../rvgrok/voiceTurnGate.ts";
 import { searchLot } from "./lotQuery.ts";
 import { searchLotUnits, singularizeLotToken } from "./lotSearch.ts";
+import { floorplanPinKey } from "./garagePins.ts";
+import { floorplanKey } from "../../../scripts/pin-garages.mjs";
 
 function units() {
   const snap = snapshotFromJson(
@@ -685,6 +687,40 @@ test("12-foot garage in a fifth wheel is fifth-wheel toy haulers, not a travel t
   assert.ok(follow.units.every((unit) => unit.body_type === "Fifth Wheel"));
   assert.ok(!follow.units.some((unit) => /toy hauler/i.test(unit.body_type)));
   assert.ok(!follow.units.some((unit) => unit.body_type === "Travel Trailer"));
+});
+
+test("16-foot garage fifth wheel uses high pins and does not estimate the rest", () => {
+  const snap = units();
+  const pins = JSON.parse(
+    readFileSync(join(process.cwd(), "public/inventory/garage-pins.json"), "utf8"),
+  );
+  const sample = snap.units.find((unit) => unit.stock_number === "47613");
+  assert.ok(sample);
+  assert.equal(floorplanPinKey(sample), floorplanKey(sample));
+  const hit = searchLot(snap.units, {
+    query: "16 foot garage fifth wheel",
+    garage_pins: pins,
+  });
+  assert.equal(hit.applied.body_type, "Fifth Wheel Toy Hauler");
+  assert.ok(hit.matched > 0);
+  assert.ok(hit.units.every((unit) => unit.body_type === "Fifth Wheel Toy Hauler"));
+  assert.ok(hit.units.every((unit) => unit.price == null || typeof unit.price === "number"));
+  for (const unit of hit.units) {
+    const pin = pins[floorplanPinKey(unit)];
+    assert.equal(pin.confidence, "high");
+    assert.ok(pin.garage_length_in >= 16 * 12);
+    assert.equal(unit.stock_number.trim().length > 0, true);
+  }
+  assert.match(hit.summary, /Another \d+ toy haulers don't have a pinned garage length; check the floorplan/);
+  assert.match(hit.summary, /Confirm the fit with the dealer or manufacturer before quoting it/);
+  assert.match(hit.summary, /cargo length|spec sheet|pinned sheet/);
+  assert.doesNotMatch(hit.summary, /about \d+ feet long, give or take/i);
+  const plain = searchLot(snap.units, { query: "31Z" });
+  assert.ok(plain.matched > 0);
+  assert.ok(
+    plain.units.some((unit) => /31zw/i.test(`${unit.trim} ${unit.model}`)),
+    "31Z still finds 31ZW",
+  );
 });
 
 test("those aren't toy haulers drops toy haulers", () => {

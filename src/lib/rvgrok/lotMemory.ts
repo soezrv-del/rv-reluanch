@@ -21,6 +21,7 @@ import {
   type LotQueryApplied,
   type LotQueryCounts,
 } from "../lot/lotQuery.ts";
+import type { GaragePinBook } from "../lot/garagePins.ts";
 import {
   looksLikeBareLotConfirm,
   looksLikeOwnLotFollowUp,
@@ -368,6 +369,7 @@ export function answerQueryLotFromSnapshot(
   previous: LotMemory | null,
   utterance = "",
   priorAssistant = "",
+  garagePins?: GaragePinBook,
 ): QueryLotAnswer {
   if (ownLotIsUnavailable(snapshot)) {
     return {
@@ -538,7 +540,7 @@ export function answerQueryLotFromSnapshot(
         }
       : {}),
   });
-  const found = searchLot(snapshot.units, bareCount ? { limit } : searchArgs);
+  const found = searchLot(snapshot.units, bareCount ? { limit } : { ...searchArgs, garage_pins: garagePins });
   const applied = found.applied;
   const memory: LotMemory = bareCount
     ? { filter: {}, limit }
