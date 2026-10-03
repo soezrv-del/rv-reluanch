@@ -1239,3 +1239,38 @@ test("series, complaint, king beds, and all the stores stay on the question he a
   assert.ok(winds.matched > 0, winds.summary);
   assert.ok(winds.units.every((unit) => /winds/i.test(`${unit.make} ${unit.model}`)));
 });
+
+test("\"are you able\" is not a coach name, so Class Cs still come back", () => {
+  const snap = units();
+  for (const utterance of [
+    "Are you able to search a lot for Class Cs?",
+    "Are you able to find Class Cs?",
+    "Class Cs on the lot, are you able?",
+  ]) {
+    const answer = answerQueryLotFromSnapshot(snap, {}, null, utterance, "");
+    assert.doesNotMatch(String(answer.summary), /Did you mean Eagle/, utterance);
+    assert.match(String(answer.summary), /Matching units: 180 Class C/, utterance);
+  }
+});
+
+test("spoken garage asks: spelled numbers, \"or bigger\", and filler words", () => {
+  const snap = units();
+  const pins = JSON.parse(
+    readFileSync(join(process.cwd(), "public/inventory/garage-pins.json"), "utf8"),
+  );
+  const plain = answerQueryLotFromSnapshot(snap, {}, null, "toy haulers with a 10 foot garage", "", pins);
+  const want = String(plain.summary).match(/Matching units: (\d+)/)?.[1];
+  assert.ok(want && Number(want) > 0 && Number(want) <= 181);
+  for (const utterance of [
+    "Look up uh uh in our inventory toy haulers that have a ten-foot or bigger garage.",
+    "any toy haulers that have over a ten-foot garage",
+    "a garage toy hauler thats ten foot or larger",
+    "toy haulers 10 foot or larger garage",
+  ]) {
+    const answer = answerQueryLotFromSnapshot(snap, {}, null, utterance, "", pins);
+    const summary = String(answer.summary);
+    assert.doesNotMatch(summary, /Did you mean/, utterance);
+    assert.doesNotMatch(summary, /foot and over\./, utterance);
+    assert.match(summary, new RegExp(`Matching units: ${want}\\b`), utterance);
+  }
+});

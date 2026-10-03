@@ -227,6 +227,8 @@ const STOP = new Set([
   "vehicles",
   "whole",
   "a",
+  "able",
+  "unable",
   "about",
   "an",
   "and",
@@ -262,6 +264,11 @@ const STOP = new Set([
   "im",
   "in",
   "inventory",
+  "look",
+  "lookup",
+  "up",
+  "bigger",
+  "larger",
   "is",
   "isnt",
   "arent",
@@ -1224,47 +1231,95 @@ function plainBodyAfterToyRejection(carry: string): string {
 /** "12-foot garage" on the original sentence, even after body words are stripped. */
 export function spokenGarageBand(raw: string): { min?: number; max?: number } {
   const t = normalizeLotQueryText(raw);
-  const ahead = t.match(/\b(\d{1,2}(?:\.\d+)?)(?:\s+|-)?(?:foot|feet|ft)\s+garage\b/);
-  const behind = t.match(/\bgarage\s+(?:of\s+)?(\d{1,2}(?:\.\d+)?)(?:\s+|-)?(?:foot|feet|ft)\b/);
-  const feet = Number(ahead?.[1] || behind?.[1]);
-  if (!Number.isFinite(feet) || feet <= 0) return {};
-  return { min: feet - 1, max: feet + 1 };
+  const found = consumeGarageLength(t.split(/\s+/).filter(Boolean));
+  return found.min == null && found.max == null ? {} : { min: found.min, max: found.max };
 }
+
+const FEET_WORD = /^(?:foot|feet|ft)$/;
+const OPEN_ENDED = /^(?:bigger|larger|longer|more|greater|up|plus|better)$/;
+/** Garages run about 8 to 18 feet. A bigger number away from "garage" is the coach length. */
+const LOOSE_GARAGE_MAX_FT = 20;
+
+function feetNumber(token: string): number | undefined {
+  if (/^\d{1,2}(?:\.\d+)?$/.test(token)) return Number(token);
+  if (token === "a" || token === "an") return undefined;
+  const word = SMALL_NUMBER[token];
+  return word != null && word >= 6 && word <= 30 ? word : undefined;
+}
+
 export function consumeGarageLength(tokens: string[]): {
   tokens: string[];
   min?: number;
   max?: number;
 } {
+  // "ten-foot" arrives as "ten foot", or glued as "10ft". Split glued feet first.
+  const split: string[] = [];
+  for (const token of tokens) {
+    const glued = token.match(/^(\d{1,2}(?:\.\d+)?)(foot|feet|ft)$/);
+    if (glued) split.push(glued[1]!, glued[2]!);
+    else split.push(token);
+  }
+  const saidGarage = split.includes("garage");
   const kept: string[] = [];
   let feet: number | undefined;
-  for (let i = 0; i < tokens.length; ) {
-    const token = tokens[i] || "";
-    const next = tokens[i + 1] || "";
-    const after = tokens[i + 2] || "";
-    const glued = token.match(/^(\d{1,2}(?:\.\d+)?)(?:foot|feet|ft)$/);
-    if (glued && next === "garage") {
-      feet = Number(glued[1]);
-      i += 2;
-      continue;
-    }
-    if (/^\d{1,2}(?:\.\d+)?$/.test(token) && /^(?:foot|feet|ft)$/.test(next) && after === "garage") {
-      feet = Number(token);
-      i += 3;
-      continue;
-    }
-    if (token === "garage" && /^(?:foot|feet|ft)$/.test(next) && /^\d{1,2}(?:\.\d+)?$/.test(after)) {
-      feet = Number(after);
-      i += 3;
-      continue;
-    }
+  let adjacent = false;
+  let open = false;
+  let loose: { index: number; feet: number; open: boolean } | undefined;
+  const drop = new Set<number>();
+  for (let i = 0; i < split.length; i++) {
+    const token = split[i] || "";
     if (token === "garage") {
-      i += 1;
+      drop.add(i);
       continue;
     }
-    kept.push(token);
-    i += 1;
+    const n = feetNumber(token);
+    if (n == null || !FEET_WORD.test(split[i + 1] || "")) continue;
+    // Optional "or bigger" / "and up" / "plus" right after the feet word.
+    let j = i + 2;
+    let isOpen = false;
+    if ((split[j] === "or" || split[j] === "and") && OPEN_ENDED.test(split[j + 1] || "")) {
+      isOpen = true;
+      j += 2;
+    } else if (OPEN_ENDED.test(split[j] || "") && split[j] !== "up") {
+      isOpen = true;
+      j += 1;
+    }
+    const before = split[i - 1] || "";
+    const before2 = split[i - 2] || "";
+    if (/^(?:over|above)$/.test(before) || (before === "least" && before2 === "at")) isOpen = true;
+    const touchesGarage =
+      split[j] === "garage" ||
+      split[i - 1] === "garage" ||
+      (split[i - 1] === "of" && split[i - 2] === "garage");
+    if (touchesGarage) {
+      feet = n;
+      adjacent = true;
+      open = isOpen;
+      for (let k = i; k < j; k++) drop.add(k);
+      break;
+    }
+    if (saidGarage && !loose && n <= LOOSE_GARAGE_MAX_FT) {
+      loose = { index: i, feet: n, open: isOpen };
+      for (let k = i; k < j; k++) drop.add(k);
+    }
   }
-  if (feet == null || !Number.isFinite(feet)) return { tokens: kept };
+  if (!adjacent && loose) {
+    feet = loose.feet;
+    open = loose.open;
+  } else if (adjacent && loose) {
+    // The loose number was not the garage after all; keep its words.
+    for (let k = loose.index; k < loose.index + 2; k++) drop.delete(k);
+  }
+  split.forEach((token, i) => {
+    if (!drop.has(i)) kept.push(token);
+  });
+  if (feet == null || !Number.isFinite(feet)) {
+    return { tokens: split.filter((t) => t !== "garage") };
+  }
+  if (open) {
+    const rest = kept.filter((t, i) => !(OPEN_ENDED.test(t) && (kept[i - 1] === "or" || kept[i - 1] === "and")));
+    return { tokens: rest, min: feet };
+  }
   return { tokens: kept, min: feet - 1, max: feet + 1 };
 }
 
