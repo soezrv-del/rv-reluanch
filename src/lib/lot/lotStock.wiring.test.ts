@@ -166,3 +166,10 @@ test("RV Grok prompts and DialaBot stay out of this page", () => {
   assert.doesNotMatch(page, /DialaBot/);
   assert.doesNotMatch(search, /DialaBot/);
 });
+
+test("garage pins are bundled, so a missing public file never breaks a lot answer", () => {
+  const src = readFileSync(new URL("./garagePinFile.ts", import.meta.url), "utf8");
+  assert.match(src, /import bundledPins from "\.\.\/\.\.\/\.\.\/public\/inventory\/garage-pins\.json"/);
+  assert.match(src, /try \{\s*return JSON\.parse\(readFileSync\(path/);
+  assert.doesNotMatch(src, /process\.cwd\(\)/);
+});
