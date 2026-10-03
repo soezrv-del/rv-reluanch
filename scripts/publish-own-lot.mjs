@@ -62,14 +62,41 @@ export function describeSnapshot(bytes) {
   }
   const uniq = [...new Set(scraped)];
   if (uniq.length > 1) return { ok: false, reason: "mixed scraped_at" };
+  let missingRaw = 0;
+  let withAttributes = 0;
+  for (const row of json) {
+    const rawObj = row && typeof row === "object" ? row.raw : null;
+    if (!rawObj || typeof rawObj !== "object" || Array.isArray(rawObj)) {
+      missingRaw += 1;
+      continue;
+    }
+    if (
+      rawObj.attributes &&
+      typeof rawObj.attributes === "object" &&
+      !Array.isArray(rawObj.attributes)
+    ) {
+      withAttributes += 1;
+    }
+  }
   const raw = Buffer.isBuffer(bytes) ? bytes : Buffer.from(String(bytes));
   return {
     ok: true,
     units: json.length,
     scrapedAt: uniq[0] || "",
+    missingRaw,
+    withAttributes,
     sha256: createHash("sha256").update(raw).digest("hex"),
     blobSha: gitBlobSha(raw),
   };
+}
+
+/** Slim rows have no raw object, or no row carries spec-sheet attributes. */
+export function slimReason(snapshot) {
+  if (!snapshot?.ok) return "";
+  if ((snapshot.missingRaw || 0) > 0 || !(snapshot.withAttributes > 0)) {
+    return `refusing slim snapshot (${snapshot.missingRaw || 0} rows missing raw, ${snapshot.withAttributes || 0} with attributes)`;
+  }
+  return "";
 }
 
 /** GitHub contents `sha` is the git blob id, not a raw sha256. */
@@ -102,6 +129,8 @@ export function decidePublish(local, remote) {
     return { publish: false, reason: `only ${local.units} units (need ${MIN_UNITS})` };
   }
   if (!remote?.ok) {
+    const slim = slimReason(local);
+    if (slim) return { publish: false, reason: slim };
     return { publish: true, reason: "production has no usable snapshot" };
   }
   if (local.sha256 && remote.sha256 && local.sha256 === remote.sha256) {
@@ -125,8 +154,16 @@ export function decidePublish(local, remote) {
       reason: `refusing shrink ${remote.units} → ${local.units}`,
     };
   }
+  const slim = slimReason(local);
+  if (slim) return { publish: false, reason: slim };
   const when = local.scrapedAt || "undated";
   return { publish: true, reason: `scrape ${when} (${local.units} units)` };
+}
+
+/** Upstream scraped_at is strictly older than the production snapshot. */
+export function upstreamOlderThanProduction(upstream, productionScrapedAt) {
+  if (!upstream?.ok || !upstream.scrapedAt || !productionScrapedAt) return false;
+  return upstream.scrapedAt < productionScrapedAt;
 }
 
 export function scrapeAgeMs(scrapedAt, now = Date.now()) {
@@ -145,6 +182,9 @@ export function isFreshScrape(scrapedAt, now = Date.now()) {
  * Identical bytes stay "already current" only while the scrape is fresh.
  */
 export function withScrapeStatus(summary, now = Date.now()) {
+  if (summary.upstreamOlder) {
+    return { ...summary, publish: false, status: "stale", exitCode: 1 };
+  }
   if (summary.publish) {
     return { ...summary, status: "published", exitCode: 0 };
   }
@@ -314,6 +354,17 @@ export function syncOwnLot({
     publishing?.blobSha &&
     remoteMeta.sha === publishing.blobSha
   ) {
+    if (upstreamOlderThanProduction(upstream, publishing.scrapedAt)) {
+      return stamp(
+        olderUpstreamSummary({
+          upstream,
+          productionScrapedAt: publishing.scrapedAt,
+          copied,
+          check,
+          remoteUnits: publishing.units,
+        }),
+      );
+    }
     return stamp({
       copied,
       check,
@@ -333,6 +384,17 @@ export function syncOwnLot({
       const msg = String(err?.stderr || err?.message || err);
       if (!/404/.test(msg)) throw err;
     }
+  }
+  if (upstreamOlderThanProduction(upstream, remote?.scrapedAt)) {
+    return stamp(
+      olderUpstreamSummary({
+        upstream,
+        productionScrapedAt: remote.scrapedAt,
+        copied,
+        check,
+        remoteUnits: remote?.units ?? 0,
+      }),
+    );
   }
   const decision = decidePublish(publishing, remote);
   const summary = {
@@ -370,7 +432,32 @@ export function syncOwnLot({
   return stamp(summary);
 }
 
+function olderUpstreamSummary({
+  upstream,
+  productionScrapedAt,
+  copied,
+  check,
+  remoteUnits,
+}) {
+  return {
+    copied,
+    check,
+    units: upstream.units,
+    scrapedAt: upstream.scrapedAt,
+    upstreamScrapedAt: upstream.scrapedAt,
+    remoteUnits,
+    remoteScrapedAt: productionScrapedAt,
+    publish: false,
+    upstreamOlder: true,
+    reason: "upstream scrape is OLDER than production (stale)",
+    commit: "",
+  };
+}
+
 export function formatSyncLine(summary) {
+  if (summary.upstreamOlder) {
+    return `own-lot: upstream scrape is OLDER than production (stale) — not published — upstream ${summary.upstreamScrapedAt}, production ${summary.remoteScrapedAt}`;
+  }
   const local = `${summary.units} units${summary.scrapedAt ? `, scraped ${summary.scrapedAt}` : ""}`;
   if (summary.publish && summary.check) return `own-lot: would publish ${local}`;
   if (summary.publish && summary.commit) {
