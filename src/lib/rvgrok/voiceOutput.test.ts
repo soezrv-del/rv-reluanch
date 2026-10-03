@@ -11,6 +11,7 @@ import {
   nativeShellLeavesMicHardwareOn,
   playbackNeedsSpeakerElement,
   preferIosLoudspeaker,
+  setSpeakingSession,
   shouldUseSpeakerElement,
   softClipCurve,
 } from "./voiceOutput.ts";
@@ -87,6 +88,19 @@ test("iOS uses the speaker element; play-and-record is set when the session exis
   assert.equal(preferIosLoudspeaker({} as Navigator), false);
 });
 
+test("speaking uses playback volume, then play-and-record when the mic opens", () => {
+  const session = { type: "play-and-record" };
+  const nav = { audioSession: session } as unknown as Navigator;
+  setSpeakingSession(true, nav);
+  assert.equal(session.type, "playback");
+  setSpeakingSession(true, nav);
+  assert.equal(session.type, "playback");
+  setSpeakingSession(false, nav);
+  assert.equal(session.type, "play-and-record");
+  setSpeakingSession(true, {} as Navigator);
+  assert.equal(session.type, "play-and-record");
+});
+
 test("the native shell does not flip the mic hardware", () => {
   assert.equal(nativeShellLeavesMicHardwareOn(null), false);
   assert.equal(nativeShellLeavesMicHardwareOn({}), false);
@@ -133,14 +147,27 @@ test("playback goes through the jitter-buffered player and the output gain", () 
   assert.match(live, /if \(audioCtx\.state === "suspended"\) void audioCtx\.resume\(\)/);
   assert.match(live, /echoCancellation: false/);
   assert.match(live, /noiseSuppression: false/);
-  assert.match(live, /autoGainControl: true/);
+  assert.match(live, /autoGainControl: false/);
+  assert.doesNotMatch(live, /autoGainControl: true/);
+  assert.match(realtime, /autoGainControl: false/);
+  assert.doesNotMatch(realtime, /autoGainControl: true/);
   assert.doesNotMatch(live, /new AC\(\{[^}]*sampleRate/);
   assert.match(output, /makeup\.gain\.value = LIVE_VOICE_OUTPUT_GAIN/);
+  assert.equal(LIVE_VOICE_OUTPUT_GAIN, 2);
   assert.match(output, /gain\.connect\(clipper\)/);
   assert.match(output, /clipper\.connect\(makeup\)/);
   assert.match(output, /setSpeakingSession/);
   assert.match(realtime, /setSpeakingSession\(closed\)/);
   assert.doesNotMatch(output, /createDynamicsCompressor/);
+  // Playback switch runs for the shell too. Only the hardware track flip
+  // stays behind the native return.
+  const gateStart = realtime.indexOf("private setMicGate");
+  const gateEnd = realtime.indexOf("private beginSpeaking");
+  const gate = realtime.slice(gateStart, gateEnd);
+  const leave = gate.indexOf("if (nativeShellLeavesMicHardwareOn()) return;");
+  const flipTrack = gate.indexOf("track.enabled = !closed");
+  const flipSession = gate.indexOf("setSpeakingSession(closed)");
+  assert.ok(flipSession !== -1 && flipSession < leave && leave < flipTrack);
   assert.match(output, /createMediaStreamDestination/);
   assert.match(output, /playsInline = true/);
   assert.match(output, /audioSession\.type = "play-and-record"|session\.type = "play-and-record"/);
