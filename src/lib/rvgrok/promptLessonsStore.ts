@@ -62,6 +62,30 @@ export async function getStoredPromptLessons(): Promise<PromptLesson[]> {
   }
 }
 
+/**
+ * Fresh DB read for read-modify-write paths. Throws on a DB miss instead of
+ * returning [] — saving on top of a fail-open [] would wipe every admin lesson.
+ */
+async function readStoredPromptLessonsForWrite(): Promise<PromptLesson[]> {
+  const sql = await getSql();
+  const rows = await sql<{ value: string }>`
+    select value
+    from rvgrok_ops_settings
+    where key = ${PROMPT_LESSONS_SETTING_KEY}
+    limit 1
+  `;
+  const raw = rows[0]?.value;
+  // A corrupt row parses to []; refuse to write over it.
+  if (typeof raw === "string" && raw.trim()) JSON.parse(raw);
+  return parseStoredPromptLessons(raw);
+}
+
+const LESSONS_UNAVAILABLE = {
+  ok: false as const,
+  error: "Could not load standing lessons. Try again shortly.",
+  unavailable: true,
+};
+
 export async function setStoredPromptLessons(
   lessons: readonly PromptLesson[],
 ): Promise<
@@ -141,7 +165,13 @@ export async function addPromptLesson(text: string): Promise<
   | { ok: true; status: PromptLessonsStatus }
   | { ok: false; error: string; unavailable?: boolean }
 > {
-  const planned = applyAddLesson(await getStoredPromptLessons(), text);
+  let current: PromptLesson[];
+  try {
+    current = await readStoredPromptLessonsForWrite();
+  } catch {
+    return LESSONS_UNAVAILABLE;
+  }
+  const planned = applyAddLesson(current, text);
   if (!planned.ok) return planned;
   const saved = await setStoredPromptLessons(planned.stored);
   if (!saved.ok) return saved;
@@ -152,7 +182,13 @@ export async function deletePromptLesson(id: string): Promise<
   | { ok: true; status: PromptLessonsStatus }
   | { ok: false; error: string; unavailable?: boolean }
 > {
-  const planned = applyDeleteLesson(await getStoredPromptLessons(), id);
+  let current: PromptLesson[];
+  try {
+    current = await readStoredPromptLessonsForWrite();
+  } catch {
+    return LESSONS_UNAVAILABLE;
+  }
+  const planned = applyDeleteLesson(current, id);
   if (!planned.ok) return planned;
   const saved = await setStoredPromptLessons(planned.stored);
   if (!saved.ok) return saved;
@@ -161,11 +197,12 @@ export async function deletePromptLesson(id: string): Promise<
 
 /**
  * Write one standing voice lesson into the injected store.
- * Same id replaces the older line. Returns the block the next token sends.
+ * Same id replaces the older line. Never drops an admin lesson; if the voice
+ * line cannot fit, nothing is saved. Returns the block the next token sends.
  */
 export async function upsertVoiceLesson(draft: VoiceLessonDraft): Promise<string> {
   try {
-    const stored = await getStoredPromptLessons();
+    const stored = await readStoredPromptLessonsForWrite();
     const next = applyVoiceLesson(stored, draft);
     if (!next) return formatPromptLessons(mergePromptLessons(stored));
     const saved = await setStoredPromptLessons(next);

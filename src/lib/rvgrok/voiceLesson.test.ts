@@ -1,10 +1,18 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { formatPromptLessons, STANDING_LESSONS_MAX_CHARS } from "./promptLessons.ts";
+import {
+  applyAddLesson,
+  applyDeleteLesson,
+  formatPromptLessons,
+  mergePromptLessons,
+  STANDING_LESSONS_MAX_CHARS,
+  type PromptLesson,
+} from "./promptLessons.ts";
 import {
   applyVoiceLesson,
   lessonFromVoiceTurn,
+  VOICE_LESSON_LOT_NOT_MISS,
   VOICE_LESSON_LOT_ROW,
   VOICE_LESSON_NO_INVENT,
   VOICE_LESSON_PRINTED_FIELD,
@@ -112,4 +120,120 @@ test("voice lesson write stays off phone memory and coach knowledge", () => {
   const emit = live.indexOf("this.noteVoiceLesson(text)");
   assert.ok(done > 0 && emit > 0 && emit < done);
   assert.match(live, /source: "voice"/);
+});
+
+function adminLesson(n: number, len: number): PromptLesson {
+  const head = `Admin rule ${String.fromCharCode(97 + n)}: `;
+  return {
+    id: `admin-test-${String.fromCharCode(97 + n)}`,
+    text: (head + "keep this desk rule word for word ".repeat(20)).slice(0, len).trim(),
+    updatedAt: `2026-01-0${n + 1}T00:00:00.000Z`,
+  };
+}
+
+/** Admin lessons that nearly fill the 1,800-char block. */
+function nearlyFullAdmin(): PromptLesson[] {
+  const rows = [0, 1, 2, 3, 4, 5].map((n) => adminLesson(n, 270));
+  const used = formatPromptLessons(rows).length;
+  assert.ok(used > STANDING_LESSONS_MAX_CHARS - 150 && used <= STANDING_LESSONS_MAX_CHARS);
+  return rows;
+}
+
+test("a voice lesson never drops or truncates admin lessons near the cap", () => {
+  const admin = nearlyFullAdmin();
+  const next = applyVoiceLesson(admin, VOICE_LESSON_LOT_ROW, "2026-09-27T00:00:00.000Z");
+  const result = next ?? admin;
+  for (const row of admin) {
+    const kept = result.find((l) => l.id === row.id);
+    assert.ok(kept, `admin lesson ${row.id} was removed`);
+    assert.equal(kept.text, row.text);
+  }
+  // It does not fit, so nothing is saved rather than evicting admin lessons.
+  assert.equal(next, null);
+  const block = formatPromptLessons(mergePromptLessons(result));
+  for (const row of admin) assert.ok(block.includes(row.text));
+});
+
+test("a voice lesson that fits is added and every admin lesson is kept in order", () => {
+  const admin = [adminLesson(0, 200), adminLesson(1, 200)];
+  const next = applyVoiceLesson(admin, VOICE_LESSON_LOT_ROW, "2026-09-27T00:00:00.000Z");
+  assert.ok(next);
+  assert.deepEqual(
+    next.filter((l) => l.id.startsWith("admin-")),
+    admin,
+  );
+  assert.ok(next.some((l) => l.id === VOICE_LESSON_LOT_ROW.id));
+});
+
+test("updating an existing voice lesson id replaces it in place", () => {
+  const admin = [adminLesson(0, 200), adminLesson(1, 200)];
+  const stored: PromptLesson[] = [
+    admin[0]!,
+    { ...VOICE_LESSON_NO_INVENT, updatedAt: "2026-09-01T00:00:00.000Z" },
+    admin[1]!,
+  ];
+  const next = applyVoiceLesson(
+    stored,
+    { id: VOICE_LESSON_NO_INVENT.id, text: "Do not invent a spec. Say it is not on the row." },
+    "2026-09-27T00:00:00.000Z",
+  );
+  assert.ok(next);
+  assert.deepEqual(
+    next.map((l) => l.id),
+    stored.map((l) => l.id),
+  );
+  assert.equal(next[1]!.text, "Do not invent a spec. Say it is not on the row.");
+  assert.equal(next[1]!.updatedAt, "2026-09-27T00:00:00.000Z");
+  assert.deepEqual(next[0], admin[0]);
+  assert.deepEqual(next[2], admin[1]);
+});
+
+test("a voice lesson evicts an older voice lesson but never an admin one", () => {
+  const admin = [0, 1, 2, 3, 4].map((n) => adminLesson(n, 275));
+  const oldVoice: PromptLesson = {
+    ...VOICE_LESSON_LOT_NOT_MISS,
+    updatedAt: "2026-09-01T00:00:00.000Z",
+  };
+  const newerVoice: PromptLesson = {
+    ...VOICE_LESSON_NO_INVENT,
+    updatedAt: "2026-09-10T00:00:00.000Z",
+  };
+  const stored = [newerVoice, oldVoice, ...admin];
+  // Precondition: the block is full enough that a third voice line cannot just be added.
+  assert.ok(
+    formatPromptLessons([VOICE_LESSON_LOT_ROW as PromptLesson, ...stored], Infinity).length >
+      STANDING_LESSONS_MAX_CHARS,
+  );
+  const next = applyVoiceLesson(stored, VOICE_LESSON_LOT_ROW, "2026-09-27T00:00:00.000Z");
+  assert.ok(next);
+  assert.ok(next.some((l) => l.id === VOICE_LESSON_LOT_ROW.id));
+  assert.ok(!next.some((l) => l.id === oldVoice.id), "oldest voice lesson is evicted first");
+  assert.deepEqual(
+    next.filter((l) => l.id.startsWith("admin-")),
+    admin,
+  );
+  const block = formatPromptLessons(mergePromptLessons(next));
+  assert.ok(block.length <= STANDING_LESSONS_MAX_CHARS);
+  for (const row of admin) assert.ok(block.includes(row.text));
+});
+
+test("a voice draft cannot overwrite an admin lesson id", () => {
+  const admin = [adminLesson(0, 120)];
+  assert.equal(
+    applyVoiceLesson(admin, { id: admin[0]!.id, text: "Overwrite the admin rule." }),
+    null,
+  );
+});
+
+test("admin add and delete still work alongside voice lessons", () => {
+  const voice = applyVoiceLesson([], VOICE_LESSON_LOT_ROW, "2026-09-27T00:00:00.000Z")!;
+  const added = applyAddLesson(voice, "Always confirm the stock number before quoting.");
+  assert.ok(added.ok);
+  assert.equal(added.stored.length, 2);
+  assert.equal(added.stored[1]!.text, "Always confirm the stock number before quoting.");
+  assert.equal(added.stored[0]!.id, VOICE_LESSON_LOT_ROW.id);
+  const deleted = applyDeleteLesson(added.stored, added.lesson.id);
+  assert.ok(deleted.ok);
+  assert.deepEqual(deleted.stored, voice);
+  assert.equal(applyDeleteLesson(deleted.stored, "admin-missing").ok, false);
 });
