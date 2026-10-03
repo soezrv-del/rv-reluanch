@@ -13,8 +13,10 @@ Then: node scripts/publish-own-lot.mjs
 Publishing also writes public/inventory/own-lot-fulltext.json.
 
 User-Agent is fixed. 2.5s between requests. Stops on 403, 429, 503, or a
-Cloudflare challenge and does not write a partial file. Refuses a slim file
-that is missing raw.attributes.
+Cloudflare challenge and does not write a partial file. Drops a row that is
+missing raw.attributes and logs its stock number and URL. Refuses to write
+only when more than 2% of rows are missing raw.attributes, or the kept total
+is under 1,200 units.
 """
 
 from __future__ import annotations
@@ -36,6 +38,8 @@ PACE_SECONDS = 2.5
 VEHICLE_SITEMAP = "https://rvcountry.com/vehicle-sitemap.xml"
 SRP_SITEMAP = "https://rvcountry.com/srp-sitemap.xml"
 DEFAULT_OUT = "/home/box/agent-data/projects/rvfox/inventory/own-lot-latest.json"
+DEFAULT_MAX_MISSING_RATIO = 0.02
+DEFAULT_MIN_UNITS = 1200
 KEEP_NULL = {"price", "price_msrp", "price_current", "price_hidden", "price_lowest"}
 
 
@@ -496,13 +500,57 @@ def is_slim_row(row: dict) -> bool:
     return not isinstance(raw, dict) or not isinstance(raw.get("attributes"), dict)
 
 
-def slim_reason(rows: list) -> str:
+def row_stock(row: dict) -> str:
+    return str(row.get("stock_number") or row.get("id") or "")
+
+
+def row_url(row: dict) -> str:
+    return str(row.get("url") or row.get("source_page") or "")
+
+
+def filter_slim_rows(
+    rows: list,
+    *,
+    max_missing_ratio: float = DEFAULT_MAX_MISSING_RATIO,
+    min_units: int = DEFAULT_MIN_UNITS,
+    log=None,
+) -> tuple[list, str]:
+    """Drop rows missing raw.attributes. Return (kept, reason).
+
+    reason is empty when kept may be written. A missing share above
+    max_missing_ratio refuses before anything is dropped into the file.
+    The kept total has to reach min_units.
+    """
     if not rows:
-        return "refusing slim snapshot (no units)"
-    missing = sum(1 for row in rows if is_slim_row(row))
-    if missing:
-        return f"refusing slim snapshot ({missing} rows missing raw.attributes)"
-    return ""
+        return [], "refusing slim snapshot (no units)"
+    dropped = [row for row in rows if is_slim_row(row)]
+    missing = len(dropped)
+    if missing / len(rows) > max_missing_ratio:
+        return [], f"refusing slim snapshot ({missing} rows missing raw.attributes)"
+    kept = [row for row in rows if not is_slim_row(row)]
+    for row in dropped:
+        line = f"[scrape-rvcountry] dropping stock {row_stock(row)} missing raw.attributes {row_url(row)}"
+        if log is None:
+            print(line, file=sys.stderr)
+        else:
+            log(line)
+    if len(kept) < min_units:
+        return [], f"refusing slim snapshot ({len(kept)} units is under {min_units})"
+    return kept, ""
+
+
+def slim_reason(
+    rows: list,
+    max_missing_ratio: float = DEFAULT_MAX_MISSING_RATIO,
+    min_units: int = DEFAULT_MIN_UNITS,
+) -> str:
+    _kept, reason = filter_slim_rows(
+        rows,
+        max_missing_ratio=max_missing_ratio,
+        min_units=min_units,
+        log=lambda _line: None,
+    )
+    return reason
 
 
 def fetch_text(url: str, opener=urlopen, timeout: int = 40) -> tuple[int, str]:
@@ -523,7 +571,15 @@ def fetch_text(url: str, opener=urlopen, timeout: int = 40) -> tuple[int, str]:
     return status, body
 
 
-def scrape(max_units: int | None = None, opener=urlopen, sleep=time.sleep, pace: float = PACE_SECONDS, now: datetime | None = None):
+def scrape(
+    max_units: int | None = None,
+    opener=urlopen,
+    sleep=time.sleep,
+    pace: float = PACE_SECONDS,
+    now: datetime | None = None,
+    max_missing_ratio: float = DEFAULT_MAX_MISSING_RATIO,
+    min_units: int = DEFAULT_MIN_UNITS,
+):
     requested: list[str] = []
     last = 0.0
 
@@ -572,10 +628,14 @@ def scrape(max_units: int | None = None, opener=urlopen, sleep=time.sleep, pace:
         if prev is None or len((row.get("raw") or {}).get("attributes") or {}) > len((prev.get("raw") or {}).get("attributes") or {}):
             by_stock[stock] = row
     deduped = list(by_stock.values())
-    reason = slim_reason(deduped)
+    kept, reason = filter_slim_rows(
+        deduped,
+        max_missing_ratio=max_missing_ratio,
+        min_units=min_units,
+    )
     if reason:
         raise ScrapeFailed(reason)
-    return {"rows": deduped, "scraped_at": scraped_at, "requested": requested}
+    return {"rows": kept, "scraped_at": scraped_at, "requested": requested}
 
 
 def write_snapshot(path: str, rows: list) -> None:
@@ -591,12 +651,28 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Scrape the RV Country own lot into the rich snapshot.")
     parser.add_argument("--max", type=int, default=None, help="Fetch only N inventory pages")
     parser.add_argument("--out", default=os.environ.get("OWN_LOT_INVENTORY_PATH") or DEFAULT_OUT)
+    parser.add_argument(
+        "--max-missing-ratio",
+        type=float,
+        default=DEFAULT_MAX_MISSING_RATIO,
+        help="Refuse when more than this share of rows lack raw.attributes (default 0.02)",
+    )
+    parser.add_argument(
+        "--min-units",
+        type=int,
+        default=DEFAULT_MIN_UNITS,
+        help="Refuse when the kept snapshot is under this many units (default 1200)",
+    )
     args = parser.parse_args(argv)
     if args.max is not None and args.max < 1:
         print("[scrape-rvcountry] --max needs a positive integer", file=sys.stderr)
         return 1
     try:
-        scraped = scrape(max_units=args.max)
+        scraped = scrape(
+            max_units=args.max,
+            max_missing_ratio=args.max_missing_ratio,
+            min_units=args.min_units,
+        )
     except (ScrapeBlocked, ScrapeFailed) as err:
         print(f"[scrape-rvcountry] {err}", file=sys.stderr)
         return 1
