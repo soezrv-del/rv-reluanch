@@ -79,6 +79,32 @@ export function mapboxStandardConfig(
   };
 }
 
+/**
+ * Route line on the Trips map: soft blue with a white casing in both themes
+ * so it stays crisp on Standard day / night and on satellite. Widths scale
+ * with zoom (thin at a multi-state overview, bolder in town).
+ */
+export const ROUTE_LINE_COLOR = { light: "#3e6ae1", dark: "#5b83ec" } as const;
+export const ROUTE_CASING_COLOR = "#ffffff";
+
+export type RouteLineStyle = {
+  lineColor: string;
+  casingColor: string;
+  casingOpacity: number;
+  lineWidth: unknown[];
+  casingWidth: unknown[];
+};
+
+export function routeLineStyle(theme: "light" | "dark"): RouteLineStyle {
+  return {
+    lineColor: ROUTE_LINE_COLOR[theme],
+    casingColor: ROUTE_CASING_COLOR,
+    casingOpacity: theme === "dark" ? 0.9 : 1,
+    lineWidth: ["interpolate", ["linear"], ["zoom"], 4, 3.75, 8, 4.5, 12, 6, 16, 8.5],
+    casingWidth: ["interpolate", ["linear"], ["zoom"], 4, 7, 8, 8, 12, 10, 16, 13.5],
+  };
+}
+
 export function mapboxRasterTemplate(
   token: string,
   style: MapboxStyleId = "streets",

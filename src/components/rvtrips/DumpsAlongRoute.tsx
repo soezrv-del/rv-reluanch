@@ -51,7 +51,7 @@ export function DumpsAlongRoute({
 
   return (
     <section
-      className="space-y-2"
+      className="rv-along space-y-2"
       data-dumps-along-route
       data-dumps-source={result?.source || ""}
       data-along-open={open ? "1" : "0"}
@@ -60,28 +60,25 @@ export function DumpsAlongRoute({
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="flex min-h-11 w-full items-center gap-2 text-left"
+        data-trip-btn="row"
+        className="rv-along-row"
       >
-        <h3 className="min-w-0 flex-1 text-[12px] font-bold tracking-[0.12em] text-white">
-          DUMPS ALONG ROUTE
+        <h3 className="rv-along-title">
+          Dumps along route
         </h3>
         {count ? (
-          <span className="shrink-0 text-[11px] font-semibold text-white/70">
-            {count}
-          </span>
+          <span className="rv-along-count">{count}</span>
         ) : null}
         <ChevronDown
-          className={cn(
-            "size-4 shrink-0 text-white/55 transition-transform",
-            open && "rotate-180",
-          )}
+          className={cn("rv-along-chevron", open && "rotate-180")}
+          aria-hidden
         />
       </button>
 
       {open ? (
         <>
           {status === "live" && dumps.length > 0 ? (
-            <DumpFeeLegend className="rounded-lg border border-white/12 bg-black/30 px-2.5 py-1.5" />
+            <DumpFeeLegend className="rv-along-legend" />
           ) : null}
 
           {status === "loading" ? (

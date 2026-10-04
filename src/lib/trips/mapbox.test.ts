@@ -15,9 +15,17 @@ import {
   mapboxStandardConfig,
   mapboxStyleUrl,
   readMapboxToken,
+  ROUTE_CASING_COLOR,
+  ROUTE_LINE_COLOR,
+  routeLineStyle,
   standardLightPreset,
 } from "./mapbox.ts";
 import { mapboxCatalog } from "./basemap.ts";
+import {
+  POI_OVERVIEW_MAX_ZOOM,
+  poiOverview,
+  poiThinsAtOverview,
+} from "./mapPoi.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
@@ -193,4 +201,108 @@ test("Trips header chrome sits above the Mapbox canvas", () => {
   assert.match(css, /z-index:\s*40/);
   assert.match(css, /clip-path:\s*inset\(0\)/);
   assert.match(css, /\[data-route-basemap\]/);
+});
+
+test("route line is soft blue on a white casing in both themes — never aqua", () => {
+  const light = routeLineStyle("light");
+  const dark = routeLineStyle("dark");
+  assert.equal(light.lineColor, "#3e6ae1");
+  assert.equal(ROUTE_CASING_COLOR, "#ffffff");
+  assert.equal(light.casingColor, "#ffffff");
+  assert.equal(dark.casingColor, "#ffffff");
+  assert.equal(light.casingOpacity, 1);
+  for (const c of Object.values(ROUTE_LINE_COLOR)) {
+    assert.doesNotMatch(c, /#0?0?ff?ff|aqua|cyan|#4a86f0/i);
+  }
+  assert.equal(light.lineWidth[0], "interpolate");
+  assert.equal(light.casingWidth[0], "interpolate");
+  const gl = readFileSync(
+    join(root, "../../components/rvtrips/RouteMapboxGl.tsx"),
+    "utf8",
+  );
+  assert.match(gl, /routeLineStyle\(theme\)/);
+  assert.match(gl, /recolorRoute\(map, theme\)/);
+  assert.doesNotMatch(gl, /#0b1a28|#4a86f0/);
+});
+
+test("camp / dump / fuel dots thin out below zoom 7; A / B / via pins never do", () => {
+  assert.equal(POI_OVERVIEW_MAX_ZOOM, 7);
+  assert.equal(poiOverview(4.2), true);
+  assert.equal(poiOverview(6.99), true);
+  assert.equal(poiOverview(7), false);
+  assert.equal(poiOverview(11), false);
+  assert.equal(poiOverview(null), false);
+  assert.equal(poiOverview(Number.NaN), false);
+  for (const k of ["campground", "rv-park", "dump-free", "dump-paid", "dump-unknown", "fuel", "truck-stop"]) {
+    assert.equal(poiThinsAtOverview(k), true, k);
+  }
+  for (const k of ["origin", "dest", "via"]) {
+    assert.equal(poiThinsAtOverview(k), false, k);
+  }
+  const gl = readFileSync(
+    join(root, "../../components/rvtrips/RouteMapboxGl.tsx"),
+    "utf8",
+  );
+  const raster = readFileSync(
+    join(root, "../../components/rvtrips/RouteBasemap.tsx"),
+    "utf8",
+  );
+  const css = readFileSync(join(root, "../../styles.css"), "utf8");
+  assert.match(gl, /data-poi-thin/);
+  assert.match(gl, /data-map-overview/);
+  assert.match(gl, /map\.on\("zoomend"/);
+  assert.match(raster, /poiOverview\(view\?\.z\)/);
+  assert.match(raster, /overview && !on && poiThinsAtOverview/);
+  assert.match(
+    css,
+    /\[data-map-overview="1"\] \[data-poi-thin\]:not\(\.rv-map-dot-on\)/,
+  );
+});
+
+test("map POI dots have no native button frame and the key sits below the map", () => {
+  const css = readFileSync(join(root, "../../styles.css"), "utf8");
+  const dot = css.slice(css.indexOf(".rv-map-dot {"), css.indexOf("}", css.indexOf(".rv-map-dot {")));
+  for (const rule of [
+    /appearance: none/,
+    /-webkit-appearance: none/,
+    /padding: 0/,
+    /margin: 0/,
+    /line-height: 0/,
+    /font-size: 0/,
+    /display: block/,
+    /box-sizing: border-box/,
+  ]) {
+    assert.match(dot, rule);
+  }
+  // The light-mode global button reset must skip the map and Trips-owned controls.
+  const reset = css.slice(
+    css.indexOf('html[data-theme="light"] .app-shell button:not(.showroom-brand)'),
+  );
+  const resetSel = reset.slice(0, reset.indexOf("{"));
+  assert.match(resetSel, /:not\(\[data-route-basemap\] \*\)/);
+  assert.match(resetSel, /:not\(\[data-trip-btn\]\)/);
+  const premium = css.slice(css.indexOf("/* Premium rows that are buttons sit above the card. */"));
+  const premiumSel = premium.slice(0, premium.indexOf("{"));
+  assert.match(premiumSel, /:not\(\[data-trip-btn\]\):not\(\[data-route-basemap\] \*\)/);
+  for (const file of ["RouteMapboxGl.tsx", "RouteBasemap.tsx"]) {
+    const src = readFileSync(join(root, `../../components/rvtrips/${file}`), "utf8");
+    const mapEnd = src.lastIndexOf("</div>\n      {showCamps || showDumps");
+    assert.ok(mapEnd > 0, `${file}: legend renders after the map frame closes`);
+    assert.doesNotMatch(src, /bg-black\/55 px-2 py-1/);
+  }
+});
+
+test("light mode primary is graphite; dark keeps sapphire", () => {
+  const css = readFileSync(join(root, "../../styles.css"), "utf8");
+  const light = css.slice(css.indexOf('html[data-theme="light"] [data-route-results] {'));
+  assert.match(light.slice(0, light.indexOf("}")), /--trip-primary-bg: #171a20/);
+  const base = css.slice(css.indexOf("[data-route-results] {\n  --trip-fg"));
+  assert.match(base.slice(0, base.indexOf("}")), /--trip-primary-bg: #1648c8/);
+  const ui = readFileSync(
+    join(root, "../../components/rvtrips/RvTripsApp.tsx"),
+    "utf8",
+  );
+  const tbt = ui.slice(ui.indexOf("data-start-tbt") - 600, ui.indexOf("Start Turn-by-Turn"));
+  assert.match(tbt, /rv-trip-primary/);
+  assert.doesNotMatch(tbt, /bg-blue text-white shadow/);
 });
