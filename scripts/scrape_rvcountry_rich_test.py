@@ -11,6 +11,8 @@ from scrape_rvcountry_rich import (
     is_api_url,
     is_blocked_response,
     map_unit,
+    load_checkpoint,
+    scrape,
     slim_reason,
     write_snapshot,
 )
@@ -164,6 +166,117 @@ class SlimSnapshotTest(unittest.TestCase):
         kept, reason = filter_slim_rows(rows, log=lambda _line: None)
         self.assertEqual(kept, [])
         self.assertIn("under 1200", reason)
+
+
+class FakeResponse:
+    def __init__(self, body: str, status: int = 200):
+        self.body = body.encode("utf-8")
+        self.status = status
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def read(self):
+        return self.body
+
+
+def unit_page(stock: str) -> str:
+    item = rich_item()
+    item = json.loads(json.dumps(item))
+    item["stock_number"] = stock
+    item["_raw"]["stock_number"] = stock
+    return '<script>window.x={"initialItem":' + json.dumps(item) + "}</script>"
+
+
+class Killed(Exception):
+    pass
+
+
+def fake_site(stocks, fetched, kill_after=None):
+    sitemap = "".join(f"<loc>https://rvcountry.com/inventory/u-{s}</loc>" for s in stocks)
+
+    def opener(request, timeout=40):
+        url = request.full_url
+        if url.endswith("vehicle-sitemap.xml"):
+            return FakeResponse(f"<urlset>{sitemap}</urlset>")
+        if url.endswith("srp-sitemap.xml"):
+            return FakeResponse("<urlset></urlset>")
+        if kill_after is not None and len(fetched) >= kill_after:
+            raise Killed(url)
+        fetched.append(url)
+        return FakeResponse(unit_page(url.rsplit("-", 1)[1]))
+
+    return opener
+
+
+class ResumeTest(unittest.TestCase):
+    def run_scrape(self, opener, checkpoint, now, max_age_s=6 * 3600):
+        return scrape(
+            opener=opener,
+            sleep=lambda _s: None,
+            pace=0,
+            now=now,
+            min_units=1,
+            checkpoint=checkpoint,
+            resume_max_age_s=max_age_s,
+            log=lambda _line: None,
+        )
+
+    def test_killed_run_resumes_without_refetching(self):
+        from datetime import datetime, timedelta
+        from zoneinfo import ZoneInfo
+
+        start = datetime(2026, 10, 4, 5, 43, 15, tzinfo=ZoneInfo("America/Phoenix"))
+        with tempfile.TemporaryDirectory() as tmp:
+            checkpoint = str(Path(tmp) / "own.partial.jsonl")
+            first: list = []
+            with self.assertRaises(Killed):
+                self.run_scrape(fake_site(["1", "2", "3", "4"], first, kill_after=2), checkpoint, start)
+            self.assertEqual(len(first), 2)
+            second: list = []
+            later = start + timedelta(minutes=40)
+            # Unit 2 sold between runs, unit 5 arrived.
+            result = self.run_scrape(fake_site(["1", "3", "4", "5"], second), checkpoint, later)
+            self.assertEqual([u.rsplit("-", 1)[1] for u in second], ["3", "4", "5"])
+            self.assertEqual(sorted(r["stock_number"] for r in result["rows"]), ["1", "3", "4", "5"])
+            self.assertEqual(result["scraped_at"], "2026-10-04T05:43:15-07:00")
+            self.assertEqual({r["scraped_at"] for r in result["rows"]}, {"2026-10-04T05:43:15-07:00"})
+
+    def test_old_checkpoint_starts_over(self):
+        from datetime import datetime, timedelta
+        from zoneinfo import ZoneInfo
+
+        start = datetime(2026, 10, 3, 5, 43, 15, tzinfo=ZoneInfo("America/Phoenix"))
+        with tempfile.TemporaryDirectory() as tmp:
+            checkpoint = str(Path(tmp) / "own.partial.jsonl")
+            with self.assertRaises(Killed):
+                self.run_scrape(fake_site(["1", "2"], [], kill_after=1), checkpoint, start)
+            later = start + timedelta(hours=24)
+            self.assertEqual(load_checkpoint(checkpoint, 6 * 3600, now=later), ("", {}))
+            fetched: list = []
+            result = self.run_scrape(fake_site(["1", "2"], fetched), checkpoint, later)
+            self.assertEqual(len(fetched), 2)
+            self.assertEqual(result["scraped_at"], "2026-10-04T05:43:15-07:00")
+
+    def test_torn_last_line_is_ignored(self):
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+
+        now = datetime(2026, 10, 4, 6, 0, 0, tzinfo=ZoneInfo("America/Phoenix"))
+        with tempfile.TemporaryDirectory() as tmp:
+            checkpoint = Path(tmp) / "own.partial.jsonl"
+            checkpoint.write_text(
+                json.dumps({"checkpoint": 1, "scraped_at": "2026-10-04T05:43:15-07:00"})
+                + "\n"
+                + json.dumps({"url": "https://rvcountry.com/inventory/u-1", "rows": [{"stock_number": "1", "scraped_at": "2026-10-04T05:43:15-07:00"}]})
+                + "\n{\"url\": \"https://rvcountry.com/inv"
+            )
+            scraped_at, done = load_checkpoint(str(checkpoint), 6 * 3600, now=now)
+            self.assertEqual(scraped_at, "2026-10-04T05:43:15-07:00")
+            self.assertEqual(list(done), ["https://rvcountry.com/inventory/u-1"])
 
 
 if __name__ == "__main__":

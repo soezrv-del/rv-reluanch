@@ -12,6 +12,15 @@ Default output is OWN_LOT_INVENTORY_PATH, else the publisher upstream path.
 Then: node scripts/publish-own-lot.mjs
 Publishing also writes public/inventory/own-lot-fulltext.json.
 
+Resume: every fetched page is appended to a checkpoint (default
+<out>.partial.jsonl). A run that is killed (an agent session ending, a
+reboot) picks up where it stopped on the next start, keeping the first
+run's scraped_at, as long as that checkpoint is under --resume-max-age-hours
+(default 6) old. Older checkpoints are discarded and the scrape starts over.
+The sitemaps are always re-read, so a unit sold since the first run is not
+kept. The checkpoint is deleted after a successful write. --no-resume
+ignores it.
+
 User-Agent is fixed. 2.5s between requests. Stops on 403, 429, 503, or a
 Cloudflare challenge and does not write a partial file. Drops a row that is
 missing raw.attributes and logs its stock number and URL. Refuses to write
@@ -40,6 +49,7 @@ SRP_SITEMAP = "https://rvcountry.com/srp-sitemap.xml"
 DEFAULT_OUT = "/home/box/agent-data/projects/rvfox/inventory/own-lot-latest.json"
 DEFAULT_MAX_MISSING_RATIO = 0.02
 DEFAULT_MIN_UNITS = 1200
+DEFAULT_RESUME_MAX_AGE_HOURS = 6
 KEEP_NULL = {"price", "price_msrp", "price_current", "price_hidden", "price_lowest"}
 
 
@@ -553,6 +563,72 @@ def slim_reason(
     return reason
 
 
+def default_checkpoint(out: str) -> str:
+    return f"{out}.partial.jsonl"
+
+
+def start_checkpoint(path: str, scraped_at: str) -> None:
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    with open(path, "w", encoding="utf-8") as handle:
+        handle.write(json.dumps({"checkpoint": 1, "scraped_at": scraped_at}) + "\n")
+
+
+def append_checkpoint(path: str, url: str, rows: list) -> None:
+    with open(path, "a", encoding="utf-8") as handle:
+        handle.write(json.dumps({"url": url, "rows": rows}, ensure_ascii=False) + "\n")
+        handle.flush()
+        os.fsync(handle.fileno())
+
+
+def load_checkpoint(path: str, max_age_s: float, now: datetime | None = None) -> tuple[str, dict]:
+    """Return (scraped_at, {url: rows}) from a usable checkpoint, else ("", {}).
+
+    A torn last line (killed mid-write) is ignored. A checkpoint whose
+    scraped_at is older than max_age_s is not resumed.
+    """
+    if not path or not os.path.exists(path):
+        return "", {}
+    try:
+        with open(path, encoding="utf-8") as handle:
+            lines = handle.read().splitlines()
+    except OSError:
+        return "", {}
+    if not lines:
+        return "", {}
+    try:
+        header = json.loads(lines[0])
+    except json.JSONDecodeError:
+        return "", {}
+    scraped_at = header.get("scraped_at") if isinstance(header, dict) else None
+    if not isinstance(scraped_at, str) or not scraped_at:
+        return "", {}
+    try:
+        started = datetime.fromisoformat(scraped_at)
+    except ValueError:
+        return "", {}
+    current = now or datetime.now(ZoneInfo("America/Phoenix"))
+    if current.tzinfo is None:
+        current = current.replace(tzinfo=ZoneInfo("America/Phoenix"))
+    age = (current - started).total_seconds()
+    if age < 0 or age > max_age_s:
+        return "", {}
+    done: dict[str, list] = {}
+    for line in lines[1:]:
+        try:
+            entry = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(entry, dict) or not isinstance(entry.get("url"), str):
+            continue
+        rows = entry.get("rows")
+        if not isinstance(rows, list):
+            continue
+        if any(not isinstance(row, dict) or row.get("scraped_at") != scraped_at for row in rows):
+            continue
+        done[entry["url"]] = rows
+    return scraped_at, done
+
+
 def fetch_text(url: str, opener=urlopen, timeout: int = 40) -> tuple[int, str]:
     if is_api_url(url):
         raise ScrapeFailed(f"refusing /api/ url {url}")
@@ -579,6 +655,9 @@ def scrape(
     now: datetime | None = None,
     max_missing_ratio: float = DEFAULT_MAX_MISSING_RATIO,
     min_units: int = DEFAULT_MIN_UNITS,
+    checkpoint: str | None = None,
+    resume_max_age_s: float = DEFAULT_RESUME_MAX_AGE_HOURS * 3600,
+    log=None,
 ):
     requested: list[str] = []
     last = 0.0
@@ -608,18 +687,35 @@ def scrape(
     if max_units is not None:
         urls = urls[:max_units]
     scraped_at = format_scraped_at(now)
+    done: dict[str, list] = {}
+    if checkpoint:
+        resumed_at, done = load_checkpoint(checkpoint, resume_max_age_s, now=now)
+        if resumed_at:
+            scraped_at = resumed_at
+            say = log or (lambda line: print(line, file=sys.stderr))
+            reused = sum(1 for url in urls if url in done)
+            say(f"[scrape-rvcountry] resuming {checkpoint}: {reused} of {len(urls)} pages already fetched, scraped_at {scraped_at}")
+        else:
+            start_checkpoint(checkpoint, scraped_at)
     rows = []
     for url in urls:
+        if url in done:
+            rows.extend(done[url])
+            continue
         status, body = get(url)
         if status == 404:
+            if checkpoint:
+                append_checkpoint(checkpoint, url, [])
             continue
         if status >= 400:
             raise ScrapeFailed(f"scrape failed ({status}) {url}")
         units = extract_embedded_units(body)
         if not units:
             raise ScrapeFailed(f"scrape failed (no embedded unit) {url}")
-        for unit in units:
-            rows.append(map_unit(unit, scraped_at=scraped_at, page_url=url))
+        page_rows = [map_unit(unit, scraped_at=scraped_at, page_url=url) for unit in units]
+        if checkpoint:
+            append_checkpoint(checkpoint, url, page_rows)
+        rows.extend(page_rows)
     deduped = []
     by_stock: dict[str, dict] = {}
     for row in rows:
@@ -663,20 +759,37 @@ def main(argv: list[str] | None = None) -> int:
         default=DEFAULT_MIN_UNITS,
         help="Refuse when the kept snapshot is under this many units (default 1200)",
     )
+    parser.add_argument("--checkpoint", default=None, help="Resume file (default <out>.partial.jsonl)")
+    parser.add_argument("--no-resume", action="store_true", help="Ignore and overwrite any checkpoint")
+    parser.add_argument(
+        "--resume-max-age-hours",
+        type=float,
+        default=DEFAULT_RESUME_MAX_AGE_HOURS,
+        help="Only resume a checkpoint started within this many hours (default 6)",
+    )
     args = parser.parse_args(argv)
     if args.max is not None and args.max < 1:
         print("[scrape-rvcountry] --max needs a positive integer", file=sys.stderr)
         return 1
+    checkpoint = None if args.max else (args.checkpoint or default_checkpoint(args.out))
+    if checkpoint and args.no_resume and os.path.exists(checkpoint):
+        os.remove(checkpoint)
     try:
         scraped = scrape(
             max_units=args.max,
             max_missing_ratio=args.max_missing_ratio,
             min_units=args.min_units,
+            checkpoint=checkpoint,
+            resume_max_age_s=args.resume_max_age_hours * 3600,
         )
     except (ScrapeBlocked, ScrapeFailed) as err:
         print(f"[scrape-rvcountry] {err}", file=sys.stderr)
+        if checkpoint and os.path.exists(checkpoint):
+            print(f"[scrape-rvcountry] checkpoint kept for resume: {checkpoint}", file=sys.stderr)
         return 1
     write_snapshot(args.out, scraped["rows"])
+    if checkpoint and os.path.exists(checkpoint):
+        os.remove(checkpoint)
     partial = f" (max {args.max})" if args.max else ""
     print(f"own-lot scrape: {len(scraped['rows'])} units, scraped {scraped['scraped_at']}{partial} -> {args.out}")
     return 0
