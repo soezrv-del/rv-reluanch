@@ -13,13 +13,12 @@ import {
   MEMORY_EXTRACT_SYSTEM,
   capProfileSummary,
   emptyPhoneMemory,
-  fallbackDigestFromTurns,
   formatVisitorMemoryBlock,
   memoryPhoneKey,
-  mergeDigests,
-  mergeProfileSummary,
+  memoryRowForSave,
   parseDigests,
   parseExtractedMemory,
+  planPhoneMemoryWrite,
   shouldWriteMemory,
 } from "./phoneMemory.ts";
 
@@ -63,8 +62,10 @@ export async function savePhoneMemory(input: {
 }): Promise<PhoneMemory> {
   const key = memoryPhoneKey(input.phoneDigits);
   if (!key) return emptyPhoneMemory();
-  const profile = capProfileSummary(input.profileSummary);
-  const digests = mergeDigests(input.digests, null);
+  // Scrubbed of every number right before the Neon write.
+  const row = memoryRowForSave(input);
+  const profile = row.profileSummary;
+  const digests = row.digests;
   const sql = await getSql();
   const rows = await sql.query<MemoryRow>(
     `insert into rvgrok_phone_memory (
@@ -194,27 +195,16 @@ export async function applyMemoryUpdate(opts: {
     return null;
   }
 
-  const extracted =
-    (await extractMemoryWithXai(turns, existing)) || {
-      profileSummary: "",
-      digest: fallbackDigestFromTurns(turns),
-    };
-  if (!extracted.profileSummary && !extracted.digest) return null;
+  // No key or a failed extract keeps the old profile; only a scrubbed digest is added.
+  const plan = planPhoneMemoryWrite({
+    existing,
+    extracted: await extractMemoryWithXai(turns, existing),
+    turns,
+  });
+  if (!plan) return null;
 
   try {
-    return await savePhoneMemory({
-      phoneDigits: key,
-      profileSummary: mergeProfileSummary(
-        existing.profileSummary,
-        extracted.profileSummary,
-      ),
-      digests: mergeDigests(
-        existing.digests,
-        extracted.digest
-          ? { at: new Date().toISOString(), text: extracted.digest }
-          : null,
-      ),
-    });
+    return await savePhoneMemory({ phoneDigits: key, ...plan });
   } catch {
     return null;
   }
