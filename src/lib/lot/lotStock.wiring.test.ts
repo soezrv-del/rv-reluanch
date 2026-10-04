@@ -93,6 +93,7 @@ test("Lot stock is the last dock tab and not RV Grok", () => {
   assert.match(lot, /On the lot/);
   assert.match(lot, /filterLotBrowse/);
   assert.match(lot, /lotTypeChips/);
+  assert.doesNotMatch(lot, /SALES_FILTERS|data-lot-sales|Under 30k mi|Around 50k mi|label: "Generator"|label: "Solar"|Outdoor kitchen|2\+ slides|King bed/);
   assert.doesNotMatch(lot, /rvData|from "@\/lib\/rv\/catalog"/);
   assert.doesNotMatch(lot, /ownLotInventory/);
   assert.doesNotMatch(lot, /DialaBot|dialabot/i);

@@ -4,11 +4,9 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  LIVE_VOICE_KEEP_ALIVE_GAIN,
   LIVE_VOICE_OUTPUT_GAIN,
   LIVE_VOICE_ROUTE_KEY,
   LIVE_VOICE_SOFT_CLIP,
-  iosNeedsMicKeepAlive,
   liveVoiceRouteOverride,
   nativeShellLeavesMicHardwareOn,
   playbackNeedsSpeakerElement,
@@ -124,62 +122,6 @@ test("the native shell does not flip the mic hardware", () => {
   );
 });
 
-test("the iPhone keeps a whisper on the speaker so a quiet stretch still hears", () => {
-  assert.ok(LIVE_VOICE_KEEP_ALIVE_GAIN > 0);
-  assert.ok(LIVE_VOICE_KEEP_ALIVE_GAIN <= 0.0001);
-  const iphone = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)";
-  assert.equal(iosNeedsMicKeepAlive(iphone, "iPhone", 5, null), true);
-  assert.equal(iosNeedsMicKeepAlive(iphone, "iPhone", 5, {}), true);
-  assert.equal(
-    iosNeedsMicKeepAlive(
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
-      "MacIntel",
-      0,
-      null,
-    ),
-    false,
-  );
-  assert.equal(
-    iosNeedsMicKeepAlive(
-      "Mozilla/5.0 (Windows NT 10.0; Win64)",
-      "Win32",
-      0,
-      { isNativePlatform: () => true },
-    ),
-    true,
-  );
-  const output = readFileSync(join(root, "voiceOutput.ts"), "utf8");
-  const realtime = readFileSync(join(root, "realtime.ts"), "utf8");
-  assert.match(output, /if \(!iosNeedsMicKeepAlive\(\)\) return/);
-  assert.match(output, /gain\.gain\.value = LIVE_VOICE_KEEP_ALIVE_GAIN/);
-  assert.match(output, /gain\.connect\(chain\.pull\)/);
-  assert.doesNotMatch(output, /gain\.connect\(ctx\.destination\)/);
-  const gateStart = realtime.indexOf("private setMicGate");
-  const gateEnd = realtime.indexOf("private armGraphKeepAlive");
-  const gate = realtime.slice(gateStart, gateEnd);
-  const awake = gate.indexOf("keepLiveVoiceGraphAwake(this.audioCtx)");
-  const flip = gate.indexOf("setSpeakingSession(closed)");
-  assert.ok(awake > flip);
-  assert.match(gate, /if \(iosNeedsMicKeepAlive\(\)\)/);
-  assert.match(realtime, /if \(!iosNeedsMicKeepAlive\(\)\) return/);
-  assert.match(realtime, /this\.armGraphKeepAlive\(\)/);
-  assert.match(realtime, /setInterval\(poke, 1000\)/);
-  assert.match(realtime, /this\.clearGraphKeepAlive\(\)/);
-});
-
-test("the iPhone app does not flip the audio session when she talks", () => {
-  const realtime = readFileSync(join(root, "realtime.ts"), "utf8");
-  const start = realtime.indexOf("private setMicGate");
-  const end = realtime.indexOf("private beginSpeaking");
-  const gate = realtime.slice(start, end);
-  const nativeAt = gate.indexOf("if (!nativeShellLeavesMicHardwareOn())");
-  const flipAt = gate.indexOf("setSpeakingSession(closed)");
-  const resumeAt = gate.lastIndexOf("resumeLiveVoiceSpeaker");
-  assert.ok(nativeAt >= 0 && flipAt > nativeAt);
-  assert.ok(resumeAt > flipAt);
-  assert.match(gate, /ctx\.resume\(\)/);
-});
-
 test("playback goes through the jitter-buffered player and the output gain", () => {
   const realtime = readFileSync(join(root, "realtime.ts"), "utf8");
   const live = readFileSync(join(root, "liveVoice.ts"), "utf8");
@@ -217,16 +159,15 @@ test("playback goes through the jitter-buffered player and the output gain", () 
   assert.match(output, /setSpeakingSession/);
   assert.match(realtime, /setSpeakingSession\(closed\)/);
   assert.doesNotMatch(output, /createDynamicsCompressor/);
-  // The iPhone app leaves the session and the track alone. Safari still
-  // flips both, inside the native check. The speaker element still resumes.
+  // Playback switch runs for the shell too. Only the hardware track flip
+  // stays behind the native return.
   const gateStart = realtime.indexOf("private setMicGate");
   const gateEnd = realtime.indexOf("private beginSpeaking");
   const gate = realtime.slice(gateStart, gateEnd);
-  assert.doesNotMatch(gate, /if \(nativeShellLeavesMicHardwareOn\(\)\) return/);
-  const nativeAt = gate.indexOf("if (!nativeShellLeavesMicHardwareOn())");
+  const leave = gate.indexOf("if (nativeShellLeavesMicHardwareOn()) return;");
   const flipTrack = gate.indexOf("track.enabled = !closed");
   const flipSession = gate.indexOf("setSpeakingSession(closed)");
-  assert.ok(nativeAt !== -1 && nativeAt < flipSession && flipSession < flipTrack);
+  assert.ok(flipSession !== -1 && flipSession < leave && leave < flipTrack);
   assert.match(output, /createMediaStreamDestination/);
   assert.match(output, /playsInline = true/);
   assert.match(output, /audioSession\.type = "play-and-record"|session\.type = "play-and-record"/);

@@ -459,6 +459,21 @@ test("type chips come from the lot snapshot and filter without catalog bleed", (
     ),
   );
   const lotChips = lotTypeChips(snap.units);
+  assert.deepEqual(lotChips.map((chip) => chip.label), [
+    "Class A",
+    "Class B",
+    "Class C",
+    "Camper",
+    "Destination",
+    "Diesel",
+    "Expandable",
+    "Fifth wheel",
+    "FW toy",
+    "Popup",
+    "Super C",
+    "Travel trailer",
+    "TT toy",
+  ]);
   assert.equal(lotChips.filter((chip) => chip.label === "Popup").length, 1);
   const popup = lotChips.find((chip) => chip.label === "Popup");
   assert.ok(popup);

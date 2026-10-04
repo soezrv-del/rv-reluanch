@@ -15,6 +15,15 @@ import {
   upsertSession,
 } from "@/lib/rvgrok/history";
 import { streamChat } from "@/lib/rvgrok/stream";
+import {
+  CHAT_STREAM_IDLE_MS,
+  CHAT_STREAM_TOTAL_MS,
+  chatRetryMessage,
+  initialStreamView,
+  reduceStreamView,
+  streamActivityLabel,
+  type StreamViewEvent,
+} from "@/lib/rvgrok/chatStreamView";
 import { userLinesForMemory } from "@/lib/rvgrok/sessionLearn";
 import { GrokRealtimeSession } from "@/lib/rvgrok/realtime";
 import { missingIdentityFloorplans } from "@/lib/rvgrok/coachIdentity";
@@ -534,6 +543,10 @@ export function RvGrokApp({
         imageDataUrl: image || undefined,
       };
       const assistantMsgId = uid("a");
+      // Typed turns get the ack → status → streamed text bubble. Voice and
+      // live-camera turns keep the old "Thinking…" path untouched.
+      const typedTurn = !opts?.fromVoice && !opts?.liveFrame;
+      let streamView = initialStreamView();
       const assistantMsg: Message = {
         id: assistantMsgId,
         role: "assistant",
@@ -542,6 +555,7 @@ export function RvGrokApp({
         timestamp: new Date(),
         isAgentMode: agentMode,
         agentSteps: [],
+        ...(typedTurn ? { streamStatus: streamActivityLabel(streamView) ?? undefined } : {}),
       };
 
       setMessages((prev) => [...prev, userMsg, assistantMsg]);
@@ -556,6 +570,15 @@ export function RvGrokApp({
       const liveSteps: AgentStep[] = [];
       const liveImages: string[] = [];
       let unverified = false;
+
+      const stepView = (ev: StreamViewEvent) => {
+        if (!typedTurn) return;
+        streamView = reduceStreamView(streamView, ev);
+      };
+      const viewStatus = () =>
+        typedTurn
+          ? { streamStatus: streamActivityLabel(streamView) ?? streamView.status }
+          : {};
 
       const stampUnverified = () => {
         unverified = true;
@@ -668,7 +691,31 @@ export function RvGrokApp({
           accessPhone: access?.phone,
           visitorFirstName:
             access?.allowed && access.name ? access.name : undefined,
+          watchdog: typedTurn
+            ? { idleMs: CHAT_STREAM_IDLE_MS, totalMs: CHAT_STREAM_TOTAL_MS }
+            : undefined,
           handlers: {
+            onStatus: (text) => {
+              if (!typedTurn) return;
+              stepView({ kind: "status", text });
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === assistantMsgId ? { ...m, ...viewStatus() } : m,
+                ),
+              );
+            },
+            onReplace: (text) => {
+              fullContent = text;
+              stepView({ kind: "replace", text });
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === assistantMsgId
+                    ? { ...m, content: fullContent, streaming: true, ...viewStatus() }
+                    : m,
+                ),
+              );
+              scrollToBottom();
+            },
             onModel: (m) => {
               setActiveModel(m);
               if (/demo/i.test(m)) stampUnverified();
@@ -715,6 +762,7 @@ export function RvGrokApp({
             },
             onDelta: (delta) => {
               fullContent += delta;
+              stepView({ kind: "delta", text: delta });
               if (
                 !unverified &&
                 /\bunverified demo\b|\*\*RvGrok · unverified/i.test(fullContent)
@@ -731,6 +779,7 @@ export function RvGrokApp({
                         generatedImages: [...liveImages],
                         streaming: true,
                         unverified: unverified || m.unverified,
+                        ...viewStatus(),
                       }
                     : m,
                 ),
@@ -784,6 +833,7 @@ export function RvGrokApp({
                   generatedImages: [...liveImages],
                   unverified,
                   deskSheet: paintedDesk || undefined,
+                  streamStatus: undefined,
                 }
               : m,
           );
@@ -848,14 +898,23 @@ export function RvGrokApp({
         if ((err as Error)?.name === "AbortError") return;
         const msg =
           err instanceof Error ? err.message : "Failed to connect";
+        if (typedTurn) controller.abort();
         setMessages((prev) =>
           prev.map((m) =>
             m.id === assistantMsgId
-              ? {
-                  ...m,
-                  content: `Error: ${msg}. Please try again.`,
-                  streaming: false,
-                }
+              ? typedTurn
+                ? {
+                    ...m,
+                    content: chatRetryMessage(err),
+                    streaming: false,
+                    streamStatus: undefined,
+                    retryText: messageText || undefined,
+                  }
+                : {
+                    ...m,
+                    content: `Error: ${msg}. Please try again.`,
+                    streaming: false,
+                  }
               : m,
           ),
         );
@@ -1169,21 +1228,8 @@ export function RvGrokApp({
               return updated;
             });
           }
-          const stuckUserId = liveUserMsgId.current;
           liveUserMsgId.current = null;
           liveAsstMsgId.current = null;
-          if (stuckUserId) {
-            setMessages((prev) =>
-              prev.filter(
-                (m) =>
-                  !(
-                    m.id === stuckUserId &&
-                    m.role === "user" &&
-                    m.content === "🎤 Listening…"
-                  ),
-              ),
-            );
-          }
           scrollToBottom();
         },
         onError: (message) => {
@@ -1764,6 +1810,7 @@ export function RvGrokApp({
                 : undefined
             }
             onSuggestion={(prompt) => void sendMessage(prompt)}
+            onRetry={(prompt) => void sendMessage(prompt)}
             onFloorplanChoice={(code) => {
               const live = realtimeRef.current;
               if (live?.isActive && live.chooseFloorplan(code)) {
@@ -1792,10 +1839,6 @@ export function RvGrokApp({
 
   const visitorName = access?.allowed && access.name ? access.name : "";
   const sessionGreeting = sessionIntroLine(visitorName);
-  const liveSheTalking =
-    liveActive &&
-    (realtimeStatus === "speaking" ||
-      /speaking|finishing reply/i.test(realtimeDetail || ""));
 
   const startersOrThread = isLanding ? (
     <GrokLanding
@@ -1892,41 +1935,34 @@ export function RvGrokApp({
           paddingBottom: composerLift > 0 ? composerLift : undefined,
         }}
       >
-        {liveActive ? (
-          <div
-            data-live-voice-bar=""
-            className="mx-auto mb-2 flex max-w-2xl items-center gap-2 rounded-full border border-black/10 bg-white py-1 pl-3 pr-1 dark:border-white/15 dark:bg-[#171a20]"
+        {(realtimeStatus === "speaking" ||
+          /speaking|finishing reply/i.test(realtimeDetail || "")) &&
+        liveActive ? (
+          <button
+            type="button"
+            onClick={() => {
+              realtimeRef.current?.interrupt();
+            }}
+            className="mb-2 flex w-full items-center gap-2 rounded-[var(--radius-md)] border border-white/10 bg-[#1e2126] px-3 py-2.5 text-left"
+            data-on-dark=""
           >
-            <span className="size-2 shrink-0 animate-pulse rounded-full bg-sapphire" />
-            <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-[#171a20] dark:text-white">
-              {liveSheTalking ? "She's talking" : "Your turn"}
+            <span className="flex size-7 items-center justify-center rounded-md bg-sapphire text-white" data-on-dark="">
+              <Square className="size-3.5 fill-current" />
             </span>
-            {liveSheTalking ? (
-              <button
-                type="button"
-                onClick={() => {
-                  realtimeRef.current?.interrupt();
-                }}
-                className="min-h-11 rounded-full px-3 text-[13px] font-semibold text-[#171a20] dark:text-white"
-              >
-                Cut
-              </button>
-            ) : null}
-            <button
-              type="button"
-              onClick={handleStop}
-              className="min-h-11 rounded-full bg-[#171a20] px-4 text-[13px] font-semibold text-white dark:bg-white dark:text-[#171a20]"
-            >
-              End
-            </button>
-          </div>
+            <span className="flex-1 text-[13px] font-semibold text-white">
+              Interrupt — stop her, keep listening
+            </span>
+            <span className="text-[11px] font-bold tracking-wide text-white/70">
+              CUT
+            </span>
+          </button>
         ) : null}
         {(isLoading ||
           messages.some((m) => m.streaming) ||
           isRecording ||
+          liveActive ||
           speakingId ||
-          continuousArmed) &&
-        !liveActive && (
+          continuousArmed) && (
           <button
             type="button"
             onClick={handleStop}
@@ -1936,13 +1972,15 @@ export function RvGrokApp({
               <Square className="size-3.5 fill-current" />
             </span>
             <span className="flex-1 text-[13px] font-medium text-fg">
-              {isRecording
-                ? voiceMode
-                  ? "Auto-listening — tap to stop hands-free"
-                  : "Recording — tap to stop & send"
-                : isLoading
-                  ? "Processing — tap to cancel"
-                  : "Speaking — tap to stop"}
+              {liveActive
+                ? `Live continuous · ${realtimeDetail || realtimeStatus} — tap to end`
+                : isRecording
+                  ? voiceMode
+                    ? "Auto-listening — tap to stop hands-free"
+                    : "Recording — tap to stop & send"
+                  : isLoading
+                    ? "Processing — tap to cancel"
+                    : "Speaking — tap to stop"}
             </span>
             <span className="text-[11px] font-bold tracking-wide text-sky-100">
               STOP
@@ -2029,6 +2067,19 @@ export function RvGrokApp({
           </div>
         ) : null}
 
+        {liveActive && (
+          <div className="mx-auto mb-2 flex max-w-2xl items-center gap-2 rounded-full border border-sky-300/40 bg-sky-500/15 px-3 py-1.5">
+            <span className="size-2 animate-pulse rounded-full bg-sky-500" />
+            <Radio className="size-3 text-sky-100" />
+            <span className="flex-1 text-[11px] font-medium text-sky-100">
+              {realtimeDetail || `Live Grok Voice · ${realtimeStatus}`}
+            </span>
+            <span className="text-[10px] uppercase tracking-wide text-muted">
+              {selectedVoice}
+            </span>
+          </div>
+        )}
+
         {waitingToResumeLive && (
           <button
             type="button"
@@ -2051,11 +2102,13 @@ export function RvGrokApp({
 
         {isLanding ? null : <div className="mx-auto max-w-2xl">{composer}</div>}
 
-        {!liveActive && (waitingToResumeLive || pendingImage) ? (
+        {liveActive || waitingToResumeLive || pendingImage ? (
           <p className="mx-auto mt-1.5 max-w-2xl text-center text-[11px] text-muted">
-            {waitingToResumeLive
-              ? "Live Voice armed · tap mic"
-              : "Photo attached · send or add a question"}
+            {liveActive
+              ? "Hands-free · tap mic to end"
+              : waitingToResumeLive
+                ? "Live Voice armed · tap mic"
+                : "Photo attached · send or add a question"}
           </p>
         ) : null}
       </div>

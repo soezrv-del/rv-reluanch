@@ -8,7 +8,21 @@ export type StreamHandlers = {
   onModel?: (model: string) => void;
   onUpstream?: (upstream: string) => void;
   onError?: (message: string) => void;
+  /** Short activity line while the server works (lot, spec sheet, web, tools). */
+  onStatus?: (text: string) => void;
+  /** Server swapped the whole answer text ("" clears retracted pre-tool text). */
+  onReplace?: (text: string) => void;
+  /** Server gave up on this turn (timeout / upstream failure). */
+  onFailed?: (message: string) => void;
 };
+
+/** Thrown when the stream stalls, runs too long, or the server sends `error`. */
+export class ChatStreamError extends Error {
+  constructor(message: string, name: "TimeoutError" | "ChatStreamError" = "ChatStreamError") {
+    super(message);
+    this.name = name;
+  }
+}
 
 /**
  * Parse SSE-style lines from either:
@@ -43,6 +57,24 @@ export function processSseLine(
       if (delta) handlers.onDelta(delta);
       return;
     }
+    if (parsed.type === "status") {
+      if (typeof parsed.text === "string") handlers.onStatus?.(parsed.text);
+      return;
+    }
+    if (parsed.type === "replace") {
+      handlers.onReplace?.(typeof parsed.text === "string" ? parsed.text : "");
+      return;
+    }
+    if (parsed.type === "upstream") {
+      if (typeof parsed.upstream === "string") handlers.onUpstream?.(parsed.upstream);
+      return;
+    }
+    if (parsed.type === "error") {
+      handlers.onFailed?.(
+        typeof parsed.message === "string" ? parsed.message : "Upstream error",
+      );
+      return;
+    }
     if (parsed.type === "agent_start" && parsed.model) {
       handlers.onModel?.(parsed.model);
       return;
@@ -74,11 +106,39 @@ export function processSseLine(
   }
 }
 
+export type StreamWatchdog = {
+  /** Fail when no bytes (pings included) arrive for this long. */
+  idleMs?: number;
+  /** Fail when the whole stream runs longer than this. */
+  totalMs?: number;
+  now?: () => number;
+};
+
+async function readWithWatchdog(
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  waitMs: number | null,
+): Promise<ReadableStreamReadResult<Uint8Array>> {
+  if (waitMs == null) return reader.read();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(new ChatStreamError("Reply timed out", "TimeoutError")),
+      Math.max(0, waitMs),
+    );
+  });
+  try {
+    return await Promise.race([reader.read(), timeout]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 export async function consumeSseStream(
   response: Response,
   agentMode: boolean,
   handlers: StreamHandlers,
   signal?: AbortSignal,
+  watchdog?: StreamWatchdog,
 ) {
   const modelUsed = response.headers.get("X-Model-Used");
   if (modelUsed) handlers.onModel?.(modelUsed);
@@ -96,13 +156,27 @@ export async function consumeSseStream(
 
   const decoder = new TextDecoder();
   let buffer = "";
+  const now = watchdog?.now ?? (() => Date.now());
+  const startedAt = now();
 
   while (true) {
     if (signal?.aborted) {
       reader.cancel().catch(() => {});
       break;
     }
-    const { done, value } = await reader.read();
+    const left = watchdog?.totalMs != null ? watchdog.totalMs - (now() - startedAt) : null;
+    const wait =
+      watchdog?.idleMs != null || left != null
+        ? Math.min(watchdog?.idleMs ?? Infinity, left ?? Infinity)
+        : null;
+    let chunk: ReadableStreamReadResult<Uint8Array>;
+    try {
+      chunk = await readWithWatchdog(reader, wait);
+    } catch (err) {
+      reader.cancel().catch(() => {});
+      throw err;
+    }
+    const { done, value } = chunk;
     if (done) break;
     buffer += decoder.decode(value, { stream: true });
     const lines = buffer.split("\n");
@@ -135,6 +209,8 @@ export async function streamChat(opts: {
   accessPhone?: string;
   /** Approved first name — chat personalization only; never grants access. */
   visitorFirstName?: string;
+  /** Stall / total-time limits for the reply stream. */
+  watchdog?: StreamWatchdog;
 }) {
   const { fetchWithResearchAccess, researchAccessHeaders } = await import(
     "../access/researchUnlock.ts"
@@ -173,6 +249,7 @@ export async function streamChat(opts: {
   }
 
   let assistantText = "";
+  let failed: string | null = null;
   await consumeSseStream(
     response,
     opts.agentMode,
@@ -182,9 +259,19 @@ export async function streamChat(opts: {
         assistantText += text;
         opts.handlers.onDelta(text);
       },
+      onReplace: (text) => {
+        assistantText = text;
+        opts.handlers.onReplace?.(text);
+      },
+      onFailed: (message) => {
+        failed = message;
+        opts.handlers.onFailed?.(message);
+      },
     },
     opts.signal,
+    opts.watchdog,
   );
+  if (failed != null) throw new ChatStreamError(failed);
 
   schedulePhoneMemoryPing({
     accessPhone: opts.accessPhone,
