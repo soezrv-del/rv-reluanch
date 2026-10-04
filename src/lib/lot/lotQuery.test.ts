@@ -711,9 +711,12 @@ test("16-foot garage fifth wheel uses high pins and does not estimate the rest",
     assert.ok(pin.garage_length_in >= 16 * 12);
     assert.equal(unit.stock_number.trim().length > 0, true);
   }
-  assert.match(hit.summary, /Another \d+ toy haulers don't have a pinned garage length; check the floorplan/);
-  assert.match(hit.summary, /Confirm the fit with the dealer or manufacturer before quoting it/);
-  assert.match(hit.summary, /cargo length|spec sheet|pinned sheet/);
+  assert.match(
+    hit.summary,
+    /Another \d+ fifth wheel toy haulers don't have a pinned garage length; check the floorplan/,
+  );
+  assert.match(hit.summary, /Confirm garage fit with the dealer or manufacturer\./);
+  assert.doesNotMatch(hit.summary, /before quoting it|Garage length is from/);
   assert.doesNotMatch(hit.summary, /about \d+ feet long, give or take/i);
   const plain = searchLot(snap.units, { query: "31Z" });
   assert.ok(plain.matched > 0);
@@ -1273,4 +1276,68 @@ test("spoken garage asks: spelled numbers, \"or bigger\", and filler words", () 
     assert.doesNotMatch(summary, /foot and over\./, utterance);
     assert.match(summary, new RegExp(`Matching units: ${want}\\b`), utterance);
   }
+});
+
+test("trailers plus toy haulers is every toy hauler unless a towable kind is named", () => {
+  const snap = units();
+  const pins = JSON.parse(
+    readFileSync(join(process.cwd(), "public/inventory/garage-pins.json"), "utf8"),
+  );
+  const count = (body: string) => snap.units.filter((unit) => unit.body_type === body).length;
+  const travelToys = count("Travel Trailer Toy Hauler");
+  const fifthToys = count("Fifth Wheel Toy Hauler");
+  assert.ok(travelToys > 0 && fifthToys > 0);
+
+  const plain = answerQueryLotFromSnapshot(
+    snap, {}, null, "do we have any toy haulers with a ten foot or bigger garage", "", pins,
+  );
+  const want = String(plain.summary).match(/Matching units: (\d+)/)?.[1];
+  assert.ok(want && Number(want) > 0);
+  const mixed = answerQueryLotFromSnapshot(
+    snap, {}, null,
+    "Do we have any trailers, toy haulers, that have ten-foot or bigger garage?", "", pins,
+  );
+  assert.match(String(mixed.summary), new RegExp(`Matching units: ${want}\\b`));
+
+  const all = searchLot(snap.units, { query: "trailers, toy haulers" });
+  assert.equal(all.matched, travelToys + fifthToys);
+  assert.equal(all.counts.body_type["Travel Trailer Toy Hauler"], travelToys);
+  assert.equal(all.counts.body_type["Fifth Wheel Toy Hauler"], fifthToys);
+
+  const travel = searchLot(snap.units, { query: "travel trailer toy haulers" });
+  assert.equal(travel.matched, travelToys);
+  assert.equal(travel.counts.body_type["Fifth Wheel Toy Hauler"], undefined);
+  const fifth = searchLot(snap.units, { query: "fifth wheel toy haulers" });
+  assert.equal(fifth.matched, fifthToys);
+  assert.equal(fifth.counts.body_type["Travel Trailer Toy Hauler"], undefined);
+
+  const towables = searchLot(snap.units, { query: "towables" });
+  const trailers = searchLot(snap.units, { query: "how many trailers" });
+  assert.ok(trailers.matched > travelToys + fifthToys);
+  assert.equal(trailers.matched, towables.matched);
+  assert.match(
+    trailers.summary,
+    new RegExp(
+      `Matching units: ${trailers.matched}\\. ${count("Travel Trailer")} travel trailers, ` +
+        `${count("Fifth Wheel")} fifth wheels, ${travelToys} travel trailer toy haulers, ` +
+        `${fifthToys} fifth wheel toy haulers`,
+    ),
+  );
+});
+
+test("the unpinned garage line names the narrowed toy-hauler body", () => {
+  const snap = units();
+  const pins = JSON.parse(
+    readFileSync(join(process.cwd(), "public/inventory/garage-pins.json"), "utf8"),
+  );
+  const ask = (utterance: string) =>
+    String(answerQueryLotFromSnapshot(snap, {}, null, utterance, "", pins).summary);
+  const fifth = ask("Do we have any fifth wheels with ten-foot garages or bigger? Toy haulers?");
+  assert.match(fifth, /Another \d+ fifth wheel toy haulers don't have a pinned garage length; check the floorplan\./);
+  assert.match(fifth, /Confirm garage fit with the dealer or manufacturer\./);
+  const travel = ask("travel trailer toy haulers with a ten foot or bigger garage");
+  assert.match(travel, /Another \d+ travel trailer toy haulers don't have a pinned garage length/);
+  const all = ask("do we have any toy haulers with a ten foot or bigger garage");
+  assert.match(all, /Another \d+ toy haulers don't have a pinned garage length/);
+  assert.doesNotMatch(all, /(?:fifth wheel|travel trailer) toy haulers don't/);
 });

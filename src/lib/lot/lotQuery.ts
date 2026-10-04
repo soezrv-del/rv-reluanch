@@ -457,8 +457,12 @@ export function bodySpecFromText(raw: string): { spec: BodySpec; rest: string } 
   if (toyish && travel.hit) {
     return { spec: { kind: "labels", labels: ["Travel Trailer Toy Hauler"] }, rest };
   }
-  if (toy.hit) return { spec: { kind: "toy" }, rest };
-  if (garage.hit) return { spec: { kind: "toy" }, rest };
+  if (toy.hit || garage.hit) {
+    // "Trailers" means every towable, and every toy hauler is a towable. Without
+    // travel trailer or fifth wheel named, "trailers, toy haulers" is all toy
+    // haulers, so the leftover word must not narrow the match.
+    return { spec: { kind: "toy" }, rest: take(rest, /\b(?:towable|pull behind|trailer)\b/g).rest };
+  }
   if (fifth.hit) return { spec: { kind: "labels", labels: ["Fifth Wheel"] }, rest };
   if (travel.hit) return { spec: { kind: "labels", labels: ["Travel Trailer"] }, rest };
 
@@ -2336,6 +2340,15 @@ function specSummary(summary: string, parsed: Parsed, matched: number): string {
   return `${summary.replace(/\.$/, "")}. ${spec}.`.replace(/\.\./g, ".");
 }
 
+/** The unpinned-garage line names the toy-hauler body the ask narrowed to. */
+function garageBodyNoun(body: BodySpec): string {
+  if (body.kind === "labels" && body.labels.length === 1) {
+    if (body.labels[0] === "Fifth Wheel Toy Hauler") return "fifth wheel toy haulers";
+    if (body.labels[0] === "Travel Trailer Toy Hauler") return "travel trailer toy haulers";
+  }
+  return "toy haulers";
+}
+
 function withSheetNotes(
   summary: string,
   notes: {
@@ -2348,6 +2361,7 @@ function withSheetNotes(
     garageSkipped: number;
     garageMissingSheet: boolean;
     garagePinMode?: boolean;
+    garageNoun?: string;
     lengthMin?: number;
     lengthMax?: number;
   },
@@ -2371,7 +2385,7 @@ function withSheetNotes(
     }
   }
   if (notes.garagePinMode && notes.garageSkipped) {
-    bits.push(unpinnedGarageLine(notes.garageSkipped).replace(/\.$/, ""));
+    bits.push(unpinnedGarageLine(notes.garageSkipped, notes.garageNoun).replace(/\.$/, ""));
   } else if (notes.garageMissingSheet) {
     bits.push("Garage length isn't on the sheet");
   } else if ((notes.garageMin != null || notes.garageMax != null) && notes.garageSkipped) {
@@ -2634,7 +2648,6 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
   let garageSkipped = 0;
   let garageMissingSheet = false;
   let garagePinMode = false;
-  let garagePinSources: string[] = [];
   const pinBook = args.garage_pins;
   if (garageBounded && pinBook && Object.keys(pinBook).length) {
     garagePinMode = true;
@@ -2642,7 +2655,6 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
     if (ask != null) {
       const split = splitPinnedGarages(matched, pinBook, ask);
       garageSkipped = split.unpinned;
-      garagePinSources = split.sources;
       matched = split.pinned;
     }
   } else if (garageBounded) {
@@ -2796,13 +2808,14 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
       garageSkipped,
       garageMissingSheet,
       garagePinMode,
+      garageNoun: garageBodyNoun(parsed.body),
       lengthMin: parsed.lengthMin,
       lengthMax: parsed.lengthMax,
     },
   );
   if (garagePinMode && matched.length) {
     const ask = garageAskFeet(parsed.garageMin, parsed.garageMax);
-    const extra = [garageSourceSentence(garagePinSources), garageFitSentence(ask)]
+    const extra = [garageSourceSentence(), garageFitSentence(ask)]
       .filter(Boolean)
       .join(" ");
     if (extra && !summary.includes(extra)) summary = `${summary.replace(/\s+$/, "")} ${extra}`;
