@@ -69,6 +69,14 @@ import {
   requiredToolForAsk,
   type TalkMode,
 } from "@/lib/rvgrok/chatTools";
+import {
+  chunkForTyping,
+  createAnswerGate,
+  createChatSseSink,
+  createXaiStreamAccumulator,
+  type ChatSseSink,
+} from "@/lib/rvgrok/chatStreamGate";
+import { toolStatusText } from "@/lib/rvgrok/chatStreamView";
 import { evaluateTowMatch } from "@/lib/tow/towMatch";
 import { computeLoan } from "@/lib/rv/rvCal";
 import { parseCreditBand, type CreditBand } from "@/lib/rv/lendersCatalog";
@@ -133,6 +141,8 @@ function answerSampling(text: string): { temperature: number; max_tokens: number
     max_tokens: long ? 1800 : 700,
   };
 }
+
+const WEB_RESEARCH_STATUS = "Looking that up…";
 
 function encodeSse(obj: unknown) {
   return `data: ${JSON.stringify(obj)}\n\n`;
@@ -249,6 +259,8 @@ function jsonToSseStream(opts: {
   agentMode: boolean;
   upstream: string;
   prelude?: unknown[];
+  /** Typing delay per 12-char piece (0 = memory-only replay). */
+  chunkDelayMs?: number;
 }): Response {
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
@@ -272,7 +284,8 @@ function jsonToSseStream(opts: {
         } else {
           send({ choices: [{ delta: { content: piece } }] });
         }
-        await sleep(8);
+        const delay = opts.chunkDelayMs ?? 8;
+        if (delay > 0) await sleep(delay);
       }
       controller.enqueue(encoder.encode("data: [DONE]\n\n"));
       controller.close();
@@ -293,12 +306,6 @@ type ToolCall = {
   id: string;
   type?: string;
   function?: { name?: string; arguments?: string };
-};
-
-type ChatCompletionMessage = {
-  role?: string;
-  content?: string | null;
-  tool_calls?: ToolCall[];
 };
 
 const toolFn = (
@@ -667,7 +674,12 @@ async function runXaiWithTools(opts: {
   requiredTool: string | null;
   userText: string;
   requestOrigin?: string;
-}): Promise<Response | null> {
+  sink: ChatSseSink;
+  /** Lot / count ask: never show model text until lot data is in context. */
+  lotSensitive: boolean;
+  /** Lot rows already injected server-side (OWN-LOT INVENTORY block). */
+  lotNotesInContext: boolean;
+}): Promise<string | null> {
   const working: Array<Record<string, unknown>> = opts.messages.map((m) => ({
     role: m.role,
     content: m.content,
@@ -676,6 +688,23 @@ async function runXaiWithTools(opts: {
   let stepNo = 0;
   let lastContent = "";
   let imageCount = 0;
+  let lotSeen = opts.lotNotesInContext;
+  const sink = opts.sink;
+  // Steps / images go out right before the first answer text, as before.
+  const flushPrelude = () => {
+    while (prelude.length) sink.event(prelude.shift());
+  };
+  const emitText = (text: string) => {
+    flushPrelude();
+    sink.delta(text);
+  };
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  const typeIn = async (text: string) => {
+    for (const piece of chunkForTyping(text)) {
+      emitText(piece);
+      await sleep(8);
+    }
+  };
   console.info(
     `[rvgrok] tool-loop ${opts.model} ${opts.requiredTool || "auto"}`,
   );
@@ -701,31 +730,42 @@ async function runXaiWithTools(opts: {
           forced === "generate_image"
             ? { type: "function", function: { name: "generate_image" } }
             : "auto",
-        stream: false,
+        stream: true,
         ...answerSampling(opts.userText),
       }),
       signal: AbortSignal.timeout(60_000),
     });
-    if (!resp.ok) {
+    if (!resp.ok || !resp.body) {
+      if (round === 0) return null;
+      break;
+    }
+    if (round === 0) sink.meta(opts.agentMode ? `${opts.model} · Agent` : opts.model, "xai-direct");
+
+    // Text that may still be thrown away (forced-tool round, or a lot ask
+    // before lot rows are in context) is held for the whole round.
+    const gate = createAnswerGate({
+      hold: forced != null || (opts.lotSensitive && !lotSeen),
+      emit: emitText,
+    });
+    const acc = createXaiStreamAccumulator();
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const out = acc.push(decoder.decode(value, { stream: true }));
+      for (const piece of out.content) gate.push(piece);
+    }
+    for (const piece of acc.end().content) gate.push(piece);
+    const content = acc.content();
+    if (!acc.sawChoice()) {
       if (round === 0) return null;
       break;
     }
 
-    const data = (await resp.json()) as {
-      choices?: Array<{
-        message?: ChatCompletionMessage;
-        finish_reason?: string;
-      }>;
-    };
-    const msg = data.choices?.[0]?.message;
-    if (!msg) {
-      if (round === 0) return null;
-      break;
-    }
-
-    let toolCalls = msg.tool_calls ?? [];
-    if (!toolCalls.length && msg.content) {
-      const synPrompt = parseGenerateImagePromptFromContent(String(msg.content));
+    let toolCalls: ToolCall[] = acc.toolCalls();
+    if (!toolCalls.length && content) {
+      const synPrompt = parseGenerateImagePromptFromContent(String(content));
       if (synPrompt) {
         toolCalls = [
           {
@@ -754,9 +794,11 @@ async function runXaiWithTools(opts: {
       ];
     }
     if (toolCalls.length) {
+      // Pre-tool text never stays on screen; today it was never shown.
+      if (gate.retract()) sink.replace("");
       working.push({
         role: "assistant",
-        content: msg.content ?? null,
+        content: content || null,
         tool_calls: toolCalls,
       });
       for (const call of toolCalls) {
@@ -772,6 +814,7 @@ async function runXaiWithTools(opts: {
         }
         stepNo += 1;
         console.info(`[rvgrok] tool ${name}`, JSON.stringify(args).slice(0, 240));
+        sink.status(toolStatusText(name));
         if (name === "generate_image") {
           if (imageCount >= 2) {
             working.push({
@@ -837,6 +880,7 @@ async function runXaiWithTools(opts: {
             userText: opts.userText,
             requestOrigin: opts.requestOrigin,
           });
+          if (name === "get_own_lot") lotSeen = true;
           prelude.push({
             type: "step",
             step: stepNo,
@@ -852,24 +896,27 @@ async function runXaiWithTools(opts: {
           });
         }
       }
+      sink.status("Writing that up…");
       continue;
     }
 
-    lastContent = String(msg.content || "");
+    // Final answer round: release anything the gate still holds.
+    await typeIn(gate.release());
+    lastContent = String(content || "");
     break;
   }
 
-  return jsonToSseStream({
-    content:
-      lastContent ||
-      (imageCount
-        ? "Here's the generated image."
-        : "No response content returned from the AI upstream."),
-    model: opts.model,
-    agentMode: opts.agentMode,
-    upstream: "xai-direct",
-    prelude,
-  });
+  const finalText =
+    lastContent ||
+    (imageCount
+      ? "Here's the generated image."
+      : "No response content returned from the AI upstream.");
+  if (!lastContent) {
+    if (sink.visibleText()) sink.replace("");
+    await typeIn(finalText);
+  }
+  flushPrelude();
+  return finalText;
 }
 
 async function tryXaiDirect(
@@ -884,8 +931,10 @@ async function tryXaiDirect(
   standingLessons?: string,
   mode?: TalkMode,
   requestOrigin?: string,
-): Promise<Response | null> {
+  stream?: { sink: ChatSseSink; lotSensitive: boolean },
+): Promise<string | null> {
   const apiKey = process.env.XAI_API_KEY;
+  if (!stream) return null;
   if (!apiKey) return null;
 
   const vision = hasVision(messages);
@@ -932,11 +981,16 @@ async function tryXaiDirect(
         requiredTool,
         userText: lastPlain,
         requestOrigin,
+        sink: stream.sink,
+        lotSensitive: stream.lotSensitive,
+        lotNotesInContext: Boolean((ownLotNotes || "").trim()),
       });
-      if (result) return result;
+      if (result != null) return result;
     } catch {
       /* next model */
     }
+    // A model that died mid-reply never leaves half an answer on screen.
+    if (stream.sink.visibleText()) stream.sink.replace("");
   }
   return null;
 }
@@ -1123,96 +1177,197 @@ export const Route = createFileRoute("/api/rvgrok")({
             ? body.visitorFirstName
             : "";
         const phoneKey = memoryKeyFromRequest(request);
-        const [visitorMemory, standingLessons] = await Promise.all([
-          phoneKey ? loadVisitorMemoryBlockFromRequest(request) : "",
-          readStandingLessonsBlock(),
-        ]);
-        const lastUser = [...messages].reverse().find((m) => m.role === "user");
-        const lastPlain = lastUser ? contentToPlain(lastUser.content) : "";
-        const memoryTurns: MemoryTurn[] = messages.map((m) => ({
-          role: m.role,
-          text: contentToPlain(m.content).slice(0, 800),
-        }));
-        const finish = (response: Response) =>
-          rememberAfterSseResponse(response, {
-            phoneDigits: phoneKey,
-            turns: memoryTurns,
+        // One SSE response goes back right away. The bubble shows short
+        // status lines while the work below runs, then the answer streams.
+        const sink = createChatSseSink({ agentMode });
+        const deliver = async (response: Response) => {
+          sink.meta(
+            response.headers.get("X-Model-Used"),
+            response.headers.get("X-Upstream"),
+          );
+          await sink.pipe(response);
+        };
+        const run = async (): Promise<void> => {
+          const [visitorMemory, standingLessons] = await Promise.all([
+            phoneKey ? loadVisitorMemoryBlockFromRequest(request) : "",
+            readStandingLessonsBlock(),
+          ]);
+          const lastUser = [...messages].reverse().find((m) => m.role === "user");
+          const lastPlain = lastUser ? contentToPlain(lastUser.content) : "";
+          const memoryTurns: MemoryTurn[] = messages.map((m) => ({
+            role: m.role,
+            text: contentToPlain(m.content).slice(0, 800),
+          }));
+          // Same memory tap as before, on the same inner reply stream.
+          const finish = (response: Response) =>
+            deliver(
+              rememberAfterSseResponse(response, {
+                phoneDigits: phoneKey,
+                turns: memoryTurns,
+              }),
+            );
+
+          // Server re-grounds the latest ask so a phone/API probe without
+          // client catalogContext still locks Lineage Series M (and friends).
+          // Spec / GVWR / engine / pricing / YMM asks browse first; the
+          // catalog lock is injected so notes cannot invent a "not in catalog"
+          // story. If this turn names a different coach, do not keep a stale
+          // client Lineage (etc.) lock from a previous Facts / session coach.
+          const priorUserText = messages
+            .filter((m) => m.role === "user")
+            .map((m) => contentToPlain(m.content))
+            .join("\n");
+          const serverGrounded = buildChatGrounding({
+            query: lastPlain,
+            extraText: priorUserText,
+            agentMode,
           });
+          const threadFloorplan = floorplanAlreadyInThread(priorUserText);
+          if (
+            serverGrounded.identity &&
+            !serverGrounded.identity.floorplan &&
+            threadFloorplan
+          ) {
+            serverGrounded.identity = {
+              ...serverGrounded.identity,
+              floorplan: threadFloorplan,
+              source: "mixed",
+            };
+          }
+          const lastNamesCoach = askNamesCoachIdentity(
+            parseCoachFromText(lastPlain),
+          );
+          const catalogContext = lastNamesCoach
+            ? serverGrounded.block || ""
+            : serverGrounded.block || body.catalogContext || "";
+          const screen = activeScreenFromContext(body.catalogContext);
+          const factsSpec = factsSpecRequestsWebSearch(screen, lastPlain);
 
-        // Server re-grounds the latest ask so a phone/API probe without
-        // client catalogContext still locks Lineage Series M (and friends).
-        // Spec / GVWR / engine / pricing / YMM asks browse first; the
-        // catalog lock is injected so notes cannot invent a "not in catalog"
-        // story. If this turn names a different coach, do not keep a stale
-        // client Lineage (etc.) lock from a previous Facts / session coach.
-        const priorUserText = messages
-          .filter((m) => m.role === "user")
-          .map((m) => contentToPlain(m.content))
-          .join("\n");
-        const serverGrounded = buildChatGrounding({
-          query: lastPlain,
-          extraText: priorUserText,
-          agentMode,
-        });
-        const threadFloorplan = floorplanAlreadyInThread(priorUserText);
-        if (
-          serverGrounded.identity &&
-          !serverGrounded.identity.floorplan &&
-          threadFloorplan
-        ) {
-          serverGrounded.identity = {
-            ...serverGrounded.identity,
-            floorplan: threadFloorplan,
-            source: "mixed",
-          };
-        }
-        const lastNamesCoach = askNamesCoachIdentity(
-          parseCoachFromText(lastPlain),
-        );
-        const catalogContext = lastNamesCoach
-          ? serverGrounded.block || ""
-          : serverGrounded.block || body.catalogContext || "";
-        const screen = activeScreenFromContext(body.catalogContext);
-        const factsSpec = factsSpecRequestsWebSearch(screen, lastPlain);
-
-        const specWeightAsk = isWeightSpecAsk(lastPlain);
-        if (
-          !factsSpec &&
-          specWeightAsk &&
-          serverGrounded.identity?.make &&
-          serverGrounded.identity.model
-        ) {
-          const tool = await runRegisteredTool(
-            "get_coach_facts",
-            {
+          const specWeightAsk = isWeightSpecAsk(lastPlain);
+          if (
+            !factsSpec &&
+            specWeightAsk &&
+            serverGrounded.identity?.make &&
+            serverGrounded.identity.model
+          ) {
+            sink.status(toolStatusText("get_coach_facts"));
+            const tool = await runRegisteredTool(
+              "get_coach_facts",
+              {
+                year: serverGrounded.identity.year,
+                make: serverGrounded.identity.make,
+                model: serverGrounded.identity.model,
+                floorplan: serverGrounded.identity.floorplan,
+              },
+              { userText: priorUserText || lastPlain },
+            );
+            const reply = formatChatSpecMissReply({
+              query: lastPlain,
               year: serverGrounded.identity.year,
               make: serverGrounded.identity.make,
               model: serverGrounded.identity.model,
-              floorplan: serverGrounded.identity.floorplan,
-            },
-            { userText: priorUserText || lastPlain },
-          );
-          const reply = formatChatSpecMissReply({
-            query: lastPlain,
-            year: serverGrounded.identity.year,
-            make: serverGrounded.identity.make,
-            model: serverGrounded.identity.model,
-            floorplan:
-              serverGrounded.identity.floorplan ||
-              (typeof tool.floorplan === "string" ? tool.floorplan : ""),
-            tool: tool as CoachFactsToolResult,
-          });
-          if (reply && !isUnpinnedWeightReply(reply)) {
-            return finish(
-              jsonToSseStream({
-                content: reply,
-                model: "catalog-pin",
-                agentMode,
-                upstream: "coach-facts",
-              }),
-            );
+              floorplan:
+                serverGrounded.identity.floorplan ||
+                (typeof tool.floorplan === "string" ? tool.floorplan : ""),
+              tool: tool as CoachFactsToolResult,
+            });
+            if (reply && !isUnpinnedWeightReply(reply)) {
+              return finish(
+                jsonToSseStream({
+                  content: reply,
+                  model: "catalog-pin",
+                  agentMode,
+                  upstream: "coach-facts",
+                }),
+              );
+            }
+            if (reply && serverGrounded.identity?.floorplan) {
+              sink.status(WEB_RESEARCH_STATUS);
+              const researched = await executeWebResearch({
+                apiKey: process.env.XAI_API_KEY,
+                query: lastPlain.slice(0, 400),
+                catalogBlock: catalogContext,
+                timeoutMs: researchTimeoutMs("chat", lastPlain),
+                profile: "chat",
+                skipGate: true,
+                requestOrigin: (() => {
+                  try {
+                    return new URL(request.url).origin;
+                  } catch {
+                    return "";
+                  }
+                })(),
+                maxAttempts: WEB_SEARCH_MAX_TOOL_CALLS,
+                researchProvider:
+                  (await getResearchProviderOverride()) ?? undefined,
+                researchOrder: (await getResearchOrderOverride()) ?? undefined,
+                identity: serverGrounded.identity,
+              });
+              const researchedReply = formatChatSpecMissReply({
+                query: lastPlain,
+                year: serverGrounded.identity.year,
+                make: serverGrounded.identity.make,
+                model: serverGrounded.identity.model,
+                floorplan: serverGrounded.identity.floorplan,
+                tool: tool as CoachFactsToolResult,
+                researchNotes: researched.ok ? researched.notes : "",
+              });
+              return finish(
+                jsonToSseStream({
+                  content: researchedReply || reply,
+                  model: "web-research",
+                  agentMode,
+                  upstream: "web-research",
+                }),
+              );
+            }
           }
-          if (reply && serverGrounded.identity?.floorplan) {
+
+          let requestOrigin = "";
+          try {
+            requestOrigin = new URL(request.url).origin;
+          } catch {
+            requestOrigin = "";
+          }
+
+          let ownLotNotes: string | undefined;
+          let skipWebForLot = false;
+          const lotCountOrRank = looksLikeOwnLotCountOrRankAsk(lastPlain);
+          if (looksLikeOwnLotStockQuestion(lastPlain) || lotCountOrRank) {
+            if (looksLikeOwnLotStockQuestion(lastPlain)) {
+              sink.status(toolStatusText("get_own_lot"));
+              const snapshot = await loadOwnLotSnapshot({ requestOrigin });
+              ownLotNotes =
+                snapshot.ok && !ownLotIsUnavailable(snapshot)
+                  ? formatLotQueryNotes(searchLot(snapshot.units, { query: lastPlain, utterance: lastPlain }))
+                  : snapshot.reason || "OWN-LOT INVENTORY UNAVAILABLE.";
+              // A Facts spec still searches the web. The lot block stays in context.
+              skipWebForLot = factsSpec
+                ? false
+                : shouldSkipWebForOwnLot(lastPlain, snapshot);
+            }
+            // A count or a cheapest is the lot tool only. No web notes.
+            if (lotCountOrRank && !factsSpec) skipWebForLot = true;
+          }
+          if (
+            looksLikeInventoryOrCountQuestion(lastPlain) &&
+            !factsSpec &&
+            !looksLikeMarketValueQuestion(lastPlain) &&
+            !looksLikeSpecQuestion(lastPlain)
+          ) {
+            skipWebForLot = true;
+          }
+
+          // Memory first on other screens. Rv Facts spec turns always search.
+          const wantsWebFallback =
+            factsSpec ||
+            (!skipWebForLot &&
+              (serverGrounded.needsWeb ||
+                (!serverGrounded.identity && Boolean(body.wantsWebFallback))));
+
+          let webNotes: string | undefined;
+          if (wantsWebFallback) {
+            sink.status(WEB_RESEARCH_STATUS);
             const researched = await executeWebResearch({
               apiKey: process.env.XAI_API_KEY,
               query: lastPlain.slice(0, 400),
@@ -1220,156 +1375,111 @@ export const Route = createFileRoute("/api/rvgrok")({
               timeoutMs: researchTimeoutMs("chat", lastPlain),
               profile: "chat",
               skipGate: true,
-              requestOrigin: (() => {
-                try {
-                  return new URL(request.url).origin;
-                } catch {
-                  return "";
-                }
-              })(),
+              requestOrigin,
               maxAttempts: WEB_SEARCH_MAX_TOOL_CALLS,
+              // Server-persisted admin override (not a client header).
               researchProvider:
                 (await getResearchProviderOverride()) ?? undefined,
-              researchOrder: (await getResearchOrderOverride()) ?? undefined,
+              researchOrder:
+                (await getResearchOrderOverride()) ?? undefined,
               identity: serverGrounded.identity,
+              screen,
             });
-            const researchedReply = formatChatSpecMissReply({
+            const reportText = looksLikeDeskSheetAsk(lastPlain)
+              ? formatCoachReportTimeoutReply({
+                  notes: researched.ok ? researched.notes : "",
+                  catalogBlock: catalogContext,
+                  query: lastPlain,
+                })
+              : "";
+            if (reportText) {
+              return finish(
+                jsonToSseStream({
+                  content: reportText,
+                  model:
+                    researched.ok && "model" in researched && researched.model
+                      ? researched.model
+                      : "catalog-pin",
+                  agentMode,
+                  upstream: "coach-report",
+                }),
+              );
+            }
+            webNotes = formatWebSearchInjection(researched, {
               query: lastPlain,
-              year: serverGrounded.identity.year,
-              make: serverGrounded.identity.make,
-              model: serverGrounded.identity.model,
-              floorplan: serverGrounded.identity.floorplan,
-              tool: tool as CoachFactsToolResult,
-              researchNotes: researched.ok ? researched.notes : "",
+              catalogBlock: catalogContext,
             });
-            return finish(
-              jsonToSseStream({
-                content: researchedReply || reply,
-                model: "web-research",
-                agentMode,
-                upstream: "web-research",
-              }),
-            );
           }
-        }
 
-        let requestOrigin = "";
-        try {
-          requestOrigin = new URL(request.url).origin;
-        } catch {
-          requestOrigin = "";
-        }
-
-        let ownLotNotes: string | undefined;
-        let skipWebForLot = false;
-        const lotCountOrRank = looksLikeOwnLotCountOrRankAsk(lastPlain);
-        if (looksLikeOwnLotStockQuestion(lastPlain) || lotCountOrRank) {
-          if (looksLikeOwnLotStockQuestion(lastPlain)) {
-            const snapshot = await loadOwnLotSnapshot({ requestOrigin });
-            ownLotNotes =
-              snapshot.ok && !ownLotIsUnavailable(snapshot)
-                ? formatLotQueryNotes(searchLot(snapshot.units, { query: lastPlain, utterance: lastPlain }))
-                : snapshot.reason || "OWN-LOT INVENTORY UNAVAILABLE.";
-            // A Facts spec still searches the web. The lot block stays in context.
-            skipWebForLot = factsSpec
-              ? false
-              : shouldSkipWebForOwnLot(lastPlain, snapshot);
-          }
-          // A count or a cheapest is the lot tool only. No web notes.
-          if (lotCountOrRank && !factsSpec) skipWebForLot = true;
-        }
-        if (
-          looksLikeInventoryOrCountQuestion(lastPlain) &&
-          !factsSpec &&
-          !looksLikeMarketValueQuestion(lastPlain) &&
-          !looksLikeSpecQuestion(lastPlain)
-        ) {
-          skipWebForLot = true;
-        }
-
-        // Memory first on other screens. Rv Facts spec turns always search.
-        const wantsWebFallback =
-          factsSpec ||
-          (!skipWebForLot &&
-            (serverGrounded.needsWeb ||
-              (!serverGrounded.identity && Boolean(body.wantsWebFallback))));
-
-        let webNotes: string | undefined;
-        if (wantsWebFallback) {
-          const researched = await executeWebResearch({
-            apiKey: process.env.XAI_API_KEY,
-            query: lastPlain.slice(0, 400),
-            catalogBlock: catalogContext,
-            timeoutMs: researchTimeoutMs("chat", lastPlain),
-            profile: "chat",
-            skipGate: true,
+          // xAI first when the key is present so generate_image (and vision) work.
+          // Facts keeps the normal tool list, including the lot snapshot.
+          const fromXai = await tryXaiDirect(
+            messages,
+            agentMode,
+            feedbackContext,
+            catalogContext,
+            webNotes,
+            ownLotNotes,
+            visitorFirstName,
+            visitorMemory,
+            standingLessons,
+            talkMode,
             requestOrigin,
-            maxAttempts: WEB_SEARCH_MAX_TOOL_CALLS,
-            // Server-persisted admin override (not a client header).
-            researchProvider:
-              (await getResearchProviderOverride()) ?? undefined,
-            researchOrder:
-              (await getResearchOrderOverride()) ?? undefined,
-            identity: serverGrounded.identity,
-            screen,
-          });
-          const reportText = looksLikeDeskSheetAsk(lastPlain)
-            ? formatCoachReportTimeoutReply({
-                notes: researched.ok ? researched.notes : "",
-                catalogBlock: catalogContext,
-                query: lastPlain,
-              })
-            : "";
-          if (reportText) {
-            return finish(
+            {
+              sink,
+              lotSensitive:
+                requiredToolForAsk(lastPlain) === "get_own_lot" ||
+                looksLikeOwnLotStockQuestion(lastPlain) ||
+                lotCountOrRank ||
+                looksLikeInventoryOrCountQuestion(lastPlain),
+            },
+          );
+          if (fromXai != null) {
+            if (sink.visibleText() !== fromXai) sink.replace(fromXai);
+            // Memory sees exactly the final text, as when it tapped the old
+            // replayed stream. The tee's client half is not needed here.
+            const tapped = rememberAfterSseResponse(
               jsonToSseStream({
-                content: reportText,
-                model:
-                  researched.ok && "model" in researched && researched.model
-                    ? researched.model
-                    : "catalog-pin",
+                content: fromXai,
+                model: "",
                 agentMode,
-                upstream: "coach-report",
+                upstream: "xai-direct",
+                chunkDelayMs: 0,
               }),
+              { phoneDigits: phoneKey, turns: memoryTurns },
             );
+            void tapped.body?.cancel().catch(() => undefined);
+            return;
           }
-          webNotes = formatWebSearchInjection(researched, {
-            query: lastPlain,
-            catalogBlock: catalogContext,
-          });
-        }
+          const fromWorker = await tryCloudflareWorker(
+            messages,
+            agentMode,
+            feedbackContext,
+            catalogContext,
+            webNotes,
+            ownLotNotes,
+            visitorFirstName,
+            visitorMemory,
+            standingLessons,
+            talkMode,
+          );
+          if (fromWorker) return finish(fromWorker);
 
-        // xAI first when the key is present so generate_image (and vision) work.
-        // Facts keeps the normal tool list, including the lot snapshot.
-        const fromXai = await tryXaiDirect(
-          messages,
-          agentMode,
-          feedbackContext,
-          catalogContext,
-          webNotes,
-          ownLotNotes,
-          visitorFirstName,
-          visitorMemory,
-          standingLessons,
-          talkMode,
-          requestOrigin,
-        );
-        if (fromXai) return finish(fromXai);
-        const fromWorker = await tryCloudflareWorker(
-          messages,
-          agentMode,
-          feedbackContext,
-          catalogContext,
-          webNotes,
-          ownLotNotes,
-          visitorFirstName,
-          visitorMemory,
-          standingLessons,
-          talkMode,
-        );
-        if (fromWorker) return finish(fromWorker);
+          return finish(demoStream(messages, agentMode));
+        };
 
-        return finish(demoStream(messages, agentMode));
+        void run()
+          .catch((err) => {
+            console.error("[rvgrok] chat turn failed", err);
+            if (sink.visibleText()) sink.replace("");
+            sink.error(
+              (err as Error)?.name === "TimeoutError"
+                ? "The reply timed out"
+                : "The reply failed",
+            );
+          })
+          .finally(() => sink.close());
+        return sink.response;
       },
     },
   },

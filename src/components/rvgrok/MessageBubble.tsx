@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, CornerDownLeft, Loader2, Square, ThumbsDown, ThumbsUp, Volume2 } from "lucide-react";
+import { Check, CornerDownLeft, Loader2, RotateCcw, Square, ThumbsDown, ThumbsUp, Volume2 } from "lucide-react";
 import type { FollowUpChip } from "@/lib/rvgrok/followUpChips";
 import type { Message } from "@/lib/rvgrok/types";
 import { parseCoachFromText } from "@/lib/rvgrok/answerFeedback";
@@ -48,6 +48,25 @@ function renderContent(text: string) {
   });
 }
 
+/** Three soft dots: the reply is still coming. Tailwind only, no new CSS. */
+function TypingDots({ className }: { className?: string }) {
+  return (
+    <span
+      aria-hidden
+      data-rvgrok-typing=""
+      className={cn("inline-flex items-center gap-[3px] align-middle", className)}
+    >
+      {[0, 160, 320].map((delay) => (
+        <span
+          key={delay}
+          className="size-[5px] animate-pulse rounded-full bg-current opacity-70"
+          style={{ animationDelay: `${delay}ms`, animationDuration: "1s" }}
+        />
+      ))}
+    </span>
+  );
+}
+
 export type GrokFeedbackPayload = {
   rating: "up" | "down";
   correction?: string;
@@ -66,6 +85,7 @@ export function MessageBubble({
   suggestions,
   onSuggestion,
   onFloorplanChoice,
+  onRetry,
   avatarSrc = "/assets/brand/icon-rvgrok.png",
 }: {
   message: Message;
@@ -76,6 +96,8 @@ export function MessageBubble({
   suggestions?: FollowUpChip[];
   onSuggestion?: (prompt: string) => void;
   onFloorplanChoice?: (code: string) => void;
+  /** Typed chat: resend the ask after a failed / timed-out reply. */
+  onRetry?: (prompt: string) => void;
   avatarSrc?: string;
 }) {
   const isUser = message.role === "user";
@@ -86,6 +108,7 @@ export function MessageBubble({
     !!message.content &&
     !message.streaming &&
     !!onFeedback &&
+    !message.retryText &&
     !message.content.startsWith("Error:");
 
   const parsed = parseCoachFromText(
@@ -181,13 +204,42 @@ export function MessageBubble({
         ) : null}
 
         {message.streaming && !displayContent ? (
-          <p className="grok-thinking flex items-center gap-2">
-            <Loader2 className="size-3.5 animate-spin" />
-            Thinking…
-          </p>
+          message.streamStatus ? (
+            <p
+              className="grok-thinking flex items-center gap-2"
+              data-rvgrok-stream-status=""
+              role="status"
+              aria-live="polite"
+            >
+              <TypingDots />
+              {message.streamStatus}
+            </p>
+          ) : (
+            <p className="grok-thinking flex items-center gap-2">
+              <Loader2 className="size-3.5 animate-spin" />
+              Thinking…
+            </p>
+          )
         ) : (
-          renderContent(displayContent)
+          <>
+            {renderContent(displayContent)}
+            {message.streaming && message.streamStatus ? (
+              <TypingDots className="mt-1 opacity-70" />
+            ) : null}
+          </>
         )}
+
+        {!message.streaming && message.retryText && onRetry ? (
+          <button
+            type="button"
+            data-rvgrok-retry=""
+            onClick={() => onRetry(message.retryText!)}
+            className="mt-2 inline-flex min-h-9 items-center gap-1.5 rounded-full border border-white/20 px-3 text-[12px] font-semibold"
+          >
+            <RotateCcw className="size-3.5" />
+            Try again
+          </button>
+        ) : null}
 
         <div className="mt-2 flex items-center justify-between gap-2">
           <span className="bubble-time">
