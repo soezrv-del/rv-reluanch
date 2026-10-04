@@ -1961,8 +1961,8 @@ export function RvTripsApp() {
                     className={cn(
                       "flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-[16px] font-bold transition disabled:opacity-40",
                       navArmed
-                        ? "border border-ruby/80 bg-ruby text-white shadow-[0_0_28px_rgba(212,37,53,0.55)]"
-                        : "bg-blue text-white shadow-[0_0_28px_rgba(80,160,255,0.4)]",
+                        ? "border border-ruby/80 bg-ruby text-white"
+                        : "bg-blue text-white",
                     )}
                   >
                     <Navigation className="size-5" />

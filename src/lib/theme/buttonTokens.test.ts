@@ -72,3 +72,13 @@ test("root route loads buttons.css after styles.css", () => {
   const b = rootRoute.indexOf("href: buttonsCss");
   assert.ok(a > 0 && b > a, "buttons.css is linked after styles.css");
 });
+
+test("trip primary buttons use the card shadow, and dock tabs share the row", () => {
+  const styles = read("src/styles.css");
+  const dock = read("src/components/shell/dock.css");
+  assert.match(styles, /\[data-trips-screen\] button\.w-full\[class\*="rounded"\]/);
+  assert.match(styles, /box-shadow:\s*0 8px 18px rgba\(4, 12, 32, 0\.22\) !important/);
+  assert.match(dock, /flex:\s*1 1 0 !important/);
+  assert.match(dock, /height:\s*44px !important/);
+  assert.doesNotMatch(dock, /padding-right:\s*calc\(50%/);
+});

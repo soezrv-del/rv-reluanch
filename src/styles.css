@@ -2179,6 +2179,10 @@
   background: var(--color-ink-black);
   isolation: isolate;
 }
+/* Primary trip actions sit at the fuel/camp card depth, not as a flat square or a glow. */
+[data-trips-screen] button.w-full[class*="rounded"]:not(.text-left) {
+  box-shadow: 0 8px 18px rgba(4, 12, 32, 0.22) !important;
+}
 [data-trips-screen] .glass-prestige,
 [data-trips-screen] .glass-prestige-deep,
 [data-trips-screen] .glass-prestige-gold,
