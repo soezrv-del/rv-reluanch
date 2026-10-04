@@ -342,7 +342,10 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
   assert.doesNotMatch(home, /Stock #|showroom-count|showroom-onlot|showroom-coachline|showroom-spotfacts|showroom-spotmeta|useCountUp|spotlightLabel|data-home-count|data-home-spotlight-specs/);
   const arrivalRail = readFileSync(join(root, "../../components/lot/LotArrivals.tsx"), "utf8");
   assert.match(arrivalRail, /Newest arrivals/);
-  assert.match(arrivalRail, /showroom-arrival-name/);
+  // Arrival cards wear the lot list card face (title, meta, photo well).
+  assert.match(arrivalRail, /lot-unit-title is-rail/);
+  assert.match(arrivalRail, /lot-unit-meta/);
+  assert.match(arrivalRail, /lot-well relative overflow-hidden is-rail/);
   assert.doesNotMatch(home, /requestSpotlightFacts|onOpenFacts|729995|54000|44\.92/);
   assert.doesNotMatch(home, /horsepower|engine/i);
   assert.doesNotMatch(fax, /takePendingSpotlightFacts|SPOTLIGHT_FACTS/);

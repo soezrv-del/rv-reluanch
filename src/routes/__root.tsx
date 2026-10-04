@@ -11,6 +11,7 @@ import { THEME_BOOT_SCRIPT } from "@/lib/theme";
 import { resolveShareHost } from "@/lib/og/shareHost";
 import appCss from "../styles.css?url";
 import buttonsCss from "../styles/buttons.css?url";
+import cardsCss from "../styles/cards.css?url";
 
 const APP_NAME = "RvFOX · Know before you buy.";
 
@@ -45,6 +46,7 @@ export const Route = createRootRoute({
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "stylesheet", href: buttonsCss },
+      { rel: "stylesheet", href: cardsCss },
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
       { rel: "icon", href: "/assets/brand/icon-rvfax.png" },
       { rel: "apple-touch-icon", href: "/assets/brand/icon-rvfax.png" },
