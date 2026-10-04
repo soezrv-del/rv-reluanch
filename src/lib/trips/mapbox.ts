@@ -14,7 +14,14 @@ export type MapboxGeoHit = {
 };
 
 export const MAPBOX_ATTRIBUTION = "© Mapbox © OpenStreetMap";
+/** Classic streets — kept for the raster (Static Tiles) fallback only. */
 export const MAPBOX_STYLE_STREETS = "mapbox://styles/mapbox/streets-v12";
+/**
+ * GL streets view. Billed per GL JS map load exactly like streets-v12
+ * (a map load includes unlimited vector/raster tile requests). The Static
+ * Tiles API cannot render Standard, so the raster path stays streets-v12.
+ */
+export const MAPBOX_STYLE_STANDARD = "mapbox://styles/mapbox/standard";
 export const MAPBOX_STYLE_SATELLITE =
   "mapbox://styles/mapbox/satellite-streets-v12";
 export const MAPBOX_RASTER_STYLE_STREETS = "mapbox/streets-v12";
@@ -42,7 +49,34 @@ export function mapboxPublicToken(
 }
 
 export function mapboxStyleUrl(style: MapboxStyleId): string {
-  return style === "satellite" ? MAPBOX_STYLE_SATELLITE : MAPBOX_STYLE_STREETS;
+  return style === "satellite" ? MAPBOX_STYLE_SATELLITE : MAPBOX_STYLE_STANDARD;
+}
+
+/** Only the GL streets view is Standard; satellite stays satellite-streets-v12. */
+export function isStandardStyle(style: MapboxStyleId): boolean {
+  return mapboxStyleUrl(style) === MAPBOX_STYLE_STANDARD;
+}
+
+export type MapboxLightPreset = "day" | "night";
+
+export function standardLightPreset(theme: "light" | "dark"): MapboxLightPreset {
+  return theme === "dark" ? "night" : "day";
+}
+
+/**
+ * Standard `basemap` config. Restrained look: no POI clutter, faded theme.
+ * `showIndoor` stays false on purpose — indoor airport tiles are a
+ * separately billed Mapbox product; everything else rides the map load.
+ */
+export function mapboxStandardConfig(
+  theme: "light" | "dark",
+): Record<string, string | boolean> {
+  return {
+    lightPreset: standardLightPreset(theme),
+    theme: "faded",
+    showPointOfInterestLabels: false,
+    showIndoor: false,
+  };
 }
 
 export function mapboxRasterTemplate(

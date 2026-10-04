@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { cn } from "@/lib/utils";
 import type { OsrmLineString } from "@/lib/trips/osrm";
 import type { FuelStop } from "@/lib/trips/corridorFuel";
@@ -20,9 +20,18 @@ import {
   type BasemapPin,
 } from "@/lib/trips/basemap";
 import {
+  isStandardStyle,
+  mapboxStandardConfig,
   mapboxStyleUrl,
+  standardLightPreset,
   type MapboxStyleId,
 } from "@/lib/trips/mapbox";
+import {
+  readTheme,
+  serverTheme,
+  subscribeTheme,
+  type SuiteTheme,
+} from "@/lib/theme";
 import {
   shouldRecenterFollow,
   type FollowStatus,
@@ -93,7 +102,27 @@ function geometryCoords(
   );
 }
 
-function paintRoute(map: MapboxMap, coords: [number, number][]) {
+/** Push the app theme + restrained look into Standard's `basemap` import. */
+function applyStandardConfig(map: MapboxMap, theme: SuiteTheme) {
+  for (const [key, value] of Object.entries(mapboxStandardConfig(theme))) {
+    try {
+      map.setConfigProperty("basemap", key, value);
+    } catch {
+      /* style may be swapping */
+    }
+  }
+}
+
+/**
+ * Route casing + line. On Standard they go in the `top` slot (above 3D
+ * buildings and basemap labels) with full emissive strength so night
+ * lighting doesn't dim them. Classic satellite has no slots — plain add.
+ */
+function paintRoute(
+  map: MapboxMap,
+  coords: [number, number][],
+  standard: boolean,
+) {
   const data = {
     type: "Feature" as const,
     properties: {},
@@ -111,26 +140,32 @@ function paintRoute(map: MapboxMap, coords: [number, number][]) {
   if (map.getSource(ROUTE_SRC)) map.removeSource(ROUTE_SRC);
   if (coords.length < 2) return;
   map.addSource(ROUTE_SRC, { type: "geojson", data });
+  const slot = standard ? { slot: "top" } : {};
+  const glow = standard ? { "line-emissive-strength": 1 } : {};
   map.addLayer({
     id: ROUTE_CASING,
     type: "line",
     source: ROUTE_SRC,
+    ...slot,
     layout: { "line-cap": "round", "line-join": "round" },
     paint: {
       "line-color": "#0b1a28",
       "line-width": 8,
       "line-opacity": 0.55,
+      ...glow,
     },
   });
   map.addLayer({
     id: ROUTE_LINE,
     type: "line",
     source: ROUTE_SRC,
+    ...slot,
     layout: { "line-cap": "round", "line-join": "round" },
     paint: {
       "line-color": "#4a86f0",
       "line-width": 4.5,
       "line-opacity": 1,
+      ...glow,
     },
   });
 }
@@ -189,6 +224,9 @@ export function RouteMapboxGl({
   const [ready, setReady] = useState(false);
   const [styleId, setStyleId] = useState<MapboxStyleId>("streets");
   const styleIdRef = useRef<MapboxStyleId>("streets");
+  const theme = useSyncExternalStore(subscribeTheme, readTheme, serverTheme);
+  const themeRef = useRef<SuiteTheme>(theme);
+  themeRef.current = theme;
   const onUnavailableRef = useRef(onUnavailable);
   onUnavailableRef.current = onUnavailable;
 
@@ -199,6 +237,8 @@ export function RouteMapboxGl({
     [vias],
   );
   const coords = useMemo(() => geometryCoords(geometry), [geometry]);
+  const coordsRef = useRef(coords);
+  coordsRef.current = coords;
 
   const pins = useMemo(() => {
     const rows: BasemapPin[] = [];
@@ -309,9 +349,13 @@ export function RouteMapboxGl({
         const coarse =
           typeof window !== "undefined" &&
           window.matchMedia?.("(pointer: coarse)")?.matches;
+        const startStandard = isStandardStyle(styleIdRef.current);
         map = new mapboxgl.Map({
           container: el,
           style: mapboxStyleUrl(styleIdRef.current),
+          ...(startStandard
+            ? { config: { basemap: mapboxStandardConfig(themeRef.current) } }
+            : {}),
           attributionControl: true,
           logoPosition: "bottom-left",
           cooperativeGestures: !coarse,
@@ -323,9 +367,22 @@ export function RouteMapboxGl({
           new mapboxgl.NavigationControl({ showCompass: false, visualizePitch: false }),
           "top-right",
         );
+        // Fires on first load and after every setStyle (Streets ⇄ Satellite):
+        // re-apply Standard config and re-add the route layers each time.
+        const onStyleLoad = () => {
+          if (cancelled || !map) return;
+          const standard = isStandardStyle(styleIdRef.current);
+          if (standard) applyStandardConfig(map, themeRef.current);
+          try {
+            paintRoute(map, coordsRef.current, standard);
+          } catch {
+            /* style may be swapping */
+          }
+        };
+        map.on("style.load", onStyleLoad);
         const onLoad = () => {
           if (cancelled) return;
-          paintRoute(map!, geometryCoords(geometry));
+          onStyleLoad();
           setReady(true);
         };
         map.on("load", onLoad);
@@ -358,7 +415,6 @@ export function RouteMapboxGl({
       setReady(false);
     };
     // Token / container lifetime only — style + data sync below.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const lastStyleRef = useRef<MapboxStyleId>("streets");
@@ -367,20 +423,30 @@ export function RouteMapboxGl({
     if (!map || !ready) return;
     if (lastStyleRef.current === styleId) return;
     lastStyleRef.current = styleId;
-    const apply = () => paintRoute(map, coords);
-    map.once("style.load", apply);
+    styleIdRef.current = styleId;
+    // Route layers + Standard config are re-applied by the style.load handler.
     try {
       map.setStyle(mapboxStyleUrl(styleId));
     } catch {
       onUnavailableRef.current();
     }
-  }, [styleId, ready, coords]);
+  }, [styleId, ready]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready || !isStandardStyle(styleId)) return;
+    try {
+      map.setConfigProperty("basemap", "lightPreset", standardLightPreset(theme));
+    } catch {
+      /* style may be swapping */
+    }
+  }, [theme, styleId, ready]);
 
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !ready) return;
     try {
-      paintRoute(map, coords);
+      paintRoute(map, coords, isStandardStyle(styleIdRef.current));
     } catch {
       /* style may be swapping */
     }
@@ -623,7 +689,7 @@ export function RouteMapboxGl({
         data-tile-note
         className="pointer-events-none absolute bottom-6 right-2 z-[5] rounded bg-black/50 px-1.5 py-0.5 text-[9px] font-medium text-white/85"
       >
-        © Mapbox · streets
+        © Mapbox · {styleId === "satellite" ? "satellite" : "standard"}
       </p>
     </div>
   );
