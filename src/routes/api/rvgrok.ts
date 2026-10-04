@@ -37,7 +37,12 @@ import {
   shouldSkipWebForOwnLot,
 } from "@/lib/rvgrok/ownLotInventory";
 import { looksLikeOwnLotCountOrRankAsk } from "@/lib/rvgrok/ownLotAsk";
-import { formatLotQueryNotes, searchLot } from "@/lib/lot/lotQuery";
+import {
+  formatLotQueryNotes,
+  isLotGoAhead,
+  offeredCoachNames,
+  searchLot,
+} from "@/lib/lot/lotQuery";
 import {
   activeScreenFromContext,
   factsSpecRequestsWebSearch,
@@ -204,6 +209,35 @@ function floorplanAlreadyInThread(text: string): string {
     else if (parsed.model) floorplan = parsed.floorplan;
   }
   return floorplan;
+}
+
+/** The assistant line right before the last user turn ("Want me to check the lot for the Navion?"). */
+function priorAssistantPlain(messages: ChatMessage[]): string {
+  let sawUser = false;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i]!;
+    if (m.role === "user") {
+      if (sawUser) return "";
+      sawUser = true;
+      continue;
+    }
+    if (sawUser && m.role === "assistant") return contentToPlain(m.content);
+  }
+  return "";
+}
+
+/**
+ * "Yes" / "are you looking for it?" after she offered coach names is a lot
+ * search for those names. Empty when the turn is not a go-ahead or she
+ * named nothing on or near the sheet.
+ */
+function goAheadLotQuery(
+  userText: string,
+  priorAssistant: string,
+  units: Parameters<typeof offeredCoachNames>[1],
+): string {
+  if (!isLotGoAhead(userText) || !priorAssistant) return "";
+  return offeredCoachNames(priorAssistant, units).join(" or ");
 }
 
 function contentToPlain(content: string | ContentPart[]): string {
@@ -383,7 +417,7 @@ const XAI_CHAT_TOOLS = [
   ),
   toolFn(
     "get_own_lot",
-    "RV Country own lot. Call for any count or availability question, including a follow-up that changes type or condition. Put their words in query. Say none only when matched is 0. If did_you_mean is set, offer that name. Do not treat a lot row as an OEM spec.",
+    "RV Country own lot. Call for any count or availability question, including a follow-up that changes type or condition. Put their words in query. When they say yes to checking the lot for coaches you just named, put those names in query (\"Navion or EKKO 23B\"), not the last coach. Never say a coach is not in stock without this tool. Say none only when matched is 0. If did_you_mean is set, offer that name. Do not treat a lot row as an OEM spec.",
     {
       query: { type: "string" },
       make: { type: "string" },
@@ -467,7 +501,7 @@ async function fetchOwnJson(
 async function runRegisteredTool(
   name: string,
   args: Record<string, unknown>,
-  ctx: { userText: string; requestOrigin?: string },
+  ctx: { userText: string; requestOrigin?: string; priorAssistant?: string },
 ): Promise<Record<string, unknown>> {
   if (name === "get_coach_facts") {
     const id = coachArgs(args, ctx.userText);
@@ -612,11 +646,14 @@ async function runRegisteredTool(
         error: snapshot.reason || "lot snapshot unavailable",
       };
     }
+    // "Yes" to "want me to check the lot for the Navion and the EKKO?"
+    // searches those names, not the last coach and not the word yes.
+    const offered = goAheadLotQuery(ctx.userText, ctx.priorAssistant || "", snapshot.units);
     const found = searchLot(snapshot.units, {
-      query: toolStr(args.query) || ctx.userText,
-      utterance: ctx.userText,
-      make: toolStr(args.make),
-      model: toolStr(args.model),
+      query: offered || toolStr(args.query) || ctx.userText,
+      ...(offered ? { utterance: offered } : { utterance: ctx.userText }),
+      make: offered ? "" : toolStr(args.make),
+      model: offered ? "" : toolStr(args.model),
       body_type: toolStr(args.body_type) || toolStr(args.bodyType),
       condition: toolStr(args.condition),
       status: toolStr(args.status),
@@ -679,6 +716,8 @@ async function runXaiWithTools(opts: {
   lotSensitive: boolean;
   /** Lot rows already injected server-side (OWN-LOT INVENTORY block). */
   lotNotesInContext: boolean;
+  /** The assistant line before this turn, so "yes" can search what she offered. */
+  priorAssistant?: string;
 }): Promise<string | null> {
   const working: Array<Record<string, unknown>> = opts.messages.map((m) => ({
     role: m.role,
@@ -879,6 +918,7 @@ async function runXaiWithTools(opts: {
           const result = await runRegisteredTool(name, args, {
             userText: opts.userText,
             requestOrigin: opts.requestOrigin,
+            priorAssistant: opts.priorAssistant,
           });
           if (name === "get_own_lot") lotSeen = true;
           prelude.push({
@@ -984,6 +1024,7 @@ async function tryXaiDirect(
         sink: stream.sink,
         lotSensitive: stream.lotSensitive,
         lotNotesInContext: Boolean((ownLotNotes || "").trim()),
+        priorAssistant: priorAssistantPlain(messages),
       });
       if (result != null) return result;
     } catch {
@@ -1349,6 +1390,27 @@ export const Route = createFileRoute("/api/rvgrok")({
             // A count or a cheapest is the lot tool only. No web notes.
             if (lotCountOrRank && !factsSpec) skipWebForLot = true;
           }
+          // "Yes" / "are you looking for it?" after she offered the Navion and
+          // the EKKO: run the real lot search for those names now, before any
+          // text, so she cannot answer "none in stock" without one.
+          let goAheadLot = false;
+          if (!ownLotNotes && isLotGoAhead(lastPlain)) {
+            const prior = priorAssistantPlain(messages);
+            if (prior) {
+              const snapshot = await loadOwnLotSnapshot({ requestOrigin });
+              if (snapshot.ok && !ownLotIsUnavailable(snapshot)) {
+                const offered = goAheadLotQuery(lastPlain, prior, snapshot.units);
+                if (offered) {
+                  sink.status(toolStatusText("get_own_lot"));
+                  ownLotNotes = formatLotQueryNotes(
+                    searchLot(snapshot.units, { query: offered, utterance: offered }),
+                  );
+                  skipWebForLot = true;
+                  goAheadLot = true;
+                }
+              }
+            }
+          }
           if (
             looksLikeInventoryOrCountQuestion(lastPlain) &&
             !factsSpec &&
@@ -1431,6 +1493,7 @@ export const Route = createFileRoute("/api/rvgrok")({
                 requiredToolForAsk(lastPlain) === "get_own_lot" ||
                 looksLikeOwnLotStockQuestion(lastPlain) ||
                 lotCountOrRank ||
+                goAheadLot ||
                 looksLikeInventoryOrCountQuestion(lastPlain),
             },
           );
