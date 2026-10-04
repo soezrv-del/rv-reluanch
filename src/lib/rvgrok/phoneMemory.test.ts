@@ -22,11 +22,16 @@ import {
   formatVisitorMemoryBlock,
   isMeaningfulMemoryTurn,
   memoryPhoneKey,
+  memoryRowForSave,
   mergeDigests,
+  mergeProfileSlots,
   mergeProfileSummary,
   parseDigests,
   parseExtractedMemory,
+  parseProfileSlots,
+  planPhoneMemoryWrite,
   shouldWriteMemory,
+  type PhoneMemory,
 } from "./phoneMemory.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -107,12 +112,13 @@ test("digest merge drops oldest and caps each entry", () => {
   const filled = mergeDigests(
     Array.from({ length: MEMORY_DIGEST_KEEP }, (_, i) => ({
       at: `2026-01-0${i + 1}T00:00:00.000Z`,
-      text: `Digest ${i + 1}`,
+      // Letters, not digits: a digest never keeps a number.
+      text: `Digest ${String.fromCharCode(65 + i)}`,
     })),
     { at: "2026-02-01T00:00:00.000Z", text: "Newest digest" },
   );
   assert.equal(filled.length, MEMORY_DIGEST_KEEP);
-  assert.equal(filled[0]?.text, "Digest 2");
+  assert.equal(filled[0]?.text, "Digest B");
   assert.equal(filled[filled.length - 1]?.text, "Newest digest");
   const long = capDigestText("x".repeat(MEMORY_DIGEST_MAX + 80));
   assert.ok(long.length <= MEMORY_DIGEST_MAX);
@@ -177,14 +183,160 @@ test("extract parse is conservative and redacts secrets", () => {
   assert.doesNotMatch(parsed.profileSummary, /sk-abcdefghijklmnopqrstuv/);
   assert.equal(parsed.digest, "Talked Newmar.");
   assert.deepEqual(parseExtractedMemory("not json"), {
+    slots: { style: "", coaches: [], openThread: null },
     profileSummary: "",
     digest: "",
   });
+  // No extract: a topic digest, never the raw quote.
   assert.equal(
     fallbackDigestFromTurns([{ role: "user", text: "Looking at a 2022 Entegra." }]),
-    "Talked about: Looking at a 2022 Entegra.",
+    "Talked about Entegra.",
+  );
+  assert.equal(
+    fallbackDigestFromTurns([
+      { role: "user", text: "What's the GVWR on stock UPF9963, is it 37,320 lbs for $229,995?" },
+    ]),
+    "Talked about gvwr.",
   );
   assert.equal(fallbackDigestFromTurns([{ role: "user", text: "hi" }]), "");
+});
+
+/** Price, GVWR-style figure, stock number, VIN, or count anywhere in the text. */
+const NUMBER_LEAK =
+  /\$|\d|\bstk\b|\b(?:forty|thirty|twelve|three|five)\b[\s-]+(?:gallons?|units?|coaches|in stock|lbs|pounds|thousand)/i;
+
+const NUMBER_EXTRACT = JSON.stringify({
+  style: "Likes short answers. He has a budget of $150,000.",
+  coaches: [
+    "2022 Entegra Aspire 44R",
+    "Newmar Dutch Star",
+    "stk UPF9963",
+    "Tiffin Allegro Red 360",
+    "Grand Design Solitude",
+    "Jayco Seneca",
+    "Thor Tuscany",
+  ],
+  open_thread: {
+    coach: "Newmar Dutch Star 4369",
+    asked: "Asked if the GVWR is 37,320 lbs. Wants to know about towing his Jeep.",
+  },
+  digest: "Compared three coaches in stock. Asked about towing.",
+});
+
+const SPOKEN_SPEC_TURNS = [
+  { role: "user", text: "Does the Dutch Star 4369 have 450 hp and a 100 gallon fresh tank? VIN 1GBHG39KX81120399." },
+  { role: "assistant", text: "It shows 450 horsepower, 100 gallons fresh, GVWR 44,600 lbs, priced at $389,000." },
+];
+
+function stored(profileSummary = "", digests: PhoneMemory["digests"] = []): PhoneMemory {
+  return { phoneDigits: "7022665918", profileSummary, digests, updatedAt: "" };
+}
+
+test("extract slots are names and words only; no number survives save or inject", () => {
+  const parsed = parseExtractedMemory(NUMBER_EXTRACT);
+  assert.equal(parsed.slots.style, "Likes short answers.");
+  assert.ok(parsed.slots.coaches.length <= 5);
+  assert.deepEqual(parsed.slots.coaches, [
+    "Entegra Aspire",
+    "Newmar Dutch Star",
+    "Tiffin Allegro Red",
+    "Grand Design Solitude",
+    "Jayco Seneca",
+  ]);
+  assert.deepEqual(parsed.slots.openThread, {
+    coach: "Newmar Dutch Star",
+    asked: "Wants to know about towing his Jeep.",
+  });
+  assert.equal(parsed.digest, "Asked about towing.");
+
+  const plan = planPhoneMemoryWrite({
+    existing: stored("Style: Plain words | Coaches: Winnebago View"),
+    extracted: parsed,
+    turns: SPOKEN_SPEC_TURNS,
+    now: "2026-10-03T00:00:00.000Z",
+  });
+  assert.ok(plan);
+  const saved = memoryRowForSave(plan);
+  const block = formatVisitorMemoryBlock({ ...stored(), ...saved });
+  for (const text of [saved.profileSummary, ...saved.digests.map((d) => d.text), block]) {
+    assert.doesNotMatch(text, NUMBER_LEAK, text);
+    assert.doesNotMatch(text, /GVWR is|gallon|horsepower|VIN|UPF9963|budget/i, text);
+  }
+  assert.match(saved.profileSummary, /^Style: Likes short answers\./);
+  assert.match(saved.profileSummary, /Open thread: Newmar Dutch Star — Wants to know about towing/);
+  assert.ok(saved.profileSummary.length <= MEMORY_PROFILE_MAX);
+  assert.ok(block.length <= MEMORY_INJECT_MAX);
+});
+
+test("an empty slot never wipes the stored one; coaches merge newest first, max 5", () => {
+  const prev =
+    "Style: Short answers | Coaches: Tiffin Allegro, Newmar Ventana | Open thread: Newmar Ventana — Asked about towing";
+  assert.equal(
+    mergeProfileSlots(prev, { style: "", coaches: [], openThread: null }),
+    prev,
+  );
+  const next = mergeProfileSlots(prev, {
+    style: "",
+    coaches: ["Entegra Anthem", "tiffin allegro"],
+    openThread: { coach: "Entegra Anthem", asked: "Wants the price." },
+  });
+  const slots = parseProfileSlots(next)!;
+  assert.equal(slots.style, "Short answers");
+  assert.deepEqual(slots.coaches, ["Entegra Anthem", "tiffin allegro", "Newmar Ventana"]);
+  assert.deepEqual(slots.openThread, { coach: "Entegra Anthem", asked: "Wants the price." });
+  // A number-only incoming slot scrubs to empty, so it keeps the stored one too.
+  const kept = parseProfileSlots(
+    mergeProfileSlots(prev, {
+      style: "Budget is $90k.",
+      coaches: ["stk 47407"],
+      openThread: { coach: "", asked: "Is it 37,320 lbs?" },
+    }),
+  )!;
+  assert.equal(kept.style, "Short answers");
+  assert.deepEqual(kept.coaches, ["Tiffin Allegro", "Newmar Ventana"]);
+  assert.equal(kept.openThread?.asked, "Asked about towing");
+});
+
+test("no key or a failed extract keeps the old profile and stores a scrubbed digest", () => {
+  const prev = "Style: Short answers | Coaches: Newmar Dutch Star";
+  const plan = planPhoneMemoryWrite({
+    existing: stored(prev),
+    extracted: null,
+    turns: SPOKEN_SPEC_TURNS,
+    now: "2026-10-03T00:00:00.000Z",
+  });
+  assert.ok(plan);
+  assert.equal(plan.profileSummary, prev);
+  assert.equal(plan.digests.length, 1);
+  const digest = plan.digests[0]!.text;
+  assert.doesNotMatch(digest, NUMBER_LEAK);
+  assert.doesNotMatch(digest, /Dutch Star|Does the|have/i, "never a raw quote");
+  assert.equal(
+    planPhoneMemoryWrite({
+      existing: stored(prev),
+      extracted: null,
+      turns: [{ role: "user", text: "Is it really 450 hp?" }],
+    }),
+    null,
+    "nothing recognizable → no write",
+  );
+});
+
+test("an older stored profile with numbers is scrubbed on save and on inject", () => {
+  const legacy =
+    "Prefers compact answers. Owns a 2019 Tiffin with 37,320 lbs GVWR. Has forty gallons fresh. Watching Entegra.";
+  const legacyDigests = [
+    { at: "2026-01-01T00:00:00.000Z", text: "Talked about: price of stk UPF9963 at $229,995" },
+    { at: "2026-01-02T00:00:00.000Z", text: "We have twelve units in stock. Asked about towing." },
+  ];
+  const block = formatVisitorMemoryBlock(stored(legacy, legacyDigests));
+  assert.doesNotMatch(block, NUMBER_LEAK);
+  assert.match(block, /Prefers compact answers\. Watching Entegra\./);
+  assert.match(block, /Asked about towing\./);
+  const saved = memoryRowForSave({ profileSummary: legacy, digests: legacyDigests });
+  assert.doesNotMatch(saved.profileSummary, NUMBER_LEAK);
+  for (const d of saved.digests) assert.doesNotMatch(d.text, NUMBER_LEAK);
+  assert.equal(saved.digests.length, 1, "an all-number digest is dropped, not stored");
 });
 
 test("parseDigests accepts JSON text or arrays", () => {
