@@ -15,6 +15,15 @@ import {
   upsertSession,
 } from "@/lib/rvgrok/history";
 import { streamChat } from "@/lib/rvgrok/stream";
+import {
+  CHAT_STREAM_IDLE_MS,
+  CHAT_STREAM_TOTAL_MS,
+  chatRetryMessage,
+  initialStreamView,
+  reduceStreamView,
+  streamActivityLabel,
+  type StreamViewEvent,
+} from "@/lib/rvgrok/chatStreamView";
 import { userLinesForMemory } from "@/lib/rvgrok/sessionLearn";
 import { GrokRealtimeSession } from "@/lib/rvgrok/realtime";
 import { missingIdentityFloorplans } from "@/lib/rvgrok/coachIdentity";
@@ -534,6 +543,10 @@ export function RvGrokApp({
         imageDataUrl: image || undefined,
       };
       const assistantMsgId = uid("a");
+      // Typed turns get the ack → status → streamed text bubble. Voice and
+      // live-camera turns keep the old "Thinking…" path untouched.
+      const typedTurn = !opts?.fromVoice && !opts?.liveFrame;
+      let streamView = initialStreamView();
       const assistantMsg: Message = {
         id: assistantMsgId,
         role: "assistant",
@@ -542,6 +555,7 @@ export function RvGrokApp({
         timestamp: new Date(),
         isAgentMode: agentMode,
         agentSteps: [],
+        ...(typedTurn ? { streamStatus: streamActivityLabel(streamView) ?? undefined } : {}),
       };
 
       setMessages((prev) => [...prev, userMsg, assistantMsg]);
@@ -556,6 +570,15 @@ export function RvGrokApp({
       const liveSteps: AgentStep[] = [];
       const liveImages: string[] = [];
       let unverified = false;
+
+      const stepView = (ev: StreamViewEvent) => {
+        if (!typedTurn) return;
+        streamView = reduceStreamView(streamView, ev);
+      };
+      const viewStatus = () =>
+        typedTurn
+          ? { streamStatus: streamActivityLabel(streamView) ?? streamView.status }
+          : {};
 
       const stampUnverified = () => {
         unverified = true;
@@ -668,7 +691,31 @@ export function RvGrokApp({
           accessPhone: access?.phone,
           visitorFirstName:
             access?.allowed && access.name ? access.name : undefined,
+          watchdog: typedTurn
+            ? { idleMs: CHAT_STREAM_IDLE_MS, totalMs: CHAT_STREAM_TOTAL_MS }
+            : undefined,
           handlers: {
+            onStatus: (text) => {
+              if (!typedTurn) return;
+              stepView({ kind: "status", text });
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === assistantMsgId ? { ...m, ...viewStatus() } : m,
+                ),
+              );
+            },
+            onReplace: (text) => {
+              fullContent = text;
+              stepView({ kind: "replace", text });
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === assistantMsgId
+                    ? { ...m, content: fullContent, streaming: true, ...viewStatus() }
+                    : m,
+                ),
+              );
+              scrollToBottom();
+            },
             onModel: (m) => {
               setActiveModel(m);
               if (/demo/i.test(m)) stampUnverified();
@@ -715,6 +762,7 @@ export function RvGrokApp({
             },
             onDelta: (delta) => {
               fullContent += delta;
+              stepView({ kind: "delta", text: delta });
               if (
                 !unverified &&
                 /\bunverified demo\b|\*\*RvGrok · unverified/i.test(fullContent)
@@ -731,6 +779,7 @@ export function RvGrokApp({
                         generatedImages: [...liveImages],
                         streaming: true,
                         unverified: unverified || m.unverified,
+                        ...viewStatus(),
                       }
                     : m,
                 ),
@@ -784,6 +833,7 @@ export function RvGrokApp({
                   generatedImages: [...liveImages],
                   unverified,
                   deskSheet: paintedDesk || undefined,
+                  streamStatus: undefined,
                 }
               : m,
           );
@@ -848,14 +898,23 @@ export function RvGrokApp({
         if ((err as Error)?.name === "AbortError") return;
         const msg =
           err instanceof Error ? err.message : "Failed to connect";
+        if (typedTurn) controller.abort();
         setMessages((prev) =>
           prev.map((m) =>
             m.id === assistantMsgId
-              ? {
-                  ...m,
-                  content: `Error: ${msg}. Please try again.`,
-                  streaming: false,
-                }
+              ? typedTurn
+                ? {
+                    ...m,
+                    content: chatRetryMessage(err),
+                    streaming: false,
+                    streamStatus: undefined,
+                    retryText: messageText || undefined,
+                  }
+                : {
+                    ...m,
+                    content: `Error: ${msg}. Please try again.`,
+                    streaming: false,
+                  }
               : m,
           ),
         );
@@ -1751,6 +1810,7 @@ export function RvGrokApp({
                 : undefined
             }
             onSuggestion={(prompt) => void sendMessage(prompt)}
+            onRetry={(prompt) => void sendMessage(prompt)}
             onFloorplanChoice={(code) => {
               const live = realtimeRef.current;
               if (live?.isActive && live.chooseFloorplan(code)) {

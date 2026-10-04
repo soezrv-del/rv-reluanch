@@ -28,6 +28,10 @@ export interface Message {
   deskSheet?: import("./deskSheet").DeskSheetPayload;
   /** Floorplan codes shown on screen. Not spoken. */
   floorplanChoices?: string[];
+  /** Typed chat only: activity line while the reply streams. Never saved as content. */
+  streamStatus?: string;
+  /** Typed chat only: the ask to resend when this reply failed or timed out. */
+  retryText?: string;
 }
 
 export interface ChatSession {
