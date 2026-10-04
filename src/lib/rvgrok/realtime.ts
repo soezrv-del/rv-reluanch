@@ -16,6 +16,8 @@ import {
   buildSessionIntroResponse,
   getRetainedLiveCapture,
   isNativeRealtimeTool,
+  liveVoiceMicConstraints,
+  logLiveVoiceMic,
   LOT_FEATURE_WEB_CLAUSE,
   releaseLiveCapture,
   retainLiveCapture,
@@ -408,6 +410,8 @@ export class GrokRealtimeSession {
     if (kept) {
       this.audioCtx = kept.ctx;
       this.mediaStream = kept.stream;
+      // Retained capture keeps the lvec setting it was opened with.
+      logLiveVoiceMic("retained", null, kept.stream);
       if (kept.ctx.state === "suspended") await kept.ctx.resume();
       await this.connectMicGraph();
       return;
@@ -430,19 +434,12 @@ export class GrokRealtimeSession {
     if (ctx.state === "suspended") await ctx.resume();
     this.audioCtx = ctx;
 
+    // Same helper as the tap (MIC_CONSTRAINTS unless ?lvec=1).
+    const micConstraints = liveVoiceMicConstraints();
     const stream = prewarm.streamPromise
       ? await prewarm.streamPromise
-      : await navigator.mediaDevices.getUserMedia({
-          audio: {
-            // Same as MIC_CONSTRAINTS. Gain control would turn on the
-            // iPhone voice processor, which ducks the speaker and pops.
-            echoCancellation: false,
-            noiseSuppression: false,
-            autoGainControl: false,
-            channelCount: 1,
-          },
-          video: false,
-        });
+      : await navigator.mediaDevices.getUserMedia(micConstraints);
+    logLiveVoiceMic(prewarm.streamPromise ? "tap-stream" : "fallback", micConstraints, stream);
     this.mediaStream = stream;
     retainLiveCapture(stream, ctx);
     await this.connectMicGraph();

@@ -19,6 +19,12 @@ import {
   shouldUseSpeakerElement,
   softClipCurve,
 } from "./voiceOutput.ts";
+import {
+  LIVE_VOICE_EC_KEY,
+  liveVoiceEchoCancelEnabled,
+  liveVoiceMicConstraints,
+  logLiveVoiceMic,
+} from "./liveVoice.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
@@ -153,8 +159,12 @@ test("playback goes through the jitter-buffered player and the output gain", () 
   assert.match(live, /noiseSuppression: false/);
   assert.match(live, /autoGainControl: false/);
   assert.doesNotMatch(live, /autoGainControl: true/);
-  assert.match(realtime, /autoGainControl: false/);
-  assert.doesNotMatch(realtime, /autoGainControl: true/);
+  // realtime.ts fallback uses the shared helper; its default is MIC_CONSTRAINTS.
+  assert.match(realtime, /getUserMedia\(micConstraints\)/);
+  assert.match(realtime, /const micConstraints = liveVoiceMicConstraints\(\)/);
+  assert.doesNotMatch(realtime, /autoGainControl: (true|false)/);
+  assert.match(live, /getUserMedia\(constraints\)/);
+  assert.match(live, /const constraints = liveVoiceMicConstraints\(\)/);
   assert.doesNotMatch(live, /new AC\(\{[^}]*sampleRate/);
   assert.match(output, /makeup\.gain\.value = LIVE_VOICE_OUTPUT_GAIN/);
   assert.equal(LIVE_VOICE_OUTPUT_GAIN, 2);
@@ -285,4 +295,91 @@ test("lvdebug flag persists and only logs when on", () => {
   const realtime = readFileSync(join(root, "realtime.ts"), "utf8");
   assert.match(realtime, /logLiveVoiceSession\("beginSpeaking"\)/);
   assert.match(realtime, /logLiveVoiceSession\("rearm"\)/);
+});
+
+
+// Exactly what main sent from both getUserMedia sites before ?lvec existed.
+const MAIN_MIC_CONSTRAINTS = {
+  audio: {
+    echoCancellation: false,
+    noiseSuppression: false,
+    autoGainControl: false,
+    channelCount: 1,
+  },
+  video: false,
+};
+
+test("default mic constraints are exactly main's (lvec off)", () => {
+  const c = liveVoiceMicConstraints(false);
+  assert.deepEqual(c, MAIN_MIC_CONSTRAINTS);
+  assert.equal(JSON.stringify(c), JSON.stringify(MAIN_MIC_CONSTRAINTS), "same keys, same order");
+  // Default argument with no location/localStorage (node) is also off.
+  assert.deepEqual(liveVoiceMicConstraints(), MAIN_MIC_CONSTRAINTS);
+  assert.equal(liveVoiceMicConstraints(false), liveVoiceMicConstraints(false), "the same object every call");
+});
+
+test("lvec=1 turns all three iOS voice processors on, nothing else", () => {
+  const c = liveVoiceMicConstraints(true);
+  assert.deepEqual(c, {
+    audio: {
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: true,
+      channelCount: 1,
+    },
+    video: false,
+  });
+  // Turning it on never mutates the default object.
+  assert.deepEqual(liveVoiceMicConstraints(false), MAIN_MIC_CONSTRAINTS);
+});
+
+test("lvec parses, persists and clears", () => {
+  const store = new Map<string, string>();
+  const storage = {
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => void store.set(k, v),
+    removeItem: (k: string) => void store.delete(k),
+  };
+  assert.equal(liveVoiceEchoCancelEnabled("", storage), false);
+  assert.equal(liveVoiceEchoCancelEnabled("?lvec=1", storage), true);
+  assert.equal(store.get(LIVE_VOICE_EC_KEY), "1");
+  assert.equal(liveVoiceEchoCancelEnabled("", storage), true, "persists");
+  assert.equal(liveVoiceEchoCancelEnabled("?lvec=yes", storage), true, "junk keeps stored");
+  assert.equal(liveVoiceEchoCancelEnabled("?lvec=0", storage), false);
+  assert.equal(store.has(LIVE_VOICE_EC_KEY), false);
+  assert.equal(liveVoiceEchoCancelEnabled("?a=b&lvec=1", storage), true);
+  assert.equal(liveVoiceEchoCancelEnabled("?lvec=auto", storage), false);
+  assert.equal(store.has(LIVE_VOICE_EC_KEY), false);
+  store.set(LIVE_VOICE_EC_KEY, "true");
+  assert.equal(liveVoiceEchoCancelEnabled("", storage), false, "only '1' counts");
+  assert.equal(liveVoiceEchoCancelEnabled("?lvec=1", null), true);
+  assert.deepEqual(
+    liveVoiceMicConstraints(liveVoiceEchoCancelEnabled("?lvec=0", storage)),
+    MAIN_MIC_CONSTRAINTS,
+  );
+});
+
+test("lvdebug logs mic constraints and track settings", () => {
+  const logs: string[] = [];
+  const orig = console.log;
+  console.log = (...a: unknown[]) => void logs.push(a.join(" "));
+  try {
+    const stream = {
+      getAudioTracks: () => [
+        { getSettings: () => ({ echoCancellation: true, autoGainControl: true }) },
+      ],
+    } as unknown as MediaStream;
+    logLiveVoiceMic("fallback", liveVoiceMicConstraints(true), stream, false);
+    assert.equal(logs.length, 0, "silent when lvdebug is off");
+    logLiveVoiceMic("fallback", liveVoiceMicConstraints(true), stream, true);
+    logLiveVoiceMic("retained", null, null, true);
+    assert.equal(logs.length, 2, "two log lines");
+    assert.match(logs[0]!, /\[lvdebug\] mic fallback constraints=\{"echoCancellation":true/);
+    assert.match(logs[0]!, /settings=\{"echoCancellation":true,"autoGainControl":true\}/);
+    assert.match(logs[1]!, /mic retained constraints=null settings=null/);
+  } finally {
+    console.log = orig;
+  }
+  const realtime = readFileSync(join(root, "realtime.ts"), "utf8");
+  assert.match(realtime, /logLiveVoiceMic\("retained", null, kept\.stream\)/);
 });
