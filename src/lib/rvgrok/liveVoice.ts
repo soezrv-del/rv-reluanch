@@ -28,7 +28,7 @@ import {
   stripScreenContext,
 } from "./screenGuides.ts";
 import { DAVID_HANSEN_STORY, PEOPLE_FACTS_RULE } from "./originStory.ts";
-import { liveVoiceOutputFor, preferIosLoudspeaker, releaseLiveVoiceOutput } from "./voiceOutput.ts";
+import { liveVoiceDebugEnabled, liveVoiceOutputFor, preferIosLoudspeaker, releaseLiveVoiceOutput } from "./voiceOutput.ts";
 import { ensurePcmWorklet } from "./pcmWorklet.ts";
 import { PCM_SAMPLE_RATE, RV_VOICE_INSTRUCTIONS, VOICE_LOT_ENERGY, VOICE_MIC_RULES } from "./voice.ts";
 
@@ -71,6 +71,79 @@ const MIC_CONSTRAINTS: MediaStreamConstraints = {
   },
   video: false,
 };
+
+export const LIVE_VOICE_EC_KEY = "rvgrok.liveVoiceEchoCancel";
+
+/**
+ * A/B switch for iOS voice processing (no redeploy). `?lvec=1` turns
+ * echoCancellation, noiseSuppression and autoGainControl on (persisted in
+ * localStorage); `?lvec=0` or `?lvec=auto` clears it. Off by default, so
+ * the default capture is exactly MIC_CONSTRAINTS above.
+ *
+ * A capture that is already open (retained between sessions) keeps the
+ * setting it was opened with. Reload the page / relaunch the app after
+ * changing it.
+ */
+export function liveVoiceEchoCancelEnabled(
+  search: string = typeof location !== "undefined" ? location.search : "",
+  storage: Pick<Storage, "getItem" | "setItem" | "removeItem"> | null =
+    typeof localStorage !== "undefined" ? localStorage : null,
+): boolean {
+  try {
+    const fromUrl = new URLSearchParams(search).get("lvec");
+    if (fromUrl === "1") {
+      storage?.setItem(LIVE_VOICE_EC_KEY, "1");
+      return true;
+    }
+    if (fromUrl === "0" || fromUrl === "auto") {
+      storage?.removeItem(LIVE_VOICE_EC_KEY);
+      return false;
+    }
+    return storage?.getItem(LIVE_VOICE_EC_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The one place both getUserMedia calls (the tap here and the fallback in
+ * realtime.ts) get their constraints, so they cannot drift. Default is
+ * MIC_CONSTRAINTS unchanged; `?lvec=1` flips all three processors on.
+ */
+export function liveVoiceMicConstraints(
+  echoCancel: boolean = liveVoiceEchoCancelEnabled(),
+): MediaStreamConstraints {
+  if (!echoCancel) return MIC_CONSTRAINTS;
+  return {
+    audio: {
+      echoCancellation: echoCancel,
+      noiseSuppression: echoCancel,
+      autoGainControl: echoCancel,
+      channelCount: 1,
+    },
+    video: false,
+  };
+}
+
+/** `?lvdebug=1`: log the constraints asked for and what the track got. */
+export function logLiveVoiceMic(
+  label: string,
+  constraints: MediaStreamConstraints | null,
+  stream: MediaStream | null,
+  enabled: boolean = liveVoiceDebugEnabled(),
+): void {
+  if (!enabled) return;
+  try {
+    const track = stream?.getAudioTracks()[0];
+    const settings =
+      track && typeof track.getSettings === "function" ? track.getSettings() : null;
+    console.log(
+      `[lvdebug] mic ${label} constraints=${JSON.stringify(constraints?.audio ?? null)} settings=${JSON.stringify(settings)}`,
+    );
+  } catch {
+    /* diagnostics only */
+  }
+}
 
 export function getAudioContextCtor(): (typeof AudioContext) | null {
   if (typeof window === "undefined") return null;
@@ -153,7 +226,9 @@ export function beginLiveVoiceFromUserGesture(): LiveVoicePrewarm {
         "This iPhone shell cannot reach the microphone. Update RVFAX from TestFlight, then Settings → RVFAX → Microphone → On.",
       );
     }
-    streamPromise = navigator.mediaDevices.getUserMedia(MIC_CONSTRAINTS);
+    const constraints = liveVoiceMicConstraints();
+    logLiveVoiceMic("tap", constraints, null);
+    streamPromise = navigator.mediaDevices.getUserMedia(constraints);
   } catch (e) {
     error = e instanceof Error ? e : new Error(String(e));
   }
