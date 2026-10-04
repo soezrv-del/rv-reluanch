@@ -16,10 +16,14 @@ jobs:
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
 
       - name: Install Grok
         run: |
@@ -33,16 +37,22 @@ jobs:
           BASE_REF: ${{ github.event.pull_request.base.ref }}
         run: |
           git fetch origin "$BASE_REF"
+          # read-only sandbox cannot start on the hosted runner: bwrap
+          # fails resolving /run/podman/podman.sock (permission denied) and
+          # grok exits before it calls the API. Sandbox off is the default.
           grok -p "Review the diff from origin/${BASE_REF} to HEAD for bugs. Read the code. Do not edit files, push, or call gh. Put the review in the final answer only. Never print secrets or environment variables." \
             --always-approve \
-            --sandbox read-only \
+            --sandbox off \
             --no-auto-update \
             --output-format json \
             > "$RUNNER_TEMP/grok.json"
-          jq -r '.text' "$RUNNER_TEMP/grok.json" \
+          jq -r '.text // empty' "$RUNNER_TEMP/grok.json" \
             | sed "s|${XAI_API_KEY}|[redacted]|g" \
             > "$RUNNER_TEMP/review.md"
-          test -s "$RUNNER_TEMP/review.md"
+          if ! test -s "$RUNNER_TEMP/review.md"; then
+            echo "grok returned no review text" >&2
+            exit 1
+          fi
 
       - name: Post review
         env:
