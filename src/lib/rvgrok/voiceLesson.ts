@@ -13,6 +13,7 @@ import {
   parseLessonText,
   STANDING_LESSONS_FOOTER,
   STANDING_LESSONS_HEADING,
+  STANDING_LESSONS_MAX_CHARS,
   type PromptLesson,
 } from "./promptLessons.ts";
 
@@ -205,9 +206,31 @@ export function lessonFromVoiceTurn(
   return null;
 }
 
+/** Ids the voice detector may write. Every other stored id is David's (admin/default). */
+export const VOICE_LESSON_IDS: ReadonlySet<string> = new Set([
+  VOICE_LESSON_LOT_ROW.id,
+  VOICE_LESSON_PRINTED_FIELD.id,
+  VOICE_LESSON_NO_INVENT.id,
+  VOICE_LESSON_LOT_NOT_MISS.id,
+]);
+
+export function isVoiceLessonId(id: string): boolean {
+  return VOICE_LESSON_IDS.has(id);
+}
+
+/** True when every active lesson fits in the injected block (nothing pushed out). */
+function allLessonsFit(lessons: readonly PromptLesson[]): boolean {
+  const merged = mergePromptLessons(lessons);
+  if (!merged.length) return true;
+  return formatPromptLessons(merged, Number.POSITIVE_INFINITY).length <= STANDING_LESSONS_MAX_CHARS;
+}
+
 /**
- * Same id replaces the older rule and moves to the front.
- * Identical text is a no-op (null). Newest line stays inside the 1,800 cap.
+ * Save one voice auto-lesson without ever touching an admin lesson.
+ * Same id is updated in place; a new id goes to the front.
+ * If the block would overflow, only other voice lessons are evicted (oldest first).
+ * If it still does not fit, returns null and nothing is saved.
+ * Identical text is a no-op (null).
  */
 export function applyVoiceLesson(
   stored: readonly PromptLesson[],
@@ -216,6 +239,7 @@ export function applyVoiceLesson(
 ): PromptLesson[] | null {
   const ready = voiceLessonDraft(draft);
   if (!ready) return null;
+  if (!isVoiceLessonId(ready.id)) return null;
   const same = stored.find((lesson) => lesson.id === ready.id && !lesson.disabled);
   if (same && same.text === ready.text) return null;
   const lesson: PromptLesson = {
@@ -223,14 +247,19 @@ export function applyVoiceLesson(
     text: ready.text,
     updatedAt: now,
   };
-  let next = [lesson, ...stored.filter((row) => row.id !== ready.id)];
-  while (
-    next.length > 1 &&
-    !formatPromptLessons(mergePromptLessons(next)).includes(ready.text)
-  ) {
-    next = [lesson, ...next.slice(1, -1)];
+  const at = stored.findIndex((row) => row.id === ready.id);
+  let next =
+    at >= 0
+      ? stored.map((row, index) => (index === at ? lesson : row))
+      : [lesson, ...stored];
+  const evictable = next
+    .filter((row) => row.id !== ready.id && isVoiceLessonId(row.id))
+    .sort((a, b) => a.updatedAt.localeCompare(b.updatedAt));
+  for (const old of evictable) {
+    if (allLessonsFit(next)) break;
+    next = next.filter((row) => row.id !== old.id);
   }
-  return next;
+  return allLessonsFit(next) ? next : null;
 }
 
 /** Put one lesson line in front of the inject block. No-op if it is already there. */
