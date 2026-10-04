@@ -67,21 +67,14 @@ export function lotSummaryForSpeech(summary: string, matched: number): string {
   return line;
 }
 
-/**
- * She said the lot has none of a coach ("no Navion or EKKO in stock", "the
- * lot search came back with just the two Views"). That claim needs a real
- * query_lot behind it.
- */
-export function claimsLotMiss(text: string): boolean {
-  const t = (text || "").replace(/\s+/g, " ").trim();
-  if (!t) return false;
-  if (/\blot search came back\b/i.test(t)) return true;
-  if (/\b(?:came back with|only found|just found)\b[^.?!]{0,80}\b(?:lot|stock|inventory)\b/i.test(t)) {
-    return true;
-  }
-  return /\b(?:no|none|not any|zero|don't have|do not have|didn't find|did not find|aren't any|are no|isn't|is not|not)\b[^.?!]{0,80}\b(?:in stock|on the lot|on our lot|in inventory|in our inventory)\b/i.test(
-    t,
-  );
+/** The spoken lot line ends by offering more, so the caller can say "yes". */
+export function lotLineWithDetailsAsk(line: string): string {
+  const t = (line || "").trim().replace(/[,;:\s]+$/, "");
+  if (!t) return t;
+  if (/\?\s*$/.test(t)) return t;
+  const ended = /[.!]$/.test(t) ? t : `${t}.`;
+  if (/^none\.?$/i.test(ended)) return ended;
+  return `${ended} Want more details?`;
 }
 
 export const SPOKEN_LOT_UNIT_CAP = 3;

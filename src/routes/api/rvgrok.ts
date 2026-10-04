@@ -718,6 +718,12 @@ async function runXaiWithTools(opts: {
   lotNotesInContext: boolean;
   /** The assistant line before this turn, so "yes" can search what she offered. */
   priorAssistant?: string;
+  /** Aborts the whole lot turn when its time budget runs out. */
+  signal?: AbortSignal;
+  /** Called with each get_own_lot summary, so a stalled turn can still answer. */
+  onLotSummary?: (summary: string) => void;
+  /** Spoken-style lot answer for a turn whose model gave no words. */
+  lotFallback?: () => string;
 }): Promise<string | null> {
   const working: Array<Record<string, unknown>> = opts.messages.map((m) => ({
     role: m.role,
@@ -772,7 +778,9 @@ async function runXaiWithTools(opts: {
         stream: true,
         ...answerSampling(opts.userText),
       }),
-      signal: AbortSignal.timeout(60_000),
+      signal: opts.signal
+        ? AbortSignal.any([AbortSignal.timeout(60_000), opts.signal])
+        : AbortSignal.timeout(60_000),
     });
     if (!resp.ok || !resp.body) {
       if (round === 0) return null;
@@ -818,11 +826,14 @@ async function runXaiWithTools(opts: {
         ];
       }
     }
+    // The lot rows are already in context: her round-0 answer stands. Forcing
+    // another get_own_lot here threw that answer away and doubled the wait.
     if (
       !toolCalls.length &&
       round === 0 &&
       forced &&
-      forced !== "generate_image"
+      forced !== "generate_image" &&
+      !(forced === "get_own_lot" && opts.lotNotesInContext && String(content || "").trim())
     ) {
       toolCalls = [
         {
@@ -921,6 +932,10 @@ async function runXaiWithTools(opts: {
             priorAssistant: opts.priorAssistant,
           });
           if (name === "get_own_lot") lotSeen = true;
+          if (name === "get_own_lot") {
+            const summary = (result as { summary?: unknown }).summary;
+            if (typeof summary === "string" && summary.trim()) opts.onLotSummary?.(summary);
+          }
           prelude.push({
             type: "step",
             step: stepNo,
@@ -946,8 +961,12 @@ async function runXaiWithTools(opts: {
     break;
   }
 
+  // Three tool rounds and no words: answer from the lot rows she already
+  // has, never an empty bubble.
+  const lotFallback = lotSeen && !imageCount ? opts.lotFallback?.() || "" : "";
   const finalText =
     lastContent ||
+    lotFallback ||
     (imageCount
       ? "Here's the generated image."
       : "No response content returned from the AI upstream.");
@@ -1010,7 +1029,23 @@ async function tryXaiDirect(
     ...messages,
   ];
 
+  // A lot ask has a time budget. When it runs out (a hung or looping model),
+  // answer from the lot rows instead of going quiet and retrying every model.
+  let lotSummary = lotSummaryFromNotes(ownLotNotes);
+  const lotFallback = () => lotFallbackAnswer(lotSummary);
+  const budget = stream.lotSensitive ? new AbortController() : null;
+  const budgetTimer = budget
+    ? setTimeout(() => budget.abort(new DOMException("lot turn budget", "TimeoutError")), lotTurnBudgetMs())
+    : null;
+  const answerFromLot = async (): Promise<string | null> => {
+    const text = lotFallback();
+    if (!text) return null;
+    stream.sink.replace(text);
+    return text;
+  };
+  try {
   for (const model of MODELS) {
+    if (budget?.signal.aborted) return await answerFromLot();
     try {
       const result = await runXaiWithTools({
         apiKey,
@@ -1025,15 +1060,60 @@ async function tryXaiDirect(
         lotSensitive: stream.lotSensitive,
         lotNotesInContext: Boolean((ownLotNotes || "").trim()),
         priorAssistant: priorAssistantPlain(messages),
+        signal: budget?.signal,
+        onLotSummary: (summary) => {
+          lotSummary = summary;
+        },
+        lotFallback,
       });
       if (result != null) return result;
     } catch {
+      if (budget?.signal.aborted) return await answerFromLot();
       /* next model */
     }
     // A model that died mid-reply never leaves half an answer on screen.
     if (stream.sink.visibleText()) stream.sink.replace("");
   }
+  // Every model failed on a lot ask: the lot rows are still a real answer.
+  if (stream.lotSensitive) return await answerFromLot();
   return null;
+  } finally {
+    if (budgetTimer) clearTimeout(budgetTimer);
+  }
+}
+
+/** Default budget for a typed lot turn before she answers from the lot rows. */
+const LOT_TURN_BUDGET_MS = 25_000;
+
+function lotTurnBudgetMs(): number {
+  const raw = Number(process.env.RVGROK_LOT_TURN_BUDGET_MS);
+  return Number.isFinite(raw) && raw > 0 ? raw : LOT_TURN_BUDGET_MS;
+}
+
+/** The summary sentence(s) of an OWN-LOT block, without the unit rows. */
+function lotSummaryFromNotes(notes: string | undefined): string {
+  const text = (notes || "").trim();
+  if (!text) return "";
+  const lines = text.split("\n").map((line) => line.trim()).filter(Boolean);
+  const kept = lines.filter((line) => !line.includes(" · ") && !/^NAME ROSTER\b/.test(line));
+  return kept.join(" ").slice(0, 600);
+}
+
+/**
+ * A plain answer from the lot summary for a turn whose model went quiet.
+ * The counts are the sheet's. No raw rows, no JSON.
+ */
+export function lotFallbackAnswer(summary: string): string {
+  const line = summary.replace(/\s+/g, " ").trim();
+  if (!line || /^OWN-LOT INVENTORY UNAVAILABLE/i.test(line)) return "";
+  const body = line
+    .replace(/^Matching units:\s*(\d+)\.\s*/i, (_m, n: string) => `We have ${n} on our lot that fit. `)
+    .replace(/^Matching units:\s*/i, "On our lot: ")
+    .replace(/\bTop:\s*/g, "Top pick: ")
+    .replace(/,?\s*stk\s+[A-Z0-9-]+/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return `${body} Want the full list or details on one of these?`;
 }
 
 /**

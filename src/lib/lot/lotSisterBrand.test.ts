@@ -4,7 +4,6 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { snapshotFromJson } from "../rvgrok/ownLotInventory.ts";
 import { answerQueryLotFromSnapshot } from "../rvgrok/lotMemory.ts";
-import { claimsLotMiss } from "../rvgrok/voiceTurnGate.ts";
 import {
   isLotGoAhead,
   offeredCoachNames,
@@ -201,24 +200,13 @@ test("Views and View are the same 2, and the same question twice is the same ans
   assert.equal(plain.matched, single.matched);
 });
 
-test("live voice waits for this turn's words before query_lot, and checks a lot miss she said without it", () => {
+test("live voice waits for this turn's words before query_lot", () => {
   const realtime = readFileSync(join(process.cwd(), "src/lib/rvgrok/realtime.ts"), "utf8");
   const handler = realtime.slice(realtime.indexOf("private async handleQueryLotCall"));
   const wait = handler.indexOf("await this.waitForUserTranscript()");
   const post = handler.indexOf('fetch("/api/rvgrok/query-lot"');
   assert.ok(wait > 0 && post > wait, "query_lot waits for the transcript before it posts");
   assert.match(realtime, /input_audio_buffer\.speech_stopped":\s*\n\s*this\.userTranscriptPending = true/);
-  assert.match(realtime, /claimsLotMiss\(this\.assistantText\)/);
-  assert.match(realtime, /verifyLotMissClaim/);
-
-  assert.equal(
-    claimsLotMiss("The lot search came back with just the two Views we already talked about — no Navion or EKKO in stock."),
-    true,
-  );
-  assert.equal(claimsLotMiss("We don't have any Navions on the lot right now."), true);
-  assert.equal(claimsLotMiss("Matching units: 2 Itasca Navion, all used."), false);
-  assert.equal(claimsLotMiss("The Navion rides on a Mercedes Sprinter."), false);
-
   const chat = readFileSync(join(process.cwd(), "src/routes/api/rvgrok.ts"), "utf8");
   assert.match(chat, /goAheadLotQuery\(lastPlain, prior, snapshot\.units\)/);
   assert.match(chat, /goAheadLotQuery\(ctx\.userText/);

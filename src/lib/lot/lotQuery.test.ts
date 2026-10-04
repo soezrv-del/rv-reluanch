@@ -1133,7 +1133,10 @@ test("anything like a View is the other Sprinter coaches, not those Views", () =
     assert.match(hit.summary, /Other Sprinter coaches near that size/);
     assert.match(hit.summary, /Itasca Navion/);
     assert.doesNotMatch(hit.summary, /Super C/);
-    assert.doesNotMatch(hit.summary, /Winnebago View/);
+    // The View is named once as the coach he asked about, never counted.
+    assert.doesNotMatch(hit.summary, /Matching units: 2 Winnebago View/);
+    assert.match(hit.summary, /not counting the 2 Winnebago View/);
+    assert.match(hit.summary, /Closest: 2 Itasca Navion/);
     assert.ok(hit.units.some((unit) => /navion/i.test(unit.model)), hit.summary);
     assert.ok(
       hit.units.every((unit) => !(/winnebago/i.test(unit.make) && /view/i.test(unit.model))),
@@ -1150,7 +1153,7 @@ test("anything like a View is the other Sprinter coaches, not those Views", () =
   assert.ok((next.matched ?? 0) > 2, next.summary);
   assert.match(next.speech, /Itasca Navion/);
   assert.doesNotMatch(next.speech, /Super C/);
-  assert.doesNotMatch(next.speech, /Winnebago View/);
+  assert.doesNotMatch(next.speech, /Matching units: 2 Winnebago View/);
 });
 
 test("a named coach survives the spare words around it", () => {
