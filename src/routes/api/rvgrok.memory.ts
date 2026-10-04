@@ -12,6 +12,8 @@ import {
   userLinesForMemory,
 } from "@/lib/rvgrok/sessionLearn";
 import { lessonFromVoiceTurn } from "@/lib/rvgrok/voiceLesson";
+import { learnVoiceLessonFromPost } from "@/lib/rvgrok/voiceLessonVerify";
+import { loadOwnLotSnapshot } from "@/lib/rvgrok/ownLotInventory";
 
 /**
  * POST /api/rvgrok/memory
@@ -51,18 +53,36 @@ export const Route = createFileRoute("/api/rvgrok/memory")({
         const voice = body.source === "voice";
         let lessons = "";
         if (voice) {
-          const lesson = lessonFromVoiceTurn({
-            userText: raw
-              .filter((turn) => turn.role === "user")
-              .map((turn) => turn.text)
-              .join("\n"),
-            assistantText: raw
-              .filter((turn) => turn.role === "assistant")
-              .map((turn) => turn.text)
-              .join("\n"),
+          const userText = raw
+            .filter((turn) => turn.role === "user")
+            .map((turn) => turn.text)
+            .join("\n");
+          const assistantText = raw
+            .filter((turn) => turn.role === "assistant")
+            .map((turn) => turn.text)
+            .join("\n");
+          // Phone text and lotNotes are not trusted for the global store.
+          // This lesson can only go to pending.
+          const clientLesson = lessonFromVoiceTurn({
+            userText,
+            assistantText,
             lotNotes: String(body.lotNotes || "").slice(0, 12000),
           });
-          if (lesson) lessons = await upsertVoiceLesson(lesson);
+          let requestOrigin = "";
+          try {
+            requestOrigin = new URL(request.url).origin;
+          } catch {
+            requestOrigin = "";
+          }
+          const learned = await learnVoiceLessonFromPost(
+            { userText, assistantText, clientLesson },
+            {
+              loadSnapshot: () => loadOwnLotSnapshot({ requestOrigin }),
+              upsertVoiceLesson,
+              queuePendingPromptLesson,
+            },
+          );
+          lessons = learned.lessons;
         }
 
         if (!phoneDigits) {
