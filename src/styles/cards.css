@@ -60,6 +60,16 @@ html[data-theme="light"] {
   box-shadow: var(--control-shadow);
 }
 
+/* On PR #637's markup the rows sit flush under hairlines (.rv-along). As
+   tiles they need the same 8px gap they get on main, not the hairline. */
+[data-route-results] > .rv-along {
+  border-top: 0;
+}
+[data-route-results] > .rv-along + .rv-along,
+[data-route-results] > [data-camp-sample-toggle] + .rv-along {
+  margin-top: 0.5rem;
+}
+
 /* Trips header tabs (Dumps, Profile / PROFILE LOCKED): buttons.css already
    gives them 12px and 44px; line them up on one baseline with button depth. */
 [data-trips-tools] {
