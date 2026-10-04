@@ -118,6 +118,27 @@ export function routeEngineLabel(
   return "OSRM";
 }
 
+/**
+ * User-facing route chip. `routeEngineLabel` stays the raw engine tag
+ * (data attribute / debugging); people never see "OSRM".
+ * - HERE Truck with dims applied → "Truck-safe route"
+ * - Truck request that fell back to a car router → "Car route — RV limits not checked"
+ * - Plain road route → null (no chip; the RV-safe chip covers the context)
+ */
+export function routeEngineChip(
+  route: Pick<
+    OsrmRouteResult,
+    "source" | "fallbackFrom" | "routingMode"
+  > | null,
+): string | null {
+  if (!route) return null;
+  if (route.source === "here" && !route.fallbackFrom) return "Truck-safe route";
+  if (route.fallbackFrom === "here" || route.routingMode === "rv_safe") {
+    return "Car route — RV limits not checked";
+  }
+  return null;
+}
+
 export function routeEngineNote(route: OsrmRouteResult | null): string {
   if (!route) return "";
   const note = (route.providerNote || "").trim();

@@ -9,6 +9,7 @@ import {
   fetchNavigateRoute,
   formatRvSafeChipDims,
   mergeLiveLegs,
+  routeEngineChip,
   routeEngineLabel,
   routeEngineNote,
   routeStopOrder,
@@ -522,4 +523,36 @@ test("Navigate route card surfaces locked RV-safe dims via Profile deep-link", (
   assert.doesNotMatch(chipBlock, /hidden=\{navArmed\}/);
   assert.match(css, /\[data-rv-safe-chip\]/);
   assert.doesNotMatch(ui, /engraved|MetalVerifiedTrue|RVTRIPS_AMERICA/);
+});
+
+test("routeEngineChip: friendly copy, never a raw engine name", () => {
+  assert.equal(routeEngineChip(null), null);
+  assert.equal(
+    routeEngineChip({ source: "here", routingMode: "rv_safe" }),
+    "Truck-safe route",
+  );
+  assert.equal(
+    routeEngineChip({ source: "osrm", fallbackFrom: "here", routingMode: "rv_safe" }),
+    "Car route — RV limits not checked",
+  );
+  assert.equal(
+    routeEngineChip({ source: "osrm", routingMode: "standard" }),
+    null,
+  );
+  for (const r of [
+    { source: "here" as const, routingMode: "rv_safe" as const },
+    { source: "osrm" as const, routingMode: "rv_safe" as const },
+  ]) {
+    assert.doesNotMatch(routeEngineChip(r) || "", /OSRM|HERE/);
+  }
+  const ui = readFileSync(
+    join(root, "../../components/rvtrips/RvTripsApp.tsx"),
+    "utf8",
+  );
+  assert.match(ui, /routeEngineChip\(osrm\)/);
+  assert.match(ui, /data-route-engine=\{engineChip\}/);
+  assert.doesNotMatch(ui, /\{engineChip\}\s*<\/span>/);
+  // Sample pads is a dev-only affordance.
+  assert.match(ui, /const showSamplePads = import\.meta\.env\.DEV/);
+  assert.match(ui, /navArmed \|\| !showSamplePads \? null/);
 });

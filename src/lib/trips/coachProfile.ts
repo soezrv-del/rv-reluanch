@@ -327,8 +327,15 @@ export function coachIsReady(p: CoachProfile | null | undefined): boolean {
   return Boolean(p.make && p.model && p.lengthFt > 0 && p.heightFt > 0);
 }
 
-/** Display-only when height or weight is unknown. Never sent to HERE Truck. */
-export const RV_SAFE_CHIP_GAP = "GAP";
+/**
+ * Display-only prompts when height or weight is unknown. Never sent to HERE
+ * Truck. Plain words — the old "GAP × GAP" placeholder read as a broken label.
+ */
+export const RV_SAFE_CHIP_MISSING = {
+  both: "add height & weight",
+  height: "add height",
+  weight: "add weight",
+} as const;
 
 function formatFtChip(n: number): string {
   return `${n}′`;
@@ -347,7 +354,7 @@ export type RvSafeChipDims = {
 
 /**
  * One-line height × weight for the navigate chip.
- * Real saved dims when present; GAP/placeholder when the profile is empty.
+ * Real saved dims when present; a short "add …" prompt for what is missing.
  * Does not require a locked coach — routing still uses canUseRvSafe separately.
  */
 export function formatRvSafeNavigateChipDims(
@@ -364,9 +371,13 @@ export function formatRvSafeNavigateChipDims(
     if (positive(coach.widthFt)) left.push(`${formatFtChip(coach.widthFt)}W`);
     return `${left.join(" · ")} × ${formatLbChip(coach.weightLbs!)}`;
   }
-  const height = hasH && coach ? formatFtChip(coach.heightFt!) : RV_SAFE_CHIP_GAP;
-  const weight = hasW && coach ? formatLbChip(coach.weightLbs!) : RV_SAFE_CHIP_GAP;
-  return `${height} × ${weight}`;
+  if (hasH && coach) {
+    return `${formatFtChip(coach.heightFt!)} · ${RV_SAFE_CHIP_MISSING.weight}`;
+  }
+  if (hasW && coach) {
+    return `${RV_SAFE_CHIP_MISSING.height} · ${formatLbChip(coach.weightLbs!)}`;
+  }
+  return RV_SAFE_CHIP_MISSING.both;
 }
 
 /** Always a one-line navigate label — never null, never waits on lock/save. */

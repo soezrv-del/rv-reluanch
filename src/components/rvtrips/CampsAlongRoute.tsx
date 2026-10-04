@@ -15,7 +15,7 @@ export function CampsAlongRoute({
   onRouteVia,
   viaDisabled,
   limit = 10,
-  heading = "CAMPS ALONG ROUTE",
+  heading = "Camps along route",
 }: {
   status: "idle" | "loading" | "live" | "error";
   result: CampSearchResult | null;
@@ -45,7 +45,7 @@ export function CampsAlongRoute({
 
   return (
     <section
-      className="space-y-2"
+      className="rv-along space-y-2"
       data-camps-along-route
       data-camps-source={result?.source || ""}
       data-along-open={open ? "1" : "0"}
@@ -54,21 +54,18 @@ export function CampsAlongRoute({
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="flex min-h-11 w-full items-center gap-2 text-left"
+        data-trip-btn="row"
+        className="rv-along-row"
       >
-        <h3 className="min-w-0 flex-1 text-[12px] font-bold tracking-[0.12em] text-white">
+        <h3 className="rv-along-title">
           {heading}
         </h3>
         {count ? (
-          <span className="shrink-0 text-[11px] font-semibold text-white/70">
-            {count}
-          </span>
+          <span className="rv-along-count">{count}</span>
         ) : null}
         <ChevronDown
-          className={cn(
-            "size-4 shrink-0 text-white/55 transition-transform",
-            open && "rotate-180",
-          )}
+          className={cn("rv-along-chevron", open && "rotate-180")}
+          aria-hidden
         />
       </button>
 

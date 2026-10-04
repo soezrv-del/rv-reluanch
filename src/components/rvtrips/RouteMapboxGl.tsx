@@ -10,6 +10,7 @@ import {
   resolveMapPoi,
   type MapPoiStop,
 } from "@/components/rvtrips/RoutePoiChrome";
+import { poiOverview, poiThinsAtOverview } from "@/lib/trips/mapPoi";
 import {
   bboxFromGeometry,
   bboxFromPoints,
@@ -23,6 +24,7 @@ import {
   isStandardStyle,
   mapboxStandardConfig,
   mapboxStyleUrl,
+  routeLineStyle,
   standardLightPreset,
   type MapboxStyleId,
 } from "@/lib/trips/mapbox";
@@ -122,6 +124,7 @@ function paintRoute(
   map: MapboxMap,
   coords: [number, number][],
   standard: boolean,
+  theme: SuiteTheme,
 ) {
   const data = {
     type: "Feature" as const,
@@ -142,6 +145,9 @@ function paintRoute(
   map.addSource(ROUTE_SRC, { type: "geojson", data });
   const slot = standard ? { slot: "top" } : {};
   const glow = standard ? { "line-emissive-strength": 1 } : {};
+  const look = routeLineStyle(theme);
+  // Crisp white casing under a soft-blue line — readable on Standard
+  // day / night and on satellite imagery.
   map.addLayer({
     id: ROUTE_CASING,
     type: "line",
@@ -149,9 +155,9 @@ function paintRoute(
     ...slot,
     layout: { "line-cap": "round", "line-join": "round" },
     paint: {
-      "line-color": "#0b1a28",
-      "line-width": 8,
-      "line-opacity": 0.55,
+      "line-color": look.casingColor,
+      "line-width": look.casingWidth as never,
+      "line-opacity": look.casingOpacity,
       ...glow,
     },
   });
@@ -162,12 +168,23 @@ function paintRoute(
     ...slot,
     layout: { "line-cap": "round", "line-join": "round" },
     paint: {
-      "line-color": "#4a86f0",
-      "line-width": 4.5,
+      "line-color": look.lineColor,
+      "line-width": look.lineWidth as never,
       "line-opacity": 1,
       ...glow,
     },
   });
+}
+
+/** Theme flip without a style reload: recolor the existing route layers. */
+function recolorRoute(map: MapboxMap, theme: SuiteTheme) {
+  const look = routeLineStyle(theme);
+  if (map.getLayer(ROUTE_LINE)) {
+    map.setPaintProperty(ROUTE_LINE, "line-color", look.lineColor);
+  }
+  if (map.getLayer(ROUTE_CASING)) {
+    map.setPaintProperty(ROUTE_CASING, "line-opacity", look.casingOpacity);
+  }
 }
 
 export function RouteMapboxGl({
@@ -222,6 +239,7 @@ export function RouteMapboxGl({
   const lastRecenterRef = useRef(0);
   const followCenterRef = useRef<BasemapLngLat | null>(null);
   const [ready, setReady] = useState(false);
+  const [overview, setOverview] = useState(false);
   const [styleId, setStyleId] = useState<MapboxStyleId>("streets");
   const styleIdRef = useRef<MapboxStyleId>("streets");
   const theme = useSyncExternalStore(subscribeTheme, readTheme, serverTheme);
@@ -374,7 +392,7 @@ export function RouteMapboxGl({
           const standard = isStandardStyle(styleIdRef.current);
           if (standard) applyStandardConfig(map, themeRef.current);
           try {
-            paintRoute(map, coordsRef.current, standard);
+            paintRoute(map, coordsRef.current, standard, themeRef.current);
           } catch {
             /* style may be swapping */
           }
@@ -386,6 +404,13 @@ export function RouteMapboxGl({
           setReady(true);
         };
         map.on("load", onLoad);
+        // Thin camp / dump dots at a multi-state overview (see poiOverview).
+        const onZoom = () => {
+          if (cancelled || !map) return;
+          setOverview(poiOverview(map.getZoom()));
+        };
+        map.on("zoomend", onZoom);
+        map.on("moveend", onZoom);
         map.on("error", (ev) => {
           const err = ev?.error as { status?: number; message?: string } | undefined;
           if (err?.status === 401 || err?.status === 403) {
@@ -446,7 +471,22 @@ export function RouteMapboxGl({
     const map = mapRef.current;
     if (!map || !ready) return;
     try {
-      paintRoute(map, coords, isStandardStyle(styleIdRef.current));
+      recolorRoute(map, theme);
+    } catch {
+      /* style may be swapping */
+    }
+  }, [theme, ready]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready) return;
+    try {
+      paintRoute(
+        map,
+        coords,
+        isStandardStyle(styleIdRef.current),
+        themeRef.current,
+      );
     } catch {
       /* style may be swapping */
     }
@@ -476,6 +516,7 @@ export function RouteMapboxGl({
       node.title = pin.label || pin.kind;
       node.textContent = pinMark(pin);
       node.setAttribute("data-map-pin", pin.kind);
+      if (poiThinsAtOverview(pin.kind)) node.setAttribute("data-poi-thin", "");
       if (camp) node.setAttribute("data-camp-pin", pin.kind);
       if (dump) {
         node.setAttribute(
@@ -592,6 +633,33 @@ export function RouteMapboxGl({
     ],
   );
 
+  // Keep the selected POI clear of the detail card (it sits bottom-left).
+  const selectedKey = selectedPoi ? `${selectedPoi.layer}:${selectedPoi.id}` : "";
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready || followActive || !selectedPoi) return;
+    const { lat, lng } = selectedPoi.stop;
+    if (!finiteLngLat({ lat, lng })) return;
+    try {
+      const h = map.getContainer().clientHeight || MAP_PANEL_H;
+      const w = map.getContainer().clientWidth || 320;
+      const pt = map.project([lng, lat]);
+      const clear =
+        pt.y > 56 && pt.y < h * 0.45 && pt.x > 24 && pt.x < w - 24;
+      if (clear) return;
+      map.easeTo({
+        center: [lng, lat],
+        offset: [0, -Math.round(h * 0.22)],
+        duration: 450,
+        essential: true,
+      });
+    } catch {
+      /* style may be swapping */
+    }
+    // Only when the selection itself changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedKey, ready, followActive]);
+
   const status: FollowStatus =
     followStatus !== "off"
       ? followStatus
@@ -601,7 +669,11 @@ export function RouteMapboxGl({
           ? "live"
           : "waiting";
 
+  const showCamps = (campStops ?? []).length > 0;
+  const showDumps = (dumpStops ?? []).length > 0;
+
   return (
+    <div data-route-map-stack className="space-y-2">
     <div
       ref={wrapRef}
       data-route-basemap
@@ -609,7 +681,8 @@ export function RouteMapboxGl({
       data-tile-source="mapbox"
       data-map-engine="mapbox-gl"
       data-follow-status={status}
-      className="relative z-0 isolate overflow-hidden rounded-xl border border-white/12 bg-[#0b1410]"
+      data-map-overview={overview ? "1" : undefined}
+      className="rv-map-frame relative z-0 isolate overflow-hidden rounded-xl"
       style={{ height: MAP_PANEL_H }}
     >
       <div
@@ -618,37 +691,33 @@ export function RouteMapboxGl({
         className="absolute inset-0 overflow-hidden"
       />
 
-      <div className="absolute right-2 top-12 z-[6] flex gap-1">
+      <div
+        className="rv-map-seg absolute left-2 top-2 z-[6]"
+        role="group"
+        aria-label="Map style"
+      >
         <button
           type="button"
           data-map-style="streets"
+          aria-pressed={styleId === "streets"}
           onClick={() => setStyleId("streets")}
-          className={cn(
-            "min-h-9 rounded-full px-2.5 text-[10px] font-bold",
-            styleId === "streets"
-              ? "bg-white text-black"
-              : "bg-black/55 text-white/90",
-          )}
+          className="rv-map-seg-btn"
         >
           Streets
         </button>
         <button
           type="button"
           data-map-style="satellite"
+          aria-pressed={styleId === "satellite"}
           onClick={() => setStyleId("satellite")}
-          className={cn(
-            "min-h-9 rounded-full px-2.5 text-[10px] font-bold",
-            styleId === "satellite"
-              ? "bg-white text-black"
-              : "bg-black/55 text-white/90",
-          )}
+          className="rv-map-seg-btn"
         >
           Satellite
         </button>
       </div>
 
       {selectedPoi ? (
-        <div className="pointer-events-auto absolute bottom-16 left-2 right-14 z-[7] max-w-[280px]">
+        <div className="pointer-events-auto absolute bottom-9 left-2 right-14 z-[7] max-w-[280px]">
           <MapPoiDetailChip
             poi={selectedPoi}
             onRouteVia={onRouteVia}
@@ -657,25 +726,11 @@ export function RouteMapboxGl({
         </div>
       ) : null}
 
-      {(campStops ?? []).length > 0 || (dumpStops ?? []).length > 0 ? (
-        <RouteLayerLegend
-          showCamps={(campStops ?? []).length > 0}
-          showDumps={(dumpStops ?? []).length > 0}
-          tone="on-map"
-          className="pointer-events-none absolute bottom-10 left-2 z-[6] rounded-md bg-black/55 px-2 py-1"
-        />
-      ) : null}
-
       {followActive ? (
         <p
           data-follow-chip
-          className={cn(
-            "absolute left-2 top-2 z-[6] rounded-full px-2 py-1 text-[10px] font-bold",
-            status === "live" && "bg-blue/90 text-black",
-            status === "denied" && "bg-amber text-black",
-            (status === "waiting" || status === "off") &&
-              "bg-black/55 text-white/85",
-          )}
+          data-follow-chip-status={status}
+          className="rv-map-pill absolute left-2 top-12 z-[6] px-2.5 py-1 text-[11px] font-semibold"
         >
           {status === "live"
             ? "GPS follow"
@@ -685,12 +740,17 @@ export function RouteMapboxGl({
         </p>
       ) : null}
 
-      <p
-        data-tile-note
-        className="pointer-events-none absolute bottom-6 right-2 z-[5] rounded bg-black/50 px-1.5 py-0.5 text-[9px] font-medium text-white/85"
-      >
+      <p data-tile-note className="sr-only">
         © Mapbox · {styleId === "satellite" ? "satellite" : "standard"}
       </p>
+    </div>
+      {showCamps || showDumps ? (
+        <RouteLayerLegend
+          showCamps={showCamps}
+          showDumps={showDumps}
+          overview={overview && !followActive}
+        />
+      ) : null}
     </div>
   );
 }

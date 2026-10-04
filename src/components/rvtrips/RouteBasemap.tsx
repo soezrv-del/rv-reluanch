@@ -11,6 +11,7 @@ import {
   resolveMapPoi,
   type MapPoiStop,
 } from "@/components/rvtrips/RoutePoiChrome";
+import { poiOverview, poiThinsAtOverview } from "@/lib/trips/mapPoi";
 import {
   attributionFor,
   bboxFromGeometry,
@@ -39,6 +40,7 @@ import {
   type GeoFix,
 } from "@/lib/trips/geoFollow";
 import { RouteMapboxGl } from "@/components/rvtrips/RouteMapboxGl";
+import { ROUTE_CASING_COLOR, ROUTE_LINE_COLOR } from "@/lib/trips/mapbox";
 
 const MAX_FUEL_PINS = 12;
 const MAX_CAMP_PINS = 10;
@@ -362,6 +364,11 @@ export function RouteBasemap({
 
   if (!overlay && !geometry?.coordinates?.length) return null;
 
+  // Static raster view: thin camp / dump dots at a multi-state overview.
+  const overview = !followActive && poiOverview(view?.z);
+  const showCamps = (campStops ?? []).length > 0;
+  const showDumps = (dumpStops ?? []).length > 0;
+
   if (useGl) {
     return (
       <RouteMapboxGl
@@ -393,6 +400,7 @@ export function RouteBasemap({
   }
 
   return (
+    <div data-route-map-stack className="space-y-2">
     <div
       ref={wrapRef}
       data-route-basemap
@@ -400,7 +408,8 @@ export function RouteBasemap({
       data-tile-source={catalog ? provider : "pending"}
       data-map-engine="raster"
       data-follow-status={status}
-      className="relative z-0 isolate overflow-hidden rounded-xl border border-white/12 bg-[#0b1410]"
+      data-map-overview={overview ? "1" : undefined}
+      className="rv-map-frame relative z-0 isolate overflow-hidden rounded-xl"
       style={{ height: MAP_PANEL_H }}
     >
       {tiles.length > 0 ? (
@@ -419,7 +428,7 @@ export function RouteBasemap({
         </div>
       ) : null}
 
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-black/10" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent" />
 
       {view && overlay ? (
         <svg
@@ -433,16 +442,16 @@ export function RouteBasemap({
           <path
             d={overlay}
             fill="none"
-            stroke="rgba(8,16,20,0.55)"
-            strokeWidth="6"
+            stroke={ROUTE_CASING_COLOR}
+            strokeWidth="7"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
           <path
             d={overlay}
             fill="none"
-            className="stroke-blue"
-            strokeWidth="3.5"
+            stroke={ROUTE_LINE_COLOR.light}
+            strokeWidth="4"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
@@ -461,6 +470,7 @@ export function RouteBasemap({
           (camp && p.id === selectedCampId) ||
           (dump && p.id === selectedDumpId);
         if (fuel || camp || dump) {
+          if (overview && !on && poiThinsAtOverview(p.kind)) return null;
           return (
             <button
               key={p.id}
@@ -554,7 +564,7 @@ export function RouteBasemap({
       ) : null}
 
       {selectedPoi ? (
-        <div className="absolute bottom-14 left-2 right-14 z-[7] max-w-[280px]">
+        <div className="absolute bottom-7 left-2 right-14 z-[7] max-w-[280px]">
           <MapPoiDetailChip
             poi={selectedPoi}
             onRouteVia={onRouteVia}
@@ -563,25 +573,11 @@ export function RouteBasemap({
         </div>
       ) : null}
 
-      {(campStops ?? []).length > 0 || (dumpStops ?? []).length > 0 ? (
-        <RouteLayerLegend
-          showCamps={(campStops ?? []).length > 0}
-          showDumps={(dumpStops ?? []).length > 0}
-          tone="on-map"
-          className="pointer-events-none absolute bottom-6 left-2 z-[6] rounded-md bg-black/55 px-2 py-1"
-        />
-      ) : null}
-
       {followActive ? (
         <p
           data-follow-chip
-          className={cn(
-            "absolute left-2 top-2 z-[6] rounded-full px-2 py-1 text-[10px] font-bold",
-            status === "live" && "bg-blue/90 text-black",
-            status === "denied" && "bg-amber text-black",
-            (status === "waiting" || status === "off") &&
-              "bg-black/55 text-white/85",
-          )}
+          data-follow-chip-status={status}
+          className="rv-map-pill absolute left-2 top-2 z-[6] px-2.5 py-1 text-[11px] font-semibold"
         >
           {status === "live"
             ? "GPS follow"
@@ -593,10 +589,18 @@ export function RouteBasemap({
 
       <p
         data-tile-note
-        className="absolute bottom-1 right-2 z-[5] rounded bg-black/50 px-1.5 py-0.5 text-[9px] font-medium text-white/85"
+        className="rv-map-attrib absolute bottom-1 right-1 z-[5] px-1.5 py-0.5"
       >
         {sourceLabel}
       </p>
+    </div>
+      {showCamps || showDumps ? (
+        <RouteLayerLegend
+          showCamps={showCamps}
+          showDumps={showDumps}
+          overview={overview}
+        />
+      ) : null}
     </div>
   );
 }
