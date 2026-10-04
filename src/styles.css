@@ -2106,6 +2106,15 @@
   color: #111;
 }
 .rv-map-dot {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 0;
+  margin: 0;
+  line-height: 0;
+  font-size: 0;
+  display: block;
+  box-sizing: border-box;
+  cursor: pointer;
   width: 14px;
   height: 14px;
   border: 2px solid #fff;
@@ -2140,6 +2149,7 @@
   width: 18px;
   height: 18px;
   outline: 2px solid var(--color-blue);
+  outline-offset: 2px;
 }
 .rv-map-puck {
   width: 18px;
