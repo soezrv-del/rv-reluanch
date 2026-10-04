@@ -3,7 +3,6 @@ import {
   Plus,
   Radio,
   Sparkles,
-  Square,
   SwitchCamera,
   Volume2,
 } from "lucide-react";
@@ -40,6 +39,8 @@ import {
 } from "@/lib/rvgrok/deskSheetLayout";
 import { DeskSpecSheet } from "./DeskSpecSheet";
 import { GrokExtrasRail } from "./GrokExtrasRail";
+import { VoiceStatusBar } from "./VoiceStatusBar";
+import { voiceStatusBarView } from "@/lib/rvgrok/voiceStatusBar";
 import { formatFeedbackContext } from "@/lib/rvgrok/answerFeedback";
 import { readActiveCoach } from "@/lib/rv/activeCoach";
 import { ensureCatalogLoaded } from "@/lib/rv/catalogLoad";
@@ -53,6 +54,7 @@ import {
 import { resolveResearchPhone } from "@/lib/access/researchUnlock";
 import {
   DEFAULT_VOICE,
+  GROK_VOICES,
   LIVE_VOICE_KEY,
   VOICE_MODE_KEY,
   VOICE_SPEED_KEY,
@@ -1637,6 +1639,18 @@ export function RvGrokApp({
     realtimeStatus === "speaking";
 
   const continuousArmed = liveActive || (voiceMode && isRecording);
+  const voiceBar = voiceStatusBarView({
+    realtimeStatus,
+    realtimeDetail,
+    liveActive,
+    isRecording,
+    isLoading,
+    streaming: messages.some((m) => m.streaming),
+    speaking: Boolean(speakingId),
+    continuousArmed,
+    voiceMode,
+    voiceName: GROK_VOICES.find((v) => v.id === selectedVoice)?.name,
+  });
   const waitingToResumeLive =
     liveVoice && !liveActive && !isRecording && !startingLiveRef.current;
   const displayInput = isRecording
@@ -1935,58 +1949,15 @@ export function RvGrokApp({
           paddingBottom: composerLift > 0 ? composerLift : undefined,
         }}
       >
-        {(realtimeStatus === "speaking" ||
-          /speaking|finishing reply/i.test(realtimeDetail || "")) &&
-        liveActive ? (
-          <button
-            type="button"
-            onClick={() => {
+        {voiceBar ? (
+          <VoiceStatusBar
+            view={voiceBar}
+            onInterrupt={() => {
               realtimeRef.current?.interrupt();
             }}
-            className="mb-2 flex w-full items-center gap-2 rounded-[var(--radius-md)] border border-white/10 bg-[#1e2126] px-3 py-2.5 text-left"
-            data-on-dark=""
-          >
-            <span className="flex size-7 items-center justify-center rounded-md bg-sapphire text-white" data-on-dark="">
-              <Square className="size-3.5 fill-current" />
-            </span>
-            <span className="flex-1 text-[13px] font-semibold text-white">
-              Interrupt — stop her, keep listening
-            </span>
-            <span className="text-[11px] font-bold tracking-wide text-white/70">
-              CUT
-            </span>
-          </button>
+            onEnd={handleStop}
+          />
         ) : null}
-        {(isLoading ||
-          messages.some((m) => m.streaming) ||
-          isRecording ||
-          liveActive ||
-          speakingId ||
-          continuousArmed) && (
-          <button
-            type="button"
-            onClick={handleStop}
-            className="mb-2 flex w-full items-center gap-2 rounded-[var(--radius-md)] border border-sky-300/40 bg-sky-500/25 px-3 py-2.5 text-left transition hover:bg-sky-500/30"
-          >
-            <span className="flex size-7 items-center justify-center rounded-md bg-sapphire text-white" data-on-dark="">
-              <Square className="size-3.5 fill-current" />
-            </span>
-            <span className="flex-1 text-[13px] font-medium text-fg">
-              {liveActive
-                ? `Live continuous · ${realtimeDetail || realtimeStatus} — tap to end`
-                : isRecording
-                  ? voiceMode
-                    ? "Auto-listening — tap to stop hands-free"
-                    : "Recording — tap to stop & send"
-                  : isLoading
-                    ? "Processing — tap to cancel"
-                    : "Speaking — tap to stop"}
-            </span>
-            <span className="text-[11px] font-bold tracking-wide text-sky-100">
-              STOP
-            </span>
-          </button>
-        )}
 
         {liveCam ? (
           <div
@@ -2066,19 +2037,6 @@ export function RvGrokApp({
             </p>
           </div>
         ) : null}
-
-        {liveActive && (
-          <div className="mx-auto mb-2 flex max-w-2xl items-center gap-2 rounded-full border border-sky-300/40 bg-sky-500/15 px-3 py-1.5">
-            <span className="size-2 animate-pulse rounded-full bg-sky-500" />
-            <Radio className="size-3 text-sky-100" />
-            <span className="flex-1 text-[11px] font-medium text-sky-100">
-              {realtimeDetail || `Live Grok Voice · ${realtimeStatus}`}
-            </span>
-            <span className="text-[10px] uppercase tracking-wide text-muted">
-              {selectedVoice}
-            </span>
-          </div>
-        )}
 
         {waitingToResumeLive && (
           <button
