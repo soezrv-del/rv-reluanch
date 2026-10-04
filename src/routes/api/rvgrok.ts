@@ -38,6 +38,10 @@ import {
 } from "@/lib/rvgrok/ownLotInventory";
 import { looksLikeOwnLotCountOrRankAsk } from "@/lib/rvgrok/ownLotAsk";
 import { formatLotQueryNotes, searchLot } from "@/lib/lot/lotQuery";
+import { chatHoldLine, chatReadsLot } from "@/lib/rvgrok/chatHold";
+import { answerQueryLotFromSnapshot } from "@/lib/rvgrok/lotMemory";
+import { lotSummaryForSpeech, spokenLotPayload } from "@/lib/rvgrok/voiceTurnGate";
+import { looksLikeRepairQuestion } from "@/lib/rvgrok/repairMode";
 import {
   activeScreenFromContext,
   factsSpecRequestsWebSearch,
@@ -872,6 +876,87 @@ async function runXaiWithTools(opts: {
   });
 }
 
+function deltaFromSseLine(line: string): string {
+  if (!line.startsWith("data: ")) return "";
+  const raw = line.slice(6).trim();
+  if (!raw || raw === "[DONE]") return "";
+  try {
+    const parsed = JSON.parse(raw) as {
+      choices?: Array<{ delta?: { content?: string } }>;
+      content?: string;
+    };
+    const delta = parsed.choices?.[0]?.delta?.content ?? parsed.content ?? "";
+    return typeof delta === "string" ? delta : "";
+  } catch {
+    return "";
+  }
+}
+
+/** Stream one plain answer. No tools. Tokens go out as they are written. */
+async function streamXaiAnswer(opts: {
+  apiKey: string;
+  models: string[];
+  messages: ChatMessage[];
+  userText: string;
+  onDelta: (text: string) => void;
+}): Promise<boolean> {
+  for (const model of opts.models) {
+    let any = false;
+    try {
+      const resp = await fetch("https://api.x.ai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${opts.apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: opts.messages,
+          stream: true,
+          ...answerSampling(opts.userText),
+        }),
+        signal: AbortSignal.timeout(60_000),
+      });
+      if (!resp.ok || !resp.body) continue;
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          const piece = deltaFromSseLine(line);
+          if (!piece) continue;
+          any = true;
+          opts.onDelta(piece);
+        }
+      }
+      const tail = deltaFromSseLine(buffer);
+      if (tail) {
+        any = true;
+        opts.onDelta(tail);
+      }
+      if (any) return true;
+    } catch {
+      if (any) return true;
+    }
+  }
+  return false;
+}
+
+function alreadySent(agentMode: boolean): Response {
+  return new Response(null, {
+    headers: sseHeaders({
+      "X-Already-Sent": "1",
+      "X-Model-Used": agentMode ? "grok-4.7 · Agent" : "grok-4.7",
+      "X-Upstream": "xai-direct",
+    }),
+  });
+}
+
 async function tryXaiDirect(
   messages: ChatMessage[],
   agentMode: boolean,
@@ -884,6 +969,7 @@ async function tryXaiDirect(
   standingLessons?: string,
   mode?: TalkMode,
   requestOrigin?: string,
+  emit?: (text: string) => void,
 ): Promise<Response | null> {
   const apiKey = process.env.XAI_API_KEY;
   if (!apiKey) return null;
@@ -920,6 +1006,28 @@ async function tryXaiDirect(
     { role: "system", content: system },
     ...messages,
   ];
+
+  const canStreamPlain =
+    Boolean(emit) &&
+    !forceImageTool &&
+    !vision &&
+    (requiredTool == null ||
+      (requiredTool === "get_own_lot" && Boolean(ownLotNotes)) ||
+      requiredTool === "get_coach_facts");
+  if (canStreamPlain && emit) {
+    fullMessages[0] = {
+      role: "system",
+      content: `${system}\n\nA hold line was already shown. Do not repeat it. Start with the answer.`,
+    };
+    const streamed = await streamXaiAnswer({
+      apiKey,
+      models: MODELS,
+      messages: fullMessages,
+      userText: lastPlain,
+      onDelta: emit,
+    });
+    if (streamed) return alreadySent(agentMode);
+  }
 
   for (const model of MODELS) {
     try {
@@ -1079,6 +1187,88 @@ function demoStream(messages: ChatMessage[], agentMode: boolean): Response {
   });
 }
 
+function relaySseLine(line: string, emit: (text: string) => void) {
+  if (!line.startsWith("data: ")) return;
+  const raw = line.slice(6).trim();
+  if (!raw || raw === "[DONE]") return;
+  try {
+    const parsed = JSON.parse(raw) as {
+      type?: string;
+      content?: string;
+      choices?: Array<{ delta?: { content?: string } }>;
+    };
+    const delta =
+      parsed.type === "delta"
+        ? parsed.content
+        : (parsed.choices?.[0]?.delta?.content ?? parsed.content ?? "");
+    if (typeof delta === "string" && delta) emit(delta);
+  } catch {
+    /* partial line */
+  }
+}
+
+async function relaySseBody(response: Response, emit: (text: string) => void) {
+  if (!response.body) {
+    const text = await response.text();
+    for (const line of text.split("\n")) relaySseLine(line, emit);
+    return;
+  }
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+    for (const line of lines) relaySseLine(line, emit);
+  }
+  if (buffer) relaySseLine(buffer, emit);
+}
+
+/**
+ * The HTTP response starts now. A lot or spec ask shows the hold before
+ * the lookup. Later tokens are the answer, as they are written.
+ */
+function openChatSse(
+  agentMode: boolean,
+  hold: string,
+  run: (emit: (text: string) => void) => Promise<Response>,
+): Response {
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      let sent = false;
+      const emit = (text: string) => {
+        if (!text) return;
+        sent = true;
+        const payload = agentMode
+          ? { type: "delta", content: text }
+          : { choices: [{ delta: { content: text } }] };
+        controller.enqueue(encoder.encode(encodeSse(payload)));
+      };
+      try {
+        if (hold) emit(`${hold}\n\n`);
+        const response = await run(emit);
+        if (response.headers.get("x-already-sent") !== "1") {
+          await relaySseBody(response, emit);
+        }
+      } catch {
+        emit(sent ? "\n\nI hit a snag. Ask me again." : "I hit a snag. Ask me again.");
+      }
+      controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+      controller.close();
+    },
+  });
+  return new Response(stream, {
+    headers: sseHeaders({
+      "X-Model-Used": agentMode ? "grok-4.7 · Agent" : "grok-4.7",
+      "X-Upstream": "xai",
+    }),
+  });
+}
+
 export const Route = createFileRoute("/api/rvgrok")({
   server: {
     handlers: {
@@ -1123,21 +1313,63 @@ export const Route = createFileRoute("/api/rvgrok")({
             ? body.visitorFirstName
             : "";
         const phoneKey = memoryKeyFromRequest(request);
-        const [visitorMemory, standingLessons] = await Promise.all([
-          phoneKey ? loadVisitorMemoryBlockFromRequest(request) : "",
-          readStandingLessonsBlock(),
-        ]);
         const lastUser = [...messages].reverse().find((m) => m.role === "user");
         const lastPlain = lastUser ? contentToPlain(lastUser.content) : "";
         const memoryTurns: MemoryTurn[] = messages.map((m) => ({
           role: m.role,
           text: contentToPlain(m.content).slice(0, 800),
         }));
+        const priorUser = messages
+          .filter((m) => m.role === "user")
+          .slice(0, -1)
+          .map((m) => contentToPlain(m.content));
         const finish = (response: Response) =>
           rememberAfterSseResponse(response, {
             phoneDigits: phoneKey,
             turns: memoryTurns,
           });
+        return finish(
+          openChatSse(agentMode, chatHoldLine(lastPlain, priorUser), async (emit) => {
+        const screenNow = activeScreenFromContext(body.catalogContext);
+        if (
+          chatReadsLot(lastPlain, priorUser) &&
+          !factsSpecRequestsWebSearch(screenNow, lastPlain) &&
+          !looksLikeMarketValueQuestion(lastPlain) &&
+          !looksLikeRepairQuestion(lastPlain)
+        ) {
+          let requestOrigin = "";
+          try {
+            requestOrigin = new URL(request.url).origin;
+          } catch {
+            requestOrigin = "";
+          }
+          const snapshot = await loadOwnLotSnapshot({ requestOrigin });
+          if (!ownLotIsUnavailable(snapshot)) {
+            const found = spokenLotPayload(
+              answerQueryLotFromSnapshot(
+                snapshot,
+                { query: lastPlain },
+                null,
+                lastPlain,
+              ),
+            );
+            const suggestion = (found.did_you_mean || "").toLowerCase();
+            const unspoken =
+              Boolean(suggestion) && !lastPlain.toLowerCase().includes(suggestion);
+            if (!unspoken && !found.name_roster?.length && found.speech.trim()) {
+              return jsonToSseStream({
+                content: found.speech.trim(),
+                model: "own-lot",
+                agentMode,
+                upstream: "own-lot",
+              });
+            }
+          }
+        }
+        const [visitorMemory, standingLessons] = await Promise.all([
+          phoneKey ? loadVisitorMemoryBlockFromRequest(request) : "",
+          readStandingLessonsBlock(),
+        ]);
 
         // Server re-grounds the latest ask so a phone/API probe without
         // client catalogContext still locks Lineage Series M (and friends).
@@ -1203,7 +1435,7 @@ export const Route = createFileRoute("/api/rvgrok")({
             tool: tool as CoachFactsToolResult,
           });
           if (reply && !isUnpinnedWeightReply(reply)) {
-            return finish(
+            return (
               jsonToSseStream({
                 content: reply,
                 model: "catalog-pin",
@@ -1242,7 +1474,7 @@ export const Route = createFileRoute("/api/rvgrok")({
               tool: tool as CoachFactsToolResult,
               researchNotes: researched.ok ? researched.notes : "",
             });
-            return finish(
+            return (
               jsonToSseStream({
                 content: researchedReply || reply,
                 model: "web-research",
@@ -1261,6 +1493,7 @@ export const Route = createFileRoute("/api/rvgrok")({
         }
 
         let ownLotNotes: string | undefined;
+        let lotSpeech = "";
         let skipWebForLot = false;
         const lotCountOrRank = looksLikeOwnLotCountOrRankAsk(lastPlain);
         if (looksLikeOwnLotStockQuestion(lastPlain) || lotCountOrRank) {
@@ -1268,7 +1501,18 @@ export const Route = createFileRoute("/api/rvgrok")({
             const snapshot = await loadOwnLotSnapshot({ requestOrigin });
             ownLotNotes =
               snapshot.ok && !ownLotIsUnavailable(snapshot)
-                ? formatLotQueryNotes(searchLot(snapshot.units, { query: lastPlain, utterance: lastPlain }))
+                ? formatLotQueryNotes(
+                    (() => {
+                      const found = searchLot(snapshot.units, {
+                        query: lastPlain,
+                        utterance: lastPlain,
+                      });
+                      if (!factsSpec && !found.name_roster?.length) {
+                        lotSpeech = lotSummaryForSpeech(found.summary, found.matched);
+                      }
+                      return found;
+                    })(),
+                  )
                 : snapshot.reason || "OWN-LOT INVENTORY UNAVAILABLE.";
             // A Facts spec still searches the web. The lot block stays in context.
             skipWebForLot = factsSpec
@@ -1321,7 +1565,7 @@ export const Route = createFileRoute("/api/rvgrok")({
               })
             : "";
           if (reportText) {
-            return finish(
+            return (
               jsonToSseStream({
                 content: reportText,
                 model:
@@ -1339,8 +1583,19 @@ export const Route = createFileRoute("/api/rvgrok")({
           });
         }
 
+        if (lotSpeech) {
+          return (
+            jsonToSseStream({
+              content: lotSpeech,
+              model: "own-lot",
+              agentMode,
+              upstream: "own-lot",
+            }),
+          );
+        }
+
         // xAI first when the key is present so generate_image (and vision) work.
-        // Facts keeps the normal tool list, including the lot snapshot.
+        // A plain lot answer already went out above. Spec and web stream.
         const fromXai = await tryXaiDirect(
           messages,
           agentMode,
@@ -1353,8 +1608,9 @@ export const Route = createFileRoute("/api/rvgrok")({
           standingLessons,
           talkMode,
           requestOrigin,
+          emit,
         );
-        if (fromXai) return finish(fromXai);
+        if (fromXai) return (fromXai);
         const fromWorker = await tryCloudflareWorker(
           messages,
           agentMode,
@@ -1367,9 +1623,11 @@ export const Route = createFileRoute("/api/rvgrok")({
           standingLessons,
           talkMode,
         );
-        if (fromWorker) return finish(fromWorker);
+        if (fromWorker) return (fromWorker);
 
-        return finish(demoStream(messages, agentMode));
+        return (demoStream(messages, agentMode));
+          }),
+        );
       },
     },
   },

@@ -308,6 +308,14 @@ export function looksLikeOwnLotSearchAsk(text: string): boolean {
   }
   if (LOT_PLACE_CUE_RE.test(t) && mentionsPrintedLotSpec(t)) return true;
   if (WEAK_LOT_SEARCH_RE.test(t) && hasFloorplanOrStock) return true;
+  // "check the lot" / "the lot page" is a lot search even when the coach
+  // name is not in the parser. The whole sentence stays the search.
+  if (
+    /\b(?:the|our|my)\s+lot\b/i.test(t) &&
+    (STRONG_LOT_SEARCH_RE.test(t) || /\b(?:have|has|got|any|see)\b/i.test(t))
+  ) {
+    return true;
+  }
   return false;
 }
 
