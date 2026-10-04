@@ -56,7 +56,8 @@ export function softClipCurve(
 
 type AudioSessionLike = { type: string };
 
-function audioSessionOf(nav: Navigator): AudioSessionLike | null {
+function audioSessionOf(nav: Navigator | null): AudioSessionLike | null {
+  if (!nav) return null;
   const session = (nav as Navigator & { audioSession?: AudioSessionLike })
     .audioSession;
   if (!session || !("type" in session)) return null;
@@ -87,11 +88,18 @@ export function nativeShellLeavesMicHardwareOn(
  * Safari 17+ Audio Session. `play-and-record` keeps the mic and the
  * loudspeaker, but iOS ducks that route so she sounds far away.
  * `playback` is normal media volume. Use it only while the mic track is off.
+ *
+ * The native shell skips this. AppDelegate owns AVAudioSession there
+ * (playAndRecord + defaultToSpeaker), and the mic track never turns off,
+ * so iOS cannot leave play-and-record anyway. A web write in WKWebView
+ * only overrides the native options and can drop the speaker route.
  */
 export function setSpeakingSession(
   speaking: boolean,
   nav: Navigator | null = typeof navigator !== "undefined" ? navigator : null,
+  nativeShell: boolean = nativeShellLeavesMicHardwareOn(),
 ): void {
+  if (nativeShell) return;
   const session = audioSessionOf(nav);
   if (!session) return;
   const next = speaking ? "playback" : "play-and-record";
@@ -102,15 +110,65 @@ export function setSpeakingSession(
   }
 }
 
+export const LIVE_VOICE_DEBUG_KEY = "rvgrok.liveVoiceDebug";
+
+/**
+ * `?lvdebug=1` turns on console logging of the audio session (persisted),
+ * `?lvdebug=0` turns it off. Diagnostics only; nothing on screen changes.
+ */
+export function liveVoiceDebugEnabled(
+  search: string = typeof location !== "undefined" ? location.search : "",
+  storage: Pick<Storage, "getItem" | "setItem" | "removeItem"> | null =
+    typeof localStorage !== "undefined" ? localStorage : null,
+): boolean {
+  try {
+    const fromUrl = new URLSearchParams(search).get("lvdebug");
+    if (fromUrl === "1") {
+      storage?.setItem(LIVE_VOICE_DEBUG_KEY, "1");
+      return true;
+    }
+    if (fromUrl === "0") {
+      storage?.removeItem(LIVE_VOICE_DEBUG_KEY);
+      return false;
+    }
+    return storage?.getItem(LIVE_VOICE_DEBUG_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+/** Log navigator.audioSession.type when `?lvdebug=1` is on. Read-only. */
+export function logLiveVoiceSession(
+  label: string,
+  nav: Navigator | null = typeof navigator !== "undefined" ? navigator : null,
+  enabled: boolean = liveVoiceDebugEnabled(),
+): void {
+  if (!enabled) return;
+  try {
+    const session = audioSessionOf(nav);
+    console.log(
+      `[lvdebug] ${label} audioSession.type=${session ? session.type : "(none)"} native=${nativeShellLeavesMicHardwareOn()}`,
+    );
+  } catch {
+    /* diagnostics only */
+  }
+}
+
 export function resumeLiveVoiceSpeaker(ctx: AudioContext | null): void {
   if (!ctx) return;
   void chains.get(ctx)?.speakerEl?.play().catch(() => {});
 }
 
-/** Open the session for mic + loudspeaker. Call again when she stops. */
+/**
+ * Open the session for mic + loudspeaker before getUserMedia (Safari).
+ * Only the mic tap calls this. The native shell skips it: AppDelegate
+ * already set playAndRecord with defaultToSpeaker.
+ */
 export function preferIosLoudspeaker(
   nav: Navigator | null = typeof navigator !== "undefined" ? navigator : null,
+  nativeShell: boolean = nativeShellLeavesMicHardwareOn(),
 ): boolean {
+  if (nativeShell) return false;
   if (!nav) return false;
   const session = audioSessionOf(nav);
   if (!session) return false;
@@ -195,7 +253,9 @@ export function liveVoiceOutputFor(ctx: AudioContext): LiveVoiceOutput {
     return existing;
   }
 
-  preferIosLoudspeaker();
+  // No session write here. The chain can be built after beginSpeaking
+  // set `playback`; forcing play-and-record here put her back on the
+  // quiet call volume for the rest of that reply.
   const gain = ctx.createGain();
   gain.gain.value = 1;
   const clipper = ctx.createWaveShaper();
