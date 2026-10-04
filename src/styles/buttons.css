@@ -1,0 +1,226 @@
+/* ---------------------------------------------------------------------------
+   Button family — one shape, three heights.
+
+   Shape and size only: radius, height, min-height, padding. No colors,
+   fonts, font sizes or layout live here.
+
+   Loaded after src/styles.css (see src/routes/__root.tsx) and unlayered,
+   so it wins over Tailwind utilities (rounded-full, rounded-xl, min-h-*,
+   px-*) without !important. The broad rules use :where() so their
+   specificity is 0: hand-written component rules still win unless they
+   are named below on purpose.
+
+   Rules
+   - Every text button, tab, chip and segmented tab: 12px radius.
+   - Icon-only buttons stay fully round (one circle per icon control) and
+     stand on a 44px target.
+   - Heights: primary/large 52, default 44, compact 36 (desktop only;
+     compact rises to 44 on touch/narrow screens so taps stay >= 44px).
+   - Cards, list rows, the dock tray, inputs and everything inside the
+     map are not buttons in this sense and keep their own shape.
+   --------------------------------------------------------------------------- */
+:root {
+  --btn-radius: 12px;
+  --btn-h-lg: 52px;
+  --btn-h: 44px;
+  --btn-h-sm: 36px;
+  --btn-icon: 44px;
+  --btn-px-lg: 20px;
+  --btn-px: 16px;
+  --btn-px-sm: 12px;
+  --btn-py: 6px;
+}
+@media (pointer: coarse), (max-width: 767px) {
+  :root {
+    --btn-h-sm: var(--btn-h);
+  }
+}
+
+/* 1. Shape: one radius for every text button, tab and chip.
+   Skips: map chrome, cards/rows that own their shape, icon-only circles,
+   and the Trips route-card controls owned by PR #637 (.rv-trip-*). */
+:where(button, a[class*="rounded"], [role="tab"]):where(
+    :not(
+      [data-route-basemap],
+      [data-route-basemap] *,
+      [data-map-poi-detail] *,
+      [data-dump-pin-fee],
+      [data-dump-legend] *,
+      .showroom-brand,
+      .showroom-hero,
+      .showroom-placard,
+      .showroom-arrival,
+      .showroom-card,
+      .lot-card,
+      .lot-card-hit,
+      .home-jump,
+      .theme-switch,
+      .glass-prestige,
+      .rv-along-row,
+      .rv-trip-chip,
+      .rv-trip-primary,
+      .rv-trip-stop,
+      .rv-trip-devlink,
+      [data-tools-menu] button,
+      article > button.block,
+      .rounded-full[class*="size-"],
+      .rounded-xl[class*="size-"],
+      .rounded-full.p-1,
+      .rounded-full.p-1\.5,
+      .rounded-full.p-2,
+      .grok-mic-btn,
+      .grok-send-btn,
+      .showroom-mic,
+      .showroom-menu,
+      .premium-menu-btn,
+      .lot-cal-tab
+    )
+  ) {
+  border-radius: var(--btn-radius);
+}
+
+/* 2. Default height (44) + padding for single-line text buttons and chips.
+   Rows (text-left / justify-between / stacked / icon+text rows with gap-3,
+   lender rows) keep their own height and padding. */
+:where(button, a[class*="rounded"], [role="tab"]):where(
+    .rounded-full,
+    .rounded-xl,
+    .rounded-lg,
+    .rounded-md,
+    .rounded-2xl,
+    [class*="rounded-["],
+    [class*="min-h-"]
+  ):where(
+    :not(
+      [data-route-basemap],
+      [data-route-basemap] *,
+      [data-map-poi-detail] *,
+      [data-dump-pin-fee],
+      [data-dump-legend] *,
+      .rv-trip-chip,
+      .rv-trip-primary,
+      .rv-trip-stop,
+      .rv-along-row,
+      .glass-prestige,
+      [data-tools-menu] button,
+      [class*="size-"],
+      .rounded-full.p-1,
+      .rounded-full.p-1\.5,
+      .rounded-full.p-2,
+      .text-left,
+      .justify-between,
+      .flex-col,
+      .items-start,
+      .block,
+      .gap-3,
+      .exclusive-lender-row
+    )
+  ) {
+  min-height: var(--btn-h);
+  padding-block: var(--btn-py);
+  padding-inline: var(--btn-px);
+}
+
+/* 3. Primary / large (52): full-width calls to action. */
+:where(button, a[class*="rounded"]):where(.w-full, [data-facts-search]):where(
+    :not(
+      [data-route-basemap] *,
+      [data-map-poi-detail] *,
+      [data-tools-menu] button,
+      .rv-trip-primary,
+      .rv-trip-stop,
+      .text-left,
+      .justify-between,
+      .flex-col,
+      .items-start,
+      .block,
+      .gap-3
+    )
+  ) {
+  min-height: var(--btn-h-lg);
+  padding-block: var(--btn-py);
+  padding-inline: var(--btn-px-lg);
+}
+html[data-theme] .showroom-hero-primary {
+  height: var(--btn-h-lg);
+  min-height: var(--btn-h-lg);
+  border-radius: var(--btn-radius);
+  padding-inline: var(--btn-px-lg);
+}
+.lot-detail-ask,
+html[data-theme] .lot-detail-ask {
+  height: var(--btn-h-lg);
+  border-radius: var(--btn-radius);
+}
+
+/* 4. Compact: segmented tabs and small filter chips. 36 on desktop,
+   44 on touch screens (see --btn-h-sm above). */
+.slider-tab,
+.lot-condition-tab,
+.appearance-choice,
+[data-tow-kind-toggle] button,
+[aria-label="Price input mode"] button,
+[data-voice-panel] [data-voice-chip] {
+  min-height: var(--btn-h-sm);
+  border-radius: var(--btn-radius);
+  padding-block: 0;
+  padding-inline: var(--btn-px-sm);
+}
+html[data-theme] [data-voice-panel] [data-voice-chip] {
+  border-radius: var(--btn-radius);
+}
+.grok-last-chats {
+  height: var(--btn-h-sm);
+  min-height: var(--btn-h-sm);
+  border-radius: var(--btn-radius);
+  padding-inline: var(--btn-px-sm);
+}
+
+/* 5. Hand-written pill buttons join the family (same 12px / 44px). */
+.report-share-main,
+.report-share-menu button,
+.lot-detail-tab,
+.grok-starter {
+  min-height: var(--btn-h);
+  border-radius: var(--btn-radius);
+}
+html .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn {
+  border-radius: var(--btn-radius);
+}
+
+/* Light theme pins select fields (Facts pickers, Tow truck pickers, Tow
+   "More details") to 8px with !important; bring them to the family radius. */
+html[data-theme="light"] .glass-prestige button[data-catalog-field]:not(.rounded-full),
+html[data-theme="light"] [data-tow-truck] button:not(.rounded-full):not([data-tow-kind]),
+html[data-theme="light"] [data-tow-details] {
+  border-radius: var(--btn-radius) !important;
+}
+
+/* 6. Icon-only buttons: one circle, 44px target. Small circles nested in
+   fields, bubbles or photo previews (size-7/8/9, "Remove photo") keep
+   their size so they do not push the field open. */
+.grok-mic-btn,
+.grok-send-btn,
+.premium-menu-btn,
+:where(button).rounded-full:is(.size-10, .size-12):not([aria-label="Remove photo"]) {
+  width: var(--btn-icon);
+  height: var(--btn-icon);
+  min-width: var(--btn-icon);
+  border-radius: 999px;
+}
+.showroom-menu,
+.showroom-mic {
+  width: var(--btn-icon);
+  height: var(--btn-icon);
+  border-radius: 999px;
+}
+
+/* 7. Segmented containers follow their tabs: radius + their own inner
+   padding, so the outline stays concentric with the 12px tab inside. */
+[aria-label="Price input mode"],
+.appearance-switch {
+  border-radius: calc(var(--btn-radius) + 2px);
+}
+[data-tow-kind-toggle] {
+  border-radius: calc(var(--btn-radius) + 4px);
+}

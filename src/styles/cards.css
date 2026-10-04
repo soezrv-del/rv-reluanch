@@ -1,0 +1,175 @@
+/* ---------------------------------------------------------------------------
+   Card + route-control family.
+
+   Loaded after src/styles.css (see src/routes/__root.tsx) and unlayered, so
+   it wins over Tailwind utilities without !important. Shape, size and depth
+   only: no new colors and no font changes.
+
+   Values follow the button tokens from PR #638 (src/styles/buttons.css) and
+   fall back to the same numbers when that file is not loaded:
+     radius 12px · large 52px · padding 20px (large) / 16px (row)
+   Card depth is the featured lot card's own shadow:
+     light  var(--light-lift)   0 1px 2px rgba(0,0,0,.06), 0 12px 28px rgba(0,0,0,.14)
+     dark   var(--shadow-glass) 0 12px 36px rgba(4,12,32,.28) + inner rims
+   --------------------------------------------------------------------------- */
+:root {
+  --card-radius: var(--radius-2xl, 28px);
+  --control-radius: var(--btn-radius, 12px);
+  --control-h: var(--btn-h-lg, 52px);
+  --control-px-lg: var(--btn-px-lg, 20px);
+  --control-px: var(--btn-px, 16px);
+  /* Button depth: one soft drop, no glow. Same value PR #638 gives trip actions. */
+  --control-shadow: 0 8px 18px rgba(4, 12, 32, 0.22);
+  --control-row-bg: rgba(255, 255, 255, 0.06);
+  --control-row-border: 1px solid rgba(255, 255, 255, 0.12);
+}
+html[data-theme="light"] {
+  /* Light already raises buttons with --light-raise; keep that exact value. */
+  --control-shadow: var(--light-raise);
+  --control-row-bg: var(--light-shade);
+  --control-row-border: 1px solid var(--light-hairline);
+}
+
+/* 1. Trips route card ------------------------------------------------------
+   Selectors use data attributes present on main AND on PR #637's markup
+   (.rv-trip-card / .rv-trip-primary / .rv-along-row), so both pick it up. */
+
+/* The route card itself sits at featured lot card radius. */
+[data-route-results] {
+  border-radius: var(--card-radius);
+}
+
+/* Start Turn-by-Turn / Stop navigation: the large primary button. */
+[data-route-results] > button.w-full {
+  min-height: var(--control-h);
+  padding-block: 0;
+  padding-inline: var(--control-px-lg);
+  border-radius: var(--control-radius);
+  box-shadow: var(--control-shadow);
+}
+
+/* FUEL / CAMPS / DUMPS ALONG ROUTE: one row tile each, same shape. */
+:is([data-fuel-along-route], [data-camps-along-route], [data-dumps-along-route])
+  > button[aria-expanded] {
+  min-height: var(--control-h);
+  padding-block: 0;
+  padding-inline: var(--control-px);
+  border: var(--control-row-border);
+  border-radius: var(--control-radius);
+  background: var(--control-row-bg);
+  box-shadow: var(--control-shadow);
+}
+
+/* On PR #637's markup the rows sit flush under hairlines (.rv-along). As
+   tiles they need the same 8px gap they get on main, not the hairline. */
+[data-route-results] > .rv-along {
+  border-top: 0;
+}
+[data-route-results] > .rv-along + .rv-along,
+[data-route-results] > [data-camp-sample-toggle] + .rv-along {
+  margin-top: 0.5rem;
+}
+
+/* Trips header tabs (Dumps, Profile / PROFILE LOCKED): buttons.css already
+   gives them 12px and 44px; line them up on one baseline with button depth. */
+[data-trips-tools] {
+  align-items: stretch;
+}
+[data-trips-tools] > button {
+  min-height: var(--btn-h, 44px);
+  padding-inline: var(--btn-px-sm, 12px);
+  border-radius: var(--control-radius);
+  box-shadow: var(--control-shadow);
+}
+
+/* Trips profile Year / Make / Model / Floorplan pickers: two-line select
+   fields at the large button height and padding. */
+[data-trips-screen] section > .grid.grid-cols-2 > button.text-left {
+  min-height: var(--control-h);
+  padding-inline: var(--control-px);
+  border-radius: var(--control-radius);
+  box-shadow: var(--control-shadow);
+}
+/* Lock profile for map / Unlock to edit. */
+[data-trips-screen] section > button.w-full {
+  min-height: var(--control-h);
+  border-radius: var(--control-radius);
+  box-shadow: var(--control-shadow);
+}
+
+/* 1b. Every native <select>: button radius and default height. Inline
+   padding comes off the button scale; selects with a drawn chevron
+   (.pr-7) keep their right gutter for it. */
+.app-shell select:not([data-route-basemap] *) {
+  min-height: var(--btn-h, 44px);
+  border-radius: var(--control-radius);
+  padding-inline: var(--btn-px-sm, 12px);
+}
+.app-shell select.pr-7 {
+  padding-right: 1.75rem;
+}
+
+/* 2. Lot page: NEWEST ARRIVALS row ----------------------------------------
+   The arrival cards render the lot list card face (lot-card / lot-well /
+   lot-unit-title / lot-unit-meta, rail size). Only the row width is theirs:
+   10.25rem dark, 13.5rem light — the widths the row already used. */
+.lot-arrival {
+  display: flex;
+  flex: 0 0 10.25rem;
+  flex-direction: column;
+  width: 10.25rem;
+  scroll-snap-align: start;
+  border-radius: var(--card-radius);
+}
+html[data-theme="light"] .lot-arrival {
+  flex-basis: 13.5rem;
+  width: 13.5rem;
+}
+.lot-arrival > .lot-card-hit {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+/* Room for the card shadow inside the scroller (it clips overflow-y). */
+.lot-arrivals .showroom-rail {
+  padding-top: 0.25rem;
+  padding-bottom: 2.5rem;
+  margin-bottom: -1.5rem;
+}
+.lot-arrivals .lot-well > .lot-arrival-cover {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 0.5rem 0.25rem;
+}
+/* Narrow card: the type badge gives way to the price instead of overlapping. */
+.lot-arrival-badge {
+  max-width: calc(100% - 6.25rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lot-arrival-title {
+  -webkit-line-clamp: 2;
+}
+.lot-arrival-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Light: a photo-less well is as dark as a photo, so its badge and price
+   take the same on-photo treatment main gives [data-lot-scene="photo"]. */
+html[data-theme="light"] .app-shell .lot-card .lot-well[data-lot-scene="empty"] .bg-sapphire {
+  background: var(--light-action) !important;
+  background-image: none !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  box-shadow: none !important;
+}
+html[data-theme="light"] .app-shell .lot-card .lot-well[data-lot-scene="empty"] :is(.text-prestige, [class*="text-white"]) {
+  color: #c5cedb !important;
+  -webkit-text-fill-color: #c5cedb !important;
+}

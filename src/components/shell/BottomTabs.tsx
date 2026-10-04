@@ -113,7 +113,8 @@ function placeDock(dock: HTMLDivElement, smooth: boolean) {
 }
 
 /**
- * Row starts at the left. A selected tab eases to the center.
+ * Six tabs share the row at equal width.
+ * placeDock still centers a tab if the row ever overflows.
  * Android WebView: do NOT put pointer-events-none on this nav.
  */
 export function BottomTabs({
