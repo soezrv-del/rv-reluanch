@@ -1185,10 +1185,12 @@ test("a named coach survives the spare words around it", () => {
     views.summary,
   );
 
-  const wrongMake = searchLot(snap.units, { query: "Winnebago Navion" });
-  assert.equal(wrongMake.matched, 0, wrongMake.summary);
-  assert.equal(wrongMake.did_you_mean, undefined);
-  assert.match(wrongMake.summary, /^None\./);
+  // Itasca is Winnebago's sister brand. The model name is the coach.
+  const sisterMake = searchLot(snap.units, { query: "Winnebago Navion" });
+  assert.equal(sisterMake.matched, 2, sisterMake.summary);
+  assert.equal(sisterMake.did_you_mean, undefined);
+  assert.match(sisterMake.summary, /^Matching units: 2 Itasca Navion/);
+  assert.match(sisterMake.summary, /under Itasca, a Winnebago family brand/);
 
   let memory = null;
   const first = answerQueryLotFromSnapshot(

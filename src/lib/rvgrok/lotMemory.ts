@@ -14,8 +14,10 @@ import {
   type OwnLotUnit,
 } from "./ownLotInventory.ts";
 import {
+  isLotGoAhead,
   lotQueryHasSubject,
   lotQueryIsBareCount,
+  offeredCoachNames,
   reconcileLotArgs,
   searchLot,
   type LotQueryApplied,
@@ -179,6 +181,13 @@ export function resolveLotTurn(
 
 function str(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
+}
+
+function normalizeName(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
 }
 
 function num(value: unknown): number | undefined {
@@ -409,6 +418,36 @@ export function answerQueryLotFromSnapshot(
     query = stock;
     prior = null;
     args = { ...args, query: stock, make: "", model: "", body_type: "" };
+  }
+  // "Yes" after she offered to check the lot for the Navion and the EKKO 23B
+  // is a search for those names. It is not the last coach again, and it is
+  // not a reason to answer from memory.
+  const goAheadText = spoken || query;
+  if (goAheadText && isLotGoAhead(goAheadText)) {
+    const carriedNames = normalizeName(
+      `${prior?.filter.make || ""} ${prior?.filter.model || ""} ${prior?.filter.trim || ""}`,
+    );
+    const isNew = (name: string) => {
+      const head = normalizeName(name).split(" ")[0] || "";
+      return Boolean(head) && !carriedNames.split(" ").includes(head);
+    };
+    const offered = offeredCoachNames(priorAssistant, snapshot.units).filter(isNew);
+    const toolQuery = str(args.query);
+    const toolNames =
+      toolQuery && !isLotGoAhead(toolQuery) && lotQueryHasSubject(toolQuery) ? toolQuery : "";
+    const titled = toolNames.replace(/\b[a-z]/g, (c) => c.toUpperCase());
+    const toolOffered = toolNames ? offeredCoachNames(titled, snapshot.units).filter(isNew) : [];
+    const names = offered.length
+      ? offered.join(" or ")
+      : toolOffered.length
+        ? toolNames
+        : "";
+    if (names) {
+      spoken = names;
+      query = names;
+      prior = null;
+      args = { ...args, query: names, make: "", model: "", body_type: "" };
+    }
   }
   const text = spoken || query;
   const saidRank = parseLotRank(text);

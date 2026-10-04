@@ -1803,8 +1803,17 @@ export function reconcileLotArgs(args: LotQueryArgs = {}): LotQueryArgs {
   const hadUtterance = Boolean(str(args.utterance));
   const spoken = stripLotAside(str(args.utterance));
   const queryText = stripLotAside(str(args.query));
+  // "Yes", "go ahead", "are you looking for it?" name no coach. The tool
+  // query carries the coach she offered ("Navion or EKKO"). Search that, not
+  // the word yes, and do not rerun the last coach.
+  const goAhead =
+    hadUtterance &&
+    isLotGoAhead(str(args.utterance)) &&
+    Boolean(queryText) &&
+    !isLotGoAhead(queryText) &&
+    lotQueryHasSubject(queryText);
   // No separate spoken line: keep the tool filters and search the stripped question.
-  if (!hadUtterance) {
+  if (!hadUtterance || goAhead) {
     const stripped = stripCarry({ ...base, query: queryText });
     return args.follow_up ? { ...stripped, follow_up: true } : stripped;
   }
@@ -2171,6 +2180,53 @@ function tokenHitsMake(unit: LotQueryUnit, token: string): boolean {
   return words.some((word) => word === token || (token.length >= 4 && word.startsWith(token)));
 }
 
+/**
+ * Brand families. A model name is the coach, so a sister-brand make in the
+ * same sentence does not hide it. "Winnebago Navion" is the Itasca Navion on
+ * the sheet, and "Thor Four Winds" is the Thor Motor Coach Four Winds.
+ */
+const MAKE_FAMILIES: string[][] = [
+  ["winnebago", "itasca", "grand design", "newmar"],
+  ["thor", "thor motor coach", "thor ca", "four winds", "jayco", "entegra", "entegra coach", "tiffin", "airstream"],
+  ["forest river", "coachmen", "dynamax", "dynamax corp", "east to west", "prime time", "palomino", "shasta"],
+  ["fleetwood", "holiday rambler", "american coach", "monaco", "monaco rv"],
+];
+
+function makeFamilyOf(token: string): string[] | undefined {
+  if (token.length < 4) return undefined;
+  return MAKE_FAMILIES.find((family) =>
+    family.some((make) => make.split(" ").some((word) => word === token || (word.length > 4 && word.startsWith(token)))),
+  );
+}
+
+function unitInMakeFamily(unit: LotQueryUnit, token: string): boolean {
+  const family = makeFamilyOf(token);
+  if (!family) return false;
+  const make = normalizeLotQueryText(unit.make || "");
+  return family.some((member) => make === member || make.startsWith(`${member} `));
+}
+
+/** A make word, or a sister brand of it when the sentence also names a model. */
+function makeTokenHits(unit: LotQueryUnit, token: string, family?: Set<string>): boolean {
+  return tokenHitsMake(unit, token) || Boolean(family?.has(token) && unitInMakeFamily(unit, token));
+}
+
+/**
+ * Make words that may stand for a sister brand. Only when the same sentence
+ * names a model on the sheet: "Winnebago Navion" yes, "Winnebago" alone no.
+ */
+function familyMakeTokens(units: LotQueryUnit[], tokens: string[]): Set<string> | undefined {
+  const models = tokens.filter((token) => units.some((unit) => tokenIsCoachName(unit, token, true)));
+  if (!models.length) return undefined;
+  const makes = tokens.filter(
+    (token) =>
+      !models.includes(token) &&
+      Boolean(makeFamilyOf(token)) &&
+      units.some((unit) => tokenHitsMake(unit, token) || unitInMakeFamily(unit, token)),
+  );
+  return makes.length ? new Set(makes) : undefined;
+}
+
 type ModelAlias = { spoken: string; key: string; display: string; distance: number };
 
 /**
@@ -2206,14 +2262,25 @@ function modelAlias(units: LotQueryUnit[], tokens: string[]): ModelAlias | undef
   return undefined;
 }
 
-function tokenSatisfied(unit: LotQueryUnit, token: string, alias?: ModelAlias): boolean {
+function tokenSatisfied(
+  unit: LotQueryUnit,
+  token: string,
+  alias?: ModelAlias,
+  family?: Set<string>,
+): boolean {
   if (/^\d{1,2}$/.test(token)) return seriesDigitHits(unit, token);
   if (tokenHitsIdentity(unit, token)) return true;
+  if (family?.has(token) && unitInMakeFamily(unit, token)) return true;
   return Boolean(alias && alias.spoken === token && nameHasWord(unit, alias.key));
 }
 
-function passesTokens(unit: LotQueryUnit, tokens: string[], alias?: ModelAlias): boolean {
-  return tokens.every((token) => tokenSatisfied(unit, token, alias));
+function passesTokens(
+  unit: LotQueryUnit,
+  tokens: string[],
+  alias?: ModelAlias,
+  family?: Set<string>,
+): boolean {
+  return tokens.every((token) => tokenSatisfied(unit, token, alias, family));
 }
 
 /** Series digit on the model line. Year and floorplan stay out. */
@@ -2560,10 +2627,233 @@ function rosterLine(unit: LotQueryUnit): string {
     .join(" | ");
 }
 
+type ListedName = {
+  /** The name as said: "Navion", "EKKO 23B". */
+  label: string;
+  tokens: string[];
+  /** Words that are a model on the sheet. */
+  models: string[];
+  /** Other words on some coach (make, floorplan, stock). Spare words are dropped. */
+  rest: string[];
+  family?: Set<string>;
+};
+
+const LIST_SPLIT = /\s*(?:\bor\b|\band\b|\bvs\.?\b|\bversus\b|\bplus\b|[,/&+])\s*/i;
+
+function labelFromWords(part: string, keep: string[], cased = ""): string {
+  const split = (text: string) =>
+    text
+      .split(/\s+/)
+      .map((word) => word.replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, ""))
+      .filter(Boolean);
+  const words = split(part);
+  const casedWords = split(cased);
+  const hits = (word: string, token: string) => {
+    const said = normalizeLotQueryText(word);
+    return token === said || singularizeLotToken(said) === token;
+  };
+  // Spoken case wins: "EKKO", not "ekko".
+  const picked = keep.map(
+    (token) =>
+      casedWords.find((word) => hits(word, token) && /[A-Z]/.test(word)) ||
+      words.find((word) => hits(word, token)) ||
+      token,
+  );
+  const label = (picked.length ? picked : words).join(" ");
+  return label
+    .split(" ")
+    .map((word) =>
+      /[A-Z]/.test(word)
+        ? word
+        : /\d/.test(word)
+          ? word.toUpperCase()
+          : word.replace(/^[a-z]/, (c) => c.toUpperCase()),
+    )
+    .join(" ");
+}
+
+/**
+ * "Navion or EKKO 23B", "the Lineage and the Isata". Two or more names in one
+ * question. Empty when the sentence is one coach plus features
+ * ("Lineage with slides and solar"): a part with no model on the sheet only
+ * counts when none of its words are on any coach.
+ */
+function listedCoachNames(units: LotQueryUnit[], query: string, cased = ""): ListedName[] {
+  const raw = str(query);
+  if (!raw || !LIST_SPLIT.test(raw)) return [];
+  const parts = raw.split(LIST_SPLIT).map((part) => part.trim()).filter(Boolean);
+  if (parts.length < 2) return [];
+  const places = locationWords(units);
+  const out: ListedName[] = [];
+  for (const part of parts) {
+    const said = normalizeLotQueryText(part);
+    if (!said) continue;
+    const tokens = identityTokens(consumeListingAliases(said.split(/\s+/)).join(" "), places).filter(
+      (token) => !STOP.has(token),
+    );
+    if (!tokens.length) continue;
+    // A floorplan code ("23B") is not a coach name on its own.
+    const models = tokens.filter(
+      (token) => /^[a-z]{4,}$/.test(token) && units.some((unit) => tokenIsCoachName(unit, token, true)),
+    );
+    const family = familyMakeTokens(units, tokens);
+    const rest = tokens.filter(
+      (token) =>
+        !models.includes(token) &&
+        (units.some((unit) => tokenHitsIdentity(unit, token)) || Boolean(family?.has(token))),
+    );
+    if (!models.length) {
+      // A coach-shaped name that is on no sheet row: "EKKO", "EKKO 23B".
+      const alpha = tokens.filter((token) => /^[a-z]+$/.test(token));
+      const offSheet =
+        alpha.length > 0 && alpha.every((token) => !units.some((unit) => tokenHitsIdentity(unit, token)));
+      const makeOnly = tokens.every((token) => units.some((unit) => tokenHitsMake(unit, token)));
+      if (!offSheet || makeOnly) {
+        if (makeOnly) continue;
+        return [];
+      }
+    }
+    out.push({
+      label: labelFromWords(part, models.length ? models : tokens, cased),
+      tokens,
+      models,
+      rest,
+      family,
+    });
+  }
+  const withModels = out.filter((name) => name.models.length);
+  if (out.length < 2 || !withModels.length) return [];
+  return out;
+}
+
+const NOT_A_COACH_NAME = new Set([
+  "class",
+  "super",
+  "sprinter",
+  "mercedes",
+  "benz",
+  "ford",
+  "transit",
+  "ram",
+  "promaster",
+  "chevy",
+  "chevrolet",
+  "freightliner",
+  "spartan",
+  "rv",
+  "rvs",
+  "i",
+  "ok",
+  "okay",
+  "yes",
+  "no",
+  "the",
+  "lot",
+  "want",
+]);
+
+function sheetModelWord(units: LotQueryUnit[], token: string): boolean {
+  if (token.length < 3 || STOP.has(token) || NOT_A_COACH_NAME.has(token)) return false;
+  return units.some((unit) =>
+    normalizeLotQueryText(`${unit.model || ""} ${unit.series || ""}`).split(/\s+/).includes(token),
+  );
+}
+
+function isMakeWord(units: LotQueryUnit[], token: string): boolean {
+  return units.some((unit) => normalizeLotQueryText(unit.make || "").split(/\s+/).includes(token));
+}
+
+/**
+ * Coach names she just offered: "Winnebago also builds the Navion and the
+ * EKKO 23B." A name is a model word on the sheet, or an all-caps or
+ * capitalized name listed with one ("EKKO 23B" next to "Navion").
+ * Makes and chassis words are not names.
+ */
+export function offeredCoachNames(text: string, units: LotQueryUnit[]): string[] {
+  const raw = str(text);
+  if (!raw) return [];
+  const words = raw.split(/\s+/);
+  type Group = { words: string[]; sheet: boolean; caps: boolean; start: number; end: number };
+  const groups: Group[] = [];
+  for (let i = 0; i < words.length; i++) {
+    const word = (words[i] || "").replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, "");
+    if (!word || !/^[A-Z]/.test(word)) continue;
+    const token = normalizeLotQueryText(word);
+    if (!token || NOT_A_COACH_NAME.has(token) || STOP.has(token)) continue;
+    const sheet = sheetModelWord(units, token);
+    const caps = /^[A-Z][A-Z0-9]{2,}$/.test(word);
+    if (!sheet && isMakeWord(units, token)) continue;
+    if (!sheet && !caps && !/^[A-Z][a-z]{3,}$/.test(word)) continue;
+    const group: Group = { words: [word], sheet, caps, start: i, end: i };
+    // A floorplan code right after the name: "EKKO 23B", "View 24D".
+    const next = (words[i + 1] || "").replace(/[^A-Za-z0-9]+$/g, "");
+    if (/^\d{2,3}[A-Za-z]{0,3}$/.test(next) && !/[.,;:!?]$/.test(words[i] || "")) {
+      group.words.push(next);
+      group.end = i + 1;
+      i += 1;
+    }
+    groups.push(group);
+  }
+  const joined = (a: Group, b: Group): boolean => {
+    const between = words
+      .slice(a.end + 1, b.start)
+      .join(" ")
+      .toLowerCase()
+      .replace(/[^a-z\s]/g, " ")
+      .trim();
+    return /^(?:(?:and|or|plus)(?:\s+(?:the|a|an))?|the)?$/.test(between) &&
+      (between !== "" || /,$/.test(words[a.end] || ""));
+  };
+  const keep = groups.map((group) => group.sheet);
+  for (let i = 0; i < groups.length; i++) {
+    if (keep[i]) continue;
+    const group = groups[i]!;
+    if (!group.caps && !/^[A-Z][a-z]{3,}$/.test(group.words[0] || "")) continue;
+    const prev = groups[i - 1];
+    const next = groups[i + 1];
+    if ((prev && keep[i - 1] && joined(prev, group)) || (next && next.sheet && joined(group, next))) {
+      keep[i] = true;
+    }
+  }
+  const out: string[] = [];
+  groups.forEach((group, index) => {
+    if (!keep[index]) return;
+    const name = group.words.join(" ");
+    if (!out.some((seen) => seen.toLowerCase() === name.toLowerCase())) out.push(name);
+  });
+  return out;
+}
+
+/**
+ * "Yes", "go ahead", "are you looking for it?", "did you check?". The
+ * salesman said go, not which coach. The coach is in the tool query or in
+ * what she just offered.
+ */
+export function isLotGoAhead(text: string): boolean {
+  const said = normalizeLotQueryText(text);
+  if (!said) return false;
+  const words = said.split(/\s+/);
+  const allowed = new Set([
+    "yes", "yeah", "yep", "yup", "sure", "ok", "okay", "please", "go", "ahead", "do", "it", "that",
+    "this", "check", "checking", "look", "looking", "search", "searching", "find", "see", "are", "you",
+    "did", "can", "could", "would", "will", "for", "them", "those", "these", "one", "ones", "the", "our",
+    "lot", "on", "in", "stock", "inventory", "if", "we", "have", "any", "up", "still", "now", "right",
+    "thanks", "thank", "both", "of", "and", "to", "me", "a", "let", "lets", "s",
+  ]);
+  if (!words.every((word) => allowed.has(word))) return false;
+  return words.some((word) =>
+    /^(?:yes|yeah|yep|yup|sure|ok|okay|please|go|check|checking|look|looking|search|searching|find)$/.test(word),
+  );
+}
+
 /** "Anything like a View" is other coaches, not another count of that View. */
 function likeCoachAsk(text: string): boolean {
   const said = normalizeLotQueryText(text);
-  return /\b(?:anything|something)\s+like\b/.test(said) || /\bsimilar\s+to\b/.test(said);
+  return (
+    /\b(?:anything|something)\s+(?:else\s+)?like\b/.test(said) ||
+    /\b(?:other|others|else)\s+(?:\w+\s+){0,2}like\s+(?:the|a|an|that|our)\b/.test(said) ||
+    /\bsimilar\s+to\b/.test(said)
+  );
 }
 
 function chassisFamily(unit: LotQueryUnit): string {
@@ -2640,13 +2930,17 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
   const lengthRequired = lengthBounded || parsed.sort === "length";
   const structured = units.filter((unit) => passesStructured(unit, parsed, lengthRequired));
   const alias = modelAlias(units, parsed.tokens);
+  // "Winnebago Navion": the sheet files the Navion under Itasca. A make word
+  // next to a model name also accepts its sister brands.
+  const family = familyMakeTokens(units, parsed.tokens);
   let matched = parsed.tokens.length
-    ? structured.filter((unit) => passesTokens(unit, parsed.tokens, alias))
+    ? structured.filter((unit) => passesTokens(unit, parsed.tokens, alias, family))
     : structured;
   // "Check the lot for a Navion" names Navion. "check" is not on a coach.
-  // Keep the named model, and keep a real make in the same sentence
-  // (Winnebago Navion is not the Itasca Navion). Class, price, year,
-  // store, and fuel still apply.
+  // Keep the named model, a make in the same sentence (or its sister brand),
+  // and any other word that is on some coach (a stock number, a floorplan).
+  // Only words that are on no coach at all are dropped. Class, price, year,
+  // store, fuel, and bed still apply.
   if (!matched.length && !alias && parsed.tokens.length) {
     const models = parsed.tokens.filter((token) =>
       units.some((unit) => tokenIsCoachName(unit, token, true)),
@@ -2654,16 +2948,60 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
     if (models.length) {
       const makes = parsed.tokens.filter(
         (token) =>
-          !models.includes(token) && units.some((unit) => tokenHitsMake(unit, token)),
+          !models.includes(token) &&
+          units.some((unit) => makeTokenHits(unit, token, family)),
+      );
+      const kept = parsed.tokens.filter(
+        (token) =>
+          !models.includes(token) &&
+          !makes.includes(token) &&
+          units.some((unit) => tokenHitsIdentity(unit, token)),
       );
       const named = units.filter(
         (unit) =>
           models.every((token) => tokenIsCoachName(unit, token, true)) &&
-          makes.every((token) => tokenHitsMake(unit, token)) &&
+          makes.every((token) => makeTokenHits(unit, token, family)) &&
+          passesTokens(unit, kept) &&
           passesStructured(unit, parsed, lengthRequired),
       );
       if (named.length) matched = named;
     }
+  }
+  // "Navion or EKKO 23B" is two coaches. Search each name and return both
+  // sets, so one name that is not on the sheet does not hide the other.
+  const listed = listedCoachNames(
+    units,
+    str(clean.query),
+    [args.utterance, args.query].map((value) => str(value)).join(" "),
+  );
+  let listedNote = "";
+  if (listed.length) {
+    const sets = listed.map((name) =>
+      units.filter(
+        (unit) =>
+          passesStructured(unit, parsed, lengthRequired) &&
+          (name.models.length
+            ? name.models.every((token) => tokenIsCoachName(unit, token, true)) &&
+              name.rest.every((token) => tokenSatisfied(unit, token, undefined, name.family))
+            : passesTokens(unit, name.tokens, undefined, name.family)),
+      ),
+    );
+    const seen = new Set<LotQueryUnit>();
+    matched = [];
+    for (const set of sets) {
+      for (const unit of set) {
+        if (seen.has(unit)) continue;
+        seen.add(unit);
+        matched.push(unit);
+      }
+    }
+    listedNote = listed
+      .map((name, index) =>
+        sets[index]!.length
+          ? `${name.label}: ${sets[index]!.length} on the lot.`
+          : `${name.label}: not on the lot.`,
+      )
+      .join(" ");
   }
   // Spare words ("looking", "right", "try again", "anything") are not a coach name.
   // If used / diesel / class / price already picked a set, keep that set.
@@ -2826,6 +3164,86 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
       }
     }
   }
+  // Base layer: the dumb type-ahead bar. If a model name in the question or
+  // the tool call is on the sheet, the answer is never none. Filters narrow
+  // that set; when they would empty it, say so and give the set.
+  let baseNote = "";
+  let byNameNote = "";
+  if (!matched.length && !similarNote && !featureBlank && !featureNo) {
+    const askText = [args.query, args.model, args.utterance, clean.query, clean.model]
+      .map((value) => str(value))
+      .filter(Boolean)
+      .join(" ");
+    const baseTokens = [
+      ...new Set([
+        ...parsed.tokens,
+        ...parseArgs(units, { query: askText }).tokens,
+      ]),
+    ].filter((token) => units.some((unit) => tokenIsCoachName(unit, token, true)));
+    // A model word beats a floorplan code: "Navion EKKO 23B" is the Navion,
+    // not every 23B on the lot.
+    const words = baseTokens.filter((token) => /^[a-z]{4,}$/.test(token));
+    if (words.length) baseTokens.splice(0, baseTokens.length, ...words);
+    if (baseTokens.length) {
+      const all = units.filter((unit) =>
+        baseTokens.every((token) => tokenIsCoachName(unit, token, true)),
+      );
+      const base = all.length
+        ? all
+        : units.filter((unit) => baseTokens.some((token) => tokenIsCoachName(unit, token, true)));
+      // Filters he said in this sentence narrow the name set. A filter he did
+      // not say (a carried store, a class the model added) does not empty it.
+      const spokenText = str(args.utterance) || str(args.query);
+      const spoken = parseArgs(units, { query: spokenText });
+      const saidLocationHead =
+        normalizeLotQueryText(parsed.location)
+          .split(/\s+/)
+          .find((word) => word.length >= 4) || "";
+      const said: Parsed = {
+        ...parsed,
+        body: spoken.body.kind !== "any" ? parsed.body : { kind: "any" },
+        condition: spoken.condition ? parsed.condition : "",
+        status: spoken.status ? parsed.status : "",
+        location:
+          saidLocationHead && normalizeLotQueryText(spokenText).includes(saidLocationHead)
+            ? parsed.location
+            : "",
+        places: spoken.places.length ? parsed.places : [],
+        yearMin: spoken.yearMin != null || spoken.yearMax != null ? parsed.yearMin : undefined,
+        yearMax: spoken.yearMin != null || spoken.yearMax != null ? parsed.yearMax : undefined,
+        priceMin: spoken.priceMin != null || spoken.priceMax != null ? parsed.priceMin : undefined,
+        priceMax: spoken.priceMin != null || spoken.priceMax != null ? parsed.priceMax : undefined,
+        lengthMin: spoken.lengthMin != null || spoken.lengthMax != null ? parsed.lengthMin : undefined,
+        lengthMax: spoken.lengthMin != null || spoken.lengthMax != null ? parsed.lengthMax : undefined,
+        fuel: spoken.fuel ? parsed.fuel : "",
+      };
+      const saidLength = said.lengthMin != null || said.lengthMax != null;
+      const narrowed = base.filter((unit) => passesStructured(unit, parsed, lengthRequired));
+      const saidNarrowed = narrowed.length
+        ? narrowed
+        : base.filter((unit) => passesStructured(unit, said, saidLength));
+      if (saidNarrowed.length) {
+        matched = saidNarrowed;
+        if (!narrowed.length) baseNote = "Not with every filter named.";
+      } else if (base.length) {
+        // He said the filter ("how many of those are used"). The count is
+        // zero, but the name is on the lot. Say both. Never a bare none.
+        const line = oneLine(base, countsFor(base), { kind: "any" }).replace(/\s*Top:.*$/, "");
+        byNameNote = `None with those filters. By name, the lot has ${line.replace(/^Matching units:\s*/, "").replace(/\.$/, "")}.`;
+      }
+    }
+  }
+  // "Winnebago Navion" landed on Itasca rows. Say the sheet make.
+  let makeNote = "";
+  if (matched.length && family?.size && !similarNote) {
+    const missed = [...family].filter((token) => !matched.some((unit) => tokenHitsMake(unit, token)));
+    if (missed.length) {
+      const sheetMakes = [...new Set(matched.map((unit) => unit.make).filter(Boolean))];
+      if (sheetMakes.length) {
+        makeNote = `The sheet lists ${sheetMakes.length === 1 ? "it" : "them"} under ${sheetMakes.join(" and ")}, a ${capitalizeWord(missed[0]!)} family brand.`;
+      }
+    }
+  }
   matched = keepCloseSeries(matched, alias);
   const noLength = lengthRequired
     ? units.filter((unit) => {
@@ -2934,6 +3352,17 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
       lengthMax: parsed.lengthMax,
     },
   );
+  if (baseNote && matched.length) {
+    // Lead with the miss on the filters, then the name hits. Never "None."
+    summary = `${baseNote} By name on the lot: ${summary.replace(/^Matching units:\s*/, "")}`;
+  }
+  for (const note of [makeNote, listedNote]) {
+    if (note && matched.length && !summary.includes(note)) {
+      summary = `${summary.replace(/\s+$/, "").replace(/\.$/, "")}. ${note}`;
+    }
+  }
+  if (listedNote && !matched.length) summary = `None. ${listedNote}`;
+  if (byNameNote && !matched.length) summary = byNameNote;
   if (similarNote.startsWith("None")) {
     summary = similarNote.endsWith(".") ? similarNote : `${similarNote}.`;
   } else if (similarNote && matched.length && !summary.includes(similarNote)) {
