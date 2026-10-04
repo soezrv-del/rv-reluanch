@@ -9,6 +9,7 @@
 import type { OsrmLineString } from "./osrm.ts";
 import {
   MAPBOX_ATTRIBUTION,
+  MAPBOX_STYLE_STANDARD,
   mapboxPublicToken,
   mapboxRasterTemplate,
 } from "./mapbox.ts";
@@ -111,7 +112,7 @@ export function mapboxCatalog(token: string): TileCatalog | null {
     attribution: MAPBOX_ATTRIBUTION,
     note: "Mapbox streets — visual layer only. Truck clearance stays HERE.",
     token: pk,
-    style: "mapbox://styles/mapbox/streets-v12",
+    style: MAPBOX_STYLE_STANDARD,
     engine: "gl",
   };
 }

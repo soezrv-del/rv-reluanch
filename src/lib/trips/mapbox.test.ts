@@ -11,8 +11,11 @@ import {
   mapboxPublicToken,
   mapboxRasterTemplate,
   mapboxReverseUrl,
+  isStandardStyle,
+  mapboxStandardConfig,
   mapboxStyleUrl,
   readMapboxToken,
+  standardLightPreset,
 } from "./mapbox.ts";
 import { mapboxCatalog } from "./basemap.ts";
 
@@ -45,12 +48,44 @@ test("mapbox catalog is GL-first and never a stock photo", () => {
   assert.match(cat.tileTemplate, /access_token=/);
   assert.doesNotMatch(cat.note, /photo|glacier|stock/i);
   assert.match(cat.note, /HERE/);
-  assert.equal(mapboxStyleUrl("streets"), "mapbox://styles/mapbox/streets-v12");
+  assert.equal(mapboxStyleUrl("streets"), "mapbox://styles/mapbox/standard");
+  assert.equal(cat.style, "mapbox://styles/mapbox/standard");
   assert.equal(
     mapboxStyleUrl("satellite"),
     "mapbox://styles/mapbox/satellite-streets-v12",
   );
   assert.match(mapboxRasterTemplate(PK, "satellite"), /satellite-streets-v12/);
+});
+
+test("GL streets is Mapbox Standard; raster + satellite stay classic", () => {
+  assert.equal(isStandardStyle("streets"), true);
+  assert.equal(isStandardStyle("satellite"), false);
+  // Static Tiles API cannot render Standard — raster fallback stays streets-v12.
+  assert.match(mapboxRasterTemplate(PK), /styles\/v1\/mapbox\/streets-v12\/tiles/);
+  assert.doesNotMatch(mapboxRasterTemplate(PK), /standard/);
+  assert.equal(standardLightPreset("light"), "day");
+  assert.equal(standardLightPreset("dark"), "night");
+  const light = mapboxStandardConfig("light");
+  const dark = mapboxStandardConfig("dark");
+  assert.equal(light.lightPreset, "day");
+  assert.equal(dark.lightPreset, "night");
+  assert.equal(light.showPointOfInterestLabels, false);
+  // Indoor airport tiles are billed separately — must stay off.
+  assert.equal(light.showIndoor, false);
+  assert.equal(dark.showIndoor, false);
+});
+
+test("Standard route layers sit in the top slot and re-add on style.load", () => {
+  const gl = readFileSync(
+    join(root, "../../components/rvtrips/RouteMapboxGl.tsx"),
+    "utf8",
+  );
+  assert.match(gl, /slot: "top"/);
+  assert.match(gl, /line-emissive-strength/);
+  assert.match(gl, /map\.on\("style\.load"/);
+  assert.match(gl, /setConfigProperty\("basemap", "lightPreset"/);
+  assert.match(gl, /subscribeTheme/);
+  assert.doesNotMatch(gl, /showIndoor:\s*true/);
 });
 
 test("Mapbox geocode URLs stay on api.mapbox.com — not Directions / /api/route", () => {
