@@ -16,6 +16,8 @@ export type GeoFix = BasemapLngLat & {
   heading: number | null;
   accuracy: number | null;
   ts: number;
+  /** Device-reported ground speed (m/s) when the platform gives one. */
+  speed?: number | null;
 };
 
 export type FollowStatus = "off" | "waiting" | "live" | "denied";
@@ -90,6 +92,7 @@ export function fixFromCoords(
     longitude: number;
     heading?: number | null;
     accuracy?: number | null;
+    speed?: number | null;
   },
   ts = Date.now(),
 ): GeoFix | null {
@@ -97,12 +100,14 @@ export function fixFromCoords(
   const lng = Number(coords.longitude);
   if (!finiteLngLat({ lat, lng })) return null;
   const acc = Number(coords.accuracy);
+  const spd = coords.speed == null ? Number.NaN : Number(coords.speed);
   return {
     lat,
     lng,
     heading: headingDeg(coords.heading),
     accuracy: Number.isFinite(acc) && acc > 0 ? acc : null,
     ts: Number.isFinite(ts) ? ts : Date.now(),
+    speed: Number.isFinite(spd) && spd >= 0 ? spd : null,
   };
 }
 
