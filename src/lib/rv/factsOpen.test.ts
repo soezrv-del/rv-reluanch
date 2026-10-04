@@ -700,7 +700,7 @@ test("dock Facts tab always opens clean search via openFactsPicker", () => {
     "utf8",
   );
   const onTab = shell.match(
-    /const onTabChange = useCallback\(\s*\(next: AppTab\) => \{[\s\S]*?\}, \[/,
+    /const onTabChange = useCallback\(\s*\(next: AppTab[^)]*\) => \{[\s\S]*?\}, \[/,
   );
   assert.ok(onTab, "onTabChange present");
   assert.match(onTab[0], /next === "rvfax"/);

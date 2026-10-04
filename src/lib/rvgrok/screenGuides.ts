@@ -75,8 +75,10 @@ export const SCREEN_SHARED = `The top bar is the finished R and the RvFOX word. 
 Every screen except the RV Grok chat has the ask bar at the bottom:
 - an "Ask RV Grok" text box, where a typed question opens the RV Grok chat with the answer
 - the mic, which starts Live Voice and keeps him on the screen he's on. It shows Listening or Speaking, and tapping it again stops voice.
-Under that bar is a dock of six gold line icons. All six are visible. The dock does not slide and does not auto-scroll. Left to right: FACTS (a document), CAL (a calendar), Grok (a gold sunburst in a blue ring), TOW (a crane), RV GPS (a pin), and LOT (buildings). The same icons show in White and Dark. There is no Einstein photo and no word pills.
-Swiping the page (not the dock) moves between tools in this order: Rv Facts, Calculator, RV Grok, Tow Guide, RV GPS, Lot Inventory. Swiping doesn't work on Home.`;
+Under that bar is a dock of four tabs. All four are visible. The dock does not slide and does not auto-scroll. Left to right: Facts (a document), Inventory (an RV), Live Chat (two chat bubbles, the RV Grok chat), and More (four squares). The open tab is a dark pill in White mode and a sapphire pill in Dark mode.
+More opens a sheet over the screen with three big tiles, Tow Check, Payments, and RV GPS, then rows for VIN Decoder, Share a brochure, and Premium & settings. Tow Check opens Tow Guide, Payments opens the Calculator, and Premium & settings opens the Premium menu. The More tab stays lit while Tow Guide, the Calculator, RV GPS, or Premium is open. Tapping More again, or tapping outside the sheet, closes it.
+The phone's back button closes the More sheet, and from Tow Guide, the Calculator, RV GPS, or Premium it goes back to the screen he came from.
+Swiping the page (not the dock) moves between the three main tabs in this order: Rv Facts, Lot Inventory, RV Grok. Swiping doesn't work on Home or on the tools under More.`;
 
 const GUIDES: Record<string, string> = {
   Home: `Home is the showroom for the app. The title sits above the coach: year and make, then the model, then price and stock. The stocked coach is the 2026 Entegra Cornerstone. The model number is Cornerstone 45D and the stock number is Stock 45282 when that unit is on the lot. Light mode is a white page. Dark mode is the same coach cutout on a black ground.

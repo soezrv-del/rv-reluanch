@@ -1373,11 +1373,7 @@
   padding-right: 0.2rem;
   padding-bottom: max(0.35rem, env(safe-area-inset-bottom, 0px));
 }
-.showroom-dock .bottom-tab-btn.is-active,
-.showroom-dock .bottom-tab-btn[aria-current="page"] {
-  border-top-color: var(--color-gold);
-}
-/* Six dock labels: FACTS and RV GPS stay fully visible on a ~360px phone. */
+/* Dock labels (Facts, Inventory, Live Chat, More) stay fully visible on a ~360px phone. */
 @media (max-width: 639px) {
   .bottom-tabs-nav {
     padding-left: 0.375rem;

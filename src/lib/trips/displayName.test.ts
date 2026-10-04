@@ -34,10 +34,8 @@ test("dock, titles, and in-app copy name the GPS tab RV GPS", () => {
   const og = read("../og/site.json");
   const plist = read("../../../ios/App/App/Info.plist");
 
-  assert.match(
-    tabs,
-    /\{ id: "rvtrips", label: "RV GPS", short: "RV GPS" \}/,
-  );
+  const sheet = read("../../components/shell/MoreSheet.tsx");
+  assert.match(sheet, /id: "rvtrips",\s*title: "RV GPS"/);
   assert.doesNotMatch(tabs, /short: "Trips"/);
   assert.doesNotMatch(tabs, /label: "RvTRIPS"/);
 

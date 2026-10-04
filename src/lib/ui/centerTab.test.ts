@@ -58,5 +58,7 @@ test("light selected tabs are graphite, not sapphire", () => {
     .join("}");
   assert.match(lightDock, /#171a20/);
   assert.doesNotMatch(lightDock, /#1648c8/);
-  assert.match(dock, /background:\s*rgba\(255, 255, 255, 0\.14\) !important/);
+  // Dark active pill is sapphire.
+  assert.match(dock, /\.is-active,[^{]*\{[^}]*background:\s*#1648c8 !important/);
+  assert.doesNotMatch(dock, /rgba\(255, 255, 255, 0\.14\)/);
 });
