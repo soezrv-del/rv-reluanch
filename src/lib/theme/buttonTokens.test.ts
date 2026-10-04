@@ -72,3 +72,25 @@ test("root route loads buttons.css after styles.css", () => {
   const b = rootRoute.indexOf("href: buttonsCss");
   assert.ok(a > 0 && b > a, "buttons.css is linked after styles.css");
 });
+
+test("trip primary buttons use the card shadow, and dock tabs share the row", () => {
+  const cards = read("src/styles/cards.css");
+  const dock = read("src/components/shell/dock.css");
+  assert.match(cards, /--control-shadow:\s*0 8px 18px rgba\(4, 12, 32, 0\.22\)/);
+  assert.match(cards, /\[data-route-results\] > button\.w-full \{[^}]*box-shadow:\s*var\(--control-shadow\)/);
+  assert.match(dock, /flex:\s*1 1 0 !important/);
+  assert.match(dock, /height:\s*44px !important/);
+  assert.doesNotMatch(dock, /padding-right:\s*calc\(50%/);
+});
+
+test("cards.css loads after buttons.css and keeps the shared shape tokens", () => {
+  const rootRoute = read("src/routes/__root.tsx");
+  const cards = read("src/styles/cards.css");
+  const b = rootRoute.indexOf("href: buttonsCss");
+  const c = rootRoute.indexOf("href: cardsCss");
+  assert.ok(b > 0 && c > b, "cards.css is linked after buttons.css");
+  assert.match(cards, /--control-radius:\s*var\(--btn-radius, 12px\)/);
+  assert.match(cards, /--control-h:\s*var\(--btn-h-lg, 52px\)/);
+  assert.match(cards, /--card-radius:\s*var\(--radius-2xl, 28px\)/);
+  assert.doesNotMatch(cards, /#00ffff|aqua|cyan|gold/i);
+});
