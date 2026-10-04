@@ -69,7 +69,12 @@ test("guides match the current showroom, pills, and labels", () => {
   assert.doesNotMatch(home, /last looked-up|newest lot unit|isn't a button/);
   assert.match(shared, /Ask RV Grok/);
   assert.match(shared, /does not slide and does not auto-scroll/);
-  assert.match(shared, /Rv Facts, Calculator, RV Grok, Tow Guide, RV GPS, Lot Inventory/);
+  assert.match(shared, /dock of four tabs/);
+  assert.match(shared, /Facts \(a document\), Inventory \(an RV\), Live Chat/);
+  assert.match(shared, /Tow Check, Payments, and RV GPS/);
+  assert.match(shared, /back button closes the More sheet/);
+  assert.match(shared, /Rv Facts, Lot Inventory, RV Grok\./);
+  assert.doesNotMatch(shared, /six gold line icons/);
   assert.match(screenGuideFor("Facts") || "", /Power to weight/);
   assert.match(screenGuideFor("Facts") || "", /smallest in series/);
   assert.match(screenGuideFor("Facts") || "", /Share kit/);

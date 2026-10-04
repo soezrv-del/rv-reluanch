@@ -20,12 +20,9 @@ test("Lot stock is the last dock tab and not RV Grok", () => {
   const route = read("../../routes/lot.tsx");
 
   assert.match(tabs, /\| "rvlot"/);
-  assert.match(tabs, /id: "rvlot", label: "Lot", short: "Lot"/);
+  assert.match(tabs, /id: "rvlot", label: "Inventory", short: "Inventory"/);
   assert.match(tabs, /placeDock/);
-  assert.match(
-    tabs,
-    /Exclude<AppTab, "more" \| "rvshare" \| "rvsold">/,
-  );
+  assert.match(tabs, /type DockTab = "rvfax" \| "rvlot" \| "rvgrok" \| "more"/);
 
   assert.match(
     constants,

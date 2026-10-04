@@ -151,7 +151,7 @@ test("AppShell Check-tow handoff is one-shot; dock tab does not set it", () => {
   assert.match(shell, /setTab\("rvtow"\)/);
 
   const onTab = shell.match(
-    /const onTabChange = useCallback\(\s*\(next: AppTab\) => \{[\s\S]*?\}, \[/,
+    /const onTabChange = useCallback\(\s*\(next: AppTab[^)]*\) => \{[\s\S]*?\}, \[/,
   );
   assert.ok(onTab, "onTabChange present");
   assert.doesNotMatch(onTab[0], /openTowWithCoach/);

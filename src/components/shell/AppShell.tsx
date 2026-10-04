@@ -14,7 +14,24 @@ import { type AppTab } from "./BottomTabs";
 import { RoomAskBar } from "./RoomAskBar";
 import { SuiteBrand } from "./SuiteBrand";
 import { HomeScreen } from "./HomeScreen";
-import { dockTabOrder, PAGE_ACCENT } from "./shellConstants";
+import {
+  isSwipeTab,
+  isUnderMore,
+  PAGE_ACCENT,
+  paneSlot,
+  SWIPE_ORDER,
+  TAB_ORDER,
+} from "./shellConstants";
+import type { MorePick } from "./MoreSheet";
+import {
+  makeNavMarker,
+  planTabHistory,
+  popTarget,
+  readNavMarker,
+  sameView,
+  type NavKind,
+  type NavView,
+} from "@/lib/shell/moreHistory";
 import { useAccess } from "@/components/access/AccessProvider";
 import { isProfessionalTier } from "@/lib/rv/proEntitlement";
 import { OPEN_SOLD_EVENT } from "@/lib/rv/soldDeals";
@@ -54,7 +71,8 @@ import {
   roomVoiceIsOpen,
   stopRoomVoice,
 } from "@/lib/rvgrok/roomAsk";
-import { onRouteChange } from "@/lib/rvgrok/screenContext";
+import { onRouteChange, setActiveScreen } from "@/lib/rvgrok/screenContext";
+import { VIN_DECODER_SCREEN } from "@/lib/rvgrok/screenGuides";
 
 /**
  * Code-split suite tools — tools load only when visited.
@@ -84,6 +102,9 @@ const SoldBookApp = lazy(() =>
   import("@/components/rvfax/SoldBookApp").then((m) => ({
     default: m.SoldBookApp,
   })),
+);
+const VinDecoder = lazy(() =>
+  import("@/components/rvfax/VinDecoder").then((m) => ({ default: m.VinDecoder })),
 );
 const LotStockApp = lazy(() =>
   import("@/components/lot/LotStockApp").then((m) => ({
@@ -166,6 +187,9 @@ export function AppShell({
   const [factsPickerToken, setFactsPickerToken] = useState(0);
   const [factsShareToken, setFactsShareToken] = useState(0);
   const [factsMarketToken, setFactsMarketToken] = useState(0);
+  /** More half-sheet and the VIN Decoder it opens. */
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [vinOpen, setVinOpen] = useState(false);
   const launchOpen = false;
   const suiteReady = true;
   const [visited, setVisited] = useState<Set<AppTab>>(() => {
@@ -352,14 +376,183 @@ export function AppShell({
     [markVisited, openFactsShare, openFactsPicker, requestCleanCal, tab, homeOpen],
   );
 
-  useEffect(() => {
-    onRouteChange(tab, homeOpen);
-  }, [tab, homeOpen]);
-
   const isPro = isProfessionalTier();
-  const dockOrder = useMemo(() => dockTabOrder(isPro), [isPro]);
-  const swipeIndex = Math.max(0, dockOrder.indexOf(tab));
-  const swipeArmed = !launchOpen && !homeOpen && dockOrder.includes(tab);
+  // Swipe moves between Facts, Inventory and Live Chat only. Tools under
+  // More (Tow, Cal, RV GPS) still render as panes from TAB_ORDER.
+  const swipeArmed =
+    !launchOpen && !homeOpen && !moreOpen && !vinOpen && isSwipeTab(tab);
+
+  /* ── History for More: sheet, VIN overlay, and tools ───────────────
+   * Android back is webView.goBack(). Main tabs never push. The sheet,
+   * the VIN Decoder, and every tool under More push one entry so back
+   * closes the sheet or returns to the screen the tool came from.
+   */
+  const navDepth = useRef(0);
+  const navBase = useRef<NavView>({ tab: initialTab, home: homeOpen });
+  const navView = useRef<NavView>({ tab: initialTab, home: homeOpen });
+  const ignorePops = useRef(0);
+  const fromPop = useRef(false);
+  const pickedFromSheet = useRef(false);
+  const moreOpenRef = useRef(false);
+  moreOpenRef.current = moreOpen;
+
+  const pushNav = useCallback((kind: NavKind, view: NavView) => {
+    if (navDepth.current === 0) navBase.current = navView.current;
+    navDepth.current += 1;
+    try {
+      history.pushState(makeNavMarker(kind, view, navDepth.current), "");
+    } catch {
+      /* sandboxed preview */
+    }
+  }, []);
+
+  const replaceNav = useCallback((kind: NavKind, view: NavView) => {
+    try {
+      history.replaceState(makeNavMarker(kind, view, navDepth.current), "");
+    } catch {
+      /* sandboxed preview */
+    }
+  }, []);
+
+  /** Pop `n` of our entries in one traversal; its popstate is ours. */
+  const popNav = useCallback((n: number) => {
+    const steps = Math.min(n, navDepth.current);
+    if (steps <= 0) return;
+    navDepth.current -= steps;
+    ignorePops.current += 1;
+    history.go(-steps);
+  }, []);
+
+  const topNavIs = (kind: NavKind) =>
+    navDepth.current > 0 && readNavMarker(history.state)?.kind === kind;
+
+  useEffect(() => {
+    const prev = navView.current;
+    const next: NavView = { tab, home: homeOpen };
+    navView.current = next;
+    const picked = pickedFromSheet.current;
+    pickedFromSheet.current = false;
+    if (fromPop.current) {
+      fromPop.current = false;
+      return;
+    }
+    if (sameView(prev, next)) return;
+    // Any screen change shuts the sheet (Home brand tap, handoffs).
+    if (moreOpenRef.current) setMoreOpen(false);
+    const step = planTabHistory({
+      prev,
+      next,
+      nextUnderMore: isUnderMore(tab),
+      depth: navDepth.current,
+      pickedFromSheet: picked && topNavIs("sheet"),
+    });
+    if (step === "push") pushNav("tool", next);
+    else if (step === "replace") replaceNav("tool", next);
+    else if (step === "unwind") popNav(navDepth.current);
+  }, [tab, homeOpen, pushNav, replaceNav, popNav]);
+
+  useEffect(() => {
+    const onPop = (e: PopStateEvent) => {
+      if (ignorePops.current > 0) {
+        ignorePops.current -= 1;
+        return;
+      }
+      const hit = popTarget(e.state, navDepth.current, navBase.current);
+      if (!hit) return;
+      navDepth.current = hit.depth;
+      setMoreOpen(false);
+      setVinOpen(false);
+      const here = navView.current;
+      if (sameView(here, hit.view)) return;
+      fromPop.current = true;
+      // Back restores the screen as it was — no clean-search reset, no voice.
+      if (hit.view.home) {
+        setHomeOpen(true);
+      } else {
+        const t = hit.view.tab as AppTab;
+        setHomeOpen(false);
+        setTab(t);
+        markVisited(t);
+      }
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [markVisited]);
+
+  useEffect(() => {
+    if (vinOpen) setActiveScreen(VIN_DECODER_SCREEN);
+    else onRouteChange(tab, homeOpen);
+  }, [vinOpen, tab, homeOpen]);
+
+  const closeMore = useCallback(() => {
+    setMoreOpen(false);
+    if (topNavIs("sheet")) popNav(1);
+  }, [popNav]);
+
+  const openMore = useCallback(() => {
+    blurSuiteFocus();
+    pushNav("sheet", navView.current);
+    setMoreOpen(true);
+  }, [pushNav]);
+
+  const closeVin = useCallback(() => {
+    setVinOpen(false);
+    if (topNavIs("vin")) popNav(1);
+  }, [popNav]);
+
+  /** Dock tap. More toggles the sheet; another tab shuts it. */
+  const onDockTap = useCallback(
+    (next: AppTab, opts?: { skipVoice?: boolean }) => {
+      if (next === "more") {
+        if (moreOpenRef.current) closeMore();
+        else openMore();
+        return;
+      }
+      if (moreOpenRef.current) {
+        if (!homeOpen && next === tab) {
+          closeMore();
+          return;
+        }
+        // The tab change unwinds the sheet entry with any tool entries.
+        setMoreOpen(false);
+      }
+      onTabChange(next, opts);
+    },
+    [closeMore, openMore, onTabChange, homeOpen, tab],
+  );
+
+  const onMorePick = useCallback(
+    (id: MorePick) => {
+      if (id === "vin") {
+        if (topNavIs("sheet")) replaceNav("vin", navView.current);
+        else pushNav("vin", navView.current);
+        setMoreOpen(false);
+        setVinOpen(true);
+        return;
+      }
+      if (id === "rvshare") {
+        if (!access.allowed) {
+          // The access sheet shows over this screen; keep its history.
+          closeMore();
+          onTabChange("rvshare");
+          return;
+        }
+        // Share lands on Facts — a main tab, so unwind everything first.
+        setMoreOpen(false);
+        popNav(navDepth.current);
+        onTabChange("rvshare");
+        return;
+      }
+      if (!homeOpen && id === tab) {
+        closeMore();
+        return;
+      }
+      pickedFromSheet.current = true;
+      setMoreOpen(false);
+      onTabChange(id);
+    },
+    [access.allowed, closeMore, onTabChange, popNav, pushNav, replaceNav, homeOpen, tab],
+  );
 
   useEffect(() => {
     const openSold = () => {
@@ -375,7 +568,7 @@ export function AppShell({
   }, [markVisited]);
 
   useSwipeTabs({
-    order: dockOrder,
+    order: SWIPE_ORDER,
     active: tab,
     onChange: onTabChange,
     // Suite panes only — never the dock. Ancestor capture listeners on
@@ -466,17 +659,18 @@ export function AppShell({
           {homeOpen ? (
             <HomeScreen onOpen={onTabChange} />
           ) : null}
-          {dockOrder.map((id, i) => {
+          {TAB_ORDER.map((id) => {
             if (!show(id)) return null;
+            const slot = paneSlot(id, tab);
             return (
               <div
                 key={id}
                 className={SWIPE_PANE}
                 data-suite-pane={id}
                 data-pane-active={id === tab ? "" : undefined}
-                data-pane-offset={i - swipeIndex}
+                data-pane-offset={slot.peek ? slot.shift : "off"}
                 style={{
-                  ["--pane-shift" as string]: `${(i - swipeIndex) * 100}%`,
+                  ["--pane-shift" as string]: `${slot.shift * 100}%`,
                   pointerEvents: id === tab ? "auto" : "none",
                 }}
               >
@@ -544,7 +738,21 @@ export function AppShell({
           ) : null}
         </main>
 
-        <RoomAskBar tab={tab} homeOpen={homeOpen} onOpen={onTabChange} />
+        {vinOpen ? (
+          <Suspense fallback={null}>
+            <VinDecoder open={vinOpen} onClose={closeVin} />
+          </Suspense>
+        ) : null}
+
+        <RoomAskBar
+          tab={tab}
+          homeOpen={homeOpen}
+          onOpen={onTabChange}
+          onDockTap={onDockTap}
+          moreOpen={moreOpen}
+          onMorePick={onMorePick}
+          onMoreClose={closeMore}
+        />
       </div>
     </ShellNavProvider>
   );

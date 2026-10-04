@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Mic, Radio } from "lucide-react";
 import type { AppTab } from "./BottomTabs";
 import { BottomTabs } from "./BottomTabs";
+import { MoreSheet, type MorePick } from "./MoreSheet";
 import {
   roomAskMic,
   roomAskSend,
@@ -11,17 +12,27 @@ import {
 import { markAskBarGrokEntry } from "@/lib/rvgrok/screenContext";
 
 /**
- * Ask bar plus the six-icon dock. The dock does not slide.
+ * Ask bar plus the four-tab dock (Facts · Inventory · Live Chat · More).
+ * The dock does not slide. More opens the tools sheet above the dock.
  * A typed ask is appended to the open RV Grok thread.
  */
 export function RoomAskBar({
   tab,
   homeOpen = false,
   onOpen,
+  onDockTap,
+  moreOpen = false,
+  onMorePick,
+  onMoreClose,
 }: {
   tab: AppTab;
   homeOpen?: boolean;
   onOpen: (tab: AppTab, opts?: { skipVoice?: boolean }) => void;
+  /** Dock taps — More toggles the sheet. Defaults to onOpen. */
+  onDockTap?: (tab: AppTab) => void;
+  moreOpen?: boolean;
+  onMorePick?: (id: MorePick) => void;
+  onMoreClose?: () => void;
 }) {
   const [draft, setDraft] = useState("");
   const [voice, setVoice] = useState<RoomVoicePhase>("idle");
@@ -97,8 +108,16 @@ export function RoomAskBar({
       <BottomTabs
         tab={tab}
         homeOpen={homeOpen}
-        onChange={(id) => onOpen(id)}
-      />
+        moreOpen={moreOpen}
+        onChange={(id) => (onDockTap ? onDockTap(id) : onOpen(id))}
+      >
+        <MoreSheet
+          open={moreOpen}
+          tab={tab}
+          onPick={(id) => onMorePick?.(id)}
+          onClose={() => onMoreClose?.()}
+        />
+      </BottomTabs>
     </div>
   );
 }

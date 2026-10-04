@@ -1,0 +1,186 @@
+/* More half-sheet. Sits on the dock's top edge; the dock stays tappable.
+   Ink only — no color tints. Light: white sheet, graphite ink.
+   Dark: #12141a sheet (the dock plate), sapphire only on the active tab. */
+.more-sheet-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: rgba(0, 0, 0, 0.32);
+  animation: more-sheet-fade 160ms ease-out;
+}
+
+.more-sheet {
+  --more-ink: #171a20;
+  --more-sub: #5c5e62;
+  --more-tile: #f4f4f4;
+  --more-line: rgba(0, 0, 0, 0.06);
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  z-index: 1;
+  max-height: min(70dvh, calc(var(--vv-height, 100dvh) - var(--safe-top, 0px) - 10rem));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.625rem calc(1rem + var(--safe-right, 0px)) 0.75rem calc(1rem + var(--safe-left, 0px));
+  border-radius: 20px 20px 0 0;
+  background: #ffffff;
+  color: var(--more-ink);
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.16);
+  animation: more-sheet-rise 220ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+html[data-theme="dark"] .more-sheet {
+  --more-ink: #f2f3f5;
+  --more-sub: #9ca0a8;
+  --more-tile: #1c1f27;
+  --more-line: rgba(255, 255, 255, 0.08);
+  background: #12141a;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* The sheet hides the ask bar under it; the dock below stays lit. */
+.showroom-dock:has([data-more-open]) [data-room-ask-bar] {
+  visibility: hidden;
+}
+
+.more-sheet-grab {
+  width: 40px;
+  height: 5px;
+  margin: 0 auto 0.875rem;
+  border-radius: 3px;
+  background: rgba(127, 127, 127, 0.35);
+}
+
+.more-sheet-heading {
+  margin: 0 0.125rem 0.625rem;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--more-sub);
+}
+
+.more-sheet-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 0.75rem;
+}
+
+.more-sheet .more-sheet-tile {
+  box-shadow: none !important;
+  display: flex;
+  min-height: 104px !important;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 14px 12px !important;
+  border: 1.5px solid transparent !important;
+  border-radius: 16px !important;
+  background: var(--more-tile) !important;
+  color: var(--more-ink) !important;
+  text-align: left;
+  touch-action: manipulation;
+  transition: opacity 150ms ease-out;
+}
+
+.more-sheet .more-sheet-tile:active,
+.more-sheet .more-sheet-row:active {
+  opacity: 0.7;
+}
+
+.more-sheet .more-sheet-tile.is-current {
+  border-color: var(--more-ink) !important;
+}
+
+.more-sheet-glyph {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  color: var(--more-ink);
+}
+
+.more-sheet-tile-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.more-sheet-tile-title {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.more-sheet-tile-sub {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--more-sub);
+}
+
+.more-sheet-rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.more-sheet .more-sheet-row {
+  box-shadow: none !important;
+  display: flex;
+  min-height: 52px !important;
+  align-items: center;
+  gap: 12px;
+  padding: 0 4px !important;
+  border: 0 !important;
+  border-top: 1px solid var(--more-line) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--more-ink) !important;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: left;
+  touch-action: manipulation;
+}
+
+.more-sheet-row-icon {
+  width: 22px;
+  height: 22px;
+  color: var(--more-ink);
+}
+
+.more-sheet-row-title {
+  flex: 1 1 auto;
+}
+
+.more-sheet-row-chev {
+  width: 18px;
+  height: 18px;
+  color: var(--more-sub);
+}
+
+@keyframes more-sheet-rise {
+  from {
+    transform: translate3d(0, 24px, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes more-sheet-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .more-sheet,
+  .more-sheet-scrim {
+    animation: none;
+  }
+}
+
+/* Keyboard up: the sheet has no fields, so it gets out of the way. */
+html.kb-open .more-sheet,
+html.kb-open .more-sheet-scrim {
+  display: none;
+}
