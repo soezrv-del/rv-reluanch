@@ -1,7 +1,10 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { BookOpen, Trash2 } from "lucide-react";
+import { BookOpen, Check, Trash2, X } from "lucide-react";
 import { adminFetch } from "@/lib/access/client";
-import type { PromptLessonsStatus } from "@/lib/rvgrok/promptLessons";
+import type {
+  PendingLessonView,
+  PromptLessonsStatus,
+} from "@/lib/rvgrok/promptLessons";
 
 /** Admin-only standing lessons. Same card on ACCESS and in the list sheet. */
 export function PromptLessonsCard({
@@ -10,6 +13,7 @@ export function PromptLessonsCard({
   surface: "more" | "sheet";
 }) {
   const [status, setStatus] = useState<PromptLessonsStatus | null>(null);
+  const [pending, setPending] = useState<PendingLessonView[]>([]);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
@@ -23,13 +27,17 @@ export function PromptLessonsCard({
         const res = await adminFetch("/api/access/admin");
         const data = (await res.json()) as {
           promptLessons?: PromptLessonsStatus;
+          pendingLessons?: PendingLessonView[];
           error?: string;
           message?: string;
         };
         if (!res.ok) {
           throw new Error(data.message || data.error || "Could not load.");
         }
-        if (!cancelled) setStatus(data.promptLessons ?? null);
+        if (!cancelled) {
+          setStatus(data.promptLessons ?? null);
+          setPending(data.pendingLessons ?? []);
+        }
       } catch (err) {
         if (!cancelled) {
           setError(
@@ -104,6 +112,40 @@ export function PromptLessonsCard({
     }
   };
 
+  const onReview = async (id: string, verdict: "approve" | "reject") => {
+    setError("");
+    setNote("");
+    setBusy(true);
+    try {
+      const res = await adminFetch("/api/access/admin", {
+        method: "POST",
+        body: JSON.stringify({ action: `prompt-lesson-${verdict}`, id }),
+      });
+      const data = (await res.json()) as {
+        promptLessons?: PromptLessonsStatus;
+        pendingLessons?: PendingLessonView[];
+        error?: string;
+        message?: string;
+      };
+      if (!res.ok) {
+        throw new Error(data.message || data.error || "Could not save.");
+      }
+      if (data.promptLessons) setStatus(data.promptLessons);
+      if (data.pendingLessons) setPending(data.pendingLessons);
+      setNote(
+        verdict === "approve"
+          ? "Approved. This lesson is now standing process for everyone."
+          : "Rejected. The pending lesson was removed.",
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Could not review the lesson.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <section
       data-prompt-lessons
@@ -159,6 +201,58 @@ export function PromptLessonsCard({
           </li>
         ))}
       </ul>
+      {pending.length ? (
+        <div data-pending-lessons className="space-y-2">
+          <p className="text-[9px] font-bold tracking-wide text-white">
+            PENDING CORRECTIONS · {pending.length}
+          </p>
+          <ul className="space-y-2">
+            {pending.map((row) => (
+              <li
+                key={row.id}
+                data-pending-lesson-id={row.id}
+                className="space-y-2 rounded-xl border border-amber/30 bg-white/5 px-3 py-2.5"
+              >
+                <p className="text-[13px] leading-relaxed text-white">
+                  {row.text}
+                </p>
+                {row.trigger ? (
+                  <p
+                    data-pending-lesson-trigger
+                    className="text-[12px] leading-relaxed text-white/80"
+                  >
+                    He said: “{row.trigger}”
+                  </p>
+                ) : null}
+                <p className="text-[11px] font-semibold text-white/70">
+                  {[row.phone, row.source].filter(Boolean).join(" · ") ||
+                    "Phone unknown"}
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    data-pending-lesson-approve={row.id}
+                    disabled={busy || !status}
+                    onClick={() => void onReview(row.id, "approve")}
+                    className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl bg-blue text-[13px] font-bold text-white disabled:opacity-60"
+                  >
+                    <Check className="size-4" /> Approve
+                  </button>
+                  <button
+                    type="button"
+                    data-pending-lesson-reject={row.id}
+                    disabled={busy}
+                    onClick={() => void onReview(row.id, "reject")}
+                    className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/20 bg-white/5 text-[13px] font-bold text-white disabled:opacity-60"
+                  >
+                    <X className="size-4" /> Reject
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       <form onSubmit={(e) => void onAdd(e)} className="space-y-2">
         <label className="block">
           <span className="mb-1 block text-[9px] font-bold tracking-wide text-white">

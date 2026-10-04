@@ -14,7 +14,9 @@ import {
   DEFAULT_PROMPT_LESSONS,
   formatPromptLessons,
   mergePromptLessons,
+  parseStoredPendingLessons,
   parseStoredPromptLessons,
+  type PendingLessonMeta,
   promptLessonsStatus,
   type PromptLesson,
   type PromptLessonsStatus,
@@ -66,7 +68,7 @@ export async function getStoredPromptLessons(): Promise<PromptLesson[]> {
  * Fresh DB read for read-modify-write paths. Throws on a DB miss instead of
  * returning [] — saving on top of a fail-open [] would wipe every admin lesson.
  */
-async function readStoredPromptLessonsForWrite(): Promise<PromptLesson[]> {
+export async function readStoredPromptLessonsForWrite(): Promise<PromptLesson[]> {
   const sql = await getSql();
   const rows = await sql<{ value: string }>`
     select value
@@ -135,8 +137,11 @@ export async function readPromptLessonsStatus(): Promise<PromptLessonsStatus> {
   return promptLessonsStatus(await readEffectivePromptLessons());
 }
 
-/** Hangup corrections wait here. Standing lessons do not read this key. */
-export async function queuePendingPromptLesson(text: string): Promise<void> {
+/** Hangup and typed-chat corrections wait here. Standing lessons do not read this key. */
+export async function queuePendingPromptLesson(
+  text: string,
+  meta?: PendingLessonMeta,
+): Promise<void> {
   try {
     const sql = await getSql();
     const rows = await sql<{ value: string }>`
@@ -146,8 +151,10 @@ export async function queuePendingPromptLesson(text: string): Promise<void> {
       limit 1
     `;
     const pending = applyQueuePendingLesson(
-      parseStoredPromptLessons(rows[0]?.value),
+      parseStoredPendingLessons(rows[0]?.value),
       text,
+      undefined,
+      meta,
     );
     await sql`
       insert into rvgrok_ops_settings (key, value, updated_at)

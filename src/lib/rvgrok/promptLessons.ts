@@ -115,7 +115,7 @@ export function parsePromptLesson(raw: unknown): PromptLesson | null {
   return lesson;
 }
 
-export function parseStoredPromptLessons(raw: unknown): PromptLesson[] {
+function storedLessonRows(raw: unknown): unknown[] {
   let value = raw;
   if (typeof raw === "string") {
     const t = raw.trim();
@@ -126,18 +126,93 @@ export function parseStoredPromptLessons(raw: unknown): PromptLesson[] {
       return [];
     }
   }
-  if (Array.isArray(value)) {
-    return value.map(parsePromptLesson).filter((l): l is PromptLesson => Boolean(l));
-  }
+  if (Array.isArray(value)) return value;
   if (value && typeof value === "object") {
     const rec = value as { lessons?: unknown; version?: unknown };
-    if (Array.isArray(rec.lessons)) {
-      return rec.lessons
-        .map(parsePromptLesson)
-        .filter((l): l is PromptLesson => Boolean(l));
-    }
+    if (Array.isArray(rec.lessons)) return rec.lessons;
   }
   return [];
+}
+
+export function parseStoredPromptLessons(raw: unknown): PromptLesson[] {
+  return storedLessonRows(raw)
+    .map(parsePromptLesson)
+    .filter((l): l is PromptLesson => Boolean(l));
+}
+
+/**
+ * A correction waiting for the desk. Never injected, never spoken.
+ * `trigger` is his own line (typed chat or voice), never her reply.
+ * `phoneLast4` is the only part of the phone kept here.
+ */
+export type PendingPromptLesson = PromptLesson & {
+  trigger?: string;
+  phoneLast4?: string;
+  source?: "chat" | "voice";
+};
+
+export type PendingLessonMeta = {
+  trigger?: string;
+  phoneDigits?: string | null;
+  source?: "chat" | "voice";
+};
+
+/** What the admin card shows. Phone is masked to the last 4 digits. */
+export type PendingLessonView = {
+  id: string;
+  text: string;
+  trigger: string;
+  phone: string;
+  source: "chat" | "voice" | "";
+  queuedAt: string;
+};
+
+export function phoneLast4(digits: unknown): string | undefined {
+  const d = String(digits ?? "").replace(/\D/g, "");
+  return d.length >= 4 ? d.slice(-4) : undefined;
+}
+
+export function maskPhoneLast4(last4: string | undefined): string {
+  return last4 && /^\d{4}$/.test(last4) ? `•••• ${last4}` : "";
+}
+
+function parseTrigger(raw: unknown): string | undefined {
+  if (typeof raw !== "string") return undefined;
+  const t = normalizeLessonText(raw).slice(0, LESSON_TEXT_MAX);
+  return t || undefined;
+}
+
+export function parseStoredPendingLessons(raw: unknown): PendingPromptLesson[] {
+  const out: PendingPromptLesson[] = [];
+  for (const row of storedLessonRows(raw)) {
+    const base = parsePromptLesson(row);
+    if (!base) continue;
+    const rec = row as { trigger?: unknown; phoneLast4?: unknown; source?: unknown };
+    const lesson: PendingPromptLesson = { ...base };
+    const trigger = parseTrigger(rec.trigger);
+    if (trigger) lesson.trigger = trigger;
+    if (typeof rec.phoneLast4 === "string" && /^\d{4}$/.test(rec.phoneLast4)) {
+      lesson.phoneLast4 = rec.phoneLast4;
+    }
+    if (rec.source === "chat" || rec.source === "voice") lesson.source = rec.source;
+    out.push(lesson);
+  }
+  return out;
+}
+
+export function pendingLessonViews(
+  pending: readonly PendingPromptLesson[],
+): PendingLessonView[] {
+  return pending
+    .filter((l) => !l.disabled && l.text)
+    .map((l) => ({
+      id: l.id,
+      text: l.text,
+      trigger: l.trigger ?? "",
+      phone: maskPhoneLast4(l.phoneLast4),
+      source: l.source ?? "",
+      queuedAt: l.updatedAt,
+    }));
 }
 
 /**
@@ -229,19 +304,81 @@ export function applyAddLesson(
 
 /** Pending desk lessons. Not injected. Duplicate text is a no-op. Cap 12. */
 export function applyQueuePendingLesson(
-  pending: readonly PromptLesson[],
+  pending: readonly PendingPromptLesson[],
   text: string,
   now = new Date().toISOString(),
-): PromptLesson[] {
+  meta?: PendingLessonMeta,
+): PendingPromptLesson[] {
   const parsed = parseLessonText(text);
   if (!parsed) return [...pending];
   if (pending.some((l) => !l.disabled && l.text === parsed)) return [...pending];
-  const lesson: PromptLesson = {
+  const lesson: PendingPromptLesson = {
     id: newAdminLessonId(),
     text: parsed,
     updatedAt: now,
   };
+  const trigger = parseTrigger(meta?.trigger);
+  if (trigger) lesson.trigger = trigger;
+  const last4 = phoneLast4(meta?.phoneDigits);
+  if (last4) lesson.phoneLast4 = last4;
+  if (meta?.source) lesson.source = meta.source;
   return [...pending, lesson].slice(-12);
+}
+
+/**
+ * Desk approves a pending row: the same id goes into prompt_lessons.
+ * Refuses a lesson over 280 chars or a block that would pass 1,800 chars
+ * (never truncates or drops another lesson). The pending row is removed.
+ */
+export function applyApprovePendingLesson(
+  stored: readonly PromptLesson[],
+  pending: readonly PendingPromptLesson[],
+  rawId: string,
+  now = new Date().toISOString(),
+):
+  | { ok: true; stored: PromptLesson[]; pending: PendingPromptLesson[]; lesson: PromptLesson }
+  | { ok: false; error: string } {
+  const id = parseLessonId(rawId);
+  const row = id ? pending.find((l) => l.id === id) : undefined;
+  if (!id || !row) return { ok: false, error: "Unknown pending lesson." };
+  const text = parseLessonText(row.text);
+  if (!text) {
+    return { ok: false, error: `Lesson must be 1–${LESSON_TEXT_MAX} characters.` };
+  }
+  const lesson: PromptLesson = { id, text, updatedAt: now };
+  const at = stored.findIndex((l) => l.id === id);
+  const next =
+    at >= 0
+      ? stored.map((l, index) => (index === at ? lesson : { ...l }))
+      : [...stored.map((l) => ({ ...l })), lesson];
+  const used = formatPromptLessons(
+    mergePromptLessons(next),
+    Number.POSITIVE_INFINITY,
+  ).length;
+  if (used > STANDING_LESSONS_MAX_CHARS) {
+    return {
+      ok: false,
+      error: `Standing lessons would be ${used}/${STANDING_LESSONS_MAX_CHARS} chars. Delete one first.`,
+    };
+  }
+  return {
+    ok: true,
+    stored: next,
+    pending: pending.filter((l) => l.id !== id),
+    lesson,
+  };
+}
+
+/** Desk rejects a pending row. prompt_lessons is not touched. */
+export function applyRejectPendingLesson(
+  pending: readonly PendingPromptLesson[],
+  rawId: string,
+): { ok: true; pending: PendingPromptLesson[] } | { ok: false; error: string } {
+  const id = parseLessonId(rawId);
+  if (!id || !pending.some((l) => l.id === id)) {
+    return { ok: false, error: "Unknown pending lesson." };
+  }
+  return { ok: true, pending: pending.filter((l) => l.id !== id) };
 }
 
 export function applyDeleteLesson(

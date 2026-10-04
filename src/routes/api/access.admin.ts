@@ -33,6 +33,11 @@ import {
   deletePromptLesson,
   readPromptLessonsStatus,
 } from "@/lib/rvgrok/promptLessonsStore";
+import {
+  approvePendingPromptLesson,
+  readPendingLessonsStatus,
+  rejectPendingPromptLesson,
+} from "@/lib/rvgrok/promptLessonsPendingStore";
 
 type Body = {
   action?: string;
@@ -64,20 +69,28 @@ export const Route = createFileRoute("/api/access/admin")({
       GET: async ({ request }) => {
         const blocked = denyAccessAdmin(request);
         if (blocked) return blocked;
-        const [entries, requests, researchProvider, researchOrder, promptLessons] =
-          await Promise.all([
-            listWhitelist(),
-            listAccessRequests(),
-            researchProviderPayload(),
-            researchOrderPayload(),
-            readPromptLessonsStatus(),
-          ]);
+        const [
+          entries,
+          requests,
+          researchProvider,
+          researchOrder,
+          promptLessons,
+          pendingLessons,
+        ] = await Promise.all([
+          listWhitelist(),
+          listAccessRequests(),
+          researchProviderPayload(),
+          researchOrderPayload(),
+          readPromptLessonsStatus(),
+          readPendingLessonsStatus(),
+        ]);
         return Response.json({
           entries,
           requests,
           researchProvider,
           researchOrder,
           promptLessons,
+          pendingLessons,
         });
       },
       PATCH: async ({ request }) => {
@@ -204,6 +217,28 @@ export const Route = createFileRoute("/api/access/admin")({
           return Response.json({
             ok: true,
             promptLessons: saved.status,
+          });
+        }
+
+        if (
+          action === "prompt-lesson-approve" ||
+          action === "prompt-lesson-reject"
+        ) {
+          const id = String(body.id ?? "");
+          const saved =
+            action === "prompt-lesson-approve"
+              ? await approvePendingPromptLesson(id)
+              : await rejectPendingPromptLesson(id);
+          if (!saved.ok) {
+            return Response.json(
+              { error: saved.error },
+              { status: saved.unavailable ? 503 : 400 },
+            );
+          }
+          return Response.json({
+            ok: true,
+            promptLessons: saved.status,
+            pendingLessons: saved.pending,
           });
         }
 
