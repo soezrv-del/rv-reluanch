@@ -46,3 +46,12 @@ test("her lot instructions ask for her own words, once, ending with the details 
   assert.match(text, /asking if he wants the details/);
   assert.match(text, /2 Winnebago View/);
 });
+
+test("\"look up the lot and see if we have\" is a lot ask, so voice runs no web research beside query_lot", async () => {
+  const { looksLikeOwnLotStockQuestion } = await import("./ownLotAsk");
+  const { decideVoiceWebResearch } = await import("./voiceWeb");
+  const ask = "Can you look up the lot and see if we have any Winnebago Views?";
+  assert.equal(looksLikeOwnLotStockQuestion(ask), true);
+  assert.equal(decideVoiceWebResearch({ transcript: ask, specs: null }).action, "pass");
+  assert.equal(looksLikeOwnLotStockQuestion("check the lot for a Navion"), true);
+});

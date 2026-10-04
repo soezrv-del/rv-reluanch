@@ -47,6 +47,11 @@ export function looksLikeOwnLotUnitListQuestion(text: string): boolean {
  */
 export const LOT_INVENTORY_PHRASES = [
   "on the lot",
+  // "look up the lot and see if we have …", "check our lot" (Oct 4: this
+  // phrasing missed, so voice ran web research and query_lot and answered twice).
+  "look up the lot",
+  "check the lot",
+  "search the lot",
   "in inventory",
   "in stock",
   "do we have",
