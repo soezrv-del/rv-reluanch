@@ -142,9 +142,12 @@ import {
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 import { PullRefreshLayer } from "@/components/shell/PullResetHint";
 import {
+  alongRouteMeters,
   formatRemainLabel,
   resolveUpcomingGuidance,
 } from "@/lib/trips/voiceGuidance";
+import { tripRemaining } from "@/lib/trips/navMode";
+import { NavModeOverlay, useFixSpeed } from "@/components/rvtrips/NavModeOverlay";
 
 type ToolPane = "profile" | "dumps" | null;
 type SheetId = "year" | "make" | "model" | "floorplan" | null;
@@ -655,6 +658,59 @@ export function RvTripsApp() {
     guidance,
     rerouting,
   });
+
+  // Full-screen nav mode (Mapbox GL). Route stays HERE Truck / OSRM —
+  // this only reads progress along the polyline we already have.
+  const navSpeedMps = useFixSpeed(navArmed ? follow.fix : null);
+  const navRemaining = useMemo(() => {
+    if (!navArmed || !osrm) return null;
+    const snap = follow.fix
+      ? alongRouteMeters(follow.fix, osrm.geometry?.coordinates, osrm.distanceM)
+      : null;
+    return tripRemaining({
+      routeDistanceM: osrm.distanceM,
+      routeDurationS: osrm.durationS,
+      alongM: snap && snap.metersOff <= 90 ? snap.alongM : null,
+    });
+  }, [navArmed, osrm, follow.fix]);
+  const stopNav = useCallback(() => {
+    setNavArmed(false);
+    hush();
+  }, [hush]);
+  const navView = useMemo(
+    () =>
+      navArmed
+        ? {
+            remainToManeuverM: guidance?.remainM ?? null,
+            speedMps: navSpeedMps,
+            overlay: (
+              <NavModeOverlay
+                instruction={guidance?.step.instruction ?? null}
+                maneuver={guidance?.step.maneuver ?? null}
+                remainToManeuverM={guidance?.remainM ?? null}
+                speedMps={navSpeedMps}
+                remaining={navRemaining}
+                status={follow.status}
+                rerouting={rerouting}
+                voiceOn={voiceOn}
+                onToggleVoice={toggleVoice}
+                onStop={stopNav}
+              />
+            ),
+          }
+        : null,
+    [
+      navArmed,
+      guidance,
+      navSpeedMps,
+      navRemaining,
+      follow.status,
+      rerouting,
+      voiceOn,
+      toggleVoice,
+      stopNav,
+    ],
+  );
 
   const commitOrigin = useCallback((hit: PlaceHit) => {
     setOriginPlace(hit);
@@ -1944,6 +2000,7 @@ export function RvTripsApp() {
                     follow={follow.fix}
                     followActive={navArmed}
                     followStatus={follow.status}
+                    nav={navView}
                   />
 
                   <button

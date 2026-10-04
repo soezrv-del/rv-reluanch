@@ -38,7 +38,7 @@ import {
   type FollowStatus,
   type GeoFix,
 } from "@/lib/trips/geoFollow";
-import { RouteMapboxGl } from "@/components/rvtrips/RouteMapboxGl";
+import { RouteMapboxGl, type RouteNavView } from "@/components/rvtrips/RouteMapboxGl";
 
 const MAX_FUEL_PINS = 12;
 const MAX_CAMP_PINS = 10;
@@ -70,6 +70,7 @@ export function RouteBasemap({
   follow,
   followActive,
   followStatus = "off",
+  nav,
 }: {
   geometry: OsrmLineString | null | undefined;
   origin?: { lat: number; lng: number; label?: string } | null;
@@ -89,6 +90,8 @@ export function RouteBasemap({
   follow?: Pick<GeoFix, "lat" | "lng" | "heading"> | null;
   followActive?: boolean;
   followStatus?: FollowStatus;
+  /** Full-screen nav mode — Mapbox GL path only; raster keeps the inline map. */
+  nav?: RouteNavView | null;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [w, setW] = useState(320);
@@ -384,6 +387,7 @@ export function RouteBasemap({
         follow={follow}
         followActive={followActive}
         followStatus={followStatus}
+        nav={nav}
         onUnavailable={() => {
           setGlFailed(true);
           failRef.current = 0;

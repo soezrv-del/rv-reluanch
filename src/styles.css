@@ -5014,3 +5014,217 @@ html[data-theme="light"] :is([data-request-access-sheet], [data-admin-whitelist-
 html:not([data-theme="light"]) :is([data-request-access-sheet], [data-admin-whitelist-sheet]) input::placeholder {
   color: rgba(255, 255, 255, 0.6);
 }
+
+/* ---------------------------------------------------------------------
+ * Trips full-screen nav mode (Mapbox GL JS, no Navigation SDK).
+ * Light: graphite #171a20 primary, soft blue #3e6ae1, labels #3d4d68.
+ * Dark: sapphire #1648c8. No gold / aqua in nav chrome.
+ * ------------------------------------------------------------------- */
+.rv-nav-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  height: 100dvh;
+  width: 100vw;
+  overflow: hidden;
+  background: #e9edf2;
+  touch-action: none;
+  overscroll-behavior: contain;
+}
+html[data-theme="dark"] .rv-nav-screen,
+.rv-nav-screen[data-theme-tone="dark"] {
+  background: #0b1220;
+}
+/* Zoom buttons are noise while driving; Mapbox logo + attribution stay
+ * visible above the ETA strip (required by the Mapbox terms). */
+.rv-nav-screen .mapboxgl-ctrl-top-right {
+  display: none;
+}
+.rv-nav-screen .mapboxgl-ctrl-bottom-left,
+.rv-nav-screen .mapboxgl-ctrl-bottom-right {
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 92px);
+}
+.rv-nav-screen .rv-map-puck[data-nav-puck] {
+  width: 24px;
+  height: 24px;
+  border-width: 4px;
+  background: #3e6ae1;
+  box-shadow: 0 0 0 8px color-mix(in srgb, #3e6ae1 28%, transparent),
+    0 4px 10px rgba(0, 0, 0, 0.25);
+}
+.rv-nav-screen .rv-map-puck[data-nav-puck]::before {
+  border-bottom-color: #3e6ae1;
+  top: -13px;
+}
+.rv-nav-screen[data-theme-tone="dark"] .rv-map-puck[data-nav-puck] {
+  background: #1648c8;
+  box-shadow: 0 0 0 8px color-mix(in srgb, #1648c8 35%, transparent);
+}
+.rv-nav-screen[data-theme-tone="dark"] .rv-map-puck[data-nav-puck]::before {
+  border-bottom-color: #1648c8;
+}
+
+.rv-nav-banner {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
+  left: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #171a20;
+  color: #ffffff;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+}
+.rv-nav-screen[data-theme-tone="dark"] .rv-nav-banner {
+  background: #1648c8;
+}
+.rv-nav-banner-turn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 64px;
+  gap: 2px;
+}
+.rv-nav-banner-dist {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.rv-nav-banner-text {
+  min-width: 0;
+  flex: 1;
+  font-size: 21px;
+  font-weight: 750;
+  line-height: 1.2;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+.rv-nav-status {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 118px);
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100% - 40px);
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #3d4d68;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  text-align: center;
+}
+.rv-nav-speed {
+  position: absolute;
+  left: 12px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 122px);
+  width: 64px;
+  padding: 6px 0 7px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 2px solid #171a20;
+  color: #171a20;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+.rv-nav-speed-cap,
+.rv-nav-speed-unit {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #3d4d68;
+}
+.rv-nav-speed-val {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.05;
+}
+.rv-nav-strip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px calc(env(safe-area-inset-bottom, 0px) + 14px);
+  border-radius: 20px 20px 0 0;
+  background: #ffffff;
+  color: #171a20;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.16);
+}
+.rv-nav-strip-eta {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #171a20;
+}
+.rv-nav-strip-left {
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 650;
+  color: #3d4d68;
+}
+.rv-nav-round {
+  display: inline-flex;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid #c5cedb;
+  background: #ffffff;
+  color: #171a20;
+}
+.rv-nav-round-on {
+  border-color: #3e6ae1;
+  color: #3e6ae1;
+}
+.rv-nav-end {
+  min-height: 46px;
+  padding: 0 20px;
+  border-radius: 999px;
+  background: #171a20;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+}
+.rv-nav-screen[data-theme-tone="dark"] .rv-nav-strip,
+.rv-nav-screen[data-theme-tone="dark"] .rv-nav-speed,
+.rv-nav-screen[data-theme-tone="dark"] .rv-nav-status {
+  background: #0f1a33;
+  color: #ffffff;
+}
+.rv-nav-screen[data-theme-tone="dark"] .rv-nav-strip-eta,
+.rv-nav-screen[data-theme-tone="dark"] .rv-nav-speed {
+  color: #ffffff;
+}
+.rv-nav-screen[data-theme-tone="dark"] .rv-nav-speed {
+  border-color: #ffffff;
+}
+.rv-nav-screen[data-theme-tone="dark"] .rv-nav-strip-left,
+.rv-nav-screen[data-theme-tone="dark"] .rv-nav-speed-cap,
+.rv-nav-screen[data-theme-tone="dark"] .rv-nav-speed-unit,
+.rv-nav-screen[data-theme-tone="dark"] .rv-nav-status {
+  color: #c5cedb;
+}
+.rv-nav-screen[data-theme-tone="dark"] .rv-nav-round {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+}
+.rv-nav-screen[data-theme-tone="dark"] .rv-nav-round-on {
+  border-color: #1648c8;
+  background: #1648c8;
+}
+.rv-nav-screen[data-theme-tone="dark"] .rv-nav-end {
+  background: #1648c8;
+}

@@ -250,3 +250,12 @@ test("guidance follow uses watchPosition; origin stays one-shot", () => {
   assert.doesNotMatch(reroute, /["'`]\/api\/route/);
   assert.doesNotMatch(reroute, /api\.mapbox\.com\/directions/);
 });
+
+test("fixFromCoords keeps device speed when reported", () => {
+  const moving = fixFromCoords({ latitude: 39.5, longitude: -119.8, speed: 26.8 }, 1);
+  assert.equal(moving?.speed, 26.8);
+  const none = fixFromCoords({ latitude: 39.5, longitude: -119.8, speed: null }, 1);
+  assert.equal(none?.speed, null);
+  const junk = fixFromCoords({ latitude: 39.5, longitude: -119.8, speed: -1 }, 1);
+  assert.equal(junk?.speed, null);
+});

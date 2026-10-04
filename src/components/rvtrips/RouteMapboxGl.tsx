@@ -1,4 +1,13 @@
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import type { OsrmLineString } from "@/lib/trips/osrm";
 import type { FuelStop } from "@/lib/trips/corridorFuel";
@@ -37,6 +46,12 @@ import {
   type FollowStatus,
   type GeoFix,
 } from "@/lib/trips/geoFollow";
+import {
+  cameraChanged,
+  navCameraFor,
+  splitRouteAtFix,
+  type NavCamera,
+} from "@/lib/trips/navMode";
 
 const MAX_FUEL_PINS = 12;
 const MAX_CAMP_PINS = 10;
@@ -44,6 +59,32 @@ const MAX_DUMP_PINS = 12;
 const ROUTE_SRC = "rv-route";
 const ROUTE_CASING = "rv-route-casing";
 const ROUTE_LINE = "rv-route-line";
+/** Nav mode only: the part already driven, drawn under the remaining line. */
+const ROUTE_TRAVELED_SRC = "rv-route-traveled";
+const ROUTE_TRAVELED = "rv-route-traveled-line";
+
+/** Plain (non-nav) route paint — restored when nav mode ends. */
+const PLAIN_ROUTE = {
+  casing: { color: "#0b1a28", width: 8, opacity: 0.55 },
+  line: { color: "#4a86f0", width: 4.5 },
+};
+/** Nav route paint. Light: soft blue. Dark: sapphire. No gold / aqua. */
+function navRoutePaint(theme: SuiteTheme) {
+  return {
+    casing: { color: "#ffffff", width: 13, opacity: 0.92 },
+    line: { color: theme === "dark" ? "#1648c8" : "#3e6ae1", width: 8.5 },
+    traveled: theme === "dark" ? "#5b6577" : "#a3acb9",
+  };
+}
+
+/** What RvTripsApp hands the map while Turn-by-Turn is armed. */
+export type RouteNavView = {
+  /** Distance to the next maneuver along the route (m). */
+  remainToManeuverM: number | null;
+  speedMps: number | null;
+  /** Banner / speed / ETA chrome drawn over the full-screen map. */
+  overlay: ReactNode;
+};
 
 type MapboxNS = typeof import("mapbox-gl");
 type MapboxMap = import("mapbox-gl").Map;
@@ -123,6 +164,8 @@ function paintRoute(
   coords: [number, number][],
   standard: boolean,
 ) {
+  if (map.getLayer(ROUTE_TRAVELED)) map.removeLayer(ROUTE_TRAVELED);
+  if (map.getSource(ROUTE_TRAVELED_SRC)) map.removeSource(ROUTE_TRAVELED_SRC);
   const data = {
     type: "Feature" as const,
     properties: {},
@@ -149,9 +192,9 @@ function paintRoute(
     ...slot,
     layout: { "line-cap": "round", "line-join": "round" },
     paint: {
-      "line-color": "#0b1a28",
-      "line-width": 8,
-      "line-opacity": 0.55,
+      "line-color": PLAIN_ROUTE.casing.color,
+      "line-width": PLAIN_ROUTE.casing.width,
+      "line-opacity": PLAIN_ROUTE.casing.opacity,
       ...glow,
     },
   });
@@ -162,12 +205,88 @@ function paintRoute(
     ...slot,
     layout: { "line-cap": "round", "line-join": "round" },
     paint: {
-      "line-color": "#4a86f0",
-      "line-width": 4.5,
+      "line-color": PLAIN_ROUTE.line.color,
+      "line-width": PLAIN_ROUTE.line.width,
       "line-opacity": 1,
       ...glow,
     },
   });
+}
+
+function lineFeature(coords: [number, number][]) {
+  return {
+    type: "Feature" as const,
+    properties: {},
+    geometry: { type: "LineString" as const, coordinates: coords },
+  };
+}
+
+/**
+ * Nav mode: remaining line in nav blue over a grey traveled line, both in
+ * the same slot as the plain route. `split` null = whole route remaining.
+ */
+function paintNavRoute(
+  map: MapboxMap,
+  coords: [number, number][],
+  split: { traveled: [number, number][]; remaining: [number, number][] } | null,
+  standard: boolean,
+  theme: SuiteTheme,
+) {
+  if (!map.getSource(ROUTE_SRC) || !map.getLayer(ROUTE_LINE)) return;
+  const paint = navRoutePaint(theme);
+  const remaining = split?.remaining ?? coords;
+  const traveled = split?.traveled ?? [];
+  (map.getSource(ROUTE_SRC) as { setData?: (d: unknown) => void }).setData?.(
+    lineFeature(remaining),
+  );
+  map.setPaintProperty(ROUTE_CASING, "line-color", paint.casing.color);
+  map.setPaintProperty(ROUTE_CASING, "line-width", paint.casing.width);
+  map.setPaintProperty(ROUTE_CASING, "line-opacity", paint.casing.opacity);
+  map.setPaintProperty(ROUTE_LINE, "line-color", paint.line.color);
+  map.setPaintProperty(ROUTE_LINE, "line-width", paint.line.width);
+  const src = map.getSource(ROUTE_TRAVELED_SRC) as
+    | { setData?: (d: unknown) => void }
+    | undefined;
+  if (src?.setData) {
+    src.setData(lineFeature(traveled));
+  } else {
+    map.addSource(ROUTE_TRAVELED_SRC, { type: "geojson", data: lineFeature(traveled) });
+    map.addLayer(
+      {
+        id: ROUTE_TRAVELED,
+        type: "line",
+        source: ROUTE_TRAVELED_SRC,
+        ...(standard ? { slot: "top" } : {}),
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: {
+          "line-color": paint.traveled,
+          "line-width": 7,
+          "line-opacity": 0.9,
+          ...(standard ? { "line-emissive-strength": 1 } : {}),
+        },
+      },
+      ROUTE_CASING,
+    );
+  }
+  map.setPaintProperty(ROUTE_TRAVELED, "line-color", paint.traveled);
+}
+
+/** Back to the plain preview line (full route, original colors). */
+function clearNavRoute(map: MapboxMap, coords: [number, number][], standard: boolean) {
+  if (map.getLayer(ROUTE_TRAVELED)) map.removeLayer(ROUTE_TRAVELED);
+  if (map.getSource(ROUTE_TRAVELED_SRC)) map.removeSource(ROUTE_TRAVELED_SRC);
+  if (!map.getLayer(ROUTE_LINE)) {
+    paintRoute(map, coords, standard);
+    return;
+  }
+  (map.getSource(ROUTE_SRC) as { setData?: (d: unknown) => void }).setData?.(
+    lineFeature(coords),
+  );
+  map.setPaintProperty(ROUTE_CASING, "line-color", PLAIN_ROUTE.casing.color);
+  map.setPaintProperty(ROUTE_CASING, "line-width", PLAIN_ROUTE.casing.width);
+  map.setPaintProperty(ROUTE_CASING, "line-opacity", PLAIN_ROUTE.casing.opacity);
+  map.setPaintProperty(ROUTE_LINE, "line-color", PLAIN_ROUTE.line.color);
+  map.setPaintProperty(ROUTE_LINE, "line-width", PLAIN_ROUTE.line.width);
 }
 
 export function RouteMapboxGl({
@@ -190,6 +309,7 @@ export function RouteMapboxGl({
   follow,
   followActive,
   followStatus = "off",
+  nav,
   onUnavailable,
 }: {
   token: string;
@@ -211,10 +331,15 @@ export function RouteMapboxGl({
   follow?: Pick<GeoFix, "lat" | "lng" | "heading"> | null;
   followActive?: boolean;
   followStatus?: FollowStatus;
+  /** Turn-by-Turn armed: full-screen pitched follow camera + nav chrome. */
+  nav?: RouteNavView | null;
   onUnavailable: () => void;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const mapElRef = useRef<HTMLDivElement>(null);
+  /** Full-screen nav slot (portal). The map host div is moved, not re-made. */
+  const navSlotRef = useRef<HTMLDivElement>(null);
+  const hostRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapboxMap | null>(null);
   const mbRef = useRef<MapboxNS | null>(null);
   const markersRef = useRef<MapboxMarker[]>([]);
@@ -325,11 +450,21 @@ export function RouteMapboxGl({
   }, [styleId]);
 
   useEffect(() => {
-    const el = mapElRef.current;
-    if (!el || !token.startsWith("pk.")) {
+    const slot = mapElRef.current;
+    if (!slot || !token.startsWith("pk.")) {
       onUnavailableRef.current();
       return;
     }
+    // The GL container is created here, not by React, so nav mode can move
+    // it into the full-screen slot without a second map load.
+    const el = document.createElement("div");
+    el.className = "absolute inset-0 overflow-hidden";
+    // Inline so mapbox-gl.css `.mapboxgl-map { position: relative }` can't
+    // collapse the host to 0px tall once it's reparented.
+    el.style.cssText = "position:absolute;inset:0;";
+    el.setAttribute("data-mapbox-canvas-host", "");
+    slot.appendChild(el);
+    hostRef.current = el;
     let cancelled = false;
     let map: MapboxMap | null = null;
     let removeResize: (() => void) | undefined;
@@ -412,6 +547,8 @@ export function RouteMapboxGl({
       markersRef.current = [];
       map?.remove();
       mapRef.current = null;
+      el.remove();
+      hostRef.current = null;
       setReady(false);
     };
     // Token / container lifetime only — style + data sync below.
@@ -503,6 +640,44 @@ export function RouteMapboxGl({
     }
   }, [pins, ready, selectedFuelId, selectedCampId, selectedDumpId, onSelectFuel, onSelectCamp, onSelectDump]);
 
+  const navOn = Boolean(nav && followActive && ready);
+  const navRef = useRef(nav);
+  navRef.current = nav;
+  const navCamRef = useRef<NavCamera | null>(null);
+  const navEnteredRef = useRef(false);
+  /** Nav changed camera / route paint, so leaving nav must restore them. */
+  const navTouchedRef = useRef(false);
+
+  // Move the one GL container between the inline card and the full-screen
+  // nav slot. Same Map object, same map load.
+  useLayoutEffect(() => {
+    const host = hostRef.current;
+    const target = navOn ? navSlotRef.current : mapElRef.current;
+    if (!host || !target || host.parentElement === target) return;
+    target.appendChild(host);
+    mapRef.current?.resize();
+  }, [navOn, ready]);
+
+  // Leaving nav: flatten the camera and restore the plain preview line.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready || navOn || !navTouchedRef.current) return;
+    navTouchedRef.current = false;
+    navEnteredRef.current = false;
+    navCamRef.current = null;
+    try {
+      clearNavRoute(map, coordsRef.current, isStandardStyle(styleIdRef.current));
+      map.easeTo({
+        pitch: 0,
+        bearing: 0,
+        padding: { top: 0, bottom: 0, left: 0, right: 0 },
+        duration: 0,
+      });
+    } catch {
+      /* style may be swapping */
+    }
+  }, [navOn, ready]);
+
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !ready || followActive) return;
@@ -551,6 +726,10 @@ export function RouteMapboxGl({
       el.style.removeProperty("--puck-heading");
       el.removeAttribute("data-follow-heading");
     }
+    if (navRef.current && followActive) {
+      navFollow(map, followPt);
+      return;
+    }
     const now = Date.now();
     if (
       shouldRecenterFollow(
@@ -570,7 +749,77 @@ export function RouteMapboxGl({
         essential: true,
       });
     }
-  }, [followPt, ready]);
+  }, [followPt, ready, followActive]);
+
+  /**
+   * Nav camera: heading-up, puck low on screen, zoom + pitch from the
+   * distance to the next maneuver (navCameraFor). Eases on every accepted
+   * fix — fixes are already 15 m-filtered in useNavFollow.
+   */
+  function navFollow(
+    map: MapboxMap,
+    pt: Pick<GeoFix, "lat" | "lng" | "heading">,
+  ) {
+    navTouchedRef.current = true;
+    const v = navRef.current;
+    const split = splitRouteAtFix(coordsRef.current, pt);
+    const onRoute = split && split.metersOff <= 90 ? split : null;
+    try {
+      paintNavRoute(
+        map,
+        coordsRef.current,
+        onRoute,
+        isStandardStyle(styleIdRef.current),
+        themeRef.current,
+      );
+    } catch {
+      /* style may be swapping */
+    }
+    const cam = navCameraFor(v?.remainToManeuverM ?? null, v?.speedMps ?? null);
+    const bearing = pt.heading ?? onRoute?.bearing ?? map.getBearing();
+    const h = map.getContainer().clientHeight || 640;
+    const first = !navEnteredRef.current;
+    navEnteredRef.current = true;
+    const moveCam = first || cameraChanged(navCamRef.current, cam);
+    navCamRef.current = cam;
+    const el = puckRef.current?.getElement();
+    if (el) {
+      // Map rotates to the heading, so the arrow points straight up.
+      el.style.setProperty("--puck-heading", `${(pt.heading ?? bearing) - bearing}deg`);
+      el.setAttribute("data-nav-puck", "");
+    }
+    const opts = {
+      center: [pt.lng, pt.lat] as [number, number],
+      bearing,
+      padding: { top: Math.round(h * 0.42), bottom: 150, left: 0, right: 0 },
+      essential: true,
+      ...(moveCam ? { zoom: cam.zoom, pitch: cam.pitch } : {}),
+    };
+    if (first) {
+      map.flyTo({ ...opts, duration: 1800, curve: 1.3 });
+    } else {
+      map.easeTo({ ...opts, duration: 900, easing: (t: number) => t });
+    }
+  }
+
+  // Nav armed with no fix yet: fly to the route start with the nav camera
+  // so the driver sees the pitched view immediately.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !navOn || followPt || navEnteredRef.current) return;
+    const start = coordsRef.current[0];
+    if (!start) return;
+    const next = coordsRef.current[1];
+    navFollow(map, {
+      lng: start[0],
+      lat: start[1],
+      heading: next
+        ? (Math.atan2(next[0] - start[0], next[1] - start[1]) * 180) / Math.PI
+        : null,
+    });
+    // Count the real first fix as the entry fly.
+    navEnteredRef.current = false;
+  }, [navOn, followPt]);
 
   const selectedPoi = useMemo(
     () =>
@@ -614,7 +863,7 @@ export function RouteMapboxGl({
     >
       <div
         ref={mapElRef}
-        data-mapbox-canvas-host
+        data-map-inline-slot
         className="absolute inset-0 overflow-hidden"
       />
 
@@ -691,6 +940,24 @@ export function RouteMapboxGl({
       >
         © Mapbox · {styleId === "satellite" ? "satellite" : "standard"}
       </p>
+      {navOn && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              data-nav-mode
+              data-no-swipe=""
+              data-map-engine="mapbox-gl"
+              data-theme-tone={theme}
+              data-follow-status={status}
+              className="rv-nav-screen"
+              role="application"
+              aria-label="Turn-by-turn navigation"
+            >
+              <div ref={navSlotRef} className="absolute inset-0" />
+              {nav?.overlay}
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }
