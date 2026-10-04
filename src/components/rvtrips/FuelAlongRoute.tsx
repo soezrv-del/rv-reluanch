@@ -41,7 +41,7 @@ export function FuelAlongRoute({
 
   return (
     <section
-      className="space-y-2"
+      className="rv-along space-y-2"
       data-fuel-along-route
       data-fuel-source={result?.source || ""}
       data-along-open={open ? "1" : "0"}
@@ -50,21 +50,18 @@ export function FuelAlongRoute({
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="flex min-h-11 w-full items-center gap-2 text-left"
+        data-trip-btn="row"
+        className="rv-along-row"
       >
-        <h3 className="min-w-0 flex-1 text-[12px] font-bold tracking-[0.12em] text-white">
-          FUEL ALONG ROUTE
+        <h3 className="rv-along-title">
+          Fuel along route
         </h3>
         {count ? (
-          <span className="shrink-0 text-[11px] font-semibold text-white/70">
-            {count}
-          </span>
+          <span className="rv-along-count">{count}</span>
         ) : null}
         <ChevronDown
-          className={cn(
-            "size-4 shrink-0 text-white/55 transition-transform",
-            open && "rotate-180",
-          )}
+          className={cn("rv-along-chevron", open && "rotate-180")}
+          aria-hidden
         />
       </button>
 

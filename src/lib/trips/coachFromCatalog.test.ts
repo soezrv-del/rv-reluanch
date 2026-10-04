@@ -14,7 +14,7 @@ import {
   loadLockedProfile,
   profileIsComplete,
   resolveTripsProfileSeed,
-  RV_SAFE_CHIP_GAP,
+  RV_SAFE_CHIP_MISSING,
   rvSafeNavigateChipLabel,
   saveLockedProfile,
   type CoachProfile,
@@ -376,22 +376,29 @@ test("loadLockedProfile keeps a coach without floorplan", () => {
   }
 });
 
-test("rvSafeNavigateChipLabel: GAP when empty, real height × weight when saved", () => {
-  assert.equal(RV_SAFE_CHIP_GAP, "GAP");
-  assert.equal(formatRvSafeNavigateChipDims(null), "GAP × GAP");
-  assert.equal(rvSafeNavigateChipLabel(null), "RV safe · GAP × GAP");
+test("rvSafeNavigateChipLabel: plain add-prompt when empty, real height × weight when saved", () => {
+  assert.equal(RV_SAFE_CHIP_MISSING.both, "add height & weight");
+  assert.equal(formatRvSafeNavigateChipDims(null), "add height & weight");
+  assert.equal(rvSafeNavigateChipLabel(null), "RV safe · add height & weight");
   assert.equal(
     rvSafeNavigateChipLabel(EMPTY_COACH_PROFILE),
-    "RV safe · GAP × GAP",
+    "RV safe · add height & weight",
   );
   assert.equal(
     rvSafeNavigateChipLabel({ heightFt: 12, weightLbs: 0 }),
-    "RV safe · 12′ × GAP",
+    "RV safe · 12′ · add weight",
   );
   assert.equal(
     rvSafeNavigateChipLabel({ heightFt: 0, weightLbs: 18000 }),
-    "RV safe · GAP × 18,000 lb",
+    "RV safe · add height · 18,000 lb",
   );
+  for (const label of [
+    rvSafeNavigateChipLabel(null),
+    rvSafeNavigateChipLabel({ heightFt: 12, weightLbs: 0 }),
+    rvSafeNavigateChipLabel({ heightFt: 0, weightLbs: 18000 }),
+  ]) {
+    assert.doesNotMatch(label, /GAP|<|×/);
+  }
   assert.equal(
     rvSafeNavigateChipLabel({ heightFt: 12, weightLbs: 18000 }),
     "RV safe · 12′ × 18,000 lb",

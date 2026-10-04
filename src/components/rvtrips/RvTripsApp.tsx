@@ -34,6 +34,7 @@ import {
 import {
   fetchNavigateRoute,
   mergeLiveLegs,
+  routeEngineChip,
   routeEngineLabel,
   rvSafeChipLabel,
 } from "@/lib/trips/navigateRoute";
@@ -1162,6 +1163,9 @@ export function RvTripsApp() {
 
   const liveStats = liveRouteStats(osrm);
   const engineChip = routeStatus === "live" ? routeEngineLabel(osrm) : "";
+  // Friendly copy only — the raw engine tag stays on data-route-engine.
+  const engineChipText = routeStatus === "live" ? routeEngineChip(osrm) : null;
+  const showSamplePads = import.meta.env.DEV;
   const providerNote = liveProviderNote(osrm);
   const rvSafeChip =
     rvSafeChipLabel(locked) ?? rvSafeNavigateChipLabel(locked);
@@ -1824,26 +1828,37 @@ export function RvTripsApp() {
                 </section>
               ) : routeStatus === "live" && liveStats && osrm ? (
                 <section
-                  className="glass-prestige space-y-3 rounded-[1.25rem] p-4"
+                  className="rv-trip-card glass-prestige space-y-4 rounded-[1.25rem] p-5"
                   data-route-results
                   data-route-miles={String(liveStats.miles)}
                   data-route-drive={`${liveStats.driveHours}h ${String(liveStats.driveMinutes).padStart(2, "0")}m`}
                   data-route-engine={engineChip}
                 >
+                  {corridor ? (
+                    <p data-route-title className="rv-trip-title">
+                      {corridor}
+                    </p>
+                  ) : originPlace || destPlace ? (
+                    <p data-route-title className="rv-trip-title">
+                      {originPlace?.label || route?.origin.label}
+                      <span className="rv-trip-title-arrow" aria-hidden>
+                        →
+                      </span>
+                      {destPlace?.label || route?.destination.label}
+                    </p>
+                  ) : null}
+
                   <div className="flex items-end justify-between gap-6">
                     <div>
-                      <p className="text-[11px] font-semibold tracking-wide text-white/65">
-                        Miles
-                      </p>
-                      <p className="mt-1 text-[34px] font-bold tabular-nums leading-none text-white">
+                      <p className="rv-trip-label">Distance</p>
+                      <p className="rv-trip-stat mt-1.5 tabular-nums">
                         {formatMiles(liveStats.miles)}
+                        <span className="rv-trip-unit">mi</span>
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[11px] font-semibold tracking-wide text-white/65">
-                        Time
-                      </p>
-                      <p className="mt-1 text-[34px] font-bold tabular-nums leading-none text-white">
+                      <p className="rv-trip-label">Drive time</p>
+                      <p className="rv-trip-stat mt-1.5 tabular-nums">
                         {formatDrive(
                           liveStats.driveHours,
                           liveStats.driveMinutes,
@@ -1852,28 +1867,24 @@ export function RvTripsApp() {
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    data-rv-safe-chip
-                    onClick={() => setTool("profile")}
-                    aria-label={`${rvSafeChip}. Open profile to confirm or edit.`}
-                    className="inline-flex max-w-full min-h-11 items-center rounded-full border border-emerald-400/35 bg-emerald-500/12 px-2.5 text-[11px] font-semibold text-emerald-200"
-                  >
-                    {rvSafeChip}
-                  </button>
-
-                  <div
-                    className={cn(
-                      "flex flex-wrap items-center gap-2",
-                      navArmed && "hidden",
-                    )}
-                    hidden={navArmed}
-                  >
-                    <span className="rounded-full border border-white/20 bg-black/35 px-3 py-1.5 text-[12px] font-bold text-white">
-                      {engineChip}
-                    </span>
-                    {alerts.length > 0 ? (
-                      <span className="inline-flex items-center gap-1 text-[12px] font-bold text-amber">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      data-rv-safe-chip
+                      data-trip-btn="chip"
+                      onClick={() => setTool("profile")}
+                      aria-label={`${rvSafeChip}. Open profile to confirm or edit.`}
+                      className="rv-trip-chip"
+                    >
+                      {rvSafeChip}
+                    </button>
+                    {!navArmed && engineChipText ? (
+                      <span data-route-engine-chip className="rv-trip-chip rv-trip-chip-static">
+                        {engineChipText}
+                      </span>
+                    ) : null}
+                    {!navArmed && alerts.length > 0 ? (
+                      <span className="rv-trip-chip rv-trip-chip-static rv-trip-chip-warn">
                         <AlertTriangle className="size-3.5" />
                         {alerts.length}
                       </span>
@@ -1881,7 +1892,12 @@ export function RvTripsApp() {
                     <button
                       type="button"
                       onClick={persistTrip}
-                      className="ml-auto inline-flex min-h-11 items-center gap-1.5 rounded-full border border-white/20 bg-black/35 px-3 py-1.5 text-[12px] font-bold text-white"
+                      hidden={navArmed}
+                      data-trip-btn="chip"
+                      className={cn(
+                        "rv-trip-chip ml-auto gap-1.5",
+                        navArmed && "hidden",
+                      )}
                       data-save-trip
                     >
                       <Bookmark className="size-3.5" />
@@ -1889,22 +1905,8 @@ export function RvTripsApp() {
                     </button>
                   </div>
 
-                  {corridor ? (
-                    <p className="text-[14px] font-semibold leading-snug text-white">
-                      {corridor}
-                    </p>
-                  ) : originPlace || destPlace ? (
-                    <p className="text-[14px] font-semibold leading-snug text-white">
-                      {originPlace?.label || route?.origin.label}
-                      <span className="mx-1.5 text-white/50">→</span>
-                      {destPlace?.label || route?.destination.label}
-                    </p>
-                  ) : null}
-
                   {providerNote && !navArmed ? (
-                    <p className="text-[12px] leading-snug text-white/75">
-                      {providerNote}
-                    </p>
+                    <p className="rv-trip-note">{providerNote}</p>
                   ) : null}
 
                   <RouteBasemap
@@ -1958,11 +1960,11 @@ export function RvTripsApp() {
                       setNavArmed(true);
                       speakStart();
                     }}
+                    data-trip-btn={navArmed ? "stop" : "primary"}
+                    data-start-tbt
                     className={cn(
-                      "flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-[16px] font-bold transition disabled:opacity-40",
-                      navArmed
-                        ? "border border-ruby/80 bg-ruby text-white shadow-[0_0_28px_rgba(212,37,53,0.55)]"
-                        : "bg-blue text-white shadow-[0_0_28px_rgba(80,160,255,0.4)]",
+                      "flex min-h-[52px] w-full items-center justify-center gap-2 px-4 text-[16px] transition disabled:opacity-40",
+                      navArmed ? "rv-trip-stop" : "rv-trip-primary",
                     )}
                   >
                     <Navigation className="size-5" />
@@ -2061,12 +2063,13 @@ export function RvTripsApp() {
                   />
                   )}
 
-                  {navArmed ? null : (
+                  {navArmed || !showSamplePads ? null : (
                   <div className="pt-0.5" data-camp-sample-toggle>
                     <button
                       type="button"
                       onClick={() => setShowSampleCamps((v) => !v)}
-                      className="text-[11px] font-semibold text-white/45 underline-offset-2 hover:text-white/70 hover:underline"
+                      data-trip-btn="link"
+                      className="rv-trip-devlink"
                     >
                       {showSampleCamps
                         ? "Hide sample pads"

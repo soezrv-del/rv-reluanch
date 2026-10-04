@@ -75,3 +75,29 @@ export function resolveMapPoi(opts: {
   }
   return null;
 }
+
+/**
+ * Below zoom 7 (about a multi-state overview) camp, dump and fuel dots are
+ * hidden so the route line reads cleanly. The selected POI and the A / B /
+ * via pins always stay visible.
+ */
+export const POI_OVERVIEW_MAX_ZOOM = 7;
+
+export function poiOverview(zoom: number | null | undefined): boolean {
+  return typeof zoom === "number" && Number.isFinite(zoom)
+    ? zoom < POI_OVERVIEW_MAX_ZOOM
+    : false;
+}
+
+/** Pin kinds that thin out at overview zoom (never origin / dest / via). */
+export function poiThinsAtOverview(kind: string): boolean {
+  return (
+    kind === "fuel" ||
+    kind === "truck-stop" ||
+    kind === "campground" ||
+    kind === "rv-park" ||
+    kind === "dump-free" ||
+    kind === "dump-paid" ||
+    kind === "dump-unknown"
+  );
+}

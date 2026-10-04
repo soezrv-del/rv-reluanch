@@ -303,7 +303,7 @@ test("GET /api/dumps stays on Overpass — no HERE / Places / paid APIs", () => 
   assert.doesNotMatch(dumpsBlock, /Sample pads/);
   assert.match(ui, /data-dumps-along-route/);
   assert.match(ui, /DumpFeeLegend/);
-  assert.match(ui, /DUMPS ALONG ROUTE/);
+  assert.match(ui, /Dumps along route/);
   assert.doesNotMatch(ui, /Sample pads/);
   assert.match(map, /dumpStops/);
   assert.match(map, /data-map-poi-detail|MapPoiDetailChip/);
