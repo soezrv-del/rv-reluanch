@@ -46,7 +46,7 @@ import {
   type ScreenCalloutEvent,
   type ScreenCalloutState,
 } from "./screenGuides";
-import { liveVoiceOutputFor, nativeShellLeavesMicHardwareOn, resumeLiveVoiceSpeaker, setSpeakingSession } from "./voiceOutput";
+import { liveVoiceOutputFor, logLiveVoiceSession, nativeShellLeavesMicHardwareOn, resumeLiveVoiceSpeaker, setSpeakingSession } from "./voiceOutput";
 import {
   PCM_CAPTURE_PROCESSOR,
   createBufferSourcePlayer,
@@ -1100,6 +1100,8 @@ export class GrokRealtimeSession {
     this.suppressMic = closed;
     // play-and-record ducks the loudspeaker. playback is full volume
     // while she talks, then play-and-record again when it is his turn.
+    // Safari only: in the app shell setSpeakingSession is a no-op and
+    // AppDelegate keeps the native session on the loudspeaker.
     // The app shell still leaves the hardware track on. Flipping that
     // track is what left WKWebView deaf after hello.
     setSpeakingSession(closed);
@@ -1113,6 +1115,7 @@ export class GrokRealtimeSession {
 
   private beginSpeaking() {
     this.setMicGate(true);
+    logLiveVoiceSession("beginSpeaking");
     this.rearmSince = 0;
     this.handlers.onStatus("speaking", "RvGrok speaking…");
     if (this.rearmTimer) {
@@ -1145,6 +1148,7 @@ export class GrokRealtimeSession {
     this.rearmSince = 0;
     if (this.closed || this.intentionalStop) return;
     this.setMicGate(false);
+    logLiveVoiceSession("rearm");
     if (this.introSpoken) this.introFinished = true;
     this.flushQueuedCallout();
     this.pushCallout({ type: "reply-done", now: Date.now() });

@@ -5,9 +5,13 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   LIVE_VOICE_OUTPUT_GAIN,
+  LIVE_VOICE_DEBUG_KEY,
   LIVE_VOICE_ROUTE_KEY,
   LIVE_VOICE_SOFT_CLIP,
+  liveVoiceDebugEnabled,
+  liveVoiceOutputFor,
   liveVoiceRouteOverride,
+  logLiveVoiceSession,
   nativeShellLeavesMicHardwareOn,
   playbackNeedsSpeakerElement,
   preferIosLoudspeaker,
@@ -159,8 +163,9 @@ test("playback goes through the jitter-buffered player and the output gain", () 
   assert.match(output, /setSpeakingSession/);
   assert.match(realtime, /setSpeakingSession\(closed\)/);
   assert.doesNotMatch(output, /createDynamicsCompressor/);
-  // Playback switch runs for the shell too. Only the hardware track flip
-  // stays behind the native return.
+  // The gate still calls setSpeakingSession before the native return
+  // (it no-ops inside for the shell). Only the hardware track flip stays
+  // behind the native return. Mic logic is unchanged.
   const gateStart = realtime.indexOf("private setMicGate");
   const gateEnd = realtime.indexOf("private beginSpeaking");
   const gate = realtime.slice(gateStart, gateEnd);
@@ -171,4 +176,113 @@ test("playback goes through the jitter-buffered player and the output gain", () 
   assert.match(output, /createMediaStreamDestination/);
   assert.match(output, /playsInline = true/);
   assert.match(output, /audioSession\.type = "play-and-record"|session\.type = "play-and-record"/);
+});
+
+test("native shell: no web audio-session writes (AppDelegate owns the session)", () => {
+  const session = { type: "play-and-record" };
+  const nav = { audioSession: session } as unknown as Navigator;
+  setSpeakingSession(true, nav, true);
+  assert.equal(session.type, "play-and-record");
+  setSpeakingSession(false, nav, true);
+  assert.equal(session.type, "play-and-record");
+  session.type = "auto";
+  assert.equal(preferIosLoudspeaker(nav, true), false);
+  assert.equal(session.type, "auto");
+  // Safari (not native) still flips.
+  session.type = "play-and-record";
+  setSpeakingSession(true, nav, false);
+  assert.equal(session.type, "playback");
+  setSpeakingSession(false, nav, false);
+  assert.equal(session.type, "play-and-record");
+  session.type = "auto";
+  assert.equal(preferIosLoudspeaker(nav, false), true);
+  assert.equal(session.type, "play-and-record");
+});
+
+test("native shell detection is the default for the session writers", () => {
+  const g = globalThis as { window?: unknown };
+  const hadWindow = "window" in g;
+  const prev = g.window;
+  const session = { type: "play-and-record" };
+  const nav = { audioSession: session } as unknown as Navigator;
+  try {
+    g.window = { Capacitor: { isNativePlatform: () => true } };
+    setSpeakingSession(true, nav);
+    assert.equal(session.type, "play-and-record");
+    session.type = "auto";
+    assert.equal(preferIosLoudspeaker(nav), false);
+    assert.equal(session.type, "auto");
+    g.window = { Capacitor: { isNativePlatform: () => false } };
+    session.type = "play-and-record";
+    setSpeakingSession(true, nav);
+    assert.equal(session.type, "playback");
+  } finally {
+    if (hadWindow) g.window = prev;
+    else delete g.window;
+  }
+});
+
+function fakeAudioContext() {
+  const node = () => ({ connect: () => {}, disconnect: () => {} });
+  return {
+    destination: node(),
+    createGain: () => ({ ...node(), gain: { value: 1 } }),
+    createWaveShaper: () => ({ ...node(), curve: null, oversample: "none" }),
+    createMediaStreamDestination: () => ({ ...node(), stream: {} }),
+  } as unknown as AudioContext;
+}
+
+test("building the output chain mid-reply does not force play-and-record", () => {
+  const g = globalThis as { navigator?: unknown };
+  const desc = Object.getOwnPropertyDescriptor(g, "navigator");
+  const session = { type: "playback" };
+  try {
+    Object.defineProperty(g, "navigator", {
+      value: { audioSession: session, userAgent: "Mozilla/5.0 (iPhone)", platform: "iPhone", maxTouchPoints: 5 },
+      configurable: true,
+      writable: true,
+    });
+    const chain = liveVoiceOutputFor(fakeAudioContext());
+    assert.ok(chain.gain);
+    assert.equal(session.type, "playback");
+  } finally {
+    if (desc) Object.defineProperty(g, "navigator", desc);
+    else delete g.navigator;
+  }
+  const output = readFileSync(join(root, "voiceOutput.ts"), "utf8");
+  const start = output.indexOf("export function liveVoiceOutputFor");
+  const end = output.indexOf("export function releaseLiveVoiceOutput");
+  assert.doesNotMatch(output.slice(start, end), /preferIosLoudspeaker\(|setSpeakingSession\(|\.type =/);
+});
+
+test("lvdebug flag persists and only logs when on", () => {
+  const store = new Map<string, string>();
+  const storage = {
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => void store.set(k, v),
+    removeItem: (k: string) => void store.delete(k),
+  };
+  assert.equal(liveVoiceDebugEnabled("", storage), false);
+  assert.equal(liveVoiceDebugEnabled("?lvdebug=1", storage), true);
+  assert.equal(store.get(LIVE_VOICE_DEBUG_KEY), "1");
+  assert.equal(liveVoiceDebugEnabled("", storage), true);
+  assert.equal(liveVoiceDebugEnabled("?lvdebug=0", storage), false);
+  assert.equal(liveVoiceDebugEnabled("", storage), false);
+
+  const logs: string[] = [];
+  const orig = console.log;
+  console.log = (...a: unknown[]) => void logs.push(a.join(" "));
+  try {
+    const nav = { audioSession: { type: "playback" } } as unknown as Navigator;
+    logLiveVoiceSession("beginSpeaking", nav, false);
+    assert.equal(logs.length, 0);
+    logLiveVoiceSession("beginSpeaking", nav, true);
+    assert.equal(logs.length, 1);
+    assert.match(logs[0]!, /\[lvdebug\] beginSpeaking audioSession\.type=playback/);
+  } finally {
+    console.log = orig;
+  }
+  const realtime = readFileSync(join(root, "realtime.ts"), "utf8");
+  assert.match(realtime, /logLiveVoiceSession\("beginSpeaking"\)/);
+  assert.match(realtime, /logLiveVoiceSession\("rearm"\)/);
 });
