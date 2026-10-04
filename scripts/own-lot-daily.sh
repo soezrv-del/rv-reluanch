@@ -8,7 +8,10 @@
 # The scrape is ~1,400 pages at 2.5s, about an hour. Run inside an agent
 # tool call, it dies when that session ends and the publisher never runs
 # (Oct 2 and Oct 4). This detaches with setsid/nohup so the scrape and the
-# publish finish on their own. Guards are unchanged: the scraper still
+# publish finish on their own. If the box or the run is killed anyway,
+# run this again: the scraper resumes from $OUT.partial.jsonl (pages
+# already fetched in the last 6h are not fetched again, same scraped_at).
+# Guards are unchanged: the scraper still
 # refuses >2% rows without a spec sheet or under 1,200 units, and the
 # publisher still refuses stale, slim, or shrinking snapshots.
 #
