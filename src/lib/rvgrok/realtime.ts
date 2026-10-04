@@ -46,7 +46,7 @@ import {
   type ScreenCalloutEvent,
   type ScreenCalloutState,
 } from "./screenGuides";
-import { liveVoiceOutputFor, nativeShellLeavesMicHardwareOn, resumeLiveVoiceSpeaker, setSpeakingSession } from "./voiceOutput";
+import { keepLiveVoiceGraphAwake, liveVoiceOutputFor, nativeShellLeavesMicHardwareOn, resumeLiveVoiceSpeaker, setSpeakingSession } from "./voiceOutput";
 import {
   PCM_CAPTURE_PROCESSOR,
   createBufferSourcePlayer,
@@ -184,6 +184,8 @@ export class GrokRealtimeSession {
   private introFinished = false;
   private facts: ActiveCoach | null;
   private rearmTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Pokes the iPhone speaker graph so a quiet stretch still pulls the mic. */
+  private graphKeepAlive: ReturnType<typeof setInterval> | null = null;
   /** Wall clock when this reply's drain wait started. Caps a stuck queue. */
   private rearmSince = 0;
   private earlyPcm: ArrayBuffer[] = [];
@@ -301,6 +303,7 @@ export class GrokRealtimeSession {
   async start(prewarm?: LiveVoicePrewarm | null) {
     this.closed = false;
     this.intentionalStop = false;
+    this.clearGraphKeepAlive();
     this.setMicGate(false);
     this.finishedAssistantOnce = false;
     this.earlyPcm = [];
@@ -312,12 +315,16 @@ export class GrokRealtimeSession {
 
     // 1) Capture FIRST (same tap). Token + socket in parallel after.
     await this.ensureCapture(prewarm ?? beginLiveVoiceFromUserGesture());
+    this.armGraphKeepAlive();
     this.handlers.onStatus("connecting", "Opening Grok Voice…");
 
     const token = await fetchEphemeralToken();
     this.visitorMemory = takeTokenVisitorMemory();
     this.standingLessons = takeTokenStandingLessons();
-    if (this.closed || this.intentionalStop) return;
+    if (this.closed || this.intentionalStop) {
+      this.clearGraphKeepAlive();
+      return;
+    }
 
     const subprotocol = `xai-client-secret.${token}`;
     const ws = new WebSocket(XAI_REALTIME_URL, [subprotocol]);
@@ -1065,10 +1072,32 @@ export class GrokRealtimeSession {
       for (const track of tracks) {
         if (track.enabled === closed) track.enabled = !closed;
       }
+    } else {
+      // Silence lets the iPhone stop the mic while the screen still says
+      // it is his turn. The whisper keeps that graph rendering.
+      keepLiveVoiceGraphAwake(this.audioCtx);
     }
     const ctx = this.audioCtx;
     if (ctx && ctx.state === "suspended") void ctx.resume().catch(() => {});
     resumeLiveVoiceSpeaker(ctx);
+  }
+
+  /** App and simulator only. Safari does not idle the mic this way. */
+  private armGraphKeepAlive() {
+    if (!nativeShellLeavesMicHardwareOn()) return;
+    if (this.graphKeepAlive) return;
+    const poke = () => {
+      if (this.closed || this.intentionalStop) return;
+      keepLiveVoiceGraphAwake(this.audioCtx);
+    };
+    poke();
+    this.graphKeepAlive = setInterval(poke, 1000);
+  }
+
+  private clearGraphKeepAlive() {
+    if (!this.graphKeepAlive) return;
+    clearInterval(this.graphKeepAlive);
+    this.graphKeepAlive = null;
   }
 
   private beginSpeaking() {
@@ -1159,6 +1188,7 @@ export class GrokRealtimeSession {
   }
 
   stop(opts?: { keepCapture?: boolean }) {
+    this.clearGraphKeepAlive();
     this.unsubScreen?.();
     this.unsubScreen = null;
     if (this.calloutTimer) {
