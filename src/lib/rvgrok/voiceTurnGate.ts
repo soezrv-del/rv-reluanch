@@ -84,6 +84,75 @@ export function claimsLotMiss(text: string): boolean {
   );
 }
 
+/**
+ * One spoken answer per lot result. After query_lot returns, the first reply
+ * is her answer. Any other reply that starts before he says something new
+ * (her own echo, a second auto-reply, a queued "speak these words") is
+ * dropped, so the lot answer is never said twice.
+ */
+export type LotReplyGate = {
+  owed: boolean;
+  answeredAt: number;
+  suppressed: boolean;
+};
+
+export const initialLotReplyGate: LotReplyGate = {
+  owed: false,
+  answeredAt: 0,
+  suppressed: false,
+};
+
+/** After this long, a new reply is never treated as a repeat. */
+export const LOT_REPLY_WINDOW_MS = 15_000;
+
+export type LotReplyEvent =
+  | { type: "tool-output" }
+  | { type: "response-created"; now: number }
+  | { type: "user-turn" };
+
+export function reduceLotReply(
+  state: LotReplyGate,
+  event: LotReplyEvent,
+): { state: LotReplyGate; action: "allow" | "cancel" | "reask" | null } {
+  switch (event.type) {
+    case "tool-output":
+      return { state: { owed: true, answeredAt: 0, suppressed: false }, action: null };
+    case "response-created":
+      if (!state.owed) return { state, action: "allow" };
+      if (!state.answeredAt) {
+        return { state: { ...state, answeredAt: event.now }, action: "allow" };
+      }
+      if (event.now - state.answeredAt > LOT_REPLY_WINDOW_MS) {
+        return { state: initialLotReplyGate, action: "allow" };
+      }
+      return { state: { ...state, suppressed: true }, action: "cancel" };
+    case "user-turn":
+      return {
+        state: initialLotReplyGate,
+        action: state.suppressed ? "reask" : null,
+      };
+    default:
+      return { state, action: null };
+  }
+}
+
+/** True once the lot answer has started, so a queued second one is dropped. */
+export function lotAnswerAlreadyGiven(state: LotReplyGate): boolean {
+  return state.owed && state.answeredAt > 0;
+}
+
+/** Her lot answer: the facts, in her own words, said once. */
+export function lotAnswerInstructions(summary: string): string {
+  return (
+    "Answer his lot question once, in your own words, in one or two short sentences, from these facts: " +
+    summary +
+    " Do not say the words \"Matching units\" and do not read the facts word for word. " +
+    "Say the year, model, town and rough price the way a salesperson would. " +
+    "Do not add any unit, price or store that is not in the facts. " +
+    "End by asking if he wants the details. Then stop."
+  );
+}
+
 export const SPOKEN_LOT_UNIT_CAP = 3;
 
 /** Spoken when the tool result includes a motorhome name roster. Not a verbatim script. */

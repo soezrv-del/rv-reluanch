@@ -98,6 +98,11 @@ import {
   initialToolSpeakGate,
   type ToolSpeakGate,
   claimsLotMiss,
+  initialLotReplyGate,
+  lotAnswerAlreadyGiven,
+  lotAnswerInstructions,
+  reduceLotReply,
+  type LotReplyGate,
 } from "./voiceTurnGate";
 import { researchAccessHeaders } from "../access/researchUnlock";
 import { GROK_EXTRA_PROMPTS, type GrokExtraKind } from "./grokExtras";
@@ -213,6 +218,10 @@ export class GrokRealtimeSession {
   private userTranscriptWaiters: Array<() => void> = [];
   /** Last lot line spoken, so a noise echo does not say it again. */
   private lastSpokenLotLine = "";
+  /** One spoken answer per lot result; see reduceLotReply. */
+  private lotReply: LotReplyGate = initialLotReplyGate;
+  /** Replies dropped as repeats of the lot answer; their events are ignored. */
+  private droppedResponseIds = new Set<string>();
   /** The hold is one response. The lot answer waits until that response ends. */
   private toolSpeak: ToolSpeakGate = initialToolSpeakGate();
   private handledToolCallIds = new Set<string>();
@@ -569,6 +578,21 @@ export class GrokRealtimeSession {
 
     const type = String(msg.type || "");
 
+    // Events from a reply we dropped as a repeat of the lot answer.
+    if (type.startsWith("response.") && type !== "response.created" && this.droppedResponseIds.size) {
+      const rid = String(
+        (msg as { response_id?: string }).response_id ||
+          (msg as { response?: { id?: string } }).response?.id ||
+          "",
+      );
+      if (rid && this.droppedResponseIds.has(rid)) {
+        if (type === "response.done" || type === "response.cancelled" || type === "response.cancel") {
+          this.droppedResponseIds.delete(rid);
+        }
+        return;
+      }
+    }
+
     switch (type) {
       case "session.created":
       case "session.updated":
@@ -613,6 +637,10 @@ export class GrokRealtimeSession {
           break;
         }
         if (transcript) {
+          const turn = reduceLotReply(this.lotReply, { type: "user-turn" });
+          this.lotReply = turn.state;
+          // His real question came in while we were dropping repeats: answer it.
+          if (turn.action === "reask") this.requestReply();
           this.lastUserTranscript = transcript;
           this.handlers.onUserTranscript(transcript);
           this.handlers.onUserTurnDone?.(transcript);
@@ -621,7 +649,16 @@ export class GrokRealtimeSession {
         break;
       }
 
-      case "response.created":
+      case "response.created": {
+        const rid = String((msg as { response?: { id?: string } }).response?.id || "");
+        const gate = reduceLotReply(this.lotReply, { type: "response-created", now: Date.now() });
+        this.lotReply = gate.state;
+        // A web-research hold or answer is not a repeat of the lot line.
+        if (gate.action === "cancel" && rid && this.researchPhase === "idle") {
+          this.droppedResponseIds.add(rid);
+          this.cancelResponse(rid);
+          break;
+        }
         this.toolSpeak = reduceToolSpeak(this.toolSpeak, {
           type: "response-start",
         }).state;
@@ -630,6 +667,7 @@ export class GrokRealtimeSession {
         this.finishedAssistantOnce = false;
         this.handlers.onStatus("thinking", "Grok is responding…");
         break;
+      }
 
       case "response.audio_transcript.delta":
       case "response.output_audio_transcript.delta": {
@@ -960,7 +998,7 @@ export class GrokRealtimeSession {
       this.sendToolOutput(
         callId,
         data,
-        hasRoster ? NAME_ROSTER_SPEAK : summary ? `Speak only these words, then stop: ${summary}` : undefined,
+        hasRoster ? NAME_ROSTER_SPEAK : summary ? lotAnswerInstructions(summary) : undefined,
       );
     } catch (err) {
       console.warn("[rvgrok] query_lot failed", { name, payload: err });
@@ -1007,6 +1045,7 @@ export class GrokRealtimeSession {
         },
       }),
     );
+    this.lotReply = reduceLotReply(this.lotReply, { type: "tool-output" }).state;
     if (!speak) return;
     const planned = reduceToolSpeak(this.toolSpeak, {
       type: "tool-ready",
@@ -1024,13 +1063,36 @@ export class GrokRealtimeSession {
     const planned = reduceToolSpeak(this.toolSpeak, { type: "response-end" });
     this.toolSpeak = planned.state;
     if (!planned.speak) return false;
-    this.emitToolSpeak(planned.speak);
-    return true;
+    return this.emitToolSpeak(planned.speak);
   }
 
-  private emitToolSpeak(instructions: string) {
+  /** Drop one reply the server started (a repeat of the lot answer). */
+  private cancelResponse(responseId: string) {
     const ws = this.ws;
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    try {
+      ws.send(JSON.stringify({ type: "response.cancel", response_id: responseId }));
+    } catch {
+      /* already finished */
+    }
+  }
+
+  /** Ask for a normal reply to what he just said. */
+  private requestReply() {
+    const ws = this.ws;
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    try {
+      ws.send(JSON.stringify({ type: "response.create", response: { modalities: ["text", "audio"] } }));
+    } catch {
+      /* socket closing */
+    }
+  }
+
+  private emitToolSpeak(instructions: string): boolean {
+    // She already answered this lot result; a second "speak this" repeats it.
+    if (lotAnswerAlreadyGiven(this.lotReply)) return false;
+    const ws = this.ws;
+    if (!ws || ws.readyState !== WebSocket.OPEN) return false;
     try {
       ws.send(
         JSON.stringify({
@@ -1041,11 +1103,13 @@ export class GrokRealtimeSession {
           },
         }),
       );
+      return true;
     } catch {
       const rejected = reduceToolSpeak(this.toolSpeak, {
         type: "create-rejected",
       });
       this.toolSpeak = rejected.state;
+      return false;
     }
   }
 
