@@ -1117,6 +1117,42 @@ test("a misspoken model stays on the sheet coach and does not open the new book"
   assert.equal(searchLot(snap.units, { query: "new available" }).matched, 752);
 });
 
+test("anything like a View is the other Sprinter coaches, not those Views", () => {
+  const snap = units();
+  const views = "Do we have any Winnebago views on the lot?";
+  const first = answerQueryLotFromSnapshot(snap, { query: views }, null, views);
+  assert.equal(first.matched, 2, first.summary);
+  assert.match(first.speech, /Winnebago View/);
+  assert.doesNotMatch(first.speech, /Super C/);
+
+  const like = "Is there anything like a Winnebago View on our lot?";
+  for (const args of [{ query: like }, { query: like, body_type: "Class C" }]) {
+    const hit = searchLot(snap.units, { ...args, utterance: like });
+    assert.ok((hit.matched ?? 0) > 2, hit.summary);
+    assert.equal(hit.did_you_mean, undefined, like);
+    assert.match(hit.summary, /Other Sprinter coaches near that size/);
+    assert.match(hit.summary, /Itasca Navion/);
+    assert.doesNotMatch(hit.summary, /Super C/);
+    assert.doesNotMatch(hit.summary, /Winnebago View/);
+    assert.ok(hit.units.some((unit) => /navion/i.test(unit.model)), hit.summary);
+    assert.ok(
+      hit.units.every((unit) => !(/winnebago/i.test(unit.make) && /view/i.test(unit.model))),
+      hit.summary,
+    );
+  }
+
+  const next = answerQueryLotFromSnapshot(
+    snap,
+    { query: like, body_type: "Class C" },
+    first.lotMemory,
+    like,
+  );
+  assert.ok((next.matched ?? 0) > 2, next.summary);
+  assert.match(next.speech, /Itasca Navion/);
+  assert.doesNotMatch(next.speech, /Super C/);
+  assert.doesNotMatch(next.speech, /Winnebago View/);
+});
+
 test("a named coach survives the spare words around it", () => {
   const snap = units();
   const navionStocks = ["UCV9247", "UCZ9811"];

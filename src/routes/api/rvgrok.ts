@@ -1435,14 +1435,12 @@ export const Route = createFileRoute("/api/rvgrok")({
             tool: tool as CoachFactsToolResult,
           });
           if (reply && !isUnpinnedWeightReply(reply)) {
-            return (
-              jsonToSseStream({
-                content: reply,
-                model: "catalog-pin",
-                agentMode,
-                upstream: "coach-facts",
-              }),
-            );
+            return jsonToSseStream({
+              content: reply,
+              model: "catalog-pin",
+              agentMode,
+              upstream: "coach-facts",
+            });
           }
           if (reply && serverGrounded.identity?.floorplan) {
             const researched = await executeWebResearch({
@@ -1474,14 +1472,12 @@ export const Route = createFileRoute("/api/rvgrok")({
               tool: tool as CoachFactsToolResult,
               researchNotes: researched.ok ? researched.notes : "",
             });
-            return (
-              jsonToSseStream({
-                content: researchedReply || reply,
-                model: "web-research",
-                agentMode,
-                upstream: "web-research",
-              }),
-            );
+            return jsonToSseStream({
+              content: researchedReply || reply,
+              model: "web-research",
+              agentMode,
+              upstream: "web-research",
+            });
           }
         }
 
@@ -1565,17 +1561,15 @@ export const Route = createFileRoute("/api/rvgrok")({
               })
             : "";
           if (reportText) {
-            return (
-              jsonToSseStream({
-                content: reportText,
-                model:
-                  researched.ok && "model" in researched && researched.model
-                    ? researched.model
-                    : "catalog-pin",
-                agentMode,
-                upstream: "coach-report",
-              }),
-            );
+            return jsonToSseStream({
+              content: reportText,
+              model:
+                researched.ok && "model" in researched && researched.model
+                  ? researched.model
+                  : "catalog-pin",
+              agentMode,
+              upstream: "coach-report",
+            });
           }
           webNotes = formatWebSearchInjection(researched, {
             query: lastPlain,
@@ -1584,14 +1578,12 @@ export const Route = createFileRoute("/api/rvgrok")({
         }
 
         if (lotSpeech) {
-          return (
-            jsonToSseStream({
-              content: lotSpeech,
-              model: "own-lot",
-              agentMode,
-              upstream: "own-lot",
-            }),
-          );
+          return jsonToSseStream({
+            content: lotSpeech,
+            model: "own-lot",
+            agentMode,
+            upstream: "own-lot",
+          });
         }
 
         // xAI first when the key is present so generate_image (and vision) work.
