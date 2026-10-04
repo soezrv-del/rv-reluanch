@@ -26,9 +26,9 @@
 export const LIVE_VOICE_OUTPUT_GAIN = 2;
 
 /**
- * Far below a phone speaker. Exact silence lets an iPhone stop rendering,
- * in the app and in the phone's browser, and then the mic stops even
- * though the screen still says it is his turn.
+ * Far below a phone speaker. Exact silence lets the iPhone stop rendering,
+ * and then the mic stops even though the screen still says it is his turn.
+ * Safari never needs this.
  */
 export const LIVE_VOICE_KEEP_ALIVE_GAIN = 0.00001;
 
@@ -93,24 +93,6 @@ export function nativeShellLeavesMicHardwareOn(
   } catch {
     return false;
   }
-}
-
-/**
- * iPhone and iPad, in the installed app or in the phone's browser.
- * A quiet stretch stops the mic on both.
- */
-export function iosNeedsMicKeepAlive(
-  ua: string = typeof navigator !== "undefined" ? navigator.userAgent : "",
-  platform: string = typeof navigator !== "undefined" ? navigator.platform : "",
-  maxTouchPoints: number = typeof navigator !== "undefined"
-    ? navigator.maxTouchPoints
-    : 0,
-  cap: NativeShell | null | undefined = typeof window !== "undefined"
-    ? (window as { Capacitor?: NativeShell }).Capacitor
-    : null,
-): boolean {
-  if (nativeShellLeavesMicHardwareOn(cap)) return true;
-  return playbackNeedsSpeakerElement(ua, platform, maxTouchPoints);
 }
 
 /**
@@ -276,12 +258,13 @@ export function liveVoiceOutputFor(ctx: AudioContext): LiveVoiceOutput {
 }
 
 /**
- * iPhone app and the phone's browser. Resume the context, keep the
- * speaker element playing, and start the whisper if it has stopped.
+ * The iPhone app only. Resume the context, keep the speaker element
+ * playing, and start the whisper if it has stopped. Safari returns
+ * immediately so its route is unchanged.
  */
 export function keepLiveVoiceGraphAwake(ctx: AudioContext | null): void {
   if (!ctx || ctx.state === "closed") return;
-  if (!iosNeedsMicKeepAlive()) return;
+  if (!nativeShellLeavesMicHardwareOn()) return;
   if (ctx.state !== "running") void ctx.resume().catch(() => {});
   const chain = chains.get(ctx);
   if (!chain) return;

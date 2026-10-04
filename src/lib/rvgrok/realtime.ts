@@ -46,7 +46,7 @@ import {
   type ScreenCalloutEvent,
   type ScreenCalloutState,
 } from "./screenGuides";
-import { iosNeedsMicKeepAlive, keepLiveVoiceGraphAwake, liveVoiceOutputFor, nativeShellLeavesMicHardwareOn, resumeLiveVoiceSpeaker, setSpeakingSession } from "./voiceOutput";
+import { keepLiveVoiceGraphAwake, liveVoiceOutputFor, nativeShellLeavesMicHardwareOn, resumeLiveVoiceSpeaker, setSpeakingSession } from "./voiceOutput";
 import {
   PCM_CAPTURE_PROCESSOR,
   createBufferSourcePlayer,
@@ -1057,26 +1057,24 @@ export class GrokRealtimeSession {
 
   /**
    * Close or open the mic. The flag stops samples from reaching her.
-   * The phone's browser may also flip the audio session and the hardware
-   * track so she stays at full volume. The installed app must not:
-   * AppDelegate already holds playAndRecord on the loudspeaker, and
-   * flipping the session after she talks leaves the app deaf while the
-   * mic button still looks on.
+   * Safari may also flip the audio session and the hardware track.
+   * The iPhone app must not: AppDelegate already holds playAndRecord
+   * on the loudspeaker, and flipping the session after she talks leaves
+   * WKWebView deaf while the mic button still looks on.
    */
   private setMicGate(closed: boolean) {
     this.suppressMic = closed;
     if (!nativeShellLeavesMicHardwareOn()) {
-      // play-and-record ducks the phone browser. playback is full volume
-      // while she talks, then play-and-record again when it is his turn.
+      // play-and-record ducks Safari. playback is full volume while she
+      // talks, then play-and-record again when it is his turn.
       setSpeakingSession(closed);
       const tracks = this.mediaStream?.getAudioTracks() ?? [];
       for (const track of tracks) {
         if (track.enabled === closed) track.enabled = !closed;
       }
-    }
-    // Silence lets an iPhone stop the mic while the screen still says
-    // it is his turn. The app and the phone's browser both need the whisper.
-    if (iosNeedsMicKeepAlive()) {
+    } else {
+      // Silence lets the iPhone stop the mic while the screen still says
+      // it is his turn. The whisper keeps that graph rendering.
       keepLiveVoiceGraphAwake(this.audioCtx);
     }
     const ctx = this.audioCtx;
@@ -1084,9 +1082,9 @@ export class GrokRealtimeSession {
     resumeLiveVoiceSpeaker(ctx);
   }
 
-  /** iPhone app and the phone's browser. */
+  /** App and simulator only. Safari does not idle the mic this way. */
   private armGraphKeepAlive() {
-    if (!iosNeedsMicKeepAlive()) return;
+    if (!nativeShellLeavesMicHardwareOn()) return;
     if (this.graphKeepAlive) return;
     const poke = () => {
       if (this.closed || this.intentionalStop) return;

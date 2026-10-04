@@ -8,7 +8,6 @@ import {
   LIVE_VOICE_OUTPUT_GAIN,
   LIVE_VOICE_ROUTE_KEY,
   LIVE_VOICE_SOFT_CLIP,
-  iosNeedsMicKeepAlive,
   liveVoiceRouteOverride,
   nativeShellLeavesMicHardwareOn,
   playbackNeedsSpeakerElement,
@@ -124,33 +123,12 @@ test("the native shell does not flip the mic hardware", () => {
   );
 });
 
-test("the iPhone keeps a whisper on the speaker so a quiet stretch still hears", () => {
+test("the iPhone app keeps a whisper on the speaker so a quiet stretch still hears", () => {
   assert.ok(LIVE_VOICE_KEEP_ALIVE_GAIN > 0);
   assert.ok(LIVE_VOICE_KEEP_ALIVE_GAIN <= 0.0001);
-  const iphone = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)";
-  assert.equal(iosNeedsMicKeepAlive(iphone, "iPhone", 5, null), true);
-  assert.equal(iosNeedsMicKeepAlive(iphone, "iPhone", 5, {}), true);
-  assert.equal(
-    iosNeedsMicKeepAlive(
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
-      "MacIntel",
-      0,
-      null,
-    ),
-    false,
-  );
-  assert.equal(
-    iosNeedsMicKeepAlive(
-      "Mozilla/5.0 (Windows NT 10.0; Win64)",
-      "Win32",
-      0,
-      { isNativePlatform: () => true },
-    ),
-    true,
-  );
   const output = readFileSync(join(root, "voiceOutput.ts"), "utf8");
   const realtime = readFileSync(join(root, "realtime.ts"), "utf8");
-  assert.match(output, /if \(!iosNeedsMicKeepAlive\(\)\) return/);
+  assert.match(output, /if \(!nativeShellLeavesMicHardwareOn\(\)\) return/);
   assert.match(output, /gain\.gain\.value = LIVE_VOICE_KEEP_ALIVE_GAIN/);
   assert.match(output, /gain\.connect\(chain\.pull\)/);
   assert.doesNotMatch(output, /gain\.connect\(ctx\.destination\)/);
@@ -160,8 +138,6 @@ test("the iPhone keeps a whisper on the speaker so a quiet stretch still hears",
   const awake = gate.indexOf("keepLiveVoiceGraphAwake(this.audioCtx)");
   const flip = gate.indexOf("setSpeakingSession(closed)");
   assert.ok(awake > flip);
-  assert.match(gate, /if \(iosNeedsMicKeepAlive\(\)\)/);
-  assert.match(realtime, /if \(!iosNeedsMicKeepAlive\(\)\) return/);
   assert.match(realtime, /this\.armGraphKeepAlive\(\)/);
   assert.match(realtime, /setInterval\(poke, 1000\)/);
   assert.match(realtime, /this\.clearGraphKeepAlive\(\)/);
