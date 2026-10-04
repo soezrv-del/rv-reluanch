@@ -67,6 +67,16 @@ export function lotSummaryForSpeech(summary: string, matched: number): string {
   return line;
 }
 
+/** The spoken lot line ends by offering more, so the caller can say "yes". */
+export function lotLineWithDetailsAsk(line: string): string {
+  const t = (line || "").trim().replace(/[,;:\s]+$/, "");
+  if (!t) return t;
+  if (/\?\s*$/.test(t)) return t;
+  const ended = /[.!]$/.test(t) ? t : `${t}.`;
+  if (/^none\.?$/i.test(ended)) return ended;
+  return `${ended} Want more details?`;
+}
+
 export const SPOKEN_LOT_UNIT_CAP = 3;
 
 /** Spoken when the tool result includes a motorhome name roster. Not a verbatim script. */

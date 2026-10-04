@@ -93,6 +93,7 @@ import {
   isSameLotLine,
   lotSummaryForSpeech,
   NAME_ROSTER_SPEAK,
+  lotLineWithDetailsAsk,
   reduceToolSpeak,
   repeatsLotLine,
   initialToolSpeakGate,
@@ -894,7 +895,7 @@ export class GrokRealtimeSession {
       this.sendToolOutput(
         callId,
         data,
-        hasRoster ? NAME_ROSTER_SPEAK : summary ? `Speak only these words, then stop: ${summary}` : undefined,
+        hasRoster ? NAME_ROSTER_SPEAK : summary ? `Speak only these words, then stop: ${lotLineWithDetailsAsk(summary)}` : undefined,
       );
     } catch (err) {
       console.warn("[rvgrok] query_lot failed", { name, payload: err });
