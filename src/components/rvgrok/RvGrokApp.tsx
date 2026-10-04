@@ -1169,8 +1169,21 @@ export function RvGrokApp({
               return updated;
             });
           }
+          const stuckUserId = liveUserMsgId.current;
           liveUserMsgId.current = null;
           liveAsstMsgId.current = null;
+          if (stuckUserId) {
+            setMessages((prev) =>
+              prev.filter(
+                (m) =>
+                  !(
+                    m.id === stuckUserId &&
+                    m.role === "user" &&
+                    m.content === "🎤 Listening…"
+                  ),
+              ),
+            );
+          }
           scrollToBottom();
         },
         onError: (message) => {
@@ -1779,6 +1792,10 @@ export function RvGrokApp({
 
   const visitorName = access?.allowed && access.name ? access.name : "";
   const sessionGreeting = sessionIntroLine(visitorName);
+  const liveSheTalking =
+    liveActive &&
+    (realtimeStatus === "speaking" ||
+      /speaking|finishing reply/i.test(realtimeDetail || ""));
 
   const startersOrThread = isLanding ? (
     <GrokLanding
@@ -1875,34 +1892,41 @@ export function RvGrokApp({
           paddingBottom: composerLift > 0 ? composerLift : undefined,
         }}
       >
-        {(realtimeStatus === "speaking" ||
-          /speaking|finishing reply/i.test(realtimeDetail || "")) &&
-        liveActive ? (
-          <button
-            type="button"
-            onClick={() => {
-              realtimeRef.current?.interrupt();
-            }}
-            className="mb-2 flex w-full items-center gap-2 rounded-[var(--radius-md)] border border-white/10 bg-[#1e2126] px-3 py-2.5 text-left"
-            data-on-dark=""
+        {liveActive ? (
+          <div
+            data-live-voice-bar=""
+            className="mx-auto mb-2 flex max-w-2xl items-center gap-2 rounded-full border border-black/10 bg-white py-1 pl-3 pr-1 dark:border-white/15 dark:bg-[#171a20]"
           >
-            <span className="flex size-7 items-center justify-center rounded-md bg-sapphire text-white" data-on-dark="">
-              <Square className="size-3.5 fill-current" />
+            <span className="size-2 shrink-0 animate-pulse rounded-full bg-sapphire" />
+            <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-[#171a20] dark:text-white">
+              {liveSheTalking ? "She's talking" : "Your turn"}
             </span>
-            <span className="flex-1 text-[13px] font-semibold text-white">
-              Interrupt — stop her, keep listening
-            </span>
-            <span className="text-[11px] font-bold tracking-wide text-white/70">
-              CUT
-            </span>
-          </button>
+            {liveSheTalking ? (
+              <button
+                type="button"
+                onClick={() => {
+                  realtimeRef.current?.interrupt();
+                }}
+                className="min-h-11 rounded-full px-3 text-[13px] font-semibold text-[#171a20] dark:text-white"
+              >
+                Cut
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={handleStop}
+              className="min-h-11 rounded-full bg-[#171a20] px-4 text-[13px] font-semibold text-white dark:bg-white dark:text-[#171a20]"
+            >
+              End
+            </button>
+          </div>
         ) : null}
         {(isLoading ||
           messages.some((m) => m.streaming) ||
           isRecording ||
-          liveActive ||
           speakingId ||
-          continuousArmed) && (
+          continuousArmed) &&
+        !liveActive && (
           <button
             type="button"
             onClick={handleStop}
@@ -1912,15 +1936,13 @@ export function RvGrokApp({
               <Square className="size-3.5 fill-current" />
             </span>
             <span className="flex-1 text-[13px] font-medium text-fg">
-              {liveActive
-                ? `Live continuous · ${realtimeDetail || realtimeStatus} — tap to end`
-                : isRecording
-                  ? voiceMode
-                    ? "Auto-listening — tap to stop hands-free"
-                    : "Recording — tap to stop & send"
-                  : isLoading
-                    ? "Processing — tap to cancel"
-                    : "Speaking — tap to stop"}
+              {isRecording
+                ? voiceMode
+                  ? "Auto-listening — tap to stop hands-free"
+                  : "Recording — tap to stop & send"
+                : isLoading
+                  ? "Processing — tap to cancel"
+                  : "Speaking — tap to stop"}
             </span>
             <span className="text-[11px] font-bold tracking-wide text-sky-100">
               STOP
@@ -2007,19 +2029,6 @@ export function RvGrokApp({
           </div>
         ) : null}
 
-        {liveActive && (
-          <div className="mx-auto mb-2 flex max-w-2xl items-center gap-2 rounded-full border border-sky-300/40 bg-sky-500/15 px-3 py-1.5">
-            <span className="size-2 animate-pulse rounded-full bg-sky-500" />
-            <Radio className="size-3 text-sky-100" />
-            <span className="flex-1 text-[11px] font-medium text-sky-100">
-              {realtimeDetail || `Live Grok Voice · ${realtimeStatus}`}
-            </span>
-            <span className="text-[10px] uppercase tracking-wide text-muted">
-              {selectedVoice}
-            </span>
-          </div>
-        )}
-
         {waitingToResumeLive && (
           <button
             type="button"
@@ -2042,13 +2051,11 @@ export function RvGrokApp({
 
         {isLanding ? null : <div className="mx-auto max-w-2xl">{composer}</div>}
 
-        {liveActive || waitingToResumeLive || pendingImage ? (
+        {!liveActive && (waitingToResumeLive || pendingImage) ? (
           <p className="mx-auto mt-1.5 max-w-2xl text-center text-[11px] text-muted">
-            {liveActive
-              ? "Hands-free · tap mic to end"
-              : waitingToResumeLive
-                ? "Live Voice armed · tap mic"
-                : "Photo attached · send or add a question"}
+            {waitingToResumeLive
+              ? "Live Voice armed · tap mic"
+              : "Photo attached · send or add a question"}
           </p>
         ) : null}
       </div>

@@ -1050,23 +1050,25 @@ export class GrokRealtimeSession {
 
   /**
    * Close or open the mic. The flag stops samples from reaching her.
-   * The hardware track has to close too: on the loudspeaker, iOS echo
-   * cancel hears her voice in the mic and chops the speaker into static.
-   * Headphones do not leak, so the same call is clean with the track left on.
+   * Safari may also flip the audio session and the hardware track.
+   * The iPhone app must not: AppDelegate already holds playAndRecord
+   * on the loudspeaker, and flipping the session after she talks leaves
+   * WKWebView deaf while the mic button still looks on.
    */
   private setMicGate(closed: boolean) {
     this.suppressMic = closed;
-    // play-and-record ducks the loudspeaker. playback is full volume
-    // while she talks, then play-and-record again when it is his turn.
-    // The app shell still leaves the hardware track on. Flipping that
-    // track is what left WKWebView deaf after hello.
-    setSpeakingSession(closed);
-    resumeLiveVoiceSpeaker(this.audioCtx);
-    if (nativeShellLeavesMicHardwareOn()) return;
-    const tracks = this.mediaStream?.getAudioTracks() ?? [];
-    for (const track of tracks) {
-      if (track.enabled === closed) track.enabled = !closed;
+    if (!nativeShellLeavesMicHardwareOn()) {
+      // play-and-record ducks Safari. playback is full volume while she
+      // talks, then play-and-record again when it is his turn.
+      setSpeakingSession(closed);
+      const tracks = this.mediaStream?.getAudioTracks() ?? [];
+      for (const track of tracks) {
+        if (track.enabled === closed) track.enabled = !closed;
+      }
     }
+    const ctx = this.audioCtx;
+    if (ctx && ctx.state === "suspended") void ctx.resume().catch(() => {});
+    resumeLiveVoiceSpeaker(ctx);
   }
 
   private beginSpeaking() {

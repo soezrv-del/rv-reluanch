@@ -122,6 +122,19 @@ test("the native shell does not flip the mic hardware", () => {
   );
 });
 
+test("the iPhone app does not flip the audio session when she talks", () => {
+  const realtime = readFileSync(join(root, "realtime.ts"), "utf8");
+  const start = realtime.indexOf("private setMicGate");
+  const end = realtime.indexOf("private beginSpeaking");
+  const gate = realtime.slice(start, end);
+  const nativeAt = gate.indexOf("if (!nativeShellLeavesMicHardwareOn())");
+  const flipAt = gate.indexOf("setSpeakingSession(closed)");
+  const resumeAt = gate.lastIndexOf("resumeLiveVoiceSpeaker");
+  assert.ok(nativeAt >= 0 && flipAt > nativeAt);
+  assert.ok(resumeAt > flipAt);
+  assert.match(gate, /ctx\.resume\(\)/);
+});
+
 test("playback goes through the jitter-buffered player and the output gain", () => {
   const realtime = readFileSync(join(root, "realtime.ts"), "utf8");
   const live = readFileSync(join(root, "liveVoice.ts"), "utf8");
@@ -159,15 +172,16 @@ test("playback goes through the jitter-buffered player and the output gain", () 
   assert.match(output, /setSpeakingSession/);
   assert.match(realtime, /setSpeakingSession\(closed\)/);
   assert.doesNotMatch(output, /createDynamicsCompressor/);
-  // Playback switch runs for the shell too. Only the hardware track flip
-  // stays behind the native return.
+  // The iPhone app leaves the session and the track alone. Safari still
+  // flips both, inside the native check. The speaker element still resumes.
   const gateStart = realtime.indexOf("private setMicGate");
   const gateEnd = realtime.indexOf("private beginSpeaking");
   const gate = realtime.slice(gateStart, gateEnd);
-  const leave = gate.indexOf("if (nativeShellLeavesMicHardwareOn()) return;");
+  assert.doesNotMatch(gate, /if \(nativeShellLeavesMicHardwareOn\(\)\) return/);
+  const nativeAt = gate.indexOf("if (!nativeShellLeavesMicHardwareOn())");
   const flipTrack = gate.indexOf("track.enabled = !closed");
   const flipSession = gate.indexOf("setSpeakingSession(closed)");
-  assert.ok(flipSession !== -1 && flipSession < leave && leave < flipTrack);
+  assert.ok(nativeAt !== -1 && nativeAt < flipSession && flipSession < flipTrack);
   assert.match(output, /createMediaStreamDestination/);
   assert.match(output, /playsInline = true/);
   assert.match(output, /audioSession\.type = "play-and-record"|session\.type = "play-and-record"/);
