@@ -2186,6 +2186,12 @@ function modelAlias(units: LotQueryUnit[], tokens: string[]): ModelAlias | undef
       !units.some((unit) => tokenHitsIdentity(unit, token)),
   );
   if (!misses.length) return undefined;
+  // The sentence already names a model on the sheet. A spare word is not
+  // a second coach: "check" is not Creek, and "page" is not Pines.
+  // A miss with no sheet model still maps (Asada → Isata, Ascenta → Isata).
+  if (tokens.some((token) => units.some((unit) => tokenIsCoachName(unit, token, true)))) {
+    return undefined;
+  }
   const makeAnchors = tokens.filter((token) => units.some((unit) => tokenHitsMake(unit, token)));
   const pool = makeAnchors.length
     ? units.filter((unit) => makeAnchors.every((token) => tokenHitsMake(unit, token)))
@@ -2569,6 +2575,28 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
   let matched = parsed.tokens.length
     ? structured.filter((unit) => passesTokens(unit, parsed.tokens, alias))
     : structured;
+  // "Check the lot for a Navion" names Navion. "check" is not on a coach.
+  // Keep the named model, and keep a real make in the same sentence
+  // (Winnebago Navion is not the Itasca Navion). Class, price, year,
+  // store, and fuel still apply.
+  if (!matched.length && !alias && parsed.tokens.length) {
+    const models = parsed.tokens.filter((token) =>
+      units.some((unit) => tokenIsCoachName(unit, token, true)),
+    );
+    if (models.length) {
+      const makes = parsed.tokens.filter(
+        (token) =>
+          !models.includes(token) && units.some((unit) => tokenHitsMake(unit, token)),
+      );
+      const named = units.filter(
+        (unit) =>
+          models.every((token) => tokenIsCoachName(unit, token, true)) &&
+          makes.every((token) => tokenHitsMake(unit, token)) &&
+          passesStructured(unit, parsed, lengthRequired),
+      );
+      if (named.length) matched = named;
+    }
+  }
   // Spare words ("looking", "right", "try again", "anything") are not a coach name.
   // If used / diesel / class / price already picked a set, keep that set.
   // A real name that the class filter missed (Class A Lineage) still returns that coach.

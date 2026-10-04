@@ -1117,6 +1117,65 @@ test("a misspoken model stays on the sheet coach and does not open the new book"
   assert.equal(searchLot(snap.units, { query: "new available" }).matched, 752);
 });
 
+test("a named coach survives the spare words around it", () => {
+  const snap = units();
+  const navionStocks = ["UCV9247", "UCZ9811"];
+  for (const query of [
+    "Can you check the lot to see if we have a Navion?",
+    "In the lot page it says we do have a Navion.",
+    "A Navion.",
+    "Navion",
+  ]) {
+    const hit = searchLot(snap.units, { query });
+    assert.equal(hit.matched, 2, `${query}\n${hit.summary}`);
+    assert.equal(hit.did_you_mean, undefined, query);
+    assert.doesNotMatch(hit.summary, /Creek|Pines/);
+    assert.doesNotMatch(hit.summary, /^None\./);
+    assert.match(hit.summary, /Matching units: 2 Itasca Navion/);
+    const stocks = hit.units.map((unit) => unit.stock_number).sort();
+    assert.deepEqual(stocks, [...navionStocks].sort(), query);
+    assert.ok(
+      hit.units.every((unit) => /itasca/i.test(unit.make) && /navion/i.test(unit.model)),
+      query,
+    );
+  }
+
+  const views = searchLot(snap.units, {
+    query: "How many Winnebago Views do we have in stock?",
+  });
+  assert.equal(views.matched, 2, views.summary);
+  assert.ok(
+    views.units.every((unit) => /winnebago/i.test(unit.make) && /view/i.test(unit.model)),
+    views.summary,
+  );
+
+  const wrongMake = searchLot(snap.units, { query: "Winnebago Navion" });
+  assert.equal(wrongMake.matched, 0, wrongMake.summary);
+  assert.equal(wrongMake.did_you_mean, undefined);
+  assert.match(wrongMake.summary, /^None\./);
+
+  let memory = null;
+  const first = answerQueryLotFromSnapshot(
+    snap,
+    { query: "How many Winnebago Views do we have in stock?" },
+    memory,
+    "How many Winnebago Views do we have in stock?",
+  );
+  assert.equal(first.matched, 2, first.summary);
+  memory = first.lotMemory;
+  const asked = "Can you check the lot to see if we have a Navion?";
+  const next = answerQueryLotFromSnapshot(snap, { query: asked }, memory, asked);
+  assert.equal(next.matched, 2, next.summary);
+  assert.equal(next.did_you_mean, undefined);
+  assert.match(next.speech || next.summary || "", /Matching units: 2 Itasca Navion/);
+  assert.doesNotMatch(next.speech || "", /Creek|Pines|Winnebago View/);
+  const page = "In the lot page it says we do have a Navion.";
+  const again = answerQueryLotFromSnapshot(snap, { query: page }, next.lotMemory, page);
+  assert.equal(again.matched, 2, again.summary);
+  assert.equal(again.did_you_mean, undefined);
+  assert.doesNotMatch(again.summary || "", /Pines|Creek/);
+});
+
 test("a 5 series follow-up stays on Isata, and yes does not open the lot", () => {
   const snap = units();
   const sparks = "UPS9882";
