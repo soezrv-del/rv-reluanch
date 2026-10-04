@@ -97,7 +97,6 @@ import {
   repeatsLotLine,
   initialToolSpeakGate,
   type ToolSpeakGate,
-  claimsLotMiss,
 } from "./voiceTurnGate";
 import { researchAccessHeaders } from "../access/researchUnlock";
 import { GROK_EXTRA_PROMPTS, type GrokExtraKind } from "./grokExtras";
@@ -208,8 +207,6 @@ export class GrokRealtimeSession {
    * the turn before ("any Winnebago Views" once none, then 2).
    */
   private userTranscriptPending = false;
-  private lastSpeechStoppedAt = 0;
-  private lastQueryLotAt = 0;
   private userTranscriptWaiters: Array<() => void> = [];
   /** Last lot line spoken, so a noise echo does not say it again. */
   private lastSpokenLotLine = "";
@@ -582,7 +579,6 @@ export class GrokRealtimeSession {
 
       case "input_audio_buffer.speech_stopped":
         this.userTranscriptPending = true;
-        this.lastSpeechStoppedAt = Date.now();
         this.handlers.onStatus("thinking", "Processing…");
         this.pushCallout({ type: "user-stop" });
         break;
@@ -712,24 +708,6 @@ export class GrokRealtimeSession {
       case "response.done": {
         const output = (msg as { response?: { output?: unknown[] } }).response
           ?.output;
-        const calledTool =
-          Array.isArray(output) &&
-          output.some(
-            (item) =>
-              Boolean(item) &&
-              typeof item === "object" &&
-              (item as { type?: string }).type === "function_call",
-          );
-        // "No Navion in stock" with no query_lot behind it this turn. Run the
-        // real search and correct the line when the lot has them.
-        if (
-          !calledTool &&
-          this.assistantText &&
-          this.lastQueryLotAt < this.lastSpeechStoppedAt &&
-          claimsLotMiss(this.assistantText)
-        ) {
-          void this.verifyLotMissClaim(this.assistantText, this.priorAssistantForLot);
-        }
         if (Array.isArray(output)) {
           for (const item of output) {
             if (
@@ -843,49 +821,6 @@ export class GrokRealtimeSession {
     });
   }
 
-  /**
-   * She claimed a lot miss without calling query_lot. Search what he asked
-   * (or the names she offered, for a "yes") and speak the real line when it
-   * finds units. A real miss stays as said.
-   */
-  private async verifyLotMissClaim(claim: string, offeredBefore: string) {
-    this.lastQueryLotAt = Date.now();
-    await this.waitForUserTranscript();
-    if (this.closed) return;
-    try {
-      const res = await fetch("/api/rvgrok/query-lot", {
-        method: "POST",
-        headers: researchAccessHeaders(
-          { "Content-Type": "application/json", Accept: "application/json" },
-          this.accessPhone,
-        ),
-        body: JSON.stringify({
-          args: { query: this.lastUserTranscript },
-          lotMemory: this.lotMemory,
-          utterance: this.lastUserTranscript,
-          priorAssistant: `${offeredBefore}\n${claim}`.trim(),
-        }),
-      });
-      const data = (await res.json()) as {
-        matched?: number;
-        speech?: string;
-        summary?: string;
-        lotMemory?: LotMemory | null;
-      } | null;
-      const matched = Number(data?.matched ?? 0);
-      if (!data || !Number.isFinite(matched) || matched <= 0) return;
-      if (data.lotMemory) this.lotMemory = data.lotMemory;
-      const summary = lotSummaryForSpeech(String(data.speech || data.summary || ""), matched);
-      if (!summary) return;
-      this.lastSpokenLotLine = summary;
-      this.emitToolSpeak(
-        `Correction: the lot search just ran and found units. Say "Correction" once, then speak only these words, then stop: ${summary}`,
-      );
-    } catch (err) {
-      console.warn("[rvgrok] lot miss check failed", { payload: err });
-    }
-  }
-
   /** query_lot. The model fills filters from the conversation; the server keeps the last lot filter. */
   private async handleQueryLotCall(msg: Record<string, unknown>) {
     const nested =
@@ -898,7 +833,6 @@ export class GrokRealtimeSession {
     if (!name) return;
     this.handledToolCallIds.add(callId);
     if (isNativeRealtimeTool(name)) return;
-    if (name === "query_lot") this.lastQueryLotAt = Date.now();
     if (name !== "query_lot") {
       const payload = nested.arguments ?? msg.arguments ?? "";
       console.warn("[rvgrok] unrecognized tool", { name, payload });

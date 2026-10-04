@@ -3067,6 +3067,9 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
   matched = sameNameMotorhomes(units, matched, parsed);
   const likeAsk = likeCoachAsk(`${str(clean.query)} ${str(clean.utterance)}`);
   let similarNote = "";
+  // Sister-brand makes of the coach he named sort first ("like the View" →
+  // the Itasca Navion before a Thor Siesta).
+  let similarFamilyMakes: string[] = [];
   if (likeAsk && matched.length) {
     const modelTokens = parsed.tokens.filter((token) =>
       units.some((unit) => tokenIsCoachName(unit, token, true)),
@@ -3081,6 +3084,32 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
       similarNote = family
         ? `Other ${chassisFamilyLabel(family)} coaches near that size.`
         : "Other coaches near that size.";
+      const anchorMakes = [...new Set(anchors.map((unit) => normalizeLotQueryText(unit.make || "")))];
+      similarFamilyMakes = anchorMakes.flatMap((make) => {
+        const word = make.split(/\s+/)[0] || "";
+        return makeFamilyOf(word) || [make];
+      });
+      // Name the coach he asked about and the closest sister-brand match.
+      const anchorLine = oneLine(anchors, countsFor(anchors), { kind: "any" })
+        .replace(/\s*Top:.*$/, "")
+        .replace(/^Matching units:\s*/, "")
+        .replace(/,\s*all \w+\.?$/, "")
+        .replace(/\.$/, "");
+      const sisters = others.filter((unit) =>
+        similarFamilyMakes.some((member) => {
+          const make = normalizeLotQueryText(unit.make || "");
+          return make === member || make.startsWith(`${member} `);
+        }),
+      );
+      const sisterLine = sisters.length
+        ? oneLine(sisters, countsFor(sisters), { kind: "any" })
+            .replace(/\s*Top:.*$/, "")
+            .replace(/^Matching units:\s*/, "")
+            .replace(/\.$/, "")
+        : "";
+      similarNote = `${similarNote.replace(/\.$/, "")}, not counting the ${anchorLine}.${
+        sisterLine ? ` Closest: ${sisterLine}, same family.` : ""
+      }`;
     } else if (anchors.length) {
       matched = [];
       similarNote = "None like that on the lot.";
@@ -3281,6 +3310,14 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
         }
       }
       if (similarNote && parsed.sort == null) {
+        const inFamily = (unit: LotQueryUnit) => {
+          const make = normalizeLotQueryText(unit.make || "");
+          return similarFamilyMakes.some((member) => make === member || make.startsWith(`${member} `))
+            ? 0
+            : 1;
+        };
+        const byFamily = inFamily(a.unit) - inFamily(b.unit);
+        if (byFamily !== 0) return byFamily;
         const ap = a.unit.price ?? Number.POSITIVE_INFINITY;
         const bp = b.unit.price ?? Number.POSITIVE_INFINITY;
         if (ap !== bp) return ap - bp;
