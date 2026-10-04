@@ -2560,6 +2560,74 @@ function rosterLine(unit: LotQueryUnit): string {
     .join(" | ");
 }
 
+/** "Anything like a View" is other coaches, not another count of that View. */
+function likeCoachAsk(text: string): boolean {
+  const said = normalizeLotQueryText(text);
+  return /\b(?:anything|something)\s+like\b/.test(said) || /\bsimilar\s+to\b/.test(said);
+}
+
+function chassisFamily(unit: LotQueryUnit): string {
+  const raw = sheetChassis(unit).toLowerCase();
+  if (raw.includes("sprinter")) return "sprinter";
+  if (raw.includes("freightliner")) return "freightliner";
+  if (raw.includes("spartan")) return "spartan";
+  if (raw.includes("promaster")) return "promaster";
+  if (raw.includes("transit")) return "transit";
+  if (raw.includes("prevost")) return "prevost";
+  return "";
+}
+
+function chassisFamilyLabel(family: string): string {
+  if (family === "sprinter") return "Sprinter";
+  if (family === "freightliner") return "Freightliner";
+  if (family === "spartan") return "Spartan";
+  if (family === "promaster") return "ProMaster";
+  if (family === "transit") return "Transit";
+  if (family === "prevost") return "Prevost";
+  return family;
+}
+
+/**
+ * Other coaches on the same chassis, near the same length, with the same
+ * sheet body. The named coach stays out. A class the salesman did not say
+ * stays out, so this does not become a Super C count.
+ */
+function similarCoaches(
+  units: LotQueryUnit[],
+  anchors: LotQueryUnit[],
+  parsed: Parsed,
+  modelTokens: string[],
+): LotQueryUnit[] {
+  const families = new Set(anchors.map(chassisFamily).filter(Boolean));
+  if (!families.size) return [];
+  const bodies = new Set(anchors.map((unit) => (unit.body_type || "").trim()).filter(Boolean));
+  const lengths = anchors
+    .map((unit) => lotUnitLength(unit).ft)
+    .filter((feet): feet is number => feet != null);
+  const seen = new Set(anchors.map((unit) => unit.stock_number || ""));
+  return units.filter((unit) => {
+    const stock = unit.stock_number || "";
+    if (stock && seen.has(stock)) return false;
+    if (modelTokens.some((token) => tokenIsCoachName(unit, token, true))) return false;
+    const family = chassisFamily(unit);
+    if (!family || !families.has(family)) return false;
+    const body = (unit.body_type || "").trim();
+    if (bodies.size && !bodies.has(body)) return false;
+    if (lengths.length) {
+      const feet = lotUnitLength(unit).ft;
+      if (feet == null) return false;
+      if (!lengths.some((anchor) => Math.abs(anchor - feet) <= 2)) return false;
+    }
+    if (!conditionMatches(unit, parsed.condition)) return false;
+    if (!statusMatches(unit, parsed.status)) return false;
+    if (!locationMatches(unit, parsed.location, parsed.places)) return false;
+    if (!yearMatches(unit, parsed.yearMin, parsed.yearMax)) return false;
+    if (!priceMatches(unit, parsed.priceMin, parsed.priceMax)) return false;
+    if (!fuelMatches(unit, parsed.fuel)) return false;
+    return true;
+  });
+}
+
 /**
  * Search the caller's own-lot units. `matched` is the full hit count.
  * `units` is the top N rows. A close make/model miss returns those sheet
@@ -2659,6 +2727,27 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
     if (blanks.length) matched = blanks;
   }
   matched = sameNameMotorhomes(units, matched, parsed);
+  const likeAsk = likeCoachAsk(`${str(clean.query)} ${str(clean.utterance)}`);
+  let similarNote = "";
+  if (likeAsk && matched.length) {
+    const modelTokens = parsed.tokens.filter((token) =>
+      units.some((unit) => tokenIsCoachName(unit, token, true)),
+    );
+    const anchors = modelTokens.length
+      ? matched.filter((unit) => modelTokens.some((token) => tokenIsCoachName(unit, token, true)))
+      : [];
+    const others = anchors.length ? similarCoaches(units, anchors, parsed, modelTokens) : [];
+    if (others.length) {
+      matched = others;
+      const family = chassisFamily(anchors.find((unit) => chassisFamily(unit)) || anchors[0]!);
+      similarNote = family
+        ? `Other ${chassisFamilyLabel(family)} coaches near that size.`
+        : "Other coaches near that size.";
+    } else if (anchors.length) {
+      matched = [];
+      similarNote = "None like that on the lot.";
+    }
+  }
   const milesBounded = parsed.milesMin != null || parsed.milesMax != null;
   let milesSkipped = 0;
   if (milesBounded) {
@@ -2773,7 +2862,11 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
           if (bySleep !== 0) return bySleep;
         }
       }
-      if (parsed.tokens.length) {
+      if (similarNote && parsed.sort == null) {
+        const ap = a.unit.price ?? Number.POSITIVE_INFINITY;
+        const bp = b.unit.price ?? Number.POSITIVE_INFINITY;
+        if (ap !== bp) return ap - bp;
+      } else if (parsed.tokens.length) {
         const rank = lotTextScore(b.unit, parsed.tokens) - lotTextScore(a.unit, parsed.tokens);
         if (rank !== 0) return rank;
       }
@@ -2814,8 +2907,8 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
         oneLine(
           matched,
           counts,
-          parsed.body,
-          didYouMean,
+          similarNote ? { kind: "any" } : parsed.body,
+          similarNote.startsWith("None") ? undefined : didYouMean,
           parsed.sort,
           sorted[0],
           parsed.listAll ? sorted : undefined,
@@ -2841,6 +2934,11 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
       lengthMax: parsed.lengthMax,
     },
   );
+  if (similarNote.startsWith("None")) {
+    summary = similarNote.endsWith(".") ? similarNote : `${similarNote}.`;
+  } else if (similarNote && matched.length && !summary.includes(similarNote)) {
+    summary = summary.replace(/^([^.]*\.)/, `$1 ${similarNote}`);
+  }
   if (garagePinMode && matched.length) {
     const ask = garageAskFeet(parsed.garageMin, parsed.garageMax);
     const extra = [garageSourceSentence(), garageFitSentence(ask)]
@@ -2881,7 +2979,7 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
     applied,
     ...(nameRoster.length ? { name_roster: nameRoster } : {}),
     ...(featureBlank ? { feature_blank: featureBlank } : {}),
-    ...(didYouMean ? { did_you_mean: didYouMean } : {}),
+    ...(didYouMean && !similarNote ? { did_you_mean: didYouMean } : {}),
     ...(parsed.close && matched.length ? { close: parsed.close } : {}),
   };
 }
