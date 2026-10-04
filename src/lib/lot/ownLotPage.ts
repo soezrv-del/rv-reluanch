@@ -660,7 +660,11 @@ export function lotTypeChips(units: LotUnit[]): LotTypeChip[] {
       label,
       count: group.count,
     }))
-    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+    .sort((a, b) => {
+      const classRank = (label: string): number =>
+        label === "Class A" ? 0 : label === "Class B" ? 1 : label === "Class C" ? 2 : 3;
+      return classRank(a.label) - classRank(b.label) || a.label.localeCompare(b.label);
+    });
 }
 
 const LOT_MONTHS = [
