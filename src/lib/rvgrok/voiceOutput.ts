@@ -26,13 +26,6 @@
 export const LIVE_VOICE_OUTPUT_GAIN = 2;
 
 /**
- * Far below a phone speaker. Exact silence lets an iPhone stop rendering,
- * in the app and in the phone's browser, and then the mic stops even
- * though the screen still says it is his turn.
- */
-export const LIVE_VOICE_KEEP_ALIVE_GAIN = 0.00001;
-
-/**
  * Soft clipper runs at unity, then the makeup gain above lifts the
  * quiet parts. Ceiling times the makeup stays under 1, so the speaker
  * is not slammed the way the old 2.5x boost was.
@@ -63,11 +56,6 @@ export function softClipCurve(
 
 type AudioSessionLike = { type: string };
 
-type GraphKeepAlive = {
-  osc: OscillatorNode;
-  gain: GainNode;
-};
-
 function audioSessionOf(nav: Navigator): AudioSessionLike | null {
   const session = (nav as Navigator & { audioSession?: AudioSessionLike })
     .audioSession;
@@ -93,24 +81,6 @@ export function nativeShellLeavesMicHardwareOn(
   } catch {
     return false;
   }
-}
-
-/**
- * iPhone and iPad, in the installed app or in the phone's browser.
- * A quiet stretch stops the mic on both.
- */
-export function iosNeedsMicKeepAlive(
-  ua: string = typeof navigator !== "undefined" ? navigator.userAgent : "",
-  platform: string = typeof navigator !== "undefined" ? navigator.platform : "",
-  maxTouchPoints: number = typeof navigator !== "undefined"
-    ? navigator.maxTouchPoints
-    : 0,
-  cap: NativeShell | null | undefined = typeof window !== "undefined"
-    ? (window as { Capacitor?: NativeShell }).Capacitor
-    : null,
-): boolean {
-  if (nativeShellLeavesMicHardwareOn(cap)) return true;
-  return playbackNeedsSpeakerElement(ua, platform, maxTouchPoints);
 }
 
 /**
@@ -213,8 +183,6 @@ export type LiveVoiceOutput = {
    * iOS sometimes never pulls samples, so Listening never becomes Hearing.
    */
   pull: AudioNode;
-  /** Whisper that keeps the iPhone pulling the mic while she is quiet. */
-  keepAlive: GraphKeepAlive | null;
 };
 
 const chains = new WeakMap<AudioContext, LiveVoiceOutput>();
@@ -224,7 +192,6 @@ export function liveVoiceOutputFor(ctx: AudioContext): LiveVoiceOutput {
   const existing = chains.get(ctx);
   if (existing) {
     void existing.speakerEl?.play().catch(() => {});
-    keepLiveVoiceGraphAwake(ctx);
     return existing;
   }
 
@@ -268,40 +235,9 @@ export function liveVoiceOutputFor(ctx: AudioContext): LiveVoiceOutput {
     speakerEl,
     route: speakerEl ? "element" : "destination",
     pull,
-    keepAlive: null,
   };
   chains.set(ctx, chain);
-  keepLiveVoiceGraphAwake(ctx);
   return chain;
-}
-
-/**
- * iPhone app and the phone's browser. Resume the context, keep the
- * speaker element playing, and start the whisper if it has stopped.
- */
-export function keepLiveVoiceGraphAwake(ctx: AudioContext | null): void {
-  if (!ctx || ctx.state === "closed") return;
-  if (!iosNeedsMicKeepAlive()) return;
-  if (ctx.state !== "running") void ctx.resume().catch(() => {});
-  const chain = chains.get(ctx);
-  if (!chain) return;
-  void chain.speakerEl?.play().catch(() => {});
-  if (chain.keepAlive) return;
-  try {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.frequency.value = 20;
-    gain.gain.value = LIVE_VOICE_KEEP_ALIVE_GAIN;
-    osc.connect(gain);
-    gain.connect(chain.pull);
-    osc.onended = () => {
-      if (chain.keepAlive?.osc === osc) chain.keepAlive = null;
-    };
-    osc.start();
-    chain.keepAlive = { osc, gain };
-  } catch {
-    chain.keepAlive = null;
-  }
 }
 
 export function releaseLiveVoiceOutput(ctx: AudioContext | null): void {
@@ -309,26 +245,6 @@ export function releaseLiveVoiceOutput(ctx: AudioContext | null): void {
   const chain = chains.get(ctx);
   if (!chain) return;
   chains.delete(ctx);
-  const keep = chain.keepAlive;
-  chain.keepAlive = null;
-  if (keep) {
-    try {
-      keep.osc.onended = null;
-      keep.osc.stop();
-    } catch {
-      /* already stopped */
-    }
-    try {
-      keep.osc.disconnect();
-    } catch {
-      /* already disconnected */
-    }
-    try {
-      keep.gain.disconnect();
-    } catch {
-      /* already disconnected */
-    }
-  }
   try {
     chain.gain.disconnect();
   } catch {
