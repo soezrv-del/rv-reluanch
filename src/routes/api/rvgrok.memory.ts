@@ -7,6 +7,7 @@ import {
 } from "@/lib/rvgrok/phoneMemoryStore";
 import { queuePendingPromptLesson, upsertVoiceLesson } from "@/lib/rvgrok/promptLessonsStore";
 import {
+  chatCorrectionForPending,
   lessonFromCorrection,
   userLinesForMemory,
 } from "@/lib/rvgrok/sessionLearn";
@@ -81,6 +82,19 @@ export const Route = createFileRoute("/api/rvgrok/memory")({
           for (const turn of turns) {
             const lesson = lessonFromCorrection(turn.text);
             if (lesson) await queuePendingPromptLesson(lesson);
+          }
+        }
+
+        // Typed chat: queue a correction for desk review only. Never injected,
+        // never spoken, never promoted here; `lessons` stays empty for chat.
+        if (!voice) {
+          const typed = chatCorrectionForPending(raw);
+          if (typed) {
+            await queuePendingPromptLesson(typed.lesson, {
+              trigger: typed.trigger,
+              phoneDigits,
+              source: "chat",
+            });
           }
         }
 

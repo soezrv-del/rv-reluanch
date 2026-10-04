@@ -2,6 +2,7 @@
  * What a Live Voice hangup is allowed to keep.
  * Her replies never enter. Status bubbles and cut-off fragments never enter.
  * A correction becomes a pending lesson. It is not injected until approved.
+ * Typed chat uses the same detector on his latest line only.
  */
 
 import {
@@ -78,4 +79,24 @@ export function pendingLessonsFromUserLines(
     next = applyQueuePendingLesson(next, lesson, now);
   }
   return next;
+}
+
+/**
+ * Typed chat: his latest line only (older turns were already checked when they
+ * were sent, so a rejected correction is not queued again). Her reply never
+ * counts. Returns the pending lesson text and the line that triggered it.
+ */
+export function chatCorrectionForPending(
+  turns: ReadonlyArray<{ role: string; text: string }>,
+): { lesson: string; trigger: string } | null {
+  let line = "";
+  for (let i = turns.length - 1; i >= 0; i -= 1) {
+    if (turns[i]!.role === "user") {
+      line = String(turns[i]!.text || "").replace(/\s+/g, " ").trim();
+      break;
+    }
+  }
+  if (!line) return null;
+  const lesson = lessonFromCorrection(line);
+  return lesson ? { lesson, trigger: line } : null;
 }
