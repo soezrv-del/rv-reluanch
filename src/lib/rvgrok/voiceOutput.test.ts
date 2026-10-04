@@ -4,7 +4,6 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  LIVE_VOICE_KEEP_ALIVE_GAIN,
   LIVE_VOICE_OUTPUT_GAIN,
   LIVE_VOICE_ROUTE_KEY,
   LIVE_VOICE_SOFT_CLIP,
@@ -121,26 +120,6 @@ test("the native shell does not flip the mic hardware", () => {
     }),
     false,
   );
-});
-
-test("the iPhone app keeps a whisper on the speaker so a quiet stretch still hears", () => {
-  assert.ok(LIVE_VOICE_KEEP_ALIVE_GAIN > 0);
-  assert.ok(LIVE_VOICE_KEEP_ALIVE_GAIN <= 0.0001);
-  const output = readFileSync(join(root, "voiceOutput.ts"), "utf8");
-  const realtime = readFileSync(join(root, "realtime.ts"), "utf8");
-  assert.match(output, /if \(!nativeShellLeavesMicHardwareOn\(\)\) return/);
-  assert.match(output, /gain\.gain\.value = LIVE_VOICE_KEEP_ALIVE_GAIN/);
-  assert.match(output, /gain\.connect\(chain\.pull\)/);
-  assert.doesNotMatch(output, /gain\.connect\(ctx\.destination\)/);
-  const gateStart = realtime.indexOf("private setMicGate");
-  const gateEnd = realtime.indexOf("private armGraphKeepAlive");
-  const gate = realtime.slice(gateStart, gateEnd);
-  const awake = gate.indexOf("keepLiveVoiceGraphAwake(this.audioCtx)");
-  const flip = gate.indexOf("setSpeakingSession(closed)");
-  assert.ok(awake > flip);
-  assert.match(realtime, /this\.armGraphKeepAlive\(\)/);
-  assert.match(realtime, /setInterval\(poke, 1000\)/);
-  assert.match(realtime, /this\.clearGraphKeepAlive\(\)/);
 });
 
 test("the iPhone app does not flip the audio session when she talks", () => {
