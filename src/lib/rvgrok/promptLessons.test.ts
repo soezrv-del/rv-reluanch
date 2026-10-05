@@ -9,6 +9,7 @@ import { absorbStandingLessonsHeader } from "./voice.ts";
 import {
   applyAddLesson,
   applyDeleteLesson,
+  chatLessonsAfterSave,
   DEFAULT_PROMPT_LESSONS,
   formatPromptLessons,
   injectStandingLessons,
@@ -326,4 +327,47 @@ test("access admin gates writes; visitors cannot add lessons", () => {
     sheet.lastIndexOf("<PromptLessonsCard") > sheet.lastIndexOf("<ResearchOrderCard"),
     "lessons card sits with the other ops cards",
   );
+});
+
+
+test("chatLessonsAfterSave prepends a correction and keeps years", () => {
+  const standing = formatPromptLessons([
+    {
+      id: "admin-1",
+      text: "Never speak his sentence back.",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    },
+  ]);
+  const next = chatLessonsAfterSave(
+    standing,
+    "He corrected her: the 2024 Phaeton GVWR is 44000.",
+  );
+  assert.match(next, /He corrected her: the 2024 Phaeton GVWR is 44000/);
+  assert.match(next, /Never speak his sentence back/);
+  const firstBullet = next
+    .split("\n")
+    .find((row) => row.startsWith("- "));
+  assert.match(firstBullet || "", /2024 Phaeton/);
+  assert.equal(chatLessonsAfterSave(next, "He corrected her: the 2024 Phaeton GVWR is 44000."), next);
+  assert.ok(next.length <= STANDING_LESSONS_MAX_CHARS);
+});
+
+test("wiring: typed chat folds the correction in run() before the model", () => {
+  const route = src("src/routes/api/rvgrok.ts");
+  const runAt = route.indexOf("const run = async (): Promise<void> => {");
+  const xaiAt = route.indexOf("await tryXaiDirect(", runAt);
+  assert.ok(runAt >= 0 && xaiAt > runAt);
+  const beforeModel = route.slice(runAt, xaiAt);
+  assert.match(beforeModel, /chatCorrectionForPending\(memoryTurns\)/);
+  assert.match(beforeModel, /queuePendingPromptLesson\(/);
+  assert.match(beforeModel, /chatLessonsAfterSave\(standingLessons/);
+  assert.match(beforeModel, /source: "chat"/);
+
+  const memory = src("src/routes/api/rvgrok.memory.ts");
+  const chat = memory.slice(
+    memory.indexOf("if (!voice) {"),
+    memory.indexOf("applyMemoryUpdate({"),
+  );
+  assert.doesNotMatch(chat, /lessons\s*=/);
+  assert.doesNotMatch(chat, /chatLessonsAfterSave/);
 });

@@ -262,6 +262,31 @@ export function formatPromptLessons(
   return [heading, ...picked, footer].join("\n");
 }
 
+
+/**
+ * Same-turn chat only: put a queued correction line in front of the standing
+ * block for this reply. Does not write prompt_lessons. Pending stays pending
+ * until the desk approves. Uses formatPromptLessons so the 1,800-char cap holds.
+ * Allows years/stock in "He corrected her: …" (unlike appendStandingLessonLine).
+ */
+export function chatLessonsAfterSave(standing: string, lesson: string): string {
+  const line = parseLessonText(lesson);
+  if (!line) return standing;
+  if (standing.includes(line)) return standing;
+  const body = standing
+    .split("\n")
+    .map((row) => row.trim())
+    .filter((row) => row.startsWith("- "))
+    .map((row) => row.slice(2).trim())
+    .filter((row) => row && row !== line);
+  const lessons: PromptLesson[] = [line, ...body].map((text, index) => ({
+    id: `chat-line-${index}`,
+    text,
+    updatedAt: "1970-01-01T00:00:00.000Z",
+  }));
+  return formatPromptLessons(lessons);
+}
+
 /** Lean core, then standing lessons. Empty block is a no-op. */
 export function injectStandingLessons(core: string, block?: string): string {
   const t = (block || "").trim();
