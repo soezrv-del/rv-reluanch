@@ -15,6 +15,7 @@ import {
   lotTextScore,
   lotTokenMatchesUnit,
   listingFeatureState,
+  lotSheetConfirms,
   normalizeLotSearchQuery,
   parseSheetHorsepower,
   salesmanFilterActive,
@@ -164,6 +165,12 @@ export type LotQueryResult = {
   lot_total: number;
   /** Set when one named coach is silent on the feature. Brochure only, not a lot count. */
   feature_blank?: string;
+  /** Feature words in this ask ("residential", "refrigerator", "fireplace"). */
+  feature_words?: string[];
+  /** Of `matched`, units whose spec-sheet field confirms every feature word. */
+  feature_confirmed?: number;
+  /** Real feature words on some coach but none in this set, dropped to keep the filters. */
+  dropped_words?: string[];
   /** Filters the search actually applied. Memory and filter_label read this. */
   applied: LotQueryApplied;
   /**
@@ -913,7 +920,7 @@ function suggestName(tokens: string[], units: LotQueryUnit[]): string | undefine
   const exact = new Set(names.map((name) => name.key));
   let best: CatalogName | undefined;
   for (const token of tokens) {
-    if (token.length < 4 || exact.has(token) || STOP.has(token) || SERIES_DIGIT[token]) continue;
+    if (token.length < 4 || exact.has(token) || isLotFillerWord(token) || SERIES_DIGIT[token]) continue;
     for (const name of names) {
       if (!editDistanceAtMost1(token, name.key)) continue;
       if (
@@ -2099,6 +2106,99 @@ export function lotQueryHasSubject(query: string): boolean {
   );
 }
 
+/**
+ * Talk around a lot question: "testing", "so", "okay", "what's a good
+ * question", "sitting on the lot right now". None of these name a coach, and
+ * none of them may filter the lot to zero or turn into a "Did you mean Destiny?".
+ */
+const LOT_FILLER = new Set([
+  "actually", "again", "ago", "alright", "also", "anyway", "approx", "approximately",
+  "ask", "asking", "ballpark", "basically", "bunch", "can", "check", "cool", "curious",
+  "dealer", "dealership", "dollar", "dollars", "bucks", "entire", "estimate", "exactly", "gonna", "good", "got",
+  "gotta", "great", "guess", "hand", "hmm", "honestly", "idea", "just", "kind", "kinds",
+  "know", "let", "lets", "like", "listen", "lot", "lots", "many", "maybe", "me", "mean",
+  "moment", "much", "need", "nice", "ok", "okay", "okey", "on", "our", "overall",
+  "please", "pretty", "question", "questions", "quick", "quickly", "real", "really",
+  "right", "rough", "roughly", "say", "see", "sit", "sitting", "so", "sort", "still",
+  "stock", "sure", "tell", "test", "testing", "thank", "thanks", "that", "the", "then",
+  "there", "these", "they", "think", "this", "total", "totally", "type", "types", "uh",
+  "um", "umm", "us", "wanna", "want", "we", "well", "what", "whats", "which", "wonder",
+  "wondering", "yeah", "yep", "yes", "you", "your",
+  // Function words and search talk: "look through our inventory and see if".
+  "anything", "as", "browse", "by", "find", "finding", "from", "get", "getting",
+  "give", "go", "going", "having", "if", "into", "it", "its", "look", "looking",
+  "of", "search", "searching", "see", "seeing", "show", "some", "something",
+  "through", "thru", "to", "whether", "with", "without",
+]);
+
+function isLotFillerWord(token: string): boolean {
+  // Tokens arrive singular: "curious" reads as "curiou".
+  return LOT_FILLER.has(token) || LOT_FILLER.has(`${token}s`) || STOP.has(token);
+}
+
+/** "how many", "inventory", "in stock", "on the lot", "total". */
+const WHOLE_LOT_CUE =
+  /\b(?:how many|inventory|in stock|on (?:the|our|a) lots?|total|count|number of|whole lot|entire lot)\b/;
+/** A word for the lot itself, not a kind of coach. "Coaches" means RVs, not Coachmen. */
+const WHOLE_LOT_NOUN = /\b(?:coach(?:es)?|rvs?|units?|rigs?|vehicles?|inventory)\b/;
+
+function wholeLotWords(text: string): boolean {
+  return WHOLE_LOT_CUE.test(text) && WHOLE_LOT_NOUN.test(text);
+}
+
+/**
+ * "How many coaches do we have on the lot right now", "testing, how many
+ * coaches are sitting on the lot", "what's a good question... how many coaches
+ * we have on the lot right now": a count word, a lot word, and no class,
+ * price, length, year, fuel, feature, place, sort, or coach name. That is the
+ * whole lot. Spare words in the sentence do not shrink it.
+ */
+function wholeLotAsk(units: LotQueryUnit[], parsed: Parsed, text: string): boolean {
+  const said = normalizeLotQueryText(text);
+  if (!said || !wholeLotWords(said)) return false;
+  if (isToyHaulerRejection(said) || isLotListExpansion(said)) return false;
+  const lengthBounded = parsed.lengthMin != null || parsed.lengthMax != null;
+  if (parsed.sort || parsed.close || parsed.listAll) return false;
+  if (hasRecognizedFilter(parsed, lengthBounded)) return false;
+  if (
+    parsed.features?.length ||
+    parsed.engine ||
+    parsed.generator ||
+    parsed.slidesMin != null ||
+    parsed.slidesMax != null
+  ) {
+    return false;
+  }
+  if (likeCoachAsk(said)) return false;
+  return parsed.tokens.every(
+    (token) =>
+      isLotFillerWord(token) ||
+      (modelWordMiss(token, units) && !suggestName([token], units)),
+  );
+}
+
+/**
+ * The words in a lot question that could name a coach: what is left after
+ * class, price, place, and spare talk are read off. Empty when he named no coach.
+ */
+export function lotQueryNamedWords(text: string, units: LotQueryUnit[]): string[] {
+  if (!text) return [];
+  return parseArgs(units, { query: text }).tokens.filter((token) => !isLotFillerWord(token));
+}
+
+/** Named words that are on no sheet coach at all ("Zorbatron" in "Winnebago Zorbatron"). */
+export function lotQueryMissWords(text: string, units: LotQueryUnit[]): string[] {
+  return lotQueryNamedWords(text, units).filter(
+    (token) => !units.some((unit) => tokenHitsIdentity(unit, token)),
+  );
+}
+
+/** True for a whole-lot count question with no filter in it (see wholeLotAsk). */
+export function lotQueryIsWholeLotAsk(text: string, units: LotQueryUnit[]): boolean {
+  if (!text) return false;
+  return wholeLotAsk(units, parseArgs(units, { query: text }), text);
+}
+
 function passesStructured(unit: LotQueryUnit, parsed: Parsed, lengthRequired: boolean): boolean {
   if (!bodyMatches(unit.body_type || "", parsed.body)) return false;
   if (!conditionMatches(unit, parsed.condition)) return false;
@@ -2239,6 +2339,8 @@ function modelAlias(units: LotQueryUnit[], tokens: string[]): ModelAlias | undef
     (token) =>
       /^[a-z]{4,}$/.test(token) &&
       !SERIES_DIGIT[token] &&
+      // "Testing" is not one sound off Destiny. Spare talk is not a coach.
+      !isLotFillerWord(token) &&
       !units.some((unit) => tokenHitsIdentity(unit, token)),
   );
   if (!misses.length) return undefined;
@@ -2477,9 +2579,21 @@ function withSheetNotes(
  * "In stock" is not "new", and a store the salesman did not name is not a filter.
  * A follow-up keeps the filters it carried.
  */
-function dropUnspokenCoachNarrowing(args: LotQueryArgs): LotQueryArgs {
-  if (args.follow_up) return args;
-  const text = normalizeLotQueryText(`${str(args.query)} ${str(args.utterance)}`);
+function dropUnspokenCoachNarrowing(input: LotQueryArgs): LotQueryArgs {
+  if (input.follow_up) return input;
+  const text = normalizeLotQueryText(`${str(input.query)} ${str(input.utterance)}`);
+  // "How many coaches" means RVs. A make of Coachmen (or a model of "coaches")
+  // that he never said is not a filter.
+  let args = input;
+  const saidCoachmen = /\bcoachm[ae]n\b/.test(text);
+  const coachish = (value: unknown) => /^coach(?:es|men|man)?$/.test(normalizeLotQueryText(str(value)));
+  if (text && !saidCoachmen && (coachish(args.make) || coachish(args.model))) {
+    args = {
+      ...args,
+      ...(coachish(args.make) ? { make: "" } : {}),
+      ...(coachish(args.model) ? { model: "" } : {}),
+    };
+  }
   if (!coachWordIn(text)) return args;
   const next: LotQueryArgs = { ...args };
   if (!/\bnew\b/.test(text) && !/\bused\b/.test(text)) next.condition = "";
@@ -2923,9 +3037,50 @@ function similarCoaches(
  * `units` is the top N rows. A close make/model miss returns those sheet
  * units and sets `did_you_mean`. It does not open the rest of the book.
  */
+/** Content words that hit some coach (not spare talk, not a word on no coach). */
+function realWordsOnSomeCoach(tokens: string[], units: LotQueryUnit[]): string[] {
+  return tokens.filter(
+    (token) =>
+      !isLotFillerWord(token) &&
+      /[a-z]{3,}/.test(token) &&
+      !units.some((unit) => tokenIsCoachName(unit, token)) &&
+      units.some((unit) => tokenHitsIdentity(unit, token)),
+  );
+}
+
+/** Words that are not a coach name or a make: a feature ("residential", "refrigerator"). */
+function featureTokensOf(tokens: string[], units: LotQueryUnit[]): string[] {
+  return tokens.filter(
+    (token) =>
+      /^[a-z]{4,}$/.test(token) &&
+      !isLotFillerWord(token) &&
+      !units.some((unit) => tokenIsCoachName(unit, token) || tokenHitsMake(unit, token)),
+  );
+}
+
+function featurePhrase(words: string[]): string {
+  return words.join(" ").replace(/\bwasher\b/, "washer and dryer");
+}
+
 export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQueryResult {
   const clean = dropUnspokenCoachNarrowing(reconcileLotArgs(args));
-  const parsed = parseArgs(units, clean);
+  const parsedArgs = parseArgs(units, clean);
+  // "Testing, how many coaches are sitting on the lot right now" is the whole
+  // lot. The spare words are not a model name and do not zero it out.
+  const wholeLot =
+    !str(clean.make) &&
+    !str(clean.model) &&
+    !clean.follow_up &&
+    wholeLotAsk(units, parsedArgs, `${str(clean.query)} ${str(clean.utterance)}`);
+  // "Look through our inventory and see if we have any Super Cs that have
+  // residential refrigerators": "through" and "if" are spare talk. They do not
+  // AND the feature words down to zero (and then open the whole class).
+  const contentTokens = parsedArgs.tokens.filter((token) => !isLotFillerWord(token));
+  const parsed = wholeLot
+    ? { ...parsedArgs, tokens: [] }
+    : contentTokens.length && contentTokens.length < parsedArgs.tokens.length
+      ? { ...parsedArgs, tokens: contentTokens }
+      : parsedArgs;
   const lengthBounded = parsed.lengthMin != null || parsed.lengthMax != null;
   const lengthRequired = lengthBounded || parsed.sort === "length";
   const structured = units.filter((unit) => passesStructured(unit, parsed, lengthRequired));
@@ -2966,6 +3121,17 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
       );
       if (named.length) matched = named;
     }
+  }
+  // Spare talk ("okay", "testing", "sitting", "what's a good question") is
+  // on no coach name. When it is the only thing left, it does not zero out a
+  // search that is otherwise unfiltered (or filtered only by class, price, used).
+  if (
+    !matched.length &&
+    !alias &&
+    parsed.tokens.length &&
+    parsed.tokens.every((token) => isLotFillerWord(token))
+  ) {
+    matched = structured;
   }
   // "Navion or EKKO 23B" is two coaches. Search each name and return both
   // sets, so one name that is not on the sheet does not hide the other.
@@ -3008,6 +3174,9 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
   // A real name that the class filter missed (Class A Lineage) still returns that coach.
   // A model word that is one sound off stays on that sheet coach. It does not open the book.
   const recognized = hasRecognizedFilter(parsed, lengthRequired);
+  // Feature words ("residential refrigerator") that are on some coach but on
+  // none in this set, thrown away to keep the class. Reported, never hidden.
+  let droppedWords: string[] = [];
   if (!matched.length && parsed.tokens.length && recognized && !alias) {
     const names = parsed.tokens.filter((token) =>
       units.some((unit) => tokenIsCoachName(unit, token)),
@@ -3030,18 +3199,26 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
           powerMatches(unit, parsed.horsepower, parsed.displacement) &&
           (!parsed.bed || listingFeatureState(unit, parsed.bed) === "yes"),
       );
-      if (byName.length) matched = byName;
+      if (byName.length) {
+        matched = byName;
+        droppedWords = realWordsOnSomeCoach(
+          parsed.tokens.filter((token) => !names.includes(token)),
+          units,
+        );
+      }
     } else if (openBook) {
       matched = structured;
+      droppedWords = realWordsOnSomeCoach(parsed.tokens, units);
     }
   }
   // A name with no class, fuel, or price can still use the plain bar.
   // Do not run that bar over a sentence that already named a real filter,
   // and do not use it to throw away a model word that missed.
   if (!matched.length && !recognized && !alias) {
+    // Spare talk ("anything", "look", "see") is not a name on the plain bar either.
     const plainTokens = plainTypeaheadTokens(
       [clean.query, clean.make, clean.model].filter(Boolean).join(" "),
-    );
+    ).filter((token) => !isLotFillerWord(token));
     if (plainTokens.length) {
       const plain = units.filter((unit) =>
         plainTokens.every((token) => tokenHitsIdentity(unit, token)),
@@ -3429,7 +3606,32 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
   }
   const disagreed = sheetDisagreement(sorted, parsed.body);
   if (disagreed) summary += `\n${disagreed}`;
-  const nameRoster = motorhomeRoster(units, parsed).map(rosterLine);
+  // A feature on the spec sheet counts. One only in the listing details, the
+  // page text, or the site's feature tags "may" be there: check the floorplan.
+  const featureWords = droppedWords.length
+    ? [...(parsed.features || [])]
+    : [...(parsed.features || []), ...featureTokensOf(parsed.tokens, units)];
+  let featureConfirmed: number | undefined;
+  if (featureWords.length && matched.length) {
+    featureConfirmed = matched.filter((unit) =>
+      featureWords.every((word) => lotSheetConfirms(unit, word)),
+    ).length;
+    const label = featurePhrase(featureWords);
+    const mentioned = matched.length - featureConfirmed;
+    let note = "";
+    if (featureConfirmed === 0) {
+      note = `The ${label} is mentioned in ${matched.length === 1 ? "that listing" : "these listings"}, not confirmed on the spec sheet, so ${matched.length === 1 ? "it may have one" : "they may have one"}. Check the floorplan.`;
+    } else if (mentioned > 0) {
+      note = `${featureConfirmed} ${featureConfirmed === 1 ? "has" : "have"} the ${label} on the spec sheet. ${mentioned} more only mention it in the listing, so they may have one. Check the floorplan.`;
+    } else {
+      note = `The spec sheet confirms the ${label}.`;
+    }
+    summary = `${summary.replace(/\s+$/, "").replace(/\.$/, "")}. ${note}`;
+  }
+  if (droppedWords.length && matched.length) {
+    summary = `${summary.replace(/\s+$/, "").replace(/\.$/, "")}. No listing in this set mentions ${droppedWords.join(" ")}.`;
+  }
+  const nameRoster = (featureWords.length || droppedWords.length ? [] : motorhomeRoster(units, parsed)).map(rosterLine);
   if (nameRoster.length) {
     summary += `\nNAME ROSTER (${nameRoster.length} motorhomes in this search). The sheet count above is only how the dealer filed them. A Super C is a Class C body on a truck, not a van. You know these names. Count the ones you know fit what he asked. When the sheet disagrees, say both. If the chassis is blank and you do not know the name, say you are not sure. Do not invent a coach that is not on this roster.`;
   }
@@ -3445,6 +3647,10 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
     applied,
     ...(nameRoster.length ? { name_roster: nameRoster } : {}),
     ...(featureBlank ? { feature_blank: featureBlank } : {}),
+    ...(featureWords.length && featureConfirmed != null
+      ? { feature_words: featureWords, feature_confirmed: featureConfirmed }
+      : {}),
+    ...(droppedWords.length ? { dropped_words: droppedWords } : {}),
     ...(didYouMean && !similarNote ? { did_you_mean: didYouMean } : {}),
     ...(parsed.close && matched.length ? { close: parsed.close } : {}),
   };

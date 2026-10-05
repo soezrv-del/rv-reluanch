@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { startsWithLotMissLine } from "./voiceTurnGate.ts";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -268,7 +269,9 @@ test("a lot miss says none and does not invent a unit", () => {
   assert.equal(tool.none, true);
   assert.equal(tool.matched, 0);
   assert.deepEqual(tool.units, []);
-  assert.match(tool.speech, /None\./);
+  // Not a bare "None.": a friendly miss line, then an honest can't-find.
+  assert.ok(startsWithLotMissLine(tool.speech), tool.speech);
+  assert.match(tool.speech, /can't find/);
   assert.doesNotMatch(tool.speech, /stk /);
 });
 

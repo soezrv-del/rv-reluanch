@@ -17,12 +17,17 @@ import {
   isLotGoAhead,
   lotQueryHasSubject,
   lotQueryIsBareCount,
+  lotQueryIsWholeLotAsk,
+  lotQueryMissWords,
+  lotQueryNamedWords,
   offeredCoachNames,
   reconcileLotArgs,
   searchLot,
   type LotQueryApplied,
   type LotQueryCounts,
+  type LotQueryUnit,
 } from "../lot/lotQuery.ts";
+import { lotMissLine } from "./voiceTurnGate.ts";
 import type { GaragePinBook } from "../lot/garagePins.ts";
 import {
   looksLikeBareLotConfirm,
@@ -306,11 +311,25 @@ export type QueryLotAnswer = {
   name_roster?: string[];
   did_you_mean?: string;
   close?: string;
+  /** Feature words in the ask, and how many matched units the spec sheet confirms. */
+  feature_words?: string[];
+  feature_confirmed?: number;
+  /** Feature words that matched no coach in this set (reported as a miss). */
+  dropped_words?: string[];
+  /** On a miss: up to 3 real sheet units that are closest. Not a match count. */
+  closest_units?: string[];
   speech: string;
   lotMemory: LotMemory | null;
   /** Units in the snapshot before this question's filters. */
   lot_total?: number;
 };
+
+function closestUnitLine(unit: LotQueryUnit): string {
+  const name = [unit.year, unit.make, unit.model, unit.trim].filter(Boolean).join(" ");
+  const price = typeof unit.price === "number" && unit.price > 0 ? `$${Math.round(unit.price).toLocaleString("en-US")}` : "";
+  const town = (unit.location || "").replace(/\s+[A-Z]{2}$/, "");
+  return [name, price, town].filter(Boolean).join(", ");
+}
 
 function structuredSubject(args: Record<string, unknown>): boolean {
   return Boolean(
@@ -396,6 +415,7 @@ export function answerQueryLotFromSnapshot(
     };
   }
   if (args.body_type == null && args.bodyType != null) args.body_type = args.bodyType;
+  if (args.body_type == null && typeof args.class === "string" && args.class) args.body_type = args.class;
   if (args.price_min == null && (args.minPrice != null || args.priceMin != null)) {
     args.price_min = args.minPrice ?? args.priceMin;
   }
@@ -474,7 +494,12 @@ export function answerQueryLotFromSnapshot(
   // "in inventory" is the same full-lot count as "in stock" / "on the lot".
   // A model price or make stuffed onto that sentence does not shrink it.
   const referBack = looksLikeOwnLotFollowUp(text);
-  const wordsBare = Boolean(text) && lotQueryIsBareCount(text) && !referBack;
+  // "Testing, how many coaches are sitting on the lot right now" is the same
+  // whole-lot count. Spare words are not a model filter.
+  const wordsBare =
+    Boolean(text) &&
+    (lotQueryIsBareCount(text) || lotQueryIsWholeLotAsk(text, snapshot.units)) &&
+    !referBack;
   const listAll = isLotListExpansion(text);
   const isBare =
     !listAll &&
@@ -579,7 +604,87 @@ export function answerQueryLotFromSnapshot(
         }
       : {}),
   });
-  const found = searchLot(snapshot.units, bareCount ? { limit } : { ...searchArgs, garage_pins: garagePins });
+  let found = searchLot(snapshot.units, bareCount ? { limit } : { ...searchArgs, garage_pins: garagePins });
+  // A miss is never a terminal "None." Search once more on only the filters
+  // (class, price, year, length, store, make) without the spoken words or a
+  // model. Spare words that zeroed the search give way to that result. A real
+  // name that is not on the sheet gets a friendly line, then the closest real
+  // units or an honest "can't find one". Counts still come only from the sheet.
+  let missSpeech = "";
+  let closest: string[] = [];
+  let featureMiss = false;
+  // "Class B with a residential refrigerator": the feature words matched no
+  // coach in the class, so the search kept the class. That is a miss on the
+  // feature, said with the friendly line, then the closest real units.
+  if (!bareCount && found.dropped_words?.length && found.matched > 0) {
+    featureMiss = true;
+    const line = lotMissLine(text || str(searchArgs.query));
+    const label = found.applied.body_type || "coach";
+    closest = found.units.slice(0, 3).map(closestUnitLine);
+    missSpeech = `${line} None of our ${label} listings mention ${found.dropped_words.join(" ")}. Closest on our lot: ${closest.join("; ")}.`;
+  }
+  if (!bareCount && found.matched === 0 && !found.name_roster?.length) {
+    const named = lotQueryNamedWords(text, snapshot.units);
+    const modelArg = str(searchArgs.model);
+    // Keep the class, price, year, store, and make he said; drop only the
+    // words that are on no coach (or every name word when none of them miss).
+    const misses = lotQueryMissWords(text, snapshot.units);
+    const dropped = misses.length ? misses : named;
+    const kept = named.filter((word) => !dropped.includes(word));
+    const remainder = text
+      .split(/\s+/)
+      .filter((word) => {
+        const w = word.toLowerCase().replace(/[^a-z0-9]/g, "");
+        return !dropped.includes(w) && !dropped.includes(w.replace(/e?s$/, ""));
+      })
+      .join(" ");
+    const retry = searchLot(snapshot.units, {
+      query: remainder,
+      utterance: remainder,
+      make: searchArgs.make,
+      body_type: searchArgs.body_type,
+      condition: searchArgs.condition,
+      status: searchArgs.status,
+      location: searchArgs.location,
+      fuel: searchArgs.fuel,
+      year_min: searchArgs.year_min,
+      year_max: searchArgs.year_max,
+      price_min: searchArgs.price_min,
+      price_max: searchArgs.price_max,
+      length_ft_min: searchArgs.length_ft_min,
+      length_ft_max: searchArgs.length_ft_max,
+      sort: searchArgs.sort,
+      order: searchArgs.order,
+      limit,
+      garage_pins: garagePins,
+    });
+    if (retry.matched > 0 && !named.length && !modelArg) {
+      found = retry;
+    } else {
+      const line = lotMissLine(text || str(searchArgs.query) || modelArg);
+      const nameAsk = found.did_you_mean || found.close;
+      if (nameAsk) {
+        missSpeech = `${line} It's not on our sheet by that name. Did you mean ${nameAsk}?`;
+      } else if (
+        retry.matched > 0 &&
+        retry.matched < retry.lot_total &&
+        Boolean(
+          kept.length ||
+            retry.applied.body_type ||
+            retry.applied.make ||
+            retry.applied.price_min != null ||
+            retry.applied.price_max != null ||
+            retry.applied.length_ft_min != null ||
+            retry.applied.length_ft_max != null,
+        )
+      ) {
+        closest = retry.units.slice(0, 3).map(closestUnitLine);
+        missSpeech = `${line} I can't find that exact one. Closest on our lot: ${closest.join("; ")}.`;
+      } else {
+        missSpeech = `${line} ${named.length || modelArg ? "I can't find that one on our sheet." : "I can't find one on our sheet with those filters."}`;
+      }
+    }
+  }
   const applied = found.applied;
   const memory: LotMemory = bareCount
     ? { filter: {}, limit }
@@ -630,7 +735,7 @@ export function answerQueryLotFromSnapshot(
           ? { pinnedStock: found.units[0].stock_number }
           : {}),
       };
-  let speech = found.summary;
+  let speech = missSpeech || found.summary;
   if (found.no_length.length) {
     const stocks = found.no_length.map((unit) => `stk ${unit.stock_number}`).join(", ");
     speech = `${speech} No length on file (not guessed): ${stocks}.`;
@@ -641,21 +746,26 @@ export function answerQueryLotFromSnapshot(
   }
   return {
     ok: true,
-    none: found.matched === 0,
-    matched: found.matched,
+    none: featureMiss || found.matched === 0,
+    matched: featureMiss ? 0 : found.matched,
     filter_label,
     counts: found.counts,
-    units: found.units.map((unit) => ({
+    units: (featureMiss ? [] : found.units).map((unit) => ({
       ...unit,
       length_ft: unit.length_ft,
       length_source: unit.length_source,
     })),
     no_length: found.no_length,
-    summary: found.summary,
+    summary: missSpeech || found.summary,
+    ...(closest.length ? { closest_units: closest } : {}),
     ...(found.name_roster?.length ? { name_roster: found.name_roster } : {}),
     ...(found.did_you_mean ? { did_you_mean: found.did_you_mean } : {}),
     ...(found.close ? { close: found.close } : {}),
     ...(found.feature_blank ? { feature_blank: found.feature_blank } : {}),
+    ...(found.feature_words?.length
+      ? { feature_words: found.feature_words, feature_confirmed: found.feature_confirmed }
+      : {}),
+    ...(found.dropped_words?.length ? { dropped_words: found.dropped_words } : {}),
     speech,
     lotMemory: memory,
     lot_total: found.lot_total,

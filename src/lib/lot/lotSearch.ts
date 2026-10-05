@@ -1576,3 +1576,27 @@ export function searchLotHits<T extends LotSearchable>(
   return hits;
 }
 
+
+/**
+ * Site tag lists and listing prose. A feature found only here "may" be on the
+ * coach: check the floorplan. Not a spec-sheet confirmation.
+ */
+const LISTING_ONLY_FIELDS = new Set(["features", "floorplan_feature", "title"]);
+
+/**
+ * True when a spec-sheet field (not the site's feature tags, the listing
+ * notes, or the full page text) carries this feature word or phrase.
+ * "residential refrigerator" only in floorplan_feature is not confirmed.
+ */
+export function lotSheetConfirms(unit: LotSearchable, feature: string): boolean {
+  const needle = feature.toLowerCase().trim();
+  if (!needle) return false;
+  const index = cacheLotSearchIndex(unit);
+  return index.fields.some((field) => {
+    if (field.tier !== "attributes" || LISTING_ONLY_FIELDS.has(field.field)) return false;
+    const text = field.text.toLowerCase();
+    if (needle.includes(" ")) return text.includes(needle);
+    const words = wordsOf(text);
+    return words.includes(needle) || (needle.length >= 4 && words.some((word) => word.startsWith(needle)));
+  });
+}
