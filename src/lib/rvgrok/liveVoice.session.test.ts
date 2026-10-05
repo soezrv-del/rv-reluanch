@@ -70,8 +70,9 @@ test("session.update enables native web_search on the Realtime session", () => {
   assert.equal(session.audio.output.format.rate, PCM_SAMPLE_RATE);
   assert.equal(session.audio.output.speed, 1.25);
   assert.match(session.instructions, /web_search/);
-  assert.match(session.instructions, /He did not found RV Country/);
-  assert.match(session.instructions, /Paul Evert founded RV Country in 1961/);
+  assert.match(session.instructions, /David Hansen \(spelled H-A-N-S-E-N\) founded RvFOX/);
+  assert.match(session.instructions, /offer to tell the rest of the story/);
+  assert.doesNotMatch(session.instructions, /He did not found RV Country/);
   assert.doesNotMatch(
     session.instructions,
     /never mix in details from the app's own notes/,

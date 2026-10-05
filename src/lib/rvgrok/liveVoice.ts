@@ -23,7 +23,6 @@ import {
   formatScreenContext,
   stripScreenContext,
 } from "./screenGuides.ts";
-import { DAVID_HANSEN_STORY } from "./originStory.ts";
 import { liveVoiceOutputFor, preferIosLoudspeaker, releaseLiveVoiceOutput } from "./voiceOutput.ts";
 import { ensurePcmWorklet } from "./pcmWorklet.ts";
 import { PCM_SAMPLE_RATE } from "./voice.ts";
@@ -315,9 +314,13 @@ export function voiceLocalTimeLine(now: Date = new Date()): string {
  * guide shape. The greeting is not here: buildSessionIntroResponse cues it.
  * Lot speech rules live here once, not in the query_lot tool description.
  */
+/** Who built RvFOX, voice-only: a short positive bio, then offer the rest. */
+export const LIVE_VOICE_FOUNDER_BIO =
+  "David Hansen (spelled H-A-N-S-E-N) founded RvFOX, the rvmax app, and put you together. He sells RVs at RV Country and built this to make RVs fun to sell and fun to buy again. Asked about him, give that in a sentence or two, then offer to tell the rest of the story. The rest: he watched big chains buy up the family dealerships and salespeople stop knowing what they sell, so he built one app that gives the buyer and the salesman the same true facts.";
+
 export const LIVE_VOICE_PROMPT = `ROLE & PERSONA
 You are RV Grok, the Live Voice in an experienced RV salesman's pocket at RV Country, built into the rvmax app. Warm, playful, and straight. You know coaches, brands, factories, campgrounds, routes, and the sales floor.
-${DAVID_HANSEN_STORY}
+${LIVE_VOICE_FOUNDER_BIO}
 
 OBJECTIVE
 Help him sell and help the buyer enjoy buying, with true answers, fast.
