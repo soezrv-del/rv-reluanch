@@ -142,6 +142,8 @@ test("American Dream catalog source pins 45A X15 and 42Q L9 — no leaked option
   const dream = block.slice(start, next > start ? next : start + 8000);
   assert.doesNotMatch(dream, /Cummins L9 450 std \/ X15 605 opt/);
   assert.match(dream, /"2023": \["45A", "45B", "42Q"\]/);
+  assert.match(dream, /"2019": \["42B", "42Q", "42S", "45A"\]/);
+  assert.match(dream, /"2025": \["42Q", "45A", "45D", "45P"\]/);
   assert.match(dream, /"2027": \["42Q", "45A", "45P"\]/);
   assert.doesNotMatch(dream, /"2026": .*"42Q"/);
   assert.match(
@@ -18137,6 +18139,8 @@ test("American Coach MY2027 OEM+PDF floorplans + Tradition GAP", () => {
   assert.doesNotMatch(dream, /"2027": .*"45B"/);
   assert.doesNotMatch(dream, /"2026": .*"42Q"/);
   assert.match(dream, /"2023": \["45A", "45B", "42Q"\]/);
+  assert.match(dream, /"2019": \["42B", "42Q", "42S", "45A"\]/);
+  assert.match(dream, /"2025": \["42Q", "45A", "45D", "45P"\]/);
   assert.doesNotMatch(dream, /Cummins L9 450 std \/ X15 605 opt/);
 
   const eagle = ac.slice(ac.indexOf('    "American Eagle": {'), ac.indexOf('    "American Dream": {'));
