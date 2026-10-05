@@ -74,6 +74,7 @@ import {
 import { planGrokTabEntry } from "@/lib/rvgrok/tabEntry";
 import {
   publishRoomVoice,
+  publishRoomVoiceError,
   registerRoomAsk,
   roomVoicePhaseFromStatus,
   takePendingGrokGreeting,
@@ -1551,6 +1552,12 @@ export function RvGrokApp({
   useEffect(() => () => publishRoomVoice("idle"), []);
 
   useEffect(() => {
+    publishRoomVoiceError(voiceError);
+  }, [voiceError]);
+
+  useEffect(() => () => publishRoomVoiceError(null), []);
+
+  useEffect(() => {
     // Another room is on screen. The pane stays mounted; keep the thread
     // and any Live Voice session. Do not stop the call when this pane hides.
     if (!active) return;
@@ -1867,9 +1874,11 @@ export function RvGrokApp({
       hint={
         liveActive
           ? realtimeDetail || "Hands-free · tap mic to end"
-          : waitingToResumeLive
-            ? "Live Voice armed · tap mic"
-            : undefined
+          : voiceError
+            ? voiceError
+            : waitingToResumeLive
+              ? "Live Voice armed · tap mic"
+              : undefined
       }
       greeting={sessionGreeting}
       welcomeBack={

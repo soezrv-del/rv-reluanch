@@ -110,3 +110,25 @@ export function subscribeRoomVoice(
     voiceListeners.delete(listener);
   };
 }
+
+/**
+ * Last Live Voice error, for the ask bar on a room that is not the Grok
+ * screen. Without it a mic tap from Home/Lot fails with no message.
+ */
+let voiceError: string | null = null;
+const errorListeners = new Set<(message: string | null) => void>();
+
+export function publishRoomVoiceError(message: string | null): void {
+  voiceError = message && message.trim() ? message : null;
+  for (const listener of errorListeners) listener(voiceError);
+}
+
+export function subscribeRoomVoiceError(
+  listener: (message: string | null) => void,
+): () => void {
+  errorListeners.add(listener);
+  listener(voiceError);
+  return () => {
+    errorListeners.delete(listener);
+  };
+}
