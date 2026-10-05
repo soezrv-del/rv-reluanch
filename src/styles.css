@@ -3556,6 +3556,7 @@ body:has(.report-page) {
 
 .lot-share-dock {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   align-items: center;
   gap: 0.4rem;
@@ -3594,7 +3595,7 @@ body:has(.report-page) {
 }
 .lot-share-dock .report-share {
   min-width: 0;
-  flex: 0 1 auto;
+  flex: 0 0 auto;
 }
 
 .report-share {
