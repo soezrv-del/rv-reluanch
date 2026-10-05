@@ -1643,6 +1643,12 @@ function main() {
       if (!/"2023": \["45A", "45B", "42Q"\]/.test(dream)) {
         fail("American Coach|American Dream MY23 must include sourced 42Q (42-foot) with 45A/45B");
       }
+      if (!/"2019": \["42B", "42Q", "42S", "45A"\]/.test(dream)) {
+        fail("American Coach|American Dream MY19 must match the RVUSA card (42B / 42Q / 42S / 45A)");
+      }
+      if (!/"2025": \["42Q", "45A", "45D", "45P"\]/.test(dream)) {
+        fail("American Coach|American Dream MY25 must match the dealer table (42Q / 45A / 45D / 45P)");
+      }
       if (/Cummins L9 450 std \/ X15 605 opt/.test(dream)) {
         fail("American Coach|American Dream must not leak L9/X15 option-band across floorplans");
       }
@@ -1721,8 +1727,17 @@ function main() {
       if (!/"2027": \["36SB", "39BB", "39FW", "39RB"\]/.test(valencia) || !/type: "Class C Diesel"/.test(valencia)) {
         fail("Renegade RV|Valencia MY27 OEM+PDF lock missing (36SB / 39BB / 39FW / 39RB Class C Diesel)");
       }
-      if (/"2026": .*"36SB"/.test(valencia)) {
-        fail("Renegade RV|Valencia must not stamp 36SB onto 2026");
+      if (!/"2024": \["36SB", "38BB", "38RB", "38RW"\]/.test(valencia)) {
+        fail("Renegade RV|Valencia MY24 OEM brochure lock missing (36SB / 38BB / 38RB / 38RW)");
+      }
+      if (!/"2025": \["36SB", "38BB", "38RB", "38RW"\]/.test(valencia)) {
+        fail("Renegade RV|Valencia MY25 OEM brochure lock missing (36SB / 38BB / 38RB / 38RW)");
+      }
+      if (!/"2026": \["36SB", "39BB", "39RB"\]/.test(valencia)) {
+        fail("Renegade RV|Valencia MY26 OEM brochure lock missing (36SB / 39BB / 39RB)");
+      }
+      if (/"2026": .*"39FW"/.test(valencia) || /"2026": .*"35MB"/.test(valencia)) {
+        fail("Renegade RV|Valencia 2026 must not keep 39FW or leftover 35MB");
       }
 
       const verona = slice("Verona", "Verona LE");

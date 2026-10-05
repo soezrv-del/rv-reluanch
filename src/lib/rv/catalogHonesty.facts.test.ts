@@ -778,6 +778,8 @@ test("American Coach Facts SoT: MY2027 OEM+PDF locks; GAP Tradition", () => {
   assert.match(dream, /"2027": \["42Q", "45A", "45P"\]/);
   assert.match(dream, /"2026": \["45A", "45B", "42C", "44Q"\]/);
   assert.match(dream, /"2023": \["45A", "45B", "42Q"\]/);
+  assert.match(dream, /"2019": \["42B", "42Q", "42S", "45A"\]/);
+  assert.match(dream, /"2025": \["42Q", "45A", "45D", "45P"\]/);
   assert.doesNotMatch(dream, /"45Q"/);
   assert.doesNotMatch(dream, /"2027": .*"45B"/);
   assert.doesNotMatch(dream, /"2026": .*"42Q"/);
@@ -818,8 +820,11 @@ test("Renegade RV Facts SoT: MY2027 OEM+PDF locks; Villagio reopen; GAP Villager
   const valencia = rg.slice(rg.indexOf("    Valencia: {"), rg.indexOf("    Verona: {"));
   assert.match(valencia, /type: "Class C Diesel"/);
   assert.match(valencia, /"2027": \["36SB", "39BB", "39FW", "39RB"\]/);
-  assert.match(valencia, /"2026": \["35MB", "38RW", "38RBB", "40RBB", "45RB", "45RBB"\]/);
-  assert.doesNotMatch(valencia, /"2026": .*"36SB"/);
+  assert.match(valencia, /"2024": \["36SB", "38BB", "38RB", "38RW"\]/);
+  assert.match(valencia, /"2025": \["36SB", "38BB", "38RB", "38RW"\]/);
+  assert.match(valencia, /"2026": \["36SB", "39BB", "39RB"\]/);
+  assert.doesNotMatch(valencia, /"2026": .*"39FW"/);
+  assert.doesNotMatch(valencia, /"2026": .*"35MB"/);
 
   const verona = rg.slice(rg.indexOf("    Verona: {"), rg.indexOf('    "Verona LE": {'));
   assert.match(verona, /type: "Super C Diesel"/);
