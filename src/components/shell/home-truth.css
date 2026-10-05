@@ -9,3 +9,112 @@
 .lot-arrivals {
   margin-top: 0.15rem;
 }
+
+/* Dark home: one featured coach on a graphite showroom stage.
+   Dark only; light mode keeps its rules in styles.css. Selectors carry
+   .showroom-home so they win over the dark rules in styles.css. */
+html[data-theme="dark"] .showroom-app[data-home-open] > .showroom-stage {
+  background:
+    radial-gradient(120% 55% at 50% 44%, rgba(132, 142, 160, 0.16) 0%, rgba(132, 142, 160, 0) 62%),
+    linear-gradient(180deg, #1c2027 0%, #171a20 42%, #0d0f13 100%);
+}
+html[data-theme="dark"] .showroom-home .showroom-hero {
+  padding: 20px 0 8px;
+}
+html[data-theme="dark"] .showroom-home .showroom-placard {
+  padding: 0 24px;
+}
+html[data-theme="dark"] .showroom-home .showroom-spotyear {
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: rgba(255, 255, 255, 0.78);
+}
+html[data-theme="dark"] .showroom-home .showroom-spotmodel {
+  margin-top: 4px;
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.04;
+  color: #ffffff;
+}
+html[data-theme="dark"] .showroom-home .showroom-spotprice {
+  margin-top: 6px;
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+  color: #ffffff;
+}
+html[data-theme="dark"] .showroom-home .showroom-spotstock {
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.62);
+}
+html[data-theme="dark"] .showroom-home .showroom-spotplace {
+  color: rgba(255, 255, 255, 0.62);
+}
+/* Soft floor light under the coach; the flipped cutout stays the reflection. */
+html[data-theme="dark"] .showroom-home .showroom-floor {
+  margin-top: 8px;
+}
+html[data-theme="dark"] .showroom-home .showroom-floor::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  left: -8%;
+  right: -8%;
+  top: 38%;
+  bottom: calc(-1 * var(--floor-mirror));
+  pointer-events: none;
+  background: radial-gradient(
+    closest-side at 50% 60%,
+    rgba(188, 198, 214, 0.15) 0%,
+    rgba(120, 130, 148, 0.06) 50%,
+    transparent 100%
+  );
+}
+/* Let the reflection fade into the floor instead of stopping at a hard line. */
+html[data-theme="dark"] .showroom-home .showroom-floor-mirror {
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.55) 45%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.55) 45%, transparent 100%);
+}
+html[data-theme="dark"] .showroom-home .showroom-hero-primary {
+  min-width: 176px;
+  margin: 24px 24px 0;
+  border: 1px solid rgba(120, 156, 255, 0.32);
+  background: linear-gradient(180deg, #1c55df 0%, #1648c8 52%, #123da9 100%);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  box-shadow:
+    0 10px 24px rgba(22, 72, 200, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transition: transform 120ms ease-out, filter 120ms ease-out;
+}
+html[data-theme="dark"] .showroom-home .showroom-hero-primary:active {
+  transform: scale(0.98);
+  filter: brightness(0.92);
+}
+html[data-theme="dark"] .showroom-home .showroom-hero-primary:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 3px;
+}
+html[data-theme="dark"] .showroom-home .home-truth {
+  margin: 1.75rem 1.5rem 1.5rem;
+}
+html[data-theme="dark"] .showroom-home .home-truth .metal-hammered,
+html[data-theme="dark"] .showroom-home .home-truth .metal-hammered-face {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="dark"] .showroom-home .showroom-hero-primary {
+    transition: none;
+  }
+}

@@ -170,3 +170,106 @@ html.android-native .showroom-dock .bottom-tabs-nav[data-dock-icons="platinum"] 
     --dock-label: 12px;
   }
 }
+
+/* Dark dock (mockup Oct 5). Light mode keeps the rules above untouched.
+   Every tab is one shape (family radius, --dock-tab-h, same padding).
+   Inactive = same glyph size, stroke and label type as active, ~70% white
+   with a soft drop shadow. Pressed = lighter glyph on a soft pill.
+   Active = full white on the sapphire #1648c8 pill. No center action
+   button: Live Chat is already a tab. */
+html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] {
+  --dock-ink: rgba(255, 255, 255, 0.7);
+  --dock-ink-pressed: rgba(255, 255, 255, 0.92);
+  --dock-ink-active: #ffffff;
+  --dock-glow: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55));
+  --dock-glow-active: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35))
+    drop-shadow(0 0 6px rgba(255, 255, 255, 0.28));
+}
+
+/* Frosted graphite bar; near-solid fallback where blur is unsupported. */
+html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tabs-dock {
+  background: rgba(23, 26, 32, 0.9) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow:
+    0 -12px 32px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  html[data-theme="dark"]:not(.android-native) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tabs-dock {
+    background: rgba(28, 32, 39, 0.72) !important;
+    -webkit-backdrop-filter: blur(22px) saturate(1.4) !important;
+    backdrop-filter: blur(22px) saturate(1.4) !important;
+  }
+}
+
+html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn {
+  margin: 0 2px;
+  border-radius: var(--btn-radius, 12px) !important;
+  opacity: 1 !important;
+  color: var(--dock-ink) !important;
+  transition:
+    background-color 160ms ease-out,
+    box-shadow 160ms ease-out,
+    color 160ms ease-out;
+}
+html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-glyph {
+  color: var(--dock-ink) !important;
+  filter: var(--dock-glow);
+  transition: color 160ms ease-out, filter 160ms ease-out;
+}
+html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-caption {
+  font-weight: 600 !important;
+  color: var(--dock-ink) !important;
+  -webkit-text-fill-color: var(--dock-ink) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+
+/* Pressed (inactive): lighter glyph and a soft highlight pill. */
+html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn:not(.is-active):active {
+  background: rgba(255, 255, 255, 0.09) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn:not(.is-active):active .bottom-tab-glyph,
+html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn:not(.is-active):active .bottom-tab-caption {
+  color: var(--dock-ink-pressed) !important;
+  -webkit-text-fill-color: var(--dock-ink-pressed) !important;
+}
+@media (hover: hover) {
+  html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn:not(.is-active):hover .bottom-tab-glyph,
+  html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn:not(.is-active):hover .bottom-tab-caption {
+    color: var(--dock-ink-pressed) !important;
+    -webkit-text-fill-color: var(--dock-ink-pressed) !important;
+  }
+}
+html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.8);
+  outline-offset: -2px;
+}
+
+/* Active: full white on sapphire, same shape as the rest. */
+html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active,
+html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] {
+  background: #1648c8 !important;
+  box-shadow:
+    0 6px 16px rgba(22, 72, 200, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
+  color: var(--dock-ink-active) !important;
+}
+html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active .bottom-tab-glyph,
+html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] .bottom-tab-glyph {
+  color: var(--dock-ink-active) !important;
+  filter: var(--dock-glow-active);
+}
+html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active .bottom-tab-caption,
+html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] .bottom-tab-caption {
+  color: var(--dock-ink-active) !important;
+  -webkit-text-fill-color: var(--dock-ink-active) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn,
+  html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-glyph {
+    transition: none;
+  }
+}

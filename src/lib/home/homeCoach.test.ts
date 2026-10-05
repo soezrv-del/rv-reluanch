@@ -151,7 +151,7 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   assert.doesNotMatch(home, /resolveHomeCoach|pickShowroomStage|newestLotUnit/);
   assert.match(home, /MetalVerifiedTrue/);
   assert.doesNotMatch(home, /New arrivals/);
-  assert.match(home, /showroom-lotcount/);
+  assert.doesNotMatch(home, /showroom-lotcount|in stock/);
   assert.match(home, /onOpen\("rvlot"\)/);
   const arrivals = readFileSync(join(root, "../../components/lot/LotArrivals.tsx"), "utf8");
   assert.match(arrivals, /CoveredCoach/);
@@ -361,9 +361,50 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
   assert.doesNotMatch(home, /spotlight-lot\.jpg/);
   assert.match(home, /Open coach/);
   assert.doesNotMatch(home, /data-lot-whisper|showroom-lot-whisper/);
-  assert.match(home, /showroom-lotcount/);
-  assert.match(home, /in stock/);
+  // The whole-lot count sits on Inventory. Next to a stock number on Home it
+  // read like there were that many of this one coach.
+  assert.doesNotMatch(home, /showroom-lotcount|in stock|lotTotal/);
   assert.doesNotMatch(home, /home-jump/);
   assert.doesNotMatch(home, /Learn more|showroom-coach-lot|data-arrival-set="duplicate"/);
   assert.doesNotMatch(css, /showroom-coach-lot/);
+});
+
+test("home hero shows one coach; the whole-lot count lives on Inventory; no center action button", () => {
+  const home = readFileSync(join(root, "../../components/shell/HomeScreen.tsx"), "utf8");
+  const lot = readFileSync(join(root, "../../components/lot/LotStockApp.tsx"), "utf8");
+  const tabs = readFileSync(join(root, "../../components/shell/BottomTabs.tsx"), "utf8");
+  const dock = readFileSync(join(root, "../../components/shell/dock.css"), "utf8");
+  const truth = readFileSync(join(root, "../../components/shell/home-truth.css"), "utf8");
+
+  assert.doesNotMatch(home, /showroom-lotcount|in stock|units\.length/);
+  assert.match(lot, /const total = snap\?\.units\.length/);
+  assert.match(lot, /total\.toLocaleString\("en-US"\)\} units/);
+
+  // Four tabs, no plus / Action Button between them (Live Chat is already a tab).
+  assert.match(tabs, /type DockTab = "rvfax" \| "rvlot" \| "rvgrok" \| "more"/);
+  assert.doesNotMatch(tabs, /Action Button|bottom-tab-action|bottom-tab-center|\bPlus\b/);
+
+  // Dark-only dock and hero rules: nothing new reaches light mode.
+  const darkStart = dock.indexOf("/* Dark dock");
+  assert.ok(darkStart > 0, "dark dock block");
+  const darkDock = dock.slice(darkStart);
+  assert.doesNotMatch(darkDock, /data-theme="light"/);
+  assert.match(darkDock, /--dock-ink:\s*rgba\(255, 255, 255, 0\.7\)/);
+  assert.match(darkDock, /\.bottom-tab-btn:not\(\.is-active\):active \{[^}]*background/);
+  assert.match(darkDock, /\.bottom-tab-btn\.is-active,[\s\S]*?background:\s*#1648c8/);
+  assert.match(darkDock, /border-radius:\s*var\(--btn-radius, 12px\)/);
+  assert.doesNotMatch(darkDock, /aqua|cyan|#00ffff/i);
+  const darkHero = truth.slice(truth.indexOf("/* Dark home"));
+  assert.doesNotMatch(darkHero, /data-theme="light"/);
+  for (const block of [darkHero, darkDock]) {
+    const bare = block.replace(/\/\*[\s\S]*?\*\//g, "");
+    for (const [, raw] of bare.matchAll(/([^{};]+)\{/g)) {
+      const sel = raw.trim();
+      if (!sel || sel.startsWith("@")) continue;
+      for (const part of sel.split(",")) {
+        assert.match(part.trim(), /^html\[data-theme="dark"\]/, `dark scope: ${part.trim()}`);
+      }
+    }
+  }
+  assert.match(darkHero, /\.showroom-hero-primary \{[^}]*#1648c8/);
 });

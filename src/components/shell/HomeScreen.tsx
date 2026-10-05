@@ -44,8 +44,6 @@ export function HomeScreen({
   const place = (spotUnit?.location || "").trim();
   const who = [spotYear, spotMake].filter(Boolean).join(" ");
   const heroSrc = SHOWROOM_SPOTLIGHT.image;
-  const lotTotal =
-    units && units.length > 0 ? units.length.toLocaleString("en-US") : "";
   const openSpot = () => {
     if (!spotUnit) return;
     requestLotUnit(lotArrivalQuery(spotUnit));
@@ -60,12 +58,13 @@ export function HomeScreen({
       data-no-swipe
       className="showroom-home absolute inset-0 z-30 flex flex-col overflow-x-hidden overflow-y-auto"
     >
+      {/* One featured coach. The whole-lot count lives on Inventory, not here:
+          next to a stock number it read like N of this one coach. */}
       <section className="showroom-hero" data-hero-kind="cutout">
         <div className="showroom-placard" data-home-placard>
           {who ? <p className="showroom-spotyear">{who}</p> : null}
           <p className="showroom-spotmodel">{model}</p>
           {specs?.price ? <p className="showroom-spotprice">{specs.price}</p> : null}
-          {lotTotal ? <p className="showroom-lotcount">{lotTotal} in stock</p> : null}
           {specs?.stock ? (
             <p className="showroom-spotstock">
               Stock {specs.stock}
