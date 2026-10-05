@@ -1,28 +1,24 @@
 /**
  * Live Voice rendering of the shared chat web-research path.
  *
- * Detection follows `needsWebFallback`. A count, a cheapest, an
- * availability, or a stock question is our lot: query_lot answers it
- * and this function returns pass so no web notes are injected. A spec
- * pin still researches. The spoken hold is narrower than browse.
- * VOICE_RESEARCH_HOLD_PHRASE ("give me one second") while live search
- * runs. A catalog pin and memory-answerable coach talk stay offline.
+ * Detection follows `needsWebFallback`. A shopper payment and a shopper
+ * buying digit search. An owner skips search only when the pin covers
+ * this floorplan and this field. The spoken hold is
+ * VOICE_RESEARCH_HOLD_PHRASE ("give me one second") only while that search runs.
  */
 
 import {
-  catalogGapNeedsWeb,
-  looksLikeCatalogAnswerableCoachCompare,
-  looksLikeCasualNonResearch,
+  looksLikeCarfaxQuestion,
   looksLikeImageOnlyAsk,
   looksLikeInventoryOrCountQuestion,
-  looksLikeLiveResearchQuestion,
-  looksLikeCarfaxQuestion,
   looksLikeOriginQuestion,
   looksLikeSpecQuestion,
-  looksLikeTowOrEconomyAsk,
   needsWebFallback,
+  type WebFallbackOpts,
   type WebFallbackSpecs,
 } from "./webIntent.ts";
+import { savedPinCoversAskedField } from "./lockedWeights.ts";
+import type { Audience } from "./speechPolicy.ts";
 import {
   factsSpecRequestsWebSearch,
   isFactsScreen,
@@ -111,52 +107,65 @@ export type VoiceWebDecision =
     };
 
 /**
- * Spoken hold only when Grok genuinely does not know and must wait on
- * a web search. Generic catalog-gap small talk answers now.
+ * Hold only while a tool is about to run. A greeting does not hold.
+ * A payment holds, because a shopper payment searches.
  */
 export function shouldSpeakVoiceResearchHold(
   transcript: string,
   specs?: WebFallbackSpecs,
+  opts?: WebFallbackOpts,
 ): boolean {
   const t = (transcript || "").trim();
   if (!t) return false;
-  if (looksLikeCasualNonResearch(t) || looksLikeImageOnlyAsk(t)) return false;
-  if (looksLikeOriginQuestion(t)) return false;
-  if (looksLikeCarfaxQuestion(t)) return false;
-  // Forum / repair / manual still hold even when both coaches are known.
-  if (looksLikeLiveResearchQuestion(t)) return true;
-  if (looksLikeLotInventoryPhrase(t)) return false;
-  // Unpinned OEM specs hold while search runs. A lock does not hold.
-  if (looksLikeSpecQuestion(t) && catalogGapNeedsWeb(specs ?? null, t)) {
-    return true;
+  if (looksLikeOriginQuestion(t) || looksLikeCarfaxQuestion(t)) return false;
+  if (looksLikeImageOnlyAsk(t)) return false;
+  // Lot questions use query_lot. That tool has its own hold. This one is web.
+  if (
+    looksLikeLotInventoryPhrase(t) ||
+    looksLikeInventoryOrCountQuestion(t) ||
+    looksLikeOwnLotStockQuestion(t) ||
+    looksLikeOwnLotCountOrRankAsk(t)
+  ) {
+    return false;
   }
-  if (looksLikeCatalogAnswerableCoachCompare(t)) return false;
-  return false;
+  return needsWebFallback(specs ?? null, t, opts);
 }
 
 /**
  * Same trigger as text chat: `needsWebFallback` from `webIntent.ts`.
- * Callers pass specs from `buildChatGrounding` when a coach is in context.
- * Greetings / lifestyle / payment / locked pins stay on the memory path.
- * An unpinned OEM number still researches. Hold is optional.
+ * Shopper searches a buying digit. Owner skips only when the caller set
+ * pinCoversAskedField for this floorplan and this field.
+ * Hold only while that search is actually about to run.
  */
 export function decideVoiceWebResearch(opts: {
   transcript: string;
-  specs?: WebFallbackSpecs;
+  specs?: WebFallbackSpecs & {
+    identity?: Parameters<typeof savedPinCoversAskedField>[0];
+  };
   catalogBlock?: string;
   screen?: string;
   /** A prior lot filter is in the session and this sentence refers back to it. */
   lotFollowUp?: boolean;
+  /** Missing tag is shopper. */
+  audience?: Audience;
+  /** Caller sets this. Shopper ignores it. */
+  pinCoversAskedField?: boolean;
 }): VoiceWebDecision {
   const transcript = (opts.transcript || "").trim();
   if (!transcript) return { action: "pass" };
+  const gate: WebFallbackOpts = {
+    audience: opts.audience,
+    pinCoversAskedField:
+      opts.pinCoversAskedField ??
+      savedPinCoversAskedField(opts.specs?.identity, transcript),
+  };
   const screen = (opts.screen || "").trim();
   if (isFactsScreen(screen) && factsSpecRequestsWebSearch(screen, transcript)) {
     return {
       action: "research",
       query: transcript.slice(0, 400),
       catalogBlock: (opts.catalogBlock || "").trim(),
-      speakHold: shouldSpeakVoiceResearchHold(transcript, opts.specs),
+      speakHold: shouldSpeakVoiceResearchHold(transcript, opts.specs, gate),
     };
   }
   // Our lot. The query_lot tool answers a count, a cheapest, availability,
@@ -173,23 +182,15 @@ export function decideVoiceWebResearch(opts: {
   ) {
     return { action: "pass" };
   }
-  // Chat's needsWebFallback answers every spec from memory. On voice a
-  // towing, GCWR, payload, or fuel-economy figure (or a which-tows-more)
-  // is looked up first: memory said a Sprinter View out-tows an E-450.
-  // A catalog pin still answers now.
-  const towLookup =
-    looksLikeTowOrEconomyAsk(transcript) && catalogGapNeedsWeb(opts.specs ?? null, transcript);
-  if (!towLookup && !needsWebFallback(opts.specs ?? null, transcript)) {
+  if (!needsWebFallback(opts.specs ?? null, transcript, gate)) {
     return { action: "pass" };
   }
-  const speakHold = shouldSpeakVoiceResearchHold(transcript, opts.specs);
   // needsWebFallback already opted in. External asks always run the sidecar.
-  // A catalog pin never reaches here.
   return {
     action: "research",
     query: transcript.slice(0, 400),
     catalogBlock: (opts.catalogBlock || "").trim(),
-    speakHold,
+    speakHold: shouldSpeakVoiceResearchHold(transcript, opts.specs, gate),
   };
 }
 

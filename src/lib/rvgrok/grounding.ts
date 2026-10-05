@@ -76,7 +76,10 @@ import {
 import {
   formatLockedWeightsBlock,
   resolveLockedOemWeights,
+  savedPinCoversAskedField,
 } from "./lockedWeights.ts";
+import type { Audience } from "./speechPolicy.ts";
+import type { WebFallbackOpts } from "./webIntent.ts";
 import { COACH_REPORT_CHAT_RULE } from "./coachReport.ts";
 
 function withDeskSheetSpeechRule(
@@ -537,6 +540,19 @@ function compareCatalogBlock(hits: ComparableCatalogCoach[]): {
   return { identity: primary.identity, specs: primary, catalog };
 }
 
+function gateOpts(
+  query: string,
+  identity: CoachIdentity | null | undefined,
+  agentMode?: boolean,
+  audience?: Audience,
+): WebFallbackOpts {
+  return {
+    agentMode,
+    audience,
+    pinCoversAskedField: savedPinCoversAskedField(identity, query),
+  };
+}
+
 function standingKnowledgeBlocks(query: string): string {
   const parts: string[] = [];
   if (looksLikeOriginQuestion(query)) parts.push(formatOriginGroundingBlock());
@@ -578,6 +594,8 @@ export function buildChatGrounding(opts: {
   facts?: ActiveCoach | null;
   extraText?: string;
   agentMode?: boolean;
+  /** Missing tag is shopper. The utterance does not flip it. */
+  audience?: Audience;
 }): {
   identity: CoachIdentity | null;
   specs: GroundedSpecs | null;
@@ -585,7 +603,7 @@ export function buildChatGrounding(opts: {
   needsWeb: boolean;
   repairMode: boolean;
 } {
-  const webOpts = { agentMode: opts.agentMode };
+  const webOpts = gateOpts(opts.query, null, opts.agentMode, opts.audience);
   const repairMode = looksLikeRepairQuestion(opts.query);
   if (looksLikeCompanyOrPlantAsk(opts.query)) {
     return {
@@ -624,7 +642,11 @@ export function buildChatGrounding(opts: {
     const merged = withOriginBlock(
       opts.query,
       repair ? `${compare.catalog}\n\n${repair}` : compare.catalog,
-      needsWebFallback(compare.specs, opts.query, webOpts),
+      needsWebFallback(
+        compare.specs,
+        opts.query,
+        gateOpts(opts.query, compare.identity, opts.agentMode, opts.audience),
+      ),
     );
     return {
       identity: compare.identity,
@@ -664,7 +686,11 @@ export function buildChatGrounding(opts: {
   const merged = withOriginBlock(
     opts.query,
     repair ? `${catalog}\n\n${repair}` : catalog,
-    needsWebFallback(specs, opts.query, webOpts),
+    needsWebFallback(
+      specs,
+      opts.query,
+      gateOpts(opts.query, identity, opts.agentMode, opts.audience),
+    ),
   );
   return {
     identity,

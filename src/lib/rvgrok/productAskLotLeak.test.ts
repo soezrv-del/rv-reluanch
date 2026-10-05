@@ -142,8 +142,9 @@ test("standing prompts have no pasted lot card; lean core only names the tool", 
     /No lot, inventory, stock, or "on our lot" language/,
   );
   assert.doesNotMatch(speechRaw, /If Matched is 0/);
-  assert.match(speechRaw, /Do not turn a factory, brand, or campground question into a year-make-model demand/);
-  assert.match(speechRaw, /You also answer the rest of what he asks/);
+  assert.match(speechRaw, /A factory, brand, or campground question is not a year-make-model demand/);
+  assert.match(speechRaw, /SHOPPER RETRIEVAL is search-always/);
+  assert.doesNotMatch(speechRaw, /You also answer the rest of what he asks/);
   assert.match(api, /loadOwnLotSnapshot/);
   assert.match(api, /looksLikeOwnLotStockQuestion/);
   assert.doesNotMatch(api, /[Dd]ialaBot/);
@@ -155,10 +156,8 @@ test("standing prompts have no pasted lot card; lean core only names the tool", 
   assert.match(speechRaw, /Get as accurate as possible, but not gospel\./);
   assert.match(speechRaw, /closest saved pin when one exists/);
   assert.doesNotMatch(speechRaw, /say that field is unverified/);
-  assert.match(
-    speechRaw,
-    /experienced RV salesman's pocket/,
-  );
+  assert.match(speechRaw, /OWNER RETRIEVAL is pin-first on this unit/);
+  assert.doesNotMatch(speechRaw, /experienced RV salesman's pocket/);
   assert.match(src("voice.ts"), /RV_GROK_LEAN_CORE/);
   assert.match(src("voice.ts"), /CAMERA:/);
   assert.match(src("voice.ts"), /GROK_VOICES/);

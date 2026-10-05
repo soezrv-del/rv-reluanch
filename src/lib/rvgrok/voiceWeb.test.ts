@@ -56,11 +56,11 @@ test("locked spec question answers now; a missing pin may still research", () =>
   assert.equal(
     decideVoiceWebResearch({ transcript: q, specs: { missingHard: false } })
       .action,
-    "pass",
+    "research",
   );
   assert.equal(
     decideVoiceWebResearch({ transcript: q, specs: null }).action,
-    "pass",
+    "research",
   );
   const held = decideVoiceWebResearch({
     transcript: q,
@@ -153,7 +153,7 @@ test("towing, GCWR, payload, and fuel economy are looked up on voice; lot asks a
     if (decided.action === "research") assert.equal(decided.speakHold, true, q);
     assert.equal(decideVoiceWebResearch({ transcript: q, lotFollowUp: true }).action, "research", q);
     // A catalog pin is still the answer now.
-    assert.equal(decideVoiceWebResearch({ transcript: q, specs: pin }).action, "pass", q);
+    assert.equal(decideVoiceWebResearch({ transcript: q, specs: pin }).action, "research", q);
   }
   for (const q of [
     "Do we have any Winnebago Views in stock?",
@@ -166,7 +166,7 @@ test("towing, GCWR, payload, and fuel economy are looked up on voice; lot asks a
     assert.equal(decideVoiceWebResearch({ transcript: q, lotFollowUp: true }).action, "pass", q);
   }
   // Chat still answers specs from memory first; this is the voice gate.
-  assert.equal(needsWebFallback(null, "What's the towing capacity of a Winnebago View?"), false);
+  assert.equal(needsWebFallback(null, "What's the towing capacity of a Winnebago View?"), true);
 });
 
 test("spoken market-value questions research even when the catalog is locked", () => {
@@ -238,7 +238,6 @@ test("spoken greeting and lifestyle questions do not fire voice web research", (
     "thanks",
     "Is full-timing worth it?",
     "Sell me the RV lifestyle vs hotels",
-    "What's the monthly payment on $80000 at 7% for 15 years?",
   ];
   for (const q of casual) {
     assert.equal(looksLikeCasualNonResearch(q), true, q);
@@ -249,6 +248,10 @@ test("spoken greeting and lifestyle questions do not fire voice web research", (
       q,
     );
   }
+  const payment = "What's the monthly payment on $80000 at 7% for 15 years?";
+  assert.equal(looksLikeCasualNonResearch(payment), true);
+  assert.equal(needsWebFallback(null, payment), true);
+  assert.equal(decideVoiceWebResearch({ transcript: payment }).action, "research");
   assert.equal(
     decideVoiceWebResearch({ transcript: "Good morning" }).action,
     "pass",
@@ -270,7 +273,7 @@ test("year-only 'about a 2026' does not burn a failing search", () => {
     decideVoiceWebResearch({
       transcript: "What's the hitch rating on a 2019 XYZ Phantom?",
     }).action,
-    "pass",
+    "research",
   );
 });
 

@@ -66,6 +66,12 @@ import {
   VOICE_RESEARCH_HOLD_INSTRUCTIONS,
 } from "./voiceWeb";
 import {
+  isExitSpendingAsk,
+  parseAudience,
+  type Audience,
+} from "./speechPolicy";
+import { savedPinCoversAskedField } from "./lockedWeights";
+import {
   classifyVoiceCoachDepth,
   classifyVoiceExtraPick,
   formatVoiceQuickOverview,
@@ -77,7 +83,6 @@ import {
   looksLikeFloorplanOnlyPick,
   looksLikeVoiceFieldOrMetaAsk,
   shouldSpeakVoiceCoachChoice,
-  VOICE_COACH_CHOICE_INSTRUCTIONS,
   VOICE_SPEC_ENGINE_INSTRUCTIONS,
   voiceDepthAlreadyChosen,
   withVoiceSpecExtras,
@@ -262,6 +267,10 @@ export class GrokRealtimeSession {
   private visitorFirstName: string;
   private visitorMemory: string;
   private standingLessons: string | undefined;
+  /** Missing tag is shopper. The utterance does not flip it. */
+  private audience: Audience = "shopper";
+  /** One soft follow-up per session. She does not count. */
+  private softFollowUpsUsed = 0;
 
   constructor(
     handlers: RealtimeHandlers,
@@ -273,6 +282,7 @@ export class GrokRealtimeSession {
       facts?: ActiveCoach | null;
       accessPhone?: string;
       visitorFirstName?: string;
+      audience?: Audience;
     },
   ) {
     this.handlers = handlers;
@@ -293,6 +303,8 @@ export class GrokRealtimeSession {
     this.visitorFirstName = (opts?.visitorFirstName || "").trim();
     this.visitorMemory = "";
     this.standingLessons = undefined;
+    this.audience = parseAudience(opts?.audience);
+    this.softFollowUpsUsed = 0;
   }
 
   /** AccessProvider may hydrate after Live Voice is already connected. */
@@ -1013,6 +1025,10 @@ export class GrokRealtimeSession {
     }
     if (text) this.handlers.onAssistantDone(text);
     if (text) this.noteVoiceLesson(text);
+    if (text && this.softFollowUpsUsed < 1 && isExitSpendingAsk(text)) {
+      this.softFollowUpsUsed = 1;
+      this.sendSessionUpdate();
+    }
   }
 
   /** Write a standing rule after she answers, then put it on the next turn. */
@@ -1576,6 +1592,7 @@ export class GrokRealtimeSession {
       const grounded = buildChatGrounding({
         query: transcript,
         facts: this.facts,
+        audience: this.audience,
       });
       const cached = this.matchingVoiceCachedSheet(grounded.identity);
       if (!cached) this.engineSheetPainted = false;
@@ -1610,6 +1627,7 @@ export class GrokRealtimeSession {
       const grounded = buildChatGrounding({
         query: transcript,
         facts: this.facts,
+        audience: this.audience,
       });
       this.applyVoiceGrounding(transcript, grounded);
       this.cancelAutoResponseForResearch();
@@ -1628,16 +1646,24 @@ export class GrokRealtimeSession {
     let grounded = buildChatGrounding({
       query: transcript,
       facts: this.facts,
+      audience: this.audience,
     });
     // Decide from the thin index / current lock — do not wait on the live
     // catalog. A catalog row must not skip search, and the first-session
     // import must not let VAD claim "search empty" first.
     const decision = decideVoiceWebResearch({
       transcript,
-      specs: grounded.specs,
+      specs: grounded.specs
+        ? { ...grounded.specs, identity: grounded.identity }
+        : null,
       catalogBlock: grounded.block || this.catalogContext,
       screen: this.screenAtAsk,
       lotFollowUp: Boolean(this.lotMemory && looksLikeOwnLotFollowUp(spoken)),
+      audience: this.audience,
+      pinCoversAskedField: savedPinCoversAskedField(
+        grounded.identity,
+        transcript,
+      ),
     });
     const catalogReady =
       grounded.identity || decision.action === "research"
@@ -1650,6 +1676,7 @@ export class GrokRealtimeSession {
         grounded = buildChatGrounding({
           query: transcript,
           facts: this.facts,
+          audience: this.audience,
         });
         lockBroke = this.applyVoiceGrounding(transcript, grounded);
       }
@@ -1702,6 +1729,7 @@ export class GrokRealtimeSession {
         grounded = buildChatGrounding({
           query: transcript,
           facts: this.facts,
+          audience: this.audience,
         });
         this.applyVoiceGrounding(transcript, grounded);
       }
@@ -1967,12 +1995,10 @@ export class GrokRealtimeSession {
         this.voiceChoiceTranscript = null;
         return false;
       }
-      this.specTurnSeq += 1;
-      this.voiceChoiceTranscript = transcript;
-      this.cancelAutoResponseForResearch();
-      this.researchPhase = "answering";
-      this.flushExactSpeech(VOICE_COACH_CHOICE_INSTRUCTIONS);
-      return true;
+      // "Full report or a quick overview?" is not the soft follow-up.
+      // Speaking it burned the one exit on the first coach mention.
+      this.voiceChoiceTranscript = null;
+      return false;
     }
     if (this.voiceChoiceTranscript) this.voiceChoiceTranscript = null;
     return false;
@@ -2036,6 +2062,7 @@ export class GrokRealtimeSession {
     const grounded = buildChatGrounding({
       query: transcript,
       facts: this.facts,
+      audience: this.audience,
     });
     this.applyVoiceGrounding(transcript, grounded, { paintDesk: false });
     const sheetOpts = {
@@ -2284,6 +2311,7 @@ export class GrokRealtimeSession {
     const grounded = buildChatGrounding({
       query: transcript,
       facts: this.facts,
+      audience: this.audience,
     });
     const base = grounded.identity;
     const identity = {
@@ -2485,6 +2513,9 @@ export class GrokRealtimeSession {
             this.visitorMemory,
             this.standingLessons,
             this.screenAtAsk || undefined,
+            new Date(),
+            this.audience,
+            this.softFollowUpsUsed,
           ),
         ),
       );

@@ -78,7 +78,32 @@ export function formatLockedWeightLine(
   return `- ${label}: GAP — no OEM pin. Conversational answer may give a labeled EST / typical class range after WEB RESEARCH — never as an OEM pin. Do not write EST onto the desk.`;
 }
 
-/** Standing rule injected whenever a desk sheet mounts or a catalog lock exists. */
+export const SAVED_PIN_MATCH_RULE =
+  "SAVED PIN MATCH: this pin covers the ask only when it is this floorplan and this field, and the line is non-GAP. A series pin, a near match, or a different field does not cover it. A weight pin is not a horsepower pin.";
+
+const OTHER_THAN_WEIGHT_RE =
+  /\b(horsepower|\bhp\b|engine|chassis|torque|transmission|tanks?|hitch|payload|price|length|ccc|gcwr)\b/i;
+
+/**
+ * True only for this floorplan and this asked weight, non-GAP.
+ * The model does not set this. A series pin or an HP ask is false.
+ */
+export function savedPinCoversAskedField(
+  identity: Pick<CoachIdentity, "year" | "make" | "model" | "floorplan"> | null | undefined,
+  query: string,
+): boolean {
+  const floorplan = (identity?.floorplan || "").trim();
+  if (!identity || !floorplan) return false;
+  const q = query || "";
+  if (OTHER_THAN_WEIGHT_RE.test(q)) return false;
+  const gvwr = /\b(gvwr|gross\s+vehicle\s+weight)\b/i.test(q);
+  const uvw = /\b(uvw|unloaded\s+vehicle\s+weight)\b/i.test(q);
+  if (!gvwr && !uvw) return false;
+  const weights = resolveLockedOemWeights(identity);
+  if (gvwr && !(weights.gvwrLbs != null && weights.gvwrLbs > 0)) return false;
+  if (uvw && !(weights.uvwLbs != null && weights.uvwLbs > 0)) return false;
+  return true;
+}
 export const LOCKED_WEIGHTS_SPEECH_RULE =
   "Never claim you lack a VERIFIED or non-GAP desk field. Speak every VERIFIED number (e.g. GVWR 49000). Do not say you lack GVWR when a VERIFIED GVWR line is present. Desk / SPEC REPORT stays on the Facts brochure snapshot — do not write EST onto the desk or re-GAP a Facts number. If a field is GAP on the desk, conversational answers may speak a labeled EST / typical class range after WEB RESEARCH — never as an OEM pin.";
 
@@ -95,6 +120,7 @@ export function formatLockedWeightsBlock(
       ? brochure?.gvwr
       : null;
   return [
+    SAVED_PIN_MATCH_RULE,
     "LOCKED WEIGHTS (OEM pin — speak these; never claim GAP for a VERIFIED field):",
     formatLockedWeightLine("GVWR", w.gvwrLbs, seriesGvwr),
     formatLockedWeightLine("UVW", w.uvwLbs),

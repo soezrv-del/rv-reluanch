@@ -1,9 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { denyUnlessWhitelisted } from "@/lib/access/httpGate";
-import { RV_SYSTEM_PROMPT, AGENT_SYSTEM_PROMPT } from "@/lib/rvgrok/prompts";
 import { injectStandingLessons } from "@/lib/rvgrok/promptLessons";
 import { readStandingLessonsBlock } from "@/lib/rvgrok/promptLessonsStore";
-import { visitorPersonalizationBlock } from "@/lib/rvgrok/speechPolicy";
+import {
+  countSoftFollowUps,
+  keepTalkingCue,
+  parseAudience,
+  rvGrokCoreFor,
+  visitorPersonalizationBlock,
+  type Audience,
+} from "@/lib/rvgrok/speechPolicy";
 import {
   loadVisitorMemoryBlockFromRequest,
   memoryKeyFromRequest,
@@ -29,6 +35,7 @@ import {
   looksLikeMarketValueQuestion,
   looksLikeInventoryOrCountQuestion,
   looksLikeSpecQuestion,
+  needsWebFallback,
 } from "@/lib/rvgrok/webIntent";
 import {
   loadOwnLotSnapshot,
@@ -69,6 +76,7 @@ import {
   parseGenerateImagePromptFromContent,
   wantsGeneratedImage,
 } from "@/lib/rvgrok/imageGen";
+import { savedPinCoversAskedField } from "@/lib/rvgrok/lockedWeights";
 import {
   parseTalkMode,
   requiredToolForAsk,
@@ -118,6 +126,8 @@ type Body = {
   visitorFirstName?: string;
   /** Lot is the default. Coach only when the UI says so. */
   mode?: TalkMode;
+  /** Missing tag is shopper. "Our truck" does not flip this. */
+  audience?: Audience;
 };
 
 function sseHeaders(extra?: Record<string, string>) {
@@ -170,6 +180,8 @@ function withGrounding(
     visitorMemory?: string;
     standingLessons?: string;
     mode?: TalkMode;
+    audience?: Audience;
+    softFollowUpsUsed?: number;
   },
 ) {
   let out = injectStandingLessons(system, opts?.standingLessons);
@@ -189,7 +201,7 @@ function withGrounding(
   if (lot) {
     out = `${out}\n\n═══════════════════════════════════════\nOWN-LOT INVENTORY (RV Country)\n═══════════════════════════════════════\n${lot}`;
   }
-  return out;
+  return `${out}\n\n${keepTalkingCue(opts?.softFollowUpsUsed ?? 0)}`;
 }
 
 function workerBase() {
@@ -991,6 +1003,8 @@ async function tryXaiDirect(
   mode?: TalkMode,
   requestOrigin?: string,
   stream?: { sink: ChatSseSink; lotSensitive: boolean },
+  audience: Audience = "shopper",
+  softFollowUpsUsed = 0,
 ): Promise<string | null> {
   const apiKey = process.env.XAI_API_KEY;
   if (!stream) return null;
@@ -1006,7 +1020,7 @@ async function tryXaiDirect(
     : ["grok-4.7", "grok-4.6", "grok-4-latest", "grok-4.5", "grok-3"];
 
   const system = withGrounding(
-    (agentMode ? AGENT_SYSTEM_PROMPT : RV_SYSTEM_PROMPT) +
+    rvGrokCoreFor(audience) +
       (vision
         ? "\n\nA photo is attached. You CAN see it. Describe exactly what is visible (panels, screens, labels, damage, coach exterior). Never claim you cannot see images. Never invent a different scene."
         : "") +
@@ -1022,6 +1036,7 @@ async function tryXaiDirect(
       visitorMemory,
       standingLessons,
       mode,
+      softFollowUpsUsed,
     },
   );
   const fullMessages: ChatMessage[] = [
@@ -1131,6 +1146,8 @@ async function tryCloudflareWorker(
   visitorMemory?: string,
   standingLessons?: string,
   mode?: TalkMode,
+  audience: Audience = "shopper",
+  softFollowUpsUsed = 0,
 ): Promise<Response | null> {
   const base = workerBase();
   const candidates = agentMode
@@ -1152,7 +1169,7 @@ async function tryCloudflareWorker(
             {
               role: "system",
               content: withGrounding(
-                (agentMode ? AGENT_SYSTEM_PROMPT : RV_SYSTEM_PROMPT) +
+                rvGrokCoreFor(audience) +
                   systemExtra,
                 {
                   feedbackContext,
@@ -1163,6 +1180,7 @@ async function tryCloudflareWorker(
                   visitorMemory,
                   standingLessons,
                   mode,
+                  softFollowUpsUsed,
                 },
               ),
             },
@@ -1292,6 +1310,7 @@ export const Route = createFileRoute("/api/rvgrok")({
 
         const agentMode = Boolean(body.agentMode);
         const talkMode = parseTalkMode(body.mode);
+        const audience = parseAudience(body.audience);
         const feedbackContext = body.feedbackContext;
         const visitorFirstName =
           typeof body.visitorFirstName === "string"
@@ -1315,6 +1334,11 @@ export const Route = createFileRoute("/api/rvgrok")({
           ]);
           const lastUser = [...messages].reverse().find((m) => m.role === "user");
           const lastPlain = lastUser ? contentToPlain(lastUser.content) : "";
+          const softFollowUpsUsed = countSoftFollowUps(
+            messages
+              .filter((m) => m.role === "assistant")
+              .map((m) => contentToPlain(m.content)),
+          );
           const memoryTurns: MemoryTurn[] = messages.map((m) => ({
             role: m.role,
             text: contentToPlain(m.content).slice(0, 800),
@@ -1342,6 +1366,7 @@ export const Route = createFileRoute("/api/rvgrok")({
             query: lastPlain,
             extraText: priorUserText,
             agentMode,
+            audience,
           });
           const threadFloorplan = floorplanAlreadyInThread(priorUserText);
           if (
@@ -1354,6 +1379,18 @@ export const Route = createFileRoute("/api/rvgrok")({
               floorplan: threadFloorplan,
               source: "mixed",
             };
+            serverGrounded.needsWeb = needsWebFallback(
+              serverGrounded.specs,
+              lastPlain,
+              {
+                agentMode,
+                audience,
+                pinCoversAskedField: savedPinCoversAskedField(
+                  serverGrounded.identity,
+                  lastPlain,
+                ),
+              },
+            );
           }
           const lastNamesCoach = askNamesCoachIdentity(
             parseCoachFromText(lastPlain),
@@ -1393,14 +1430,22 @@ export const Route = createFileRoute("/api/rvgrok")({
               tool: tool as CoachFactsToolResult,
             });
             if (reply && !isUnpinnedWeightReply(reply)) {
-              return finish(
-                jsonToSseStream({
-                  content: reply,
-                  model: "catalog-pin",
-                  agentMode,
-                  upstream: "coach-facts",
-                }),
+              const pinCovers = savedPinCoversAskedField(
+                serverGrounded.identity,
+                lastPlain,
               );
+              // Owner speaks this floorplan's pin and does not wait.
+              // A shopper pin does not skip the search.
+              if (audience === "owner" && pinCovers) {
+                return finish(
+                  jsonToSseStream({
+                    content: reply,
+                    model: "catalog-pin",
+                    agentMode,
+                    upstream: "coach-facts",
+                  }),
+                );
+              }
             }
             if (reply && serverGrounded.identity?.floorplan) {
               sink.status(WEB_RESEARCH_STATUS);
@@ -1576,6 +1621,8 @@ export const Route = createFileRoute("/api/rvgrok")({
                 goAheadLot ||
                 looksLikeInventoryOrCountQuestion(lastPlain),
             },
+            audience,
+            softFollowUpsUsed,
           );
           if (fromXai != null) {
             if (sink.visibleText() !== fromXai) sink.replace(fromXai);
@@ -1605,6 +1652,8 @@ export const Route = createFileRoute("/api/rvgrok")({
             visitorMemory,
             standingLessons,
             talkMode,
+            audience,
+            softFollowUpsUsed,
           );
           if (fromWorker) return finish(fromWorker);
 

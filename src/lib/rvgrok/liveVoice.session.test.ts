@@ -86,7 +86,7 @@ test("session.update enables native web_search on the Realtime session", () => {
   // Towing and the comparisons that rest on it are looked up, like any spec.
   assert.match(
     session.instructions,
-    /Specs \(GVWR, weights, tanks, engine, towing capacity, GCWR, payload, fuel economy\), and a which-is-better or which-tows-more comparison that rests on them, are looked up before you answer/,
+    /Specs and buying digits follow the audience path at the end of this session/,
   );
   assert.doesNotMatch(session.instructions, /Specs \(GVWR, weights, tanks, engine\):/);
   assert.doesNotMatch(session.instructions, /the catalog pin in this turn wins/);

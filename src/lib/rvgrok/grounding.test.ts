@@ -32,6 +32,8 @@ import {
   looksLikeMarketValueQuestion,
   looksLikeNamedCoachProductQuestion,
   looksLikeOffCatalogQuestion,
+  looksLikeSpecQuestion,
+  looksLikeTowOrEconomyAsk,
   catalogGapNeedsWeb,
   needsWebFallback,
 } from "./webIntent.ts";
@@ -357,7 +359,6 @@ test("looksLikeLiveResearchQuestion is false for lifestyle, payment, and hi", ()
     "thanks",
     "Is full-timing worth it?",
     "Sell me the RV lifestyle vs hotels",
-    "What's the monthly payment on $80000 at 7% for 15 years?",
   ];
   for (const q of casual) {
     assert.equal(looksLikeLiveResearchQuestion(q), false, q);
@@ -365,6 +366,11 @@ test("looksLikeLiveResearchQuestion is false for lifestyle, payment, and hi", ()
     assert.equal(needsWebFallback(null, q), false, q);
     assert.equal(needsWebFallback(null, q, { agentMode: true }), false, q);
   }
+  const payment = "What's the monthly payment on $80000 at 7% for 15 years?";
+  assert.equal(looksLikeLiveResearchQuestion(payment), false);
+  assert.equal(looksLikeCasualNonResearch(payment), true);
+  assert.equal(needsWebFallback(null, payment), true);
+  assert.equal(needsWebFallback(null, payment, { agentMode: true }), true);
   assert.equal(looksLikeLiveResearchQuestion("Draw a Class A at sunset"), false);
   assert.equal(looksLikeImageOnlyAsk("Draw a Class A at sunset"), true);
   assert.equal(needsWebFallback(null, "Draw a Class A at sunset"), false);
@@ -400,14 +406,14 @@ test("Passport slide retract wants web even when powertrain is locked", () => {
 test("spec miss still wants web; locked Vision engine question also searches", () => {
   assert.equal(
     needsWebFallback(null, "What HP does a 2023 American Dream have?"),
-    false,
+    true,
   );
   assert.equal(
     needsWebFallback(
       { missingHard: true },
       "What engine and HP does a 2023 American Coach American Dream 45A have?",
     ),
-    false,
+    true,
   );
 
   const lockedSpec = {
@@ -435,8 +441,8 @@ test("spec miss still wants web; locked Vision engine question also searches", (
       lockedSpec,
       "What engine and HP does a 2023 Entegra Vision have?",
     ),
-    false,
-    "locked spec answers from the catalog pin — no pre-token browse",
+    true,
+    "a shopper searches a locked spec — the pin does not skip",
   );
 });
 
@@ -508,7 +514,7 @@ test("repair-mode playbook is wired through chat, voice, and browse", () => {
   assert.match(src(root, "grounding.ts"), /formatRepairGroundingBlock/);
   assert.match(src(root, "webIntent.ts"), /looksLikeRepairQuestion/);
   assert.match(src(root, "prompts.ts"), /RV_GROK_LEAN_CORE/);
-  assert.match(src(root, "speechPolicy.ts"), /You also answer the rest of what he asks/);
+  assert.match(src(root, "speechPolicy.ts"), /SHOPPER RETRIEVAL is search-always/);
   assert.match(src(root, "voice.ts"), /RV_GROK_LEAN_CORE/);
   assert.match(src(root, "webSearch.ts"), /torque spec, part number, wiring color/);
   const api = src(join(root, "../../routes/api"), "rvgrok.ts");
@@ -646,15 +652,16 @@ function assertLineageSeriesMLock(
   assert.doesNotMatch(pinSpoken!.note || "", /no catalog data/i);
   assert.doesNotMatch(pinSpoken!.engine, /fifth[- ]wheel/i);
 
+  const search = looksLikeSpecQuestion(q) || looksLikeTowOrEconomyAsk(q);
   assert.equal(
     needsWebFallback({ missingHard: false }, q),
-    false,
-    "catalog lock answers now; search is not a pre-token step",
+    search,
+    q,
   );
   assert.equal(
     needsWebFallback({ missingHard: true }, q),
-    false,
-    "coach spec streams from memory; a gap does not block the first token",
+    search,
+    q,
   );
 }
 
@@ -724,8 +731,8 @@ test("inventory / diesel count asks still trip the detector when catalog is lock
       locked,
       "What engine and HP does a 2023 Entegra Vision have?",
     ),
-    false,
-    "locked fuel/engine spec answers from the pin",
+    true,
+    "a shopper engine ask searches — the pin does not skip",
   );
   const api = src(join(root, "../../routes/api"), "rvgrok.ts");
   assert.match(api, /loadOwnLotSnapshot/);
@@ -739,24 +746,24 @@ test("unknown / catalog GAP always browses — locked spec asks also browse", ()
   assert.equal(catalogGapNeedsWeb({ missingHard: false }), false);
   assert.equal(
     needsWebFallback(null, "What hitch rating does a 2019 XYZ Phantom have?"),
-    false,
-    "coach spec streams now — no pre-token search",
+    true,
+    "a shopper hitch ask searches",
   );
   assert.equal(
     needsWebFallback(
       { missingHard: true },
       "What engine does a 2026 Lineage Series E have?",
     ),
-    false,
-    "UNKNOWN hard fields do not block the first token",
+    true,
+    "a shopper engine ask searches",
   );
   assert.equal(
     needsWebFallback(
       { missingHard: false },
       "What engine and HP does a 2023 Entegra Vision have?",
     ),
-    false,
-    "locked spec ask answers from the pin",
+    true,
+    "a shopper locked spec still searches",
   );
   assert.equal(needsWebFallback(null, "hi"), false);
   const intent = src(root, "webIntent.ts");
@@ -775,12 +782,9 @@ test("David spec asks always require live search — even on a locked row", () =
   ];
   for (const q of asks) {
     assert.equal(looksLikeCoachFactAsk(q), true, q);
-    assert.equal(needsWebFallback(null, q), false, q);
-    assert.equal(
-      needsWebFallback(locked, q),
-      false,
-      `${q} uses the catalog pin — no pre-token browse`,
-    );
+    const search = looksLikeSpecQuestion(q) || looksLikeTowOrEconomyAsk(q);
+    assert.equal(needsWebFallback(null, q), search, q);
+    assert.equal(needsWebFallback(locked, q), search, q);
   }
   assert.equal(looksLikeCoachFactAsk("hi"), false);
   assert.equal(looksLikeCoachFactAsk("Is full-timing worth it?"), false);
@@ -818,8 +822,8 @@ test("catalog miss fires web without about-phrasing", () => {
   const tow =
     "What's the tow rating on a 2019 XYZ Phantom that's not in catalog?";
   assert.equal(looksLikeNamedCoachProductQuestion(tow), false);
-  assert.equal(needsWebFallback(null, tow), false);
-  assert.equal(needsWebFallback({ missingHard: true }, tow), false);
+  assert.equal(needsWebFallback(null, tow), true);
+  assert.equal(needsWebFallback({ missingHard: true }, tow), true);
 
   const fish = "Best fishing spots near Moab for an RV";
   assert.equal(looksLikeOffCatalogQuestion(fish), true);
@@ -838,7 +842,7 @@ test("catalog miss fires web without about-phrasing", () => {
       { missingHard: true },
       "2026 Grand Design Lineage Series E hitch rating",
     ),
-    false,
+    true,
   );
 });
 
@@ -984,7 +988,7 @@ test("a factory ask is the plant, not a coach missing a year", () => {
   assert.doesNotMatch(grounded.block, /Class C/);
   assert.equal(
     needsWebFallback(null, "What's the factory GVWR of a 2020 Tiffin Phaeton 40IH?"),
-    false,
+    true,
   );
   const voice = buildVoiceGrounding({ query: "what do you think of them" });
   assert.match(voice, /Name the plant and what it builds/);

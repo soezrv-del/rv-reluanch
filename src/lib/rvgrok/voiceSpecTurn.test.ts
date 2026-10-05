@@ -503,15 +503,15 @@ test("overview sheet is reused for full report and voice fallback pins knowledge
     realtime.indexOf("private async deliverVoiceQuick"),
   );
   const cachedDeliver = routeFn.indexOf("this.voiceCachedSheet?.query");
-  const choiceOpen = routeFn.indexOf("this.voiceChoiceTranscript = transcript");
-  assert.ok(cachedDeliver > 0 && choiceOpen > cachedDeliver);
-  assert.match(routeFn, /VOICE_COACH_CHOICE_INSTRUCTIONS/);
+  assert.ok(cachedDeliver > 0);
+  assert.doesNotMatch(routeFn, /VOICE_COACH_CHOICE_INSTRUCTIONS/);
+  assert.doesNotMatch(realtime, /flushExactSpeech\(VOICE_COACH_CHOICE_INSTRUCTIONS\)/);
   assert.match(routeFn, /shouldSpeakVoiceCoachChoice/);
   assert.match(routeFn, /looksLikeExplicitVoiceReportAsk/);
   const fieldSkip = routeFn.indexOf("shouldSpeakVoiceCoachChoice");
-  const choiceSpeak = routeFn.indexOf("VOICE_COACH_CHOICE_INSTRUCTIONS");
-  assert.ok(fieldSkip > 0 && fieldSkip < choiceSpeak);
-  assert.match(routeFn.slice(fieldSkip, choiceSpeak), /return false/);
+  assert.ok(fieldSkip > 0);
+  assert.match(routeFn.slice(fieldSkip, fieldSkip + 700), /return false/);
+  assert.match(routeFn, /burned the one exit/);
   const fieldRun = realtime.indexOf(
     "!looksLikeExplicitVoiceReportAsk(transcript)",
   );

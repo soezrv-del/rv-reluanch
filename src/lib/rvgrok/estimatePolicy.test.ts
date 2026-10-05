@@ -46,10 +46,10 @@ function src(name: string) {
 test("catalog miss triggers web-research path (chat + live voice)", () => {
   const miss = "What's the hitch rating on a 2019 XYZ Phantom?";
   assert.equal(catalogGapNeedsWeb(null, miss), true);
-  assert.equal(needsWebFallback(null, miss), false);
+  assert.equal(needsWebFallback(null, miss), true);
   assert.equal(
     decideVoiceWebResearch({ transcript: miss, specs: null }).action,
-    "pass",
+    "research",
   );
 
   const weightGap = "What's the UVW on a 2025 Entegra Coach Aspire 44R?";
@@ -66,16 +66,16 @@ test("catalog miss triggers web-research path (chat + live voice)", () => {
       { missingHard: false, missingOemWeightPin: true },
       weightGap,
     ),
-    false,
-    "coach weight asks stream from memory — scrape is not pre-token",
+    true,
+    "a shopper weight ask searches even when the row is locked",
   );
   assert.equal(
     needsWebFallback(
       { missingHard: false, missingOemWeightPin: true },
       "What engine and HP does a 2023 Entegra Vision have?",
     ),
-    false,
-    "locked engine / HP answers from the pin — browse only on a gap",
+    true,
+    "a shopper engine / HP ask searches — a pin does not skip",
   );
   assert.equal(
     looksLikeCoachFactAsk("What engine and HP does a 2023 Entegra Vision have?"),
@@ -83,7 +83,7 @@ test("catalog miss triggers web-research path (chat + live voice)", () => {
   );
 
   const api = src(join("..", "..", "routes", "api", "rvgrok.ts"));
-  assert.match(src("grounding.ts"), /needsWebFallback\(specs/);
+  assert.match(src("grounding.ts"), /needsWebFallback\(\s*specs/);
   assert.match(api, /serverGrounded\.needsWeb/);
   assert.match(api, /executeWebResearch/);
   assert.match(src("estimatePolicy.ts"), /MUST run live WEB RESEARCH this turn BEFORE answering/);
