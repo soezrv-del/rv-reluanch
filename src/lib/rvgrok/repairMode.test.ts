@@ -85,8 +85,8 @@ test("repair intent stays off for specs, lifestyle, and system-name-only asks", 
   }
   assert.equal(
     needsWebFallback({ missingHard: false }, no[2]!),
-    false,
-    "locked Lineage M spec answers from the catalog pin — no pre-token browse",
+    true,
+    "a shopper Lineage M spec searches — the pin does not skip",
   );
 });
 
@@ -218,7 +218,7 @@ test("wiring: chat, voice, browse, and Live share the same repair rails", () => 
   assert.match(grounding, /repairBlockFor/);
   assert.match(webIntent, /looksLikeRepairQuestion/);
   assert.match(prompts, /RV_GROK_LEAN_CORE/);
-  assert.match(src("speechPolicy.ts"), /You also answer the rest of what he asks/);
+  assert.match(src("speechPolicy.ts"), /SHOPPER RETRIEVAL is search-always/);
   assert.match(voice, /RV_GROK_LEAN_CORE/);
   assert.match(src("repairMode.ts"), /torque spec|REPAIR PLAYBOOK/);
   assert.match(webSearch, /torque spec, part number, wiring color/);

@@ -145,7 +145,8 @@ test("Facts voice searches for specs; the session prompt matches the other scree
 test("Facts spec wiring searches and keeps the lot tool; core prompt and model ids stay", () => {
   assert.match(GROUNDING_RULES, /closest saved pin when one exists/);
   assert.match(VOICE_MIC_RULES, /closest saved pin when one exists/);
-  assert.match(RV_GROK_LEAN_CORE, /closest saved pin when one exists/);
+  assert.match(RV_GROK_LEAN_CORE, /SHOPPER RETRIEVAL is search-always/);
+  assert.doesNotMatch(RV_GROK_LEAN_CORE, /pin-first on this unit/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /the catalog pin in this turn wins/);
   assert.doesNotMatch(VOICE_MIC_RULES, /do not speak a weight/i);
   const api = readFileSync(join(root, "../../routes/api/rvgrok.ts"), "utf8");

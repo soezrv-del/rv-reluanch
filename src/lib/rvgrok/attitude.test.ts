@@ -17,11 +17,10 @@ test("one voice: fun, playful, and the same words in the core", () => {
   assert.match(RV_GROK_ATTITUDE, /enjoy knowing the coach/);
   assert.match(RV_GROK_ATTITUDE, /enjoy buying/);
   assert.match(RV_GROK_ATTITUDE, /Never invent a weight/);
-  assert.match(RV_GROK_LEAN_CORE, /fun and playful/);
-  assert.match(RV_GROK_LEAN_CORE, /enjoy knowing the coach/);
+  assert.match(RV_GROK_LEAN_CORE, /Dry\. No hype/);
   assert.match(RV_GROK_LEAN_CORE, /The first sentence is the answer/);
-  assert.doesNotMatch(RV_GROK_LEAN_CORE, /Dry, not cute/);
-  assert.doesNotMatch(RV_GROK_LEAN_CORE, /No hype/);
+  assert.doesNotMatch(RV_GROK_LEAN_CORE, /fun and playful/);
+  assert.doesNotMatch(RV_GROK_LEAN_CORE, /enjoy knowing the coach/);
   assert.doesNotMatch(RV_GROK_ATTITUDE, /We'll figure this out/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /We'll figure this out/);
 });

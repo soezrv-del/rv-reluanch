@@ -17,7 +17,9 @@
  * EST when a live OEM / brochure / dealer source exists.
  * Inventory / diesel-count / in-stock still trip this detector so voice+chat
  * can inject the own-lot snapshot; a *hit* skips public web, a miss browses.
- * Skip hi / lifestyle / payment / image-only turns, named-coach small talk,
+ * Skip hi / lifestyle / image-only turns and named-coach small talk.
+ * A shopper payment searches. It is not small talk.
+ * Market value / pricing always browses (live nationwide asking, year ±2).
  * and catalog-answerable coach-vs-coach compares.
  * Market value / pricing always browses (live nationwide asking, year ±2).
  * Repair / forum / manual asks still browse even on a compare.
@@ -29,6 +31,7 @@ import { looksLikeCarfaxQuestion } from "./carfaxPositioning.ts";
 import { looksLikeOriginQuestion } from "./originStory.ts";
 import { looksLikeRepairQuestion } from "./repairMode.ts";
 import { looksLikeCatalogAnswerableCoachCompare } from "./coachCompare.ts";
+import type { Audience } from "./speechPolicy.ts";
 
 export { looksLikeCarfaxQuestion } from "./carfaxPositioning.ts";
 export { looksLikeOriginQuestion } from "./originStory.ts";
@@ -48,8 +51,16 @@ export type WebFallbackSpecs = {
 } | null;
 
 export type WebFallbackOpts = {
-  /** Agent mode may browse a bit more often — still skips hi / lifestyle / payment. */
+  /** Agent mode may browse a bit more often — still skips a greeting. */
   agentMode?: boolean;
+  /** Missing tag is shopper. Do not default this to owner. */
+  audience?: Audience;
+  /**
+   * Caller sets this. True only when the saved pin matches this floorplan
+   * and contains the asked field. A series pin, a near match, or a different
+   * field is false. Shopper ignores it. The model must not set it.
+   */
+  pinCoversAskedField?: boolean;
 };
 
 const SPEC_QUESTION_RE =
@@ -354,36 +365,60 @@ export function looksLikeLiveConditionQuestion(text: string): boolean {
 }
 
 /**
- * Browse only when the ask needs an external fact memory cannot pin.
- * Hi / lifestyle / payment / image-only / named-coach small talk stay
- * offline and stream immediately. Coach and spec asks — pinned or not —
- * also stream from memory and the catalog. Resolved hard row or a gap,
- * they must not invent an OEM
- * pin; they do not wait on search. Own-lot *hit* skips the browse in the API.
- * Repair, market, inventory, and live conditions still browse.
+ * Shopper is search-always on a buying digit, including payment.
+ * Owner is pin-first, and only an explicit cover skips the search.
+ * Resolved hard row does not skip a shopper search.
+ * A missing audience tag is shopper. Payment is not small talk.
  */
 export function needsWebFallback(
   specs: WebFallbackSpecs,
   userText: string,
   opts?: WebFallbackOpts,
 ): boolean {
-  if (looksLikeCasualNonResearch(userText)) return false;
-  if (looksLikeCompanyOrPlantAsk(userText)) return true;
-  if (looksLikeOriginQuestion(userText)) return false;
-  if (looksLikeCarfaxQuestion(userText)) return false;
-  if (looksLikeImageOnlyAsk(userText)) return false;
-  if (looksLikeIncompleteCoachIdentityAsk(userText)) return false;
-  if (looksLikeLiveResearchQuestion(userText)) return true;
-  if (looksLikeInventoryOrCountQuestion(userText)) return true;
-  // Both coaches identifiable — answer from catalog now.
-  // Forum / repair already returned above.
-  if (looksLikeCatalogAnswerableCoachCompare(userText)) return false;
-  if (looksLikeLiveConditionQuestion(userText)) return true;
-  if (
-    opts?.agentMode &&
-    AGENT_EXTRA_LOOKUP_RE.test(normalizeAskText(userText))
-  ) {
-    return true;
+  const text = normalizeAskText(userText).trim();
+  const audience: Audience = opts?.audience === "owner" ? "owner" : "shopper";
+  if (!text) return false;
+  if (CASUAL_CHAT_RE.test(text)) return false;
+  if (looksLikeOriginQuestion(text)) return false;
+  if (looksLikeCarfaxQuestion(text)) return false;
+  if (looksLikeImageOnlyAsk(text)) return false;
+  if (looksLikeIncompleteCoachIdentityAsk(text)) return false;
+  // Shared. Not the pin-first / search-always decision.
+  if (looksLikeInventoryOrCountQuestion(text)) return true;
+  if (looksLikeLiveResearchQuestion(text)) return true;
+  if (looksLikeLiveConditionQuestion(text)) return true;
+  if (/\b(dump stations?|propane stations?)\b/i.test(text)) return true;
+  if (looksLikeCompanyOrPlantAsk(text)) return true;
+  if (audience === "shopper") return shopperNeedsWeb(text, opts);
+  return ownerNeedsWeb(specs, text, opts);
+}
+
+function shopperNeedsWeb(text: string, opts?: WebFallbackOpts): boolean {
+  // First. A payment used to die as casual before the tag was read.
+  if (PAYMENT_MATH_RE.test(text)) return true;
+  // Search-always. A pin does not skip.
+  if (looksLikeMarketValueQuestion(text)) return true;
+  if (looksLikeSpecQuestion(text)) return true;
+  if (looksLikeTowOrEconomyAsk(text)) return true;
+  if (looksLikeRepairQuestion(text)) return true;
+  if (/\b(recall|nhtsa)\b/i.test(text)) return true;
+  if (opts?.agentMode && AGENT_EXTRA_LOOKUP_RE.test(text)) return true;
+  return false;
+}
+
+function ownerNeedsWeb(
+  _specs: WebFallbackSpecs,
+  text: string,
+  opts?: WebFallbackOpts,
+): boolean {
+  // These are not pins. Search-always on this path too.
+  if (looksLikeRepairQuestion(text)) return true;
+  if (looksLikeMarketValueQuestion(text)) return true;
+  if (/\b(recall|nhtsa|tsb|bulletin|owners?\s+say|irv2)\b/i.test(text)) return true;
+  if (opts?.agentMode && AGENT_EXTRA_LOOKUP_RE.test(text)) return true;
+  // Pin-first. Only an explicit cover skips the search.
+  if (looksLikeSpecQuestion(text) || looksLikeTowOrEconomyAsk(text)) {
+    return opts?.pinCoversAskedField !== true;
   }
   return false;
 }

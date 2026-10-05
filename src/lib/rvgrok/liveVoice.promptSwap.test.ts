@@ -53,7 +53,7 @@ test("Live Voice instructions carry the key rules", () => {
     /only in the listing text, tags, or page text is "may have it, check the floorplan" and is not counted/,
     /a unit counts only when a spec-sheet field confirms it/,
     /Our unit's price comes from query_lot\. The web is only for MSRP or a market range/,
-    /a saved pin from this session, else the exact figure web search found and its source\. Otherwise say "not verified", and never estimate/,
+    /Specs and buying digits follow the audience path at the end of this session\. A shopper searches\. An owner speaks a pin only when it is this floorplan and this field/,
     /English only/,
   ];
   for (const rule of rules) assert.match(text, rule, `missing rule ${rule}`);
@@ -85,11 +85,18 @@ test("Live Voice instructions stay short", () => {
   assert.ok(bare.length < 8000, `bare session instructions are ${bare.length} chars`);
 });
 
-test("Live Voice instructions are not the chat lean core", () => {
+test("Live Voice ends on the shopper path and the exit cue", () => {
   const text = instructionsFor("ara");
   assert.notEqual(text, RV_GROK_LEAN_CORE);
-  assert.equal(text.includes(RV_GROK_LEAN_CORE), false, "lean core is not embedded");
-  assert.equal(LIVE_VOICE_PROMPT.includes(RV_GROK_LEAN_CORE), false, "prompt does not embed lean core");
+  assert.ok(text.startsWith(LIVE_VOICE_PROMPT));
+  assert.equal(LIVE_VOICE_PROMPT.includes(RV_GROK_LEAN_CORE), false);
+  assert.ok(text.endsWith("EXIT OPEN. One soft follow-up only if one missing fact blocks a digit or a procedure. Otherwise commit now."));
+  assert.match(text, /SHOPPER RETRIEVAL is search-always/);
+  assert.doesNotMatch(text, /pin-first on this unit/);
+  const owner = instructionsFor("ara", 1, "", "", "", undefined, "", new Date(), "owner", 1);
+  assert.match(owner, /OWNER RETRIEVAL is pin-first on this unit/);
+  assert.doesNotMatch(owner, /SHOPPER RETRIEVAL is search-always/);
+  assert.ok(owner.endsWith("EXIT SPENT. Do not ask a question. Commit or hand off in this turn. Then stop."));
 });
 
 test("query_lot description keeps parameter docs and drops the speech rules", () => {
@@ -117,8 +124,9 @@ test("query_lot description keeps parameter docs and drops the speech rules", ()
 
 test("chat core is unchanged and Live Voice no longer imports the old voice rule stack", () => {
   assert.equal(RV_SYSTEM_PROMPT, RV_GROK_LEAN_CORE);
-  assert.match(RV_GROK_LEAN_CORE, /You are RV Grok/);
-  assert.match(RV_GROK_LEAN_CORE, /closest saved pin when one exists/);
+  assert.match(RV_GROK_LEAN_CORE, /You are RvGrok/);
+  assert.match(RV_GROK_LEAN_CORE, /SHOPPER RETRIEVAL is search-always/);
+  assert.doesNotMatch(RV_GROK_LEAN_CORE, /closest saved pin when one exists/);
   const live = readFileSync(join(root, "liveVoice.ts"), "utf8");
   for (const old of ["RV_VOICE_INSTRUCTIONS", "VOICE_MIC_RULES", "VOICE_LOT_ENERGY", "sessionIntroLine", "visitorPersonalizationBlock"]) {
     assert.equal(live.includes(old), false, `liveVoice.ts no longer uses ${old}`);

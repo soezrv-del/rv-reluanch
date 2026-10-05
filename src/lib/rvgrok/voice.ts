@@ -1,4 +1,4 @@
-import { RV_GROK_LEAN_CORE, SAVED_PIN_ANSWER } from "./speechPolicy.ts";
+import { RV_GROK_LEAN_CORE, SAVED_PIN_ANSWER, keepTalkingCue } from "./speechPolicy.ts";
 import { DEFAULT_WORKER_URL } from "./types.ts";
 import { MEMORY_HEADER } from "./phoneMemory.ts";
 import { LESSONS_HEADER } from "./promptLessons.ts";
@@ -93,7 +93,9 @@ export const SPEED_OPTIONS = [
 
 export const RV_VOICE_INSTRUCTIONS = `${RV_GROK_LEAN_CORE}
 
-CAMERA: say what is actually in frame.`;
+CAMERA: say what is actually in frame.
+
+${keepTalkingCue(0)}`;
 
 /**
  * Live Voice only. How she sounds on the lot.
