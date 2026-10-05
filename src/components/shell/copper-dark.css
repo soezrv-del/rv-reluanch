@@ -117,11 +117,11 @@ html[data-theme="dark"] [data-saved-compare-list] .garage-stack-card {
   }
 }
 
-/* Copper lacquer — Ask only when it is the active (open) section.
+/* Copper lacquer — marks only the active dock room.
    Compare is glass, not copper. Open coach is glass (press scale only). */
 html[data-theme="dark"] .copper-lacquer,
-html[data-theme="dark"] .bottom-tab-btn[data-bottom-tab="rvgrok"].is-active:not([data-ask-outline]),
-html[data-theme="dark"] .bottom-tab-btn[data-bottom-tab="rvgrok"][aria-current="page"]:not([data-ask-outline]) {
+html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active,
+html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] {
   background: var(--copper-lacquer) !important;
   border: 1px solid rgba(224, 160, 120, 0.35) !important;
   color: #fff8f2 !important;
@@ -132,8 +132,8 @@ html[data-theme="dark"] .bottom-tab-btn[data-bottom-tab="rvgrok"][aria-current="
     inset 0 -10px 18px rgba(80, 36, 16, 0.22) !important;
 }
 html[data-theme="dark"] .copper-lacquer:active,
-html[data-theme="dark"] .bottom-tab-btn[data-bottom-tab="rvgrok"].is-active:not([data-ask-outline]):active,
-html[data-theme="dark"] .bottom-tab-btn[data-bottom-tab="rvgrok"][aria-current="page"]:not([data-ask-outline]):active,
+html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active:active,
+html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"]:active,
 html[data-theme="dark"] .showroom-hero-primary:active,
 html[data-theme="dark"] .garage-compare-pill:active {
   transform: scale(var(--press-scale));

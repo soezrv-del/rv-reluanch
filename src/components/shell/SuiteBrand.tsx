@@ -1,8 +1,9 @@
 /** Owner R mark. Shared shell chrome — not a room header. */
 import { useSyncExternalStore } from "react";
+import { Calculator, Settings } from "lucide-react";
 import { readTheme, serverTheme, subscribeTheme } from "@/lib/theme";
-import { PremiumMenuButton } from "./PremiumMenuButton";
-import { ThemeSwitch } from "./ThemeSwitch";
+import { TowGlyph } from "./BottomTabs";
+import "./tool-rail.css";
 
 /** David's finished cutout. 60px file is 2x, 90px file is 3x, for a 30px header. */
 export const RAIDHO_SHELL_MARK = "/assets/brand/r-mark-final-60.png";
@@ -10,12 +11,22 @@ export const RAIDHO_SHELL_MARK_LIGHT = "/assets/brand/r-mark-final-60.png";
 export const RAIDHO_SHELL_MARK_LIGHT_WEBP = "/assets/brand/r-mark-final-60.webp";
 export const RAIDHO_SHELL_MARK_LIGHT_3X = "/assets/brand/r-mark-final-90.png";
 
+/**
+ * Logo + persistent Tow / Cal / Settings controls.
+ * No back chevron on Home. Theme lives inside Settings — no standalone switch.
+ */
 export function SuiteBrand({
   onHome,
-  showMenu = false,
+  onOpenTow,
+  onOpenCal,
+  onOpenSettings,
+  settingsOpen = false,
 }: {
   onHome: () => void;
-  showMenu?: boolean;
+  onOpenTow?: () => void;
+  onOpenCal?: () => void;
+  onOpenSettings?: () => void;
+  settingsOpen?: boolean;
 }) {
   const theme = useSyncExternalStore(subscribeTheme, readTheme, serverTheme);
 
@@ -47,12 +58,42 @@ export function SuiteBrand({
         </picture>
         <span className="showroom-word">RvFOX</span>
       </button>
-      {showMenu ? (
-        <div className="showroom-header-tools">
-          <ThemeSwitch />
-          <PremiumMenuButton variant="showroom" />
-        </div>
-      ) : null}
+      <div className="showroom-header-tools" data-tool-rail>
+        <button
+          type="button"
+          className="tool-rail-btn"
+          data-tool-rail="tow"
+          aria-label="Tow"
+          title="Tow"
+          onClick={() => onOpenTow?.()}
+        >
+          <TowGlyph className="tool-rail-glyph" />
+          <span className="tool-rail-label">Tow</span>
+        </button>
+        <button
+          type="button"
+          className="tool-rail-btn"
+          data-tool-rail="cal"
+          aria-label="Cal"
+          title="Cal"
+          onClick={() => onOpenCal?.()}
+        >
+          <Calculator className="tool-rail-glyph" strokeWidth={1.75} aria-hidden />
+          <span className="tool-rail-label">Cal</span>
+        </button>
+        <button
+          type="button"
+          className="tool-rail-btn is-settings"
+          data-tool-rail="settings"
+          aria-label="Settings"
+          title="Settings"
+          aria-expanded={settingsOpen}
+          aria-haspopup="dialog"
+          onClick={() => onOpenSettings?.()}
+        >
+          <Settings className="tool-rail-glyph" strokeWidth={1.75} aria-hidden />
+        </button>
+      </div>
     </div>
   );
 }

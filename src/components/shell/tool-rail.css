@@ -1,0 +1,56 @@
+/* Persistent Tow / Cal / Settings — top-right of every screen.
+   Structural only; dark copper accents stay in copper-dark.css. */
+.showroom-header-tools[data-tool-rail] {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  z-index: 4;
+}
+
+.tool-rail-btn {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.05rem;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  background: rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tool-rail-btn:active {
+  transform: scale(0.96);
+  opacity: 0.88;
+}
+
+.tool-rail-glyph {
+  width: 15px;
+  height: 15px;
+  display: block;
+}
+
+.tool-rail-label {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.tool-rail-btn.is-settings .tool-rail-label {
+  display: none;
+}
+
+html[data-theme="light"] .tool-rail-btn {
+  border-color: rgba(23, 26, 32, 0.22);
+  background: rgba(255, 255, 255, 0.72);
+  color: #171a20;
+  box-shadow: 0 1px 4px rgba(23, 26, 32, 0.12);
+}

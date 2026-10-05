@@ -10,22 +10,23 @@ function read(rel: string) {
   return readFileSync(join(root, rel), "utf8");
 }
 
-test("copper dark rules are dark-scoped; dock is Facts/Inventory/Ask/More with no Chat or plus", () => {
+test("copper dark rules are dark-scoped; dock is Home/Facts/Inventory/Ask with no Chat More or plus", () => {
   const tabs = read("../../components/shell/BottomTabs.tsx");
   const dock = read("../../components/shell/dock.css");
   const copper = read("../../components/shell/copper-dark.css");
   const home = read("../../components/shell/HomeScreen.tsx");
   const truth = read("../../components/shell/home-truth.css");
 
+  assert.match(tabs, /short: "Home"/);
   assert.match(tabs, /short: "Facts"/);
   assert.match(tabs, /short: "Inventory"/);
   assert.match(tabs, /short: "Ask"/);
-  assert.match(tabs, /short: "More"/);
+  assert.doesNotMatch(tabs, /short: "More"/);
   assert.doesNotMatch(tabs, /short: "Live Chat"|short: "Chat"/);
   assert.doesNotMatch(tabs, /Action Button|bottom-tab-action|bottom-tab-center|\bPlus\b/);
   assert.match(tabs, /\{ id: "rvgrok", label: "Ask", short: "Ask" \}/);
   assert.match(tabs, /copper-dark\.css/);
-  assert.match(tabs, /is-ask/);
+  assert.match(tabs, /is-active/);
 
   assert.match(copper, /--copper:/);
   assert.match(copper, /--copper-lacquer:/);
@@ -72,25 +73,19 @@ test("copper dark rules are dark-scoped; dock is Facts/Inventory/Ask/More with n
   assert.ok(placard >= 0 && primary > placard && floor > primary);
 });
 
-test("Ask label sits inside the capsule; copper only when Ask is active", () => {
+test("copper marks only the active dock room; no Ask-only capsule", () => {
   const dock = read("../../components/shell/dock.css");
   const copper = read("../../components/shell/copper-dark.css");
   const dark = dock.slice(dock.indexOf("/* Dark dock"));
+  const tabs = read("../../components/shell/BottomTabs.tsx");
 
-  // Hide sparkle / glyph; caption is the in-capsule label.
-  assert.match(dark, /\.is-ask \.bottom-tab-glyph \{[^}]*display:\s*none/);
-  assert.match(dark, /\.is-ask \.bottom-tab-caption/);
-  // Quiet glass when inactive; copper only with .is-active / aria-current.
-  assert.match(dark, /\.is-ask\.is-active/);
+  assert.doesNotMatch(tabs, /is-ask/);
+  assert.doesNotMatch(dark, /\.is-ask \.bottom-tab-glyph \{[^}]*display:\s*none/);
   assert.match(
     copper,
-    /bottom-tab-btn\[data-bottom-tab="rvgrok"\]\.is-active/,
+    /bottom-tabs-nav\[data-dock-icons="platinum"\] \.bottom-tab-btn\.is-active/,
   );
-  // Must not lacquer every Ask button unconditionally.
-  assert.doesNotMatch(
-    copper,
-    /bottom-tab-btn\[data-bottom-tab="rvgrok"\]:not\(\[data-ask-outline\]\)\s*\{/,
-  );
+  assert.match(dark, /Active room caption/);
 });
 
 test("detail solid spec card; Compare is glass and hidden under 2 saved", () => {

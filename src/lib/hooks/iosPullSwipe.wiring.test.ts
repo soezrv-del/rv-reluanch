@@ -57,17 +57,14 @@ test("Trips iPhone chrome: RvFOX wordmark, island inset, profile below status ba
   assert.match(cap, /overlaysWebView:\s*true/);
 });
 
-test("shell swipe strip follows the finger", () => {
+test("shell no longer arms swipe-between-tabs", () => {
   const shell = read("../../components/shell/AppShell.tsx");
   const css = read("../../styles.css");
   assert.match(shell, /suite-swipe-viewport/);
-  assert.match(shell, /onPeek/);
+  assert.doesNotMatch(shell, /useSwipeTabs|onPeek|swipeArmed|SWIPE_ORDER/);
   assert.match(shell, /--pane-shift/);
   assert.match(shell, /data-pane-active/);
   assert.match(shell, /data-pane-offset/);
-  assert.match(css, /--swipe-dx/);
-  assert.match(css, /cubic-bezier\(0\.32, 0\.72, 0, 1\)/);
-  assert.match(css, /contain:\s*paint/);
+  // CSS leftovers from the old gesture are harmless; wiring must stay off.
   assert.match(css, /data-pane-active/);
-  assert.match(css, /data-swipe-busy/);
 });
