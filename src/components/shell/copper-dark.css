@@ -428,12 +428,15 @@ html[data-theme="dark"] {
     var(--dock-tab-h, 60px) + env(safe-area-inset-bottom, 0px) + 1.75rem + 12px
   );
 }
+html[data-theme="dark"] .showroom-home,
 html[data-theme="dark"] [data-coach-detail] #rvfax-vehicle-report,
 html[data-theme="dark"] [data-coach-detail] [data-coach-overview],
 html[data-theme="dark"] .suite-page,
 html[data-theme="dark"] [data-suite-page],
 html[data-theme="dark"] .more-sheet-scroll,
 html[data-theme="dark"] [data-more-sheet] .more-sheet-body,
+html[data-theme="dark"] .more-sheet-list,
+html[data-theme="dark"] [data-tools-list],
 html[data-theme="dark"] .facts-cascade-scroll-pad,
 html[data-theme="dark"] [data-lot-stock],
 html[data-theme="dark"] .lot-stock-screen .suite-scroll,

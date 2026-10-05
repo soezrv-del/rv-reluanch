@@ -29,10 +29,9 @@ html[data-theme="dark"] .showroom-app[data-home-open]
 }
 
 html[data-theme="dark"] .showroom-home {
-  /* Home fills main above the dock; keep a small breath so the reflection
-     never kisses the bar. Scrolling suite lists use --dock-clearance. */
-  padding-bottom: 12px;
-  scroll-padding-bottom: var(--dock-clearance, 5.5rem);
+  /* Clear the floating dock: tab height + safe-area + ~12px (via --dock-clearance). */
+  padding-bottom: max(1.25rem, var(--dock-clearance, 5.5rem));
+  scroll-padding-bottom: max(1.25rem, var(--dock-clearance, 5.5rem));
 }
 
 html[data-theme="dark"] .showroom-home .showroom-hero {
@@ -174,9 +173,9 @@ html[data-theme="dark"] .showroom-home .showroom-hero-primary:focus-visible {
   Short fading reflection ONLY — never a second full flipped coach.
 */
 html[data-theme="dark"] .showroom-home .showroom-floor {
-  --floor-mirror: 3.5rem; /* short fade ~28% of coach height */
+  --floor-mirror: 2.75rem; /* short fade ~25–30% of coach height */
   --floor-pull: 0px;
-  --coach-max-h: min(46vh, 18.5rem);
+  --coach-max-h: min(50vh, 20rem);
   position: relative;
   z-index: 2;
   /* Shrink-wrap coach + reflection so the mirror sits under the wheels
@@ -185,7 +184,7 @@ html[data-theme="dark"] .showroom-home .showroom-floor {
   flex: 0 0 auto;
   display: block;
   width: 100%;
-  margin: 16px 0 0;
+  margin: 12px 0 0;
   padding: 0 0 var(--floor-mirror);
   background: transparent;
   line-height: 0;
@@ -224,8 +223,7 @@ html[data-theme="dark"] .showroom-home .showroom-floor .showroom-coach {
   width: 106% !important;
   max-width: 106% !important;
   height: auto !important;
-  /* Grow into leftover stage height only while width stays within 106%. */
-  max-height: min(var(--coach-max-h), calc(100% - var(--floor-mirror) - 8px)) !important;
+  max-height: var(--coach-max-h) !important;
   margin: 0 -3% !important;
   padding: 0 !important;
   object-fit: contain !important;
@@ -238,14 +236,15 @@ html[data-theme="dark"] .showroom-home .showroom-floor .showroom-coach {
 
 /* Reflection well: hangs ONLY below the wheels; clips the flipped copy. */
 html[data-theme="dark"] .showroom-home .showroom-floor-mirror {
-  position: absolute;
+  display: block !important;
+  position: absolute !important;
   z-index: 1;
   left: -3%;
   right: -3%;
-  top: auto;
-  bottom: 0;
-  height: var(--floor-mirror);
-  overflow: hidden;
+  top: auto !important;
+  bottom: 0 !important;
+  height: var(--floor-mirror) !important;
+  overflow: hidden !important;
   pointer-events: none;
   -webkit-mask-image: linear-gradient(
     to bottom,
@@ -305,19 +304,51 @@ html[data-theme="dark"] .showroom-home .showroom-floor-gloss {
 }
 
 @media (orientation: landscape) {
+  html[data-theme="dark"] .showroom-home .showroom-hero {
+    padding-top: 6px;
+  }
+  html[data-theme="dark"] .showroom-home .showroom-placard {
+    padding: 0 16px;
+  }
+  html[data-theme="dark"] .showroom-home .showroom-spotyear {
+    font-size: 10px;
+  }
+  html[data-theme="dark"] .showroom-home .showroom-spotmodel {
+    margin-top: 2px;
+    font-size: 22px;
+  }
+  html[data-theme="dark"] .showroom-home .showroom-spotprice {
+    margin-top: 2px;
+    font-size: 18px;
+  }
+  html[data-theme="dark"] .showroom-home .showroom-spotstock {
+    margin-top: 4px;
+    font-size: 12px;
+  }
+  html[data-theme="dark"] .showroom-home .showroom-verified-pill,
+  html[data-theme="dark"] .showroom-home .showroom-spot-verified {
+    margin-top: 4px;
+    min-height: 18px;
+    font-size: 8px;
+  }
+  html[data-theme="dark"] .showroom-home .showroom-hero-primary {
+    height: 36px;
+    min-height: 36px;
+    margin: 8px 16px 0;
+    font-size: 14px;
+  }
   html[data-theme="dark"] .showroom-home .showroom-floor {
-    --coach-max-h: min(52vh, 12.5rem);
-    --floor-mirror: 2.85rem;
-    margin-top: 16px;
+    --coach-max-h: min(36vh, 8.5rem);
+    --floor-mirror: 1.85rem;
+    margin-top: 8px;
+  }
+  html[data-theme="dark"] .showroom-home .showroom-floor .showroom-coach {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
   }
   html[data-theme="dark"] .showroom-home .showroom-floor .showroom-coach-reflect {
     opacity: 0.28 !important;
-  }
-  html[data-theme="dark"] .showroom-home .showroom-spotmodel {
-    font-size: 28px;
-  }
-  html[data-theme="dark"] .showroom-home .showroom-spotprice {
-    font-size: 22px;
   }
 }
 
