@@ -29,7 +29,7 @@ test("Lot stock is the last dock tab and not RV Grok", () => {
     constants,
     /TAB_ORDER = \[\s*"rvfax",\s*"rvlot",\s*"rvgrok",\s*"rvtow",\s*"rvcal",\s*"rvtrips",\s*\]/,
   );
-  assert.match(constants, /title: "LOT"/);
+  assert.match(constants, /title: "Inventory"/);
 
   assert.doesNotMatch(more, /title="Lot stock"/);
   assert.doesNotMatch(more, /onNavigate\?\.\("rvlot"\)/);
