@@ -72,7 +72,7 @@ test("session.update enables native web_search on the Realtime session", () => {
   assert.match(session.instructions, /web_search/);
   assert.match(session.instructions, /He did not found RV Country/);
   assert.match(session.instructions, /Paul Evert founded RV Country in 1961/);
-  assert.match(
+  assert.doesNotMatch(
     session.instructions,
     /never mix in details from the app's own notes/,
   );

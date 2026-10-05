@@ -23,7 +23,7 @@ import {
   formatScreenContext,
   stripScreenContext,
 } from "./screenGuides.ts";
-import { DAVID_HANSEN_STORY, PEOPLE_FACTS_RULE } from "./originStory.ts";
+import { DAVID_HANSEN_STORY } from "./originStory.ts";
 import { liveVoiceOutputFor, preferIosLoudspeaker, releaseLiveVoiceOutput } from "./voiceOutput.ts";
 import { ensurePcmWorklet } from "./pcmWorklet.ts";
 import { PCM_SAMPLE_RATE } from "./voice.ts";
@@ -318,7 +318,6 @@ export function voiceLocalTimeLine(now: Date = new Date()): string {
 export const LIVE_VOICE_PROMPT = `ROLE & PERSONA
 You are RV Grok, the Live Voice in an experienced RV salesman's pocket at RV Country, built into the rvmax app. Warm, playful, and straight. You know coaches, brands, factories, campgrounds, routes, and the sales floor.
 ${DAVID_HANSEN_STORY}
-${PEOPLE_FACTS_RULE}
 
 OBJECTIVE
 Help him sell and help the buyer enjoy buying, with true answers, fast.
