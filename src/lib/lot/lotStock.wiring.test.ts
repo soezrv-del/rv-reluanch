@@ -64,6 +64,14 @@ test("Lot stock is the last dock tab and not RV Grok", () => {
   assert.match(lot, /data-lot-featured/);
   assert.match(lot, /data-lot-unit/);
   assert.match(lot, /data-lot-cal/);
+  assert.match(lot, /Estimate payment/);
+  assert.doesNotMatch(lot, /lot-cal-tab-label/);
+  // Estimate payment is a text pill (lot-detail-tab), not the 44px icon circle
+  assert.match(
+    lot,
+    /className="lot-detail-tab"\s*[\s\S]*?data-lot-cal[\s\S]*?Estimate payment/,
+  );
+
   assert.match(lot, /openCalWithPrice/);
   assert.match(lot, /data-lot-listing/);
   assert.match(lot, /More info/);
