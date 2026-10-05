@@ -56,9 +56,9 @@ test("light selected tabs are graphite, not sapphire", () => {
     .split("}")
     .filter((rule) => rule.includes('html[data-theme="light"]') && rule.includes(".is-active"))
     .join("}");
-  assert.match(lightDock, /#171a20/);
+  assert.match(lightDock, /#c9956a/);
   assert.doesNotMatch(lightDock, /#1648c8/);
-  // Dark active pill is sapphire.
-  assert.match(dock, /\.is-active,[^{]*\{[^}]*background:\s*#1648c8 !important/);
+  // Selected dock pill is copper on this preview.
+  assert.match(dock, /\.is-active,[^{]*\{[^}]*background:\s*#c9956a !important/);
   assert.doesNotMatch(dock, /rgba\(255, 255, 255, 0\.14\)/);
 });

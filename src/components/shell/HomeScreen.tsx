@@ -7,6 +7,7 @@ import type { AppTab } from "@/components/shell/BottomTabs";
 const EMPTY_UNITS: LotUnit[] = [];
 import {
   SHOWROOM_SPOTLIGHT,
+  homeStudioPlate,
   lotArrivalQuery,
   requestLotUnit,
   spotlightLotUnit,
@@ -38,6 +39,7 @@ export function HomeScreen({
   const listed = units ?? EMPTY_UNITS;
   const spotUnit = useMemo(() => spotlightLotUnit(listed), [listed]);
   const specs = spotUnit ? spotlightSpecs(spotUnit) : null;
+  const plate = spotUnit ? homeStudioPlate(spotUnit) : [];
   const model = specs?.model || SHOWROOM_SPOTLIGHT.series;
   const spotYear = (spotUnit?.year || SHOWROOM_SPOTLIGHT.year).trim();
   const spotMake = (spotUnit?.make || SHOWROOM_SPOTLIGHT.make).trim();
@@ -72,6 +74,16 @@ export function HomeScreen({
             </p>
           ) : null}
           {lotTotal ? <p className="showroom-lotcount">{lotTotal} in stock</p> : null}
+          {plate.length ? (
+            <div className="showroom-plate" data-studio-plate>
+              {plate.map((cell) => (
+                <div className="showroom-plate-cell" key={cell.label}>
+                  <p className="showroom-plate-label">{cell.label}</p>
+                  <p className="showroom-plate-value">{cell.value}</p>
+                </div>
+              ))}
+            </div>
+          ) : null}
         </div>
         <div className="showroom-floor" data-hero-kind="cutout">
           <img

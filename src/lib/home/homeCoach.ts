@@ -154,6 +154,45 @@ export function lotCoachName(unit: LotUnit): string {
   return [unit.year, unit.make, unit.model, unit.trim].filter((p) => p.trim()).join(" ");
 }
 
+/** Model and floorplan, the short name on a studio card. */
+export function studioCardName(unit: LotUnit): string {
+  const model = unit.model.trim();
+  const trim = unit.trim.trim();
+  if (model && trim && !model.toLowerCase().includes(trim.toLowerCase())) {
+    return `${model} ${trim}`;
+  }
+  if (model) return model;
+  return lotCoachName(unit);
+}
+
+/** "44 ft 11 in" from a lot length. Blank when the sheet has no length. */
+export function studioLength(ft: number | null | undefined): string {
+  if (ft == null || !Number.isFinite(ft) || ft <= 0) return "";
+  const whole = Math.floor(ft + 1e-9);
+  let inches = Math.round((ft - whole) * 12);
+  if (inches === 12) return `${whole + 1} ft`;
+  if (inches <= 0) return `${whole} ft`;
+  return `${whole} ft ${inches} in`;
+}
+
+export type StudioCell = { label: string; value: string };
+
+/**
+ * The four-up plate on Home. Only printed lot fields. A zero slide count
+ * stays off the plate. Fuel drops a leading "Regular".
+ */
+export function homeStudioPlate(unit: LotUnit): StudioCell[] {
+  const cells: StudioCell[] = [];
+  const length = studioLength(unit.length_ft);
+  if (length) cells.push({ label: "Length", value: length });
+  if (unit.slides != null && unit.slides > 0) {
+    cells.push({ label: "Slides", value: String(unit.slides) });
+  }
+  const fuel = unit.fuel_type.trim().replace(/^Regular\s+/i, "");
+  if (fuel && fuel !== LOT_GAP) cells.push({ label: "Fuel", value: fuel });
+  return cells;
+}
+
 export function formatHomePrice(price: number | null): string {
   if (price == null) return "";
   return `$${price.toLocaleString("en-US")}`;

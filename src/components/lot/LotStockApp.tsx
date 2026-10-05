@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Calculator, Check, ChevronLeft, Search, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { Calculator, Check, ChevronLeft, MapPin, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RAIDHO_R_MARK } from "@/assets/prestige";
 import { SuitePage } from "@/components/shell/SuitePage";
@@ -18,7 +18,6 @@ import {
   lotUnitKey,
   lotUnitPhoto,
   lotDetailPhoto,
-  shortLotTypeLabel,
   LOT_GAP,
   type LotSnapshotView,
   type LotUnit,
@@ -32,10 +31,19 @@ import {
 } from "@/lib/lot/garagePins";
 import {
   LOT_UNIT_OPEN_EVENT,
+  homeStudioPlate,
   lotArrivalQuery,
   showroomUnitLabel,
+  studioCardName,
+  studioLength,
   takePendingLotQuery,
 } from "@/lib/home/homeCoach";
+import {
+  readGarageStocks,
+  subscribeGarage,
+  toggleGarageStock,
+} from "@/lib/lot/studioGarage";
+import { StudioGarage } from "@/components/lot/StudioGarage";
 import { useCenterSelectedTab } from "@/lib/hooks/useCenterSelectedTab";
 import { LotArrivals } from "@/components/lot/LotArrivals";
 import { ReportShareButton } from "@/components/report/ReportShareButton";
@@ -59,6 +67,13 @@ export function LotStockApp({
   const chipRailRef = useRef<HTMLDivElement>(null);
   useCenterSelectedTab(chipRailRef, type);
   const [openKey, setOpenKey] = useState<string | null>(null);
+  const [showGarage, setShowGarage] = useState(false);
+  const [comparing, setComparing] = useState(false);
+  const garageStocks = useSyncExternalStore(
+    subscribeGarage,
+    readGarageStocks,
+    readGarageStocks,
+  );
   const [limit, setLimit] = useState(PAGE_SIZE);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const wantOpen = useRef("");
@@ -143,6 +158,14 @@ export function LotStockApp({
     return () => io.disconnect();
   }, [filtered.length, limit]);
 
+  const garageUnits = useMemo(() => {
+    const byStock = new Map(
+      (snap?.units ?? []).map((unit) => [unit.stock_number.trim(), unit]),
+    );
+    return garageStocks
+      .map((stock) => byStock.get(stock))
+      .filter((unit): unit is LotUnit => Boolean(unit));
+  }, [snap, garageStocks]);
   const featured = filtered[0] ?? null;
   const featuredKey = featured ? lotUnitKey(featured, 0) : "";
   const rail = featured
@@ -173,7 +196,25 @@ export function LotStockApp({
         data-lot-stock
         data-lot-rendered={snap ? rail.length + (featured ? 1 : 0) : 0}
       >
-        <header className="flex items-center justify-between gap-3">
+        <div className="studio-search-head">
+          <p className="studio-kicker">RV MAX</p>
+          <h1 className="studio-title">{showGarage ? "Your garage" : "Search"}</h1>
+          {showGarage ? <div className="studio-rule" /> : null}
+          {showGarage ? (
+            <p className="studio-saved-count">{garageUnits.length} saved</p>
+          ) : null}
+          <button
+            type="button"
+            className="studio-garage-link"
+            onClick={() => {
+              setShowGarage((open) => !open);
+              setComparing(false);
+            }}
+          >
+            {showGarage ? "Search" : "Your garage"}
+          </button>
+        </div>
+        <header className="lot-premium-back flex items-center justify-between gap-3">
           <button
             type="button"
             onClick={() => nav?.setTab("more")}
@@ -187,6 +228,25 @@ export function LotStockApp({
           </p>
         </header>
 
+        {showGarage ? (
+          <StudioGarage
+            units={garageUnits}
+            comparing={comparing}
+            onOpen={(unit) => {
+              const next = lotArrivalQuery(unit);
+              wantOpen.current = next;
+              setShowGarage(false);
+              setComparing(false);
+              setType("");
+              setCondition("");
+              setQuery(next);
+            }}
+            onRemove={(stock) => toggleGarageStock(stock)}
+            onToggleCompare={() => setComparing((on) => !on)}
+          />
+        ) : null}
+
+        {showGarage ? null : (<>
         <label className="block">
           <span className="sr-only">Search lot stock</span>
           <span className="relative block">
@@ -308,8 +368,10 @@ export function LotStockApp({
                   unit={featured}
                   featured
                   pins={garagePins}
+                  saved={garageStocks.includes(featured.stock_number.trim())}
                   open={openKey === featuredKey}
                   onAsk={onAsk}
+                  onToggleSave={() => toggleGarageStock(featured.stock_number)}
                   onToggle={() =>
                     setOpenKey((cur) =>
                       cur === featuredKey ? null : featuredKey,
@@ -321,7 +383,7 @@ export function LotStockApp({
 
             {rail.length ? (
               <section className="space-y-3">
-                <div className="flex items-end justify-between gap-3">
+                <div className="studio-lot-heading flex items-end justify-between gap-3">
                   <h2 className="text-[17px] font-semibold tracking-tight text-white">
                     On the lot
                   </h2>
@@ -341,8 +403,10 @@ export function LotStockApp({
                         <LotUnitCard
                           unit={unit}
                           pins={garagePins}
+                          saved={garageStocks.includes(unit.stock_number.trim())}
                           open={openKey === key}
                           onAsk={onAsk}
+                          onToggleSave={() => toggleGarageStock(unit.stock_number)}
                           onToggle={() =>
                             setOpenKey((cur) =>
                               cur === key ? null : key,
@@ -357,6 +421,7 @@ export function LotStockApp({
             ) : null}
           </div>
         )}
+        </>)}
 
         <div ref={sentinelRef} className="h-4" aria-hidden />
       </div>
@@ -453,17 +518,21 @@ function LotUnitCard({
   featured,
   open,
   pins,
+  saved,
   onToggle,
+  onToggleSave,
   onAsk,
 }: {
   unit: LotUnit;
   featured?: boolean;
   open: boolean;
   pins: GaragePinBook;
+  saved: boolean;
   onToggle: () => void;
+  onToggleSave: () => void;
   onAsk?: (prompt: string) => void;
 }) {
-  const headline = showroomUnitLabel(unit).trim() || "GAP";
+  const headline = studioCardName(unit).trim() || "GAP";
   const price = lotPriceOrGap(unit.price);
   const miles = lotCardMiles(unit);
   const snippet = lotSearchSnippets(unit).find((row) => row.field === "horsepower" || row.field === "displacement")
@@ -519,7 +588,6 @@ function LotUnitCard({
           )}
         </div>
         <div className="lot-row-copy">
-          <p className="lot-row-kicker">{shortLotTypeLabel(unit.body_type)}</p>
           <p
             className={cn(
               "lot-unit-title",
@@ -530,18 +598,40 @@ function LotUnitCard({
             {headline}
           </p>
           <p className={cn("lot-row-price", price === "GAP" && "is-gap")}>{price}</p>
-          {snippet ? (
-            <p data-lot-snippet>
-              {snippet.text}
+          {lotTextOrGap(unit.location) !== "GAP" ? (
+            <p className="lot-row-where">
+              <MapPin aria-hidden />
+              {lotTextOrGap(unit.location)}
             </p>
           ) : null}
+          {studioLength(unit.length_ft) ? (
+            <p className="lot-row-sub">
+              {[unit.year.trim(), studioLength(unit.length_ft)].filter(Boolean).join(" · ")}
+            </p>
+          ) : null}
+          {snippet ? <p data-lot-snippet>{snippet.text}</p> : null}
           <p className="lot-unit-meta" data-lot-meta>
             {meta}
           </p>
         </div>
       </button>
+      {unit.stock_number.trim() ? (
+        <button
+          type="button"
+          className={cn("studio-save", saved && "is-on")}
+          aria-pressed={saved}
+          aria-label={
+            saved
+              ? `Remove ${headline} from your garage`
+              : `Save ${headline} to your garage`
+          }
+          onClick={onToggleSave}
+        >
+          {saved ? "Saved" : "Save"}
+        </button>
+      ) : null}
       {open ? (
-        <LotDetail unit={unit} pins={pins} onAsk={onAsk} />
+        <LotDetail unit={unit} pins={pins} onAsk={onAsk} onClose={onToggle} />
       ) : null}
     </article>
   );
@@ -551,18 +641,41 @@ function LotDetail({
   unit,
   pins,
   onAsk,
+  onClose,
 }: {
   unit: LotUnit;
   pins: GaragePinBook;
   onAsk?: (prompt: string) => void;
+  onClose: () => void;
 }) {
   const stats = lotGlance(unit);
+  const plate = homeStudioPlate(unit);
   const sections = lotOpenSections(unit);
+  const hero = lotUnitPhoto(unit);
   const nav = useShellNavOptional();
   const listing = lotListingHref(unit.url);
   const price = unit.price != null && unit.price > 0 ? unit.price : 0;
   return (
     <div className="lot-detail" data-lot-detail>
+      <div className="studio-open" data-studio-open>
+        <button type="button" className="studio-open-back" onClick={onClose}>
+          Search
+        </button>
+        {hero ? (
+          <img src={hero} alt="" className="studio-open-photo" />
+        ) : null}
+        <p className="studio-open-name">{studioCardName(unit)}</p>
+        {plate.length ? (
+          <div className="showroom-plate">
+            {plate.map((cell) => (
+              <div className="showroom-plate-cell" key={cell.label}>
+                <p className="showroom-plate-label">{cell.label}</p>
+                <p className="showroom-plate-value">{cell.value}</p>
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </div>
       {isToyHaulerBody(unit.body_type) && !garagePinConfirmed(pins, unit) ? (
         <p className="lot-garage-note" data-ask-missing-spec>
           garage length not confirmed
