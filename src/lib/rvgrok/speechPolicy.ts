@@ -87,7 +87,7 @@ export function sessionIntroPolicy(firstName?: string): string {
 /** Unnamed default — named visitors use sessionIntroPolicy(firstName). */
 export const SESSION_INTRO_POLICY = sessionIntroPolicy();
 
-export const VOICE_RESEARCH_HOLD_INSTRUCTIONS = `Say only this one short beat, then stop: ${VOICE_RESEARCH_HOLD_PHRASE}. Do not answer the question. Do not guess a location or spec.`;
+export const VOICE_RESEARCH_HOLD_INSTRUCTIONS = `Say this one short beat: ${VOICE_RESEARCH_HOLD_PHRASE}. The search for his question is already running, and you answer it in your next turn.`;
 
 export function voiceSessionIntroInstructions(firstName?: string): string {
   return `Speak only these words, then stop: ${sessionIntroLine(firstName)}`;
