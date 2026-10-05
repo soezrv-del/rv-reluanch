@@ -115,15 +115,16 @@ html[data-theme="dark"] .showroom-home .showroom-spot-verified {
 
 /* Soft warm rim / floor light under the coach. */
 html[data-theme="dark"] .showroom-home .showroom-floor {
-  --floor-mirror: 1.85rem;
-  --floor-pull: 0.55rem;
+  --floor-mirror: 1.55rem;
+  --floor-pull: 0.45rem;
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  margin-top: 4px;
-  margin-bottom: 0.35rem;
-  min-height: 0;
+  margin-top: 2px;
+  margin-bottom: 0.1rem;
+  min-height: 12rem;
+  padding-bottom: 0.1rem;
 }
 
 html[data-theme="dark"] .showroom-home .showroom-floor::before {
@@ -143,15 +144,19 @@ html[data-theme="dark"] .showroom-home .showroom-floor::before {
   );
 }
 
-/* Scale coach up; contain so rear swirl is not cropped. */
+/* Scale coach up into leftover stage; contain so rear swirl is not cropped. */
 html[data-theme="dark"] .showroom-home .showroom-floor .showroom-coach,
 html[data-theme="dark"] .showroom-home .showroom-floor .showroom-coach-reflect {
-  max-height: min(42vh, 19.5rem) !important;
-  width: 108% !important;
+  max-height: min(54vh, 26rem) !important;
+  width: 122% !important;
   max-width: none !important;
-  margin-left: -4% !important;
+  margin-left: -11% !important;
   object-fit: contain !important;
-  object-position: 42% 100% !important;
+  object-position: 36% 100% !important;
+}
+html[data-theme="dark"] .showroom-home .showroom-floor {
+  /* Prefer coach over empty black under the reflection. */
+  padding-bottom: 0.15rem;
 }
 
 html[data-theme="dark"] .showroom-home .showroom-floor-mirror {
