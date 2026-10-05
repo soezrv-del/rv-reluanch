@@ -65,13 +65,13 @@ export function HomeScreen({
           {who ? <p className="showroom-spotyear">{who}</p> : null}
           <p className="showroom-spotmodel">{model}</p>
           {specs?.price ? <p className="showroom-spotprice">{specs.price}</p> : null}
-          {lotTotal ? <p className="showroom-lotcount">{lotTotal} in stock</p> : null}
           {specs?.stock ? (
             <p className="showroom-spotstock">
               Stock {specs.stock}
               {place ? <span className="showroom-spotplace"> · {place}</span> : null}
             </p>
           ) : null}
+          {lotTotal ? <p className="showroom-lotcount">{lotTotal} in stock</p> : null}
         </div>
         <div className="showroom-floor" data-hero-kind="cutout">
           <img

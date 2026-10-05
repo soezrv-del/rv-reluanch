@@ -203,7 +203,7 @@ export function LotStockApp({
               autoCorrect="off"
               spellCheck={false}
               data-lot-search
-              className="lot-search glass-field min-h-12 w-full rounded-full py-3 pl-11 pr-12 text-[15px] font-medium text-white placeholder:text-white/50"
+              className="lot-search glass-field min-h-12 w-full rounded-lg py-3 pl-11 pr-12 text-[16px] font-medium text-white placeholder:text-white/50"
             />
             {query ? (
               <button
@@ -322,7 +322,7 @@ export function LotStockApp({
             {rail.length ? (
               <section className="space-y-3">
                 <div className="flex items-end justify-between gap-3">
-                  <h2 className="text-[1.65rem] font-bold tracking-tight text-white">
+                  <h2 className="text-[17px] font-semibold tracking-tight text-white">
                     On the lot
                   </h2>
                   <p className="text-[13px] text-white/70">
@@ -489,7 +489,7 @@ function LotUnitCard({
         data-lot-card
         data-lot-featured-card={featured ? "" : undefined}
         aria-expanded={open}
-        className="lot-card-hit w-full text-left transition duration-200 ease-out active:scale-[0.995]"
+        className="lot-card-hit lot-row w-full text-left transition duration-200 ease-out active:scale-[0.995]"
       >
         <div
           className={cn(
@@ -517,20 +517,9 @@ function LotUnitCard({
               />
             </span>
           )}
-          <span className="absolute left-3 top-3 rounded-full bg-sapphire px-2.5 py-1 text-[11px] font-bold text-white shadow-lg">
-            {shortLotTypeLabel(unit.body_type)}
-          </span>
-          <span
-            className={cn(
-              "absolute right-3 top-3 text-[15px] font-bold tabular-nums text-prestige",
-              featured && "text-[17px]",
-              price === "GAP" && "text-white/55",
-            )}
-          >
-            {price}
-          </span>
         </div>
-        <div className="min-w-0 space-y-1.5 px-4 py-3">
+        <div className="lot-row-copy">
+          <p className="lot-row-kicker">{shortLotTypeLabel(unit.body_type)}</p>
           <p
             className={cn(
               "lot-unit-title",
@@ -540,8 +529,9 @@ function LotUnitCard({
           >
             {headline}
           </p>
+          <p className={cn("lot-row-price", price === "GAP" && "is-gap")}>{price}</p>
           {snippet ? (
-            <p className="text-[12px] font-semibold text-white" data-lot-snippet>
+            <p data-lot-snippet>
               {snippet.text}
             </p>
           ) : null}
