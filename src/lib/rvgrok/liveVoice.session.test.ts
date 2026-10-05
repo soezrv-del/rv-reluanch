@@ -83,6 +83,12 @@ test("session.update enables native web_search on the Realtime session", () => {
   );
   assert.doesNotMatch(session.instructions, /closest saved pin/);
   assert.match(session.instructions, /not verified/);
+  // Towing and the comparisons that rest on it are looked up, like any spec.
+  assert.match(
+    session.instructions,
+    /Specs \(GVWR, weights, tanks, engine, towing capacity, GCWR, payload, fuel economy\), and a which-is-better or which-tows-more comparison that rests on them, are looked up before you answer/,
+  );
+  assert.doesNotMatch(session.instructions, /Specs \(GVWR, weights, tanks, engine\):/);
   assert.doesNotMatch(session.instructions, /the catalog pin in this turn wins/);
   assert.match(session.instructions, /give me one second/);
   assert.match(session.instructions, /make the tool call in that same turn/);
@@ -269,6 +275,11 @@ test("empty or noise transcripts do not start a lot reply, and a lot line is not
   assert.equal(isSameLotLine(line, `None. ${line}`), true);
   assert.equal(repeatsLotLine(`${line} ${line}`), true);
   assert.equal(repeatsLotLine(line), false);
+  const spoken = "We've got 2 on the lot: Winnebago View, all used. Top: 2012 Winnebago View Profile, $49,995, Sparks NV.";
+  assert.equal(isSameLotLine(spoken, spoken), true);
+  assert.equal(repeatsLotLine(`${spoken} ${spoken}`), true);
+  assert.equal(repeatsLotLine(spoken), false);
+  assert.equal(repeatsLotLine("We've got a View and we've got a Navion."), false);
   const realtime = readFileSync(join(root, "realtime.ts"), "utf8");
   assert.match(realtime, /isIgnorableVoiceTranscript/);
   assert.match(realtime, /cancelAutoReply/);

@@ -178,6 +178,8 @@ export type LotQueryResult = {
    * and GVWR. The sheet count stays `matched`. Empty on a ranked or measured ask.
    */
   name_roster?: string[];
+  /** The coach a likeness ask ("anything like a View") was measured against. */
+  similar_to?: string;
 };
 
 export type LotQueryApplied = {
@@ -233,6 +235,15 @@ const STOP = new Set([
   "vehicle",
   "vehicles",
   "whole",
+  // "Similar units", "comparable to", "like a View": how close, never a name
+  // or a feature ("Did you mean Salem?" for "same").
+  "similar",
+  "same",
+  "comparable",
+  "alternative",
+  "alternatives",
+  "equivalent",
+  "like",
   "a",
   "able",
   "unable",
@@ -1073,14 +1084,16 @@ function oneLine(
   }
   const classC = counts.body_type["Class C"] || 0;
   const superC = counts.body_type["Class Super C"] || 0;
-  if (
+  // A Class C ask counts the Super Cs in it. A class with none is not said.
+  const classCAsk =
     body.kind === "labels" &&
     body.labels.includes("Class C") &&
     body.labels.includes("Class Super C") &&
-    classC + superC === matched.length
-  ) {
-    return `Matching units: ${matched.length} Class C on the lot, ${classC} Class C and ${superC} Class Super C.${topBit}`;
+    classC + superC === matched.length;
+  if (classCAsk && classC && superC) {
+    return `Matching units: ${matched.length} Class C, ${classC} Class C and ${superC} Class Super C.${topBit}`;
   }
+  const classLabel = classCAsk ? (superC ? "Class Super C" : "Class C") : "";
   const models = Object.keys(counts.model);
   const makes = tally(matched, (unit) => unit.make || "");
   const makeNames = Object.keys(makes);
@@ -1093,7 +1106,7 @@ function oneLine(
         ? `${makeNames.length === 1 ? `${makeNames[0]} ` : ""}${family}`
         : "";
   const cond = conditions.length === 1 ? `, all ${conditions[0]!.toLowerCase()}` : "";
-  const label = name ? ` ${name}` : "";
+  const label = name ? ` ${name}` : classLabel ? ` ${classLabel}` : "";
   return `Matching units: ${matched.length}${label}${cond}.${topBit}`;
 }
 
@@ -2083,6 +2096,7 @@ function parseArgs(units: LotQueryUnit[], args: LotQueryArgs): Parsed {
 export function lotQueryIsBareCount(query: string): boolean {
   if (isToyHaulerRejection(query)) return false;
   if (isLotListExpansion(query)) return false;
+  if (likeCoachAsk(query)) return false;
   const parsed = parseArgs([], { query });
   const lengthBounded = parsed.lengthMin != null || parsed.lengthMax != null;
   return (
@@ -2116,7 +2130,7 @@ const LOT_FILLER = new Set([
   "ask", "asking", "ballpark", "basically", "bunch", "can", "check", "cool", "curious",
   "dealer", "dealership", "dollar", "dollars", "bucks", "entire", "estimate", "exactly", "gonna", "good", "got",
   "gotta", "great", "guess", "hand", "hmm", "honestly", "idea", "just", "kind", "kinds",
-  "know", "let", "lets", "like", "listen", "lot", "lots", "many", "maybe", "me", "mean",
+  "know", "let", "lets", "listen", "lot", "lots", "many", "maybe", "me", "mean",
   "moment", "much", "need", "nice", "ok", "okay", "okey", "on", "our", "overall",
   "please", "pretty", "question", "questions", "quick", "quickly", "real", "really",
   "right", "rough", "roughly", "say", "see", "sit", "sitting", "so", "sort", "still",
@@ -2960,14 +2974,25 @@ export function isLotGoAhead(text: string): boolean {
   );
 }
 
-/** "Anything like a View" is other coaches, not another count of that View. */
+/**
+ * "Anything on the lot that's like a View", "comparable to a View", "what's
+ * close to a View", "alternatives to a View", "similar units": other coaches,
+ * not another count of that View.
+ */
 function likeCoachAsk(text: string): boolean {
   const said = normalizeLotQueryText(text);
   return (
-    /\b(?:anything|something)\s+(?:else\s+)?like\b/.test(said) ||
-    /\b(?:other|others|else)\s+(?:\w+\s+){0,2}like\s+(?:the|a|an|that|our)\b/.test(said) ||
-    /\bsimilar\s+to\b/.test(said)
+    /\b(?:anything|something)\s+(?:else\s+)?(?:(?:kind|sort) of\s+)?like\b/.test(said) ||
+    /\b(?:anything|something|one|other)\b(?:\s+\w+){0,6}?\s+(?:that|which|is|are|look)\s+(?:\w+\s+)?like\s+(?:the|a|an|that|our|this)\b/.test(said) ||
+    /\b(?:other|others|else|unit|coach|one|rig)\s+(?:\w+\s+){0,2}like\s+(?:the|a|an|that|our)\b/.test(said) ||
+    /\b(?:similar|comparable|alternative|equivalent)\b/.test(said) ||
+    /\b(?:what|anything|something)\s+(?:\w+\s+){0,3}close to\s+(?:a|an|the|that|our)\s+(?!\d)/.test(said)
   );
+}
+
+/** True for "anything like a View", "similar units", "comparable to a View". */
+export function lotQueryIsLikeAsk(text: string): boolean {
+  return Boolean(text) && likeCoachAsk(text);
 }
 
 function chassisFamily(unit: LotQueryUnit): string {
@@ -3247,6 +3272,7 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
   // Sister-brand makes of the coach he named sort first ("like the View" →
   // the Itasca Navion before a Thor Siesta).
   let similarFamilyMakes: string[] = [];
+  let similarTo = "";
   if (likeAsk && matched.length) {
     const modelTokens = parsed.tokens.filter((token) =>
       units.some((unit) => tokenIsCoachName(unit, token, true)),
@@ -3255,6 +3281,13 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
       ? matched.filter((unit) => modelTokens.some((token) => tokenIsCoachName(unit, token, true)))
       : [];
     const others = anchors.length ? similarCoaches(units, anchors, parsed, modelTokens) : [];
+    if (anchors.length) {
+      similarTo = parsed.tokens
+        .filter((token) =>
+          anchors.some((unit) => tokenIsCoachName(unit, token, true) || tokenHitsMake(unit, token)),
+        )
+        .join(" ");
+    }
     if (others.length) {
       matched = others;
       const family = chassisFamily(anchors.find((unit) => chassisFamily(unit)) || anchors[0]!);
@@ -3653,6 +3686,7 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
     ...(droppedWords.length ? { dropped_words: droppedWords } : {}),
     ...(didYouMean && !similarNote ? { did_you_mean: didYouMean } : {}),
     ...(parsed.close && matched.length ? { close: parsed.close } : {}),
+    ...(similarTo ? { similar_to: similarTo } : {}),
   };
 }
 

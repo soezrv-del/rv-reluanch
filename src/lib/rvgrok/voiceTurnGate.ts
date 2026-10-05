@@ -17,6 +17,10 @@ export function isIgnorableVoiceTranscript(text: string): boolean {
   return false;
 }
 
+/** The opening of a spoken lot line ("We've got 2 on the lot"), or a miss. */
+const LOT_LINE_MARK = /matching units|we ve got (?:\d+|one)(?: class cs)? on the lot|none/;
+const LOT_LINE_OPEN = /matching units|we ve got (?:\d+|one)(?: class cs)? on the lot/g;
+
 function lotKey(text: string): string {
   return (text || "")
     .toLowerCase()
@@ -30,7 +34,7 @@ export function isSameLotLine(previous: string, next: string): boolean {
   const left = lotKey(previous);
   const right = lotKey(next);
   if (!left || !right) return false;
-  if (!/matching units|none/.test(left) && !/matching units|none/.test(right)) {
+  if (!LOT_LINE_MARK.test(left) && !LOT_LINE_MARK.test(right)) {
     return false;
   }
   if (left === right) return true;
@@ -41,11 +45,7 @@ export function isSameLotLine(previous: string, next: string): boolean {
 
 /** One reply that says the lot line twice. */
 export function repeatsLotLine(text: string): boolean {
-  const t = lotKey(text);
-  const marker = "matching units";
-  const first = t.indexOf(marker);
-  if (first < 0) return false;
-  return t.indexOf(marker, first + marker.length) >= 0;
+  return (lotKey(text).match(LOT_LINE_OPEN) || []).length >= 2;
 }
 
 /**
@@ -86,8 +86,19 @@ export function lotSummaryForSpeech(summary: string, matched: number): string {
     .replace(/\s+/g, " ")
     .trim();
   if (matched > 0) {
-    line = line.replace(/^none\.\s*/i, "");
-    line = line.replace(/\bnone\.\s+(?=matching units\b)/i, "");
+    // Said like a person: "We've got 2 on the lot: Winnebago View, all used."
+    line = line
+      .replace(/^none\.\s*/i, "")
+      .replace(/\bnone\.\s+(?=matching units\b)/i, "")
+      .replace(
+        /^Matching units:\s*(\d+) Class C, (\d+) Class C and (\d+) Class Super C\b/i,
+        "We've got $1 Class Cs on the lot, $2 regular and $3 Super C",
+      )
+      .replace(/^Matching units:\s*1\s+/i, "We've got one on the lot: ")
+      .replace(/^Matching units:\s*(\d+)\.\s*/i, "We've got $1 on the lot. ")
+      .replace(/^Matching units:\s*(\d+),\s*/i, "We've got $1 on the lot, ")
+      .replace(/^Matching units:\s*(\d+)\s+/i, "We've got $1 on the lot: ")
+      .trim();
   } else if (startsWithLotMissLine(line)) {
     return line;
   } else if (line && !/^none\b/i.test(line)) {

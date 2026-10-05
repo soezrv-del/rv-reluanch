@@ -17,6 +17,7 @@ import {
   isLotGoAhead,
   lotQueryHasSubject,
   lotQueryIsBareCount,
+  lotQueryIsLikeAsk,
   lotQueryIsWholeLotAsk,
   lotQueryMissWords,
   lotQueryNamedWords,
@@ -51,6 +52,8 @@ export type LotMemory = {
   garageFtMax?: number;
   /** The one unit the last question landed on. "You just told me we had one." */
   pinnedStock?: string;
+  /** The coach the last likeness ask was measured against ("winnebago view"). */
+  likeAnchor?: string;
 };
 
 export type LotTurn = LotMemory & {
@@ -351,7 +354,8 @@ function structuredSubject(args: Record<string, unknown>): boolean {
 
 function coachRecallFromAside(prior: string, previous: LotMemory | null): string {
   const text = prior.trim();
-  if (!text || /^matching units\b/i.test(text) || /^none\b/i.test(text)) return "";
+  const lotLine = /^(?:matching units|we've got (?:\d+|one)(?: class cs)? on the lot)\b/i;
+  if (!text || lotLine.test(text) || /^none\b/i.test(text)) return "";
   const parsed = parseCoachFromText(text);
   const make = parsed.make.trim();
   const model = (parsed.model.trim().split(/\s+/)[0] || "").replace(/[^a-z0-9]/gi, "");
@@ -511,12 +515,27 @@ export function answerQueryLotFromSnapshot(
         !saidRank.sort &&
         lotQueryIsBareCount(query || text) &&
         (!text || lotQueryIsBareCount(text))));
+  // "I was looking for similar units" names no coach. The coach is the one
+  // the last lot turn landed on, so the likeness search anchors there.
+  const likeAnchor =
+    prior?.likeAnchor || [prior?.filter.make, prior?.filter.model].filter(Boolean).join(" ");
+  const likeFollowUp = Boolean(
+    likeAnchor &&
+      lotQueryIsLikeAsk(text) &&
+      !lotQueryNamedWords(`${text} ${str(args.make)} ${str(args.model)}`, snapshot.units).length,
+  );
+  if (likeFollowUp && prior?.likeAnchor) {
+    prior = { ...prior, filter: { ...prior.filter, make: "", model: prior.likeAnchor, trim: "" } };
+  }
   // A follow-up, or a sort/length/price tool call with no new coach, keeps
   // the last filter. A bare "how many RVs" does not. "The full list" keeps it.
   const followUp = Boolean(
     prior &&
       !isBare &&
-      (listAll || looksLikeOwnLotFollowUp(text) || (!textHasSubject && !hasIdentityArg)),
+      (listAll ||
+        likeFollowUp ||
+        looksLikeOwnLotFollowUp(text) ||
+        (!textHasSubject && !hasIdentityArg)),
   );
   const limit =
     toolRank.limit ?? saidRank.limit ?? (followUp ? prior?.limit : undefined) ?? 12;
@@ -734,6 +753,7 @@ export function answerQueryLotFromSnapshot(
         ...(found.matched === 1 && found.units[0]?.stock_number
           ? { pinnedStock: found.units[0].stock_number }
           : {}),
+        ...(found.similar_to ? { likeAnchor: found.similar_to } : {}),
       };
   let speech = missSpeech || found.summary;
   if (found.no_length.length) {

@@ -53,7 +53,7 @@ test("Live Voice instructions carry the key rules", () => {
     /only in the listing text, tags, or page text is "may have it, check the floorplan" and is not counted/,
     /a unit counts only when a spec-sheet field confirms it/,
     /Our unit's price comes from query_lot\. The web is only for MSRP or a market range/,
-    /With no saved pin, give the exact figure web search found and name its source\. Otherwise say "not verified"/,
+    /a saved pin from this session, else the exact figure web search found and its source\. Otherwise say "not verified", and never estimate/,
     /English only/,
   ];
   for (const rule of rules) assert.match(text, rule, `missing rule ${rule}`);
