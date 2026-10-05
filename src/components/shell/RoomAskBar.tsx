@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Mic, Radio } from "lucide-react";
-import type { AppTab } from "./BottomTabs";
+import type { AppTab, DockRoomId } from "./BottomTabs";
 import { BottomTabs } from "./BottomTabs";
 import { MoreSheet, type MorePick } from "./MoreSheet";
 import {
@@ -12,9 +12,9 @@ import {
 import { markAskBarGrokEntry } from "@/lib/rvgrok/screenContext";
 
 /**
- * Ask bar plus the four-tab dock (Facts · Inventory · Live Chat · More).
- * The dock does not slide. More opens the tools sheet above the dock.
- * A typed ask is appended to the open RV Grok thread.
+ * Ask bar plus the four-room dock (Home · Facts · Inventory · Ask).
+ * The dock does not slide. Settings opens the tools sheet above the dock.
+ * A typed ask is appended to the open Ask thread.
  */
 export function RoomAskBar({
   tab,
@@ -28,8 +28,8 @@ export function RoomAskBar({
   tab: AppTab;
   homeOpen?: boolean;
   onOpen: (tab: AppTab, opts?: { skipVoice?: boolean }) => void;
-  /** Dock taps — More toggles the sheet. Defaults to onOpen. */
-  onDockTap?: (tab: AppTab) => void;
+  /** Dock taps — Home / Facts / Inventory / Ask. */
+  onDockTap?: (tab: DockRoomId) => void;
   moreOpen?: boolean;
   onMorePick?: (id: MorePick) => void;
   onMoreClose?: () => void;
@@ -66,8 +66,8 @@ export function RoomAskBar({
               data-room-ask-input
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder="Ask RV Grok"
-              aria-label="Ask RV Grok"
+              placeholder="Ask"
+              aria-label="Ask"
               enterKeyHint="send"
             />
             {live ? (
@@ -109,7 +109,10 @@ export function RoomAskBar({
         tab={tab}
         homeOpen={homeOpen}
         moreOpen={moreOpen}
-        onChange={(id) => (onDockTap ? onDockTap(id) : onOpen(id))}
+        onChange={(id) => {
+          if (onDockTap) onDockTap(id);
+          else if (id !== "home") onOpen(id);
+        }}
       >
         <MoreSheet
           open={moreOpen}

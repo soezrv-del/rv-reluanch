@@ -22,7 +22,8 @@ test("Lot stock is the last dock tab and not RV Grok", () => {
   assert.match(tabs, /\| "rvlot"/);
   assert.match(tabs, /id: "rvlot", label: "Inventory", short: "Inventory"/);
   assert.match(tabs, /placeDock/);
-  assert.match(tabs, /type DockTab = "rvfax" \| "rvlot" \| "rvgrok" \| "more"/);
+  assert.match(tabs, /export type DockRoomId/);
+  assert.doesNotMatch(tabs, /export type DockTab/);
 
   assert.match(
     constants,

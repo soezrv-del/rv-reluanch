@@ -1,13 +1,13 @@
 import { useLayoutEffect, useRef, type ReactNode } from "react";
-import { FileText, LayoutGrid, MessagesSquare } from "lucide-react";
+import { FileText, Home, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { hapticLight } from "@/lib/haptics";
 import {
   isAndroidNativeWebView,
   isStationaryDockTap,
 } from "@/lib/hooks/nativeWebView";
-import { isUnderMore } from "./shellConstants";
 import "./dock.css";
+import { dockActiveTab } from "./dockActiveTab";
 
 export type AppTab =
   | "rvgrok"
@@ -20,18 +20,24 @@ export type AppTab =
   | "rvlot"
   | "more";
 
-type DockTab = "rvfax" | "rvlot" | "rvgrok" | "more";
+/**
+ * Runtime dock room ids. Types that other modules need MUST be derived from
+ * this value (see DockRoomId). Do not reintroduce a cross-module type-only
+ * name that can be stripped while a runtime reference remains (Safari:
+ * "Can't find variable" for that type name).
+ */
+export const DOCK_ROOM_IDS = ["home", "rvfax", "rvlot", "rvgrok"] as const;
+export type DockRoomId = (typeof DOCK_ROOM_IDS)[number];
 
-/** Four dock tabs. Tow, Cal and RV GPS live in the More sheet. */
 const TABS: {
-  id: DockTab;
+  id: DockRoomId;
   label: string;
   short: string;
 }[] = [
-  { id: "rvfax", label: "RvFACTS", short: "Facts" },
+  { id: "home", label: "Home", short: "Home" },
+  { id: "rvfax", label: "Facts", short: "Facts" },
   { id: "rvlot", label: "Inventory", short: "Inventory" },
-  { id: "rvgrok", label: "Live Chat", short: "Live Chat" },
-  { id: "more", label: "More", short: "More" },
+  { id: "rvgrok", label: "Ask", short: "Ask" },
 ];
 
 const glyph = {
@@ -40,14 +46,14 @@ const glyph = {
   "aria-hidden": true as const,
 };
 
-function DockGlyph({ id }: { id: DockTab }) {
+function DockGlyph({ id }: { id: DockRoomId }) {
+  if (id === "home") return <Home {...glyph} />;
   if (id === "rvfax") return <FileText {...glyph} />;
-  if (id === "rvgrok") return <MessagesSquare {...glyph} />;
-  if (id === "more") return <LayoutGrid {...glyph} />;
+  if (id === "rvgrok") return <Sparkles {...glyph} />;
   return <InventoryGlyph />;
 }
 
-/** The RV glyph the Lot tab always used. */
+/** The RV glyph the Inventory tab always used. */
 export function InventoryGlyph({ className = "bottom-tab-glyph" }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} aria-hidden>
@@ -79,7 +85,7 @@ export function InventoryGlyph({ className = "bottom-tab-glyph" }: { className?:
   );
 }
 
-/** The hitch glyph the Tow tab always used. */
+/** The hitch glyph Tow shortcuts reuse. */
 export function TowGlyph({ className = "bottom-tab-glyph" }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} aria-hidden>
@@ -109,18 +115,7 @@ export function TowGlyph({ className = "bottom-tab-glyph" }: { className?: strin
   );
 }
 
-/** Which dock tab wears the pill. Anything under More lights More. */
-export function dockActiveTab(
-  tab: AppTab,
-  homeOpen: boolean,
-  moreOpen: boolean,
-): DockTab | null {
-  if (moreOpen) return "more";
-  if (homeOpen) return null;
-  if (isUnderMore(tab)) return "more";
-  if (tab === "rvfax" || tab === "rvlot" || tab === "rvgrok") return tab;
-  return null;
-}
+export { dockActiveTab };
 
 function placeDock(dock: HTMLDivElement, smooth: boolean) {
   const active = dock.querySelector<HTMLElement>(".is-active");
@@ -134,10 +129,8 @@ function placeDock(dock: HTMLDivElement, smooth: boolean) {
 }
 
 /**
- * Four tabs share the row at equal width: Facts · Inventory · Live Chat ·
- * More. More opens the tools sheet and stays lit while a sheet tool is open.
- * placeDock still centers a tab if the row ever overflows.
- * Android WebView: do NOT put pointer-events-none on this nav.
+ * Four rooms: Home · Facts · Inventory · Ask.
+ * Ask opens the chat room (rvgrok). Settings is a header control, not a tab.
  */
 export function BottomTabs({
   tab,
@@ -147,18 +140,16 @@ export function BottomTabs({
   children,
 }: {
   tab: AppTab;
-  onChange: (t: AppTab) => void;
+  onChange: (t: DockRoomId) => void;
   homeOpen?: boolean;
-  /** The More sheet is up. */
   moreOpen?: boolean;
-  /** The More sheet, anchored above the dock. */
   children?: ReactNode;
 }) {
-  const lastFire = useRef({ id: "" as AppTab | "", at: 0 });
-  const press = useRef<{ id: AppTab; x: number; y: number } | null>(null);
+  const lastFire = useRef({ id: "" as DockRoomId | "", at: 0 });
+  const press = useRef<{ id: DockRoomId; x: number; y: number } | null>(null);
   const dockRef = useRef<HTMLDivElement>(null);
 
-  const fire = (id: AppTab) => {
+  const fire = (id: DockRoomId) => {
     const now = performance.now();
     if (lastFire.current.id === id && now - lastFire.current.at < 400) return;
     lastFire.current = { id, at: now };
@@ -189,13 +180,13 @@ export function BottomTabs({
       data-no-swipe
       data-active-tab={homeOpen ? "home" : tab}
       data-more-open={moreOpen ? "" : undefined}
-      style={{ touchAction: "pan-x" }}
+      style={{ touchAction: "manipulation" }}
     >
       {children}
       <div
         ref={dockRef}
         className="bottom-tabs-dock pointer-events-auto relative isolate flex w-full items-stretch overflow-x-auto overflow-y-hidden"
-        style={{ touchAction: "pan-x" }}
+        style={{ touchAction: "manipulation" }}
       >
         {TABS.map(({ id, label, short }) => {
           const active = lit === id;
@@ -223,8 +214,6 @@ export function BottomTabs({
                 fire(id);
               }}
               aria-current={active ? "page" : undefined}
-              aria-expanded={id === "more" ? moreOpen : undefined}
-              aria-haspopup={id === "more" ? "dialog" : undefined}
               aria-label={label}
               title={label}
               className={cn(
