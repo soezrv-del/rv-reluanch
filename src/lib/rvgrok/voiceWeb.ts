@@ -19,6 +19,7 @@ import {
   looksLikeCarfaxQuestion,
   looksLikeOriginQuestion,
   looksLikeSpecQuestion,
+  looksLikeTowOrEconomyAsk,
   needsWebFallback,
   type WebFallbackSpecs,
 } from "./webIntent.ts";
@@ -172,7 +173,13 @@ export function decideVoiceWebResearch(opts: {
   ) {
     return { action: "pass" };
   }
-  if (!needsWebFallback(opts.specs ?? null, transcript)) {
+  // Chat's needsWebFallback answers every spec from memory. On voice a
+  // towing, GCWR, payload, or fuel-economy figure (or a which-tows-more)
+  // is looked up first: memory said a Sprinter View out-tows an E-450.
+  // A catalog pin still answers now.
+  const towLookup =
+    looksLikeTowOrEconomyAsk(transcript) && catalogGapNeedsWeb(opts.specs ?? null, transcript);
+  if (!towLookup && !needsWebFallback(opts.specs ?? null, transcript)) {
     return { action: "pass" };
   }
   const speakHold = shouldSpeakVoiceResearchHold(transcript, opts.specs);

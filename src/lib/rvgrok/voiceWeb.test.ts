@@ -121,7 +121,7 @@ test("catalog miss browses; fishing stays on memory", () => {
       transcript: "What's the tow rating on a 2019 XYZ Phantom?",
       specs: null,
     }).action,
-    "pass",
+    "research",
   );
   assert.equal(
     decideVoiceWebResearch({
@@ -137,6 +137,36 @@ test("catalog miss browses; fishing stays on memory", () => {
     }).action,
     "research",
   );
+});
+
+test("towing, GCWR, payload, and fuel economy are looked up on voice; lot asks and a pin stay offline", () => {
+  const pin = { missingHard: false, missingOemWeightPin: false };
+  for (const q of [
+    "Which tows more, the View or a Ford E-450 Class C?",
+    "What's the towing capacity of a Winnebago View?",
+    "Did you say the Mercedes has more towing power than the other ones?",
+    "Which is better, the View or a gas Class C, for GCWR and payload?",
+    "Which one gets better fuel economy, the View or a Chevy 4500 Class C?",
+  ]) {
+    const decided = decideVoiceWebResearch({ transcript: q, specs: null });
+    assert.equal(decided.action, "research", q);
+    if (decided.action === "research") assert.equal(decided.speakHold, true, q);
+    assert.equal(decideVoiceWebResearch({ transcript: q, lotFollowUp: true }).action, "research", q);
+    // A catalog pin is still the answer now.
+    assert.equal(decideVoiceWebResearch({ transcript: q, specs: pin }).action, "pass", q);
+  }
+  for (const q of [
+    "Do we have any Winnebago Views in stock?",
+    "Is there anything on the lot that's like a Winnebago View?",
+    "How many Class Cs do we have on the lot?",
+    "How many diesels are in stock?",
+    "Any towables on the lot?",
+  ]) {
+    assert.equal(decideVoiceWebResearch({ transcript: q, specs: null }).action, "pass", q);
+    assert.equal(decideVoiceWebResearch({ transcript: q, lotFollowUp: true }).action, "pass", q);
+  }
+  // Chat still answers specs from memory first; this is the voice gate.
+  assert.equal(needsWebFallback(null, "What's the towing capacity of a Winnebago View?"), false);
 });
 
 test("spoken market-value questions research even when the catalog is locked", () => {

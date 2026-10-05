@@ -53,7 +53,7 @@ export type WebFallbackOpts = {
 };
 
 const SPEC_QUESTION_RE =
-  /\b(hp|horsepower|engine|chassis|torque|transmission|fuel|gvwr?|tvwr|gross\s+vehicle\s+weight|gcwr|uvw|ccc|tow|hitch|mpg|length|weight|spec|brochure|powertrain|godzilla|cummins|f-?53|holding\s+tanks?|fresh\s+water|gr[ae]y\s+(?:water|tank)|black\s+(?:water|tank))\b/i;
+  /\b(hp|horsepower|engine|chassis|torque|transmission|fuel|gvwr?|tvwr|gross\s+vehicle\s+weight|gcwr|uvw|ccc|tow(?:s|ing|ed)?|hitch|payload|mpg|length|weight|spec|brochure|powertrain|godzilla|cummins|f-?53|holding\s+tanks?|fresh\s+water|gr[ae]y\s+(?:water|tank)|black\s+(?:water|tank))\b/i;
 
 const LIVE_RESEARCH_RE =
   /\b(troubleshoot(?:ing)?|diagnos(?:e|is|ing)|problems?|issues?|errors?|codes?|alarm|fault|dtc|check[- ]engine|tsb|bulletins?|won'?t\s+start|will\s+not\s+start|doesn'?t\s+start|leaking|leaks?|repair|fix(?:es|ing)?|how\s+do\s+i|how\s+to|why\s+is|why\s+won'?t|why\s+does(?:n'?t)?|what\s+should\s+i\s+(?:check|do|try|inspect)|what(?:'s|\s+is)\s+wrong|manual|owners?\s+manual|service\s+manual|recall|nhtsa|install(?:ing|ation)?|wiring|wires?|fuse|breaker|batter(?:y|ies)|propane|lp\s?gas|lpg|slides?|slide[- ]out|jacks?|level(?:ing|ers?)|generator|genset|inverter|converter|starlink|awning|water\s+heater|furnace|air\s+cond(?:itioner)?|refrigerator|fridge|toilet|black\s+tank|gray\s+tank|fresh\s+water|water\s+pump|short(?:ed|ing)?|overheat(?:ing)?|not\s+working|stopped\s+working|won'?t\s+(?:retract|extend|open|close|work|reset)|will\s+not\s+(?:retract|extend|open|close|work)|stuck|jammed|look(?:\s+(?:this|it))?\s+up|look\s+up|search(?:\s+(?:the\s+)?(?:web|online|forums?))|web\s+search|research|owners?\s+forums?|what\s+do\s+owners|irv2|reddit|common\s+(?:fix|cause|issue|problem)|known\s+(?:issue|problem|recall)|latest\s+(?:tsb|bulletin|recall|fix|firmware))\b/i;
@@ -109,6 +109,19 @@ export function normalizeAskText(text: string): string {
 
 export function looksLikeSpecQuestion(text: string): boolean {
   return SPEC_QUESTION_RE.test(normalizeAskText(text));
+}
+
+/** Towing, GCWR, payload, or fuel economy: figures memory gets backwards. */
+const TOW_OR_ECONOMY_RE =
+  /\b(?:tow(?:s|ing|ed)?|gcwr|gross\s+combined(?:\s+(?:vehicle\s+)?weight)?|payload|cargo\s+carrying\s+capacity|fuel\s+(?:economy|mileage)|gas\s+mileage|mpg|miles\s+per\s+gallon)\b/i;
+
+/**
+ * "Which tows more, the View or an E-450?", "towing capacity of a View",
+ * "better fuel economy": a towing, GCWR, payload, or fuel-economy figure,
+ * or a which-is-better that rests on one.
+ */
+export function looksLikeTowOrEconomyAsk(text: string): boolean {
+  return TOW_OR_ECONOMY_RE.test(normalizeAskText(text));
 }
 
 /** Lifestyle sell or payment math with no hardware/fault cue. */
