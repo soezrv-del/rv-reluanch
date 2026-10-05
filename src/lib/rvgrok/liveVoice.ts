@@ -210,7 +210,7 @@ export function releaseLiveCapture() {
  * Inventory stays on the lot. The brochure runs only when feature_blank is set.
  */
 export const LOT_FEATURE_WEB_CLAUSE =
-  "A king, queen, or bunkhouse question uses this same lot search, including the listing text. If feature_blank is set, say it is not on our listing, then web_search the brochure for that one coach and that feature only. If the summary says the coach does not have it, say no and do not web search.";
+  "A king, queen, or bunkhouse question uses this same lot search, including the listing text. If feature_blank is set, say it is not on our listing, then web_search the brochure for that one coach and that feature only. If the summary says the coach does not have it, say no and do not web search. This lot search already reads every listing's full page text, its listing details, and the site's feature tags. Put every feature word he said in query (residential refrigerator, fireplace, king bed, solar, outdoor kitchen, washer and dryer), even when you also set body_type. Never say the listing does not flag a feature, and never web search a feature, before query_lot with that feature in query has returned. A spec-sheet field confirms a feature. A feature only mentioned in the listing, the page text, or the feature tags means the coach may have it: say it is mentioned in the listing and to check the floorplan. Do not call that confirmed.";
 export const QUERY_LOT_TOOL = {
   type: "function",
   name: "query_lot",
@@ -220,7 +220,8 @@ export const QUERY_LOT_TOOL = {
     properties: {
       query: {
         type: "string",
-        description: "The salesman's lot question in their words.",
+        description:
+          "The salesman's lot question in their words, with every feature word kept (residential refrigerator, fireplace, king bed, solar). Setting body_type does not replace the feature words.",
       },
       body_type: {
         type: "string",

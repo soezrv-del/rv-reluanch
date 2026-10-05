@@ -15,6 +15,7 @@ import {
   lotTextScore,
   lotTokenMatchesUnit,
   listingFeatureState,
+  lotSheetConfirms,
   normalizeLotSearchQuery,
   parseSheetHorsepower,
   salesmanFilterActive,
@@ -164,6 +165,12 @@ export type LotQueryResult = {
   lot_total: number;
   /** Set when one named coach is silent on the feature. Brochure only, not a lot count. */
   feature_blank?: string;
+  /** Feature words in this ask ("residential", "refrigerator", "fireplace"). */
+  feature_words?: string[];
+  /** Of `matched`, units whose spec-sheet field confirms every feature word. */
+  feature_confirmed?: number;
+  /** Real feature words on some coach but none in this set, dropped to keep the filters. */
+  dropped_words?: string[];
   /** Filters the search actually applied. Memory and filter_label read this. */
   applied: LotQueryApplied;
   /**
@@ -2117,6 +2124,11 @@ const LOT_FILLER = new Set([
   "there", "these", "they", "think", "this", "total", "totally", "type", "types", "uh",
   "um", "umm", "us", "wanna", "want", "we", "well", "what", "whats", "which", "wonder",
   "wondering", "yeah", "yep", "yes", "you", "your",
+  // Function words and search talk: "look through our inventory and see if".
+  "anything", "as", "browse", "by", "find", "finding", "from", "get", "getting",
+  "give", "go", "going", "having", "if", "into", "it", "its", "look", "looking",
+  "of", "search", "searching", "see", "seeing", "show", "some", "something",
+  "through", "thru", "to", "whether", "with", "without",
 ]);
 
 function isLotFillerWord(token: string): boolean {
@@ -3025,6 +3037,31 @@ function similarCoaches(
  * `units` is the top N rows. A close make/model miss returns those sheet
  * units and sets `did_you_mean`. It does not open the rest of the book.
  */
+/** Content words that hit some coach (not spare talk, not a word on no coach). */
+function realWordsOnSomeCoach(tokens: string[], units: LotQueryUnit[]): string[] {
+  return tokens.filter(
+    (token) =>
+      !isLotFillerWord(token) &&
+      /[a-z]{3,}/.test(token) &&
+      !units.some((unit) => tokenIsCoachName(unit, token)) &&
+      units.some((unit) => tokenHitsIdentity(unit, token)),
+  );
+}
+
+/** Words that are not a coach name or a make: a feature ("residential", "refrigerator"). */
+function featureTokensOf(tokens: string[], units: LotQueryUnit[]): string[] {
+  return tokens.filter(
+    (token) =>
+      /^[a-z]{4,}$/.test(token) &&
+      !isLotFillerWord(token) &&
+      !units.some((unit) => tokenIsCoachName(unit, token) || tokenHitsMake(unit, token)),
+  );
+}
+
+function featurePhrase(words: string[]): string {
+  return words.join(" ").replace(/\bwasher\b/, "washer and dryer");
+}
+
 export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQueryResult {
   const clean = dropUnspokenCoachNarrowing(reconcileLotArgs(args));
   const parsedArgs = parseArgs(units, clean);
@@ -3035,7 +3072,15 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
     !str(clean.model) &&
     !clean.follow_up &&
     wholeLotAsk(units, parsedArgs, `${str(clean.query)} ${str(clean.utterance)}`);
-  const parsed = wholeLot ? { ...parsedArgs, tokens: [] } : parsedArgs;
+  // "Look through our inventory and see if we have any Super Cs that have
+  // residential refrigerators": "through" and "if" are spare talk. They do not
+  // AND the feature words down to zero (and then open the whole class).
+  const contentTokens = parsedArgs.tokens.filter((token) => !isLotFillerWord(token));
+  const parsed = wholeLot
+    ? { ...parsedArgs, tokens: [] }
+    : contentTokens.length && contentTokens.length < parsedArgs.tokens.length
+      ? { ...parsedArgs, tokens: contentTokens }
+      : parsedArgs;
   const lengthBounded = parsed.lengthMin != null || parsed.lengthMax != null;
   const lengthRequired = lengthBounded || parsed.sort === "length";
   const structured = units.filter((unit) => passesStructured(unit, parsed, lengthRequired));
@@ -3129,6 +3174,9 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
   // A real name that the class filter missed (Class A Lineage) still returns that coach.
   // A model word that is one sound off stays on that sheet coach. It does not open the book.
   const recognized = hasRecognizedFilter(parsed, lengthRequired);
+  // Feature words ("residential refrigerator") that are on some coach but on
+  // none in this set, thrown away to keep the class. Reported, never hidden.
+  let droppedWords: string[] = [];
   if (!matched.length && parsed.tokens.length && recognized && !alias) {
     const names = parsed.tokens.filter((token) =>
       units.some((unit) => tokenIsCoachName(unit, token)),
@@ -3151,18 +3199,26 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
           powerMatches(unit, parsed.horsepower, parsed.displacement) &&
           (!parsed.bed || listingFeatureState(unit, parsed.bed) === "yes"),
       );
-      if (byName.length) matched = byName;
+      if (byName.length) {
+        matched = byName;
+        droppedWords = realWordsOnSomeCoach(
+          parsed.tokens.filter((token) => !names.includes(token)),
+          units,
+        );
+      }
     } else if (openBook) {
       matched = structured;
+      droppedWords = realWordsOnSomeCoach(parsed.tokens, units);
     }
   }
   // A name with no class, fuel, or price can still use the plain bar.
   // Do not run that bar over a sentence that already named a real filter,
   // and do not use it to throw away a model word that missed.
   if (!matched.length && !recognized && !alias) {
+    // Spare talk ("anything", "look", "see") is not a name on the plain bar either.
     const plainTokens = plainTypeaheadTokens(
       [clean.query, clean.make, clean.model].filter(Boolean).join(" "),
-    );
+    ).filter((token) => !isLotFillerWord(token));
     if (plainTokens.length) {
       const plain = units.filter((unit) =>
         plainTokens.every((token) => tokenHitsIdentity(unit, token)),
@@ -3550,7 +3606,32 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
   }
   const disagreed = sheetDisagreement(sorted, parsed.body);
   if (disagreed) summary += `\n${disagreed}`;
-  const nameRoster = motorhomeRoster(units, parsed).map(rosterLine);
+  // A feature on the spec sheet counts. One only in the listing details, the
+  // page text, or the site's feature tags "may" be there: check the floorplan.
+  const featureWords = droppedWords.length
+    ? [...(parsed.features || [])]
+    : [...(parsed.features || []), ...featureTokensOf(parsed.tokens, units)];
+  let featureConfirmed: number | undefined;
+  if (featureWords.length && matched.length) {
+    featureConfirmed = matched.filter((unit) =>
+      featureWords.every((word) => lotSheetConfirms(unit, word)),
+    ).length;
+    const label = featurePhrase(featureWords);
+    const mentioned = matched.length - featureConfirmed;
+    let note = "";
+    if (featureConfirmed === 0) {
+      note = `The ${label} is mentioned in ${matched.length === 1 ? "that listing" : "these listings"}, not confirmed on the spec sheet, so ${matched.length === 1 ? "it may have one" : "they may have one"}. Check the floorplan.`;
+    } else if (mentioned > 0) {
+      note = `${featureConfirmed} ${featureConfirmed === 1 ? "has" : "have"} the ${label} on the spec sheet. ${mentioned} more only mention it in the listing, so they may have one. Check the floorplan.`;
+    } else {
+      note = `The spec sheet confirms the ${label}.`;
+    }
+    summary = `${summary.replace(/\s+$/, "").replace(/\.$/, "")}. ${note}`;
+  }
+  if (droppedWords.length && matched.length) {
+    summary = `${summary.replace(/\s+$/, "").replace(/\.$/, "")}. No listing in this set mentions ${droppedWords.join(" ")}.`;
+  }
+  const nameRoster = (featureWords.length || droppedWords.length ? [] : motorhomeRoster(units, parsed)).map(rosterLine);
   if (nameRoster.length) {
     summary += `\nNAME ROSTER (${nameRoster.length} motorhomes in this search). The sheet count above is only how the dealer filed them. A Super C is a Class C body on a truck, not a van. You know these names. Count the ones you know fit what he asked. When the sheet disagrees, say both. If the chassis is blank and you do not know the name, say you are not sure. Do not invent a coach that is not on this roster.`;
   }
@@ -3566,6 +3647,10 @@ export function searchLot(units: LotQueryUnit[], args: LotQueryArgs = {}): LotQu
     applied,
     ...(nameRoster.length ? { name_roster: nameRoster } : {}),
     ...(featureBlank ? { feature_blank: featureBlank } : {}),
+    ...(featureWords.length && featureConfirmed != null
+      ? { feature_words: featureWords, feature_confirmed: featureConfirmed }
+      : {}),
+    ...(droppedWords.length ? { dropped_words: droppedWords } : {}),
     ...(didYouMean && !similarNote ? { did_you_mean: didYouMean } : {}),
     ...(parsed.close && matched.length ? { close: parsed.close } : {}),
   };

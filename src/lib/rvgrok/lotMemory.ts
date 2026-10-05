@@ -311,6 +311,11 @@ export type QueryLotAnswer = {
   name_roster?: string[];
   did_you_mean?: string;
   close?: string;
+  /** Feature words in the ask, and how many matched units the spec sheet confirms. */
+  feature_words?: string[];
+  feature_confirmed?: number;
+  /** Feature words that matched no coach in this set (reported as a miss). */
+  dropped_words?: string[];
   /** On a miss: up to 3 real sheet units that are closest. Not a match count. */
   closest_units?: string[];
   speech: string;
@@ -410,6 +415,7 @@ export function answerQueryLotFromSnapshot(
     };
   }
   if (args.body_type == null && args.bodyType != null) args.body_type = args.bodyType;
+  if (args.body_type == null && typeof args.class === "string" && args.class) args.body_type = args.class;
   if (args.price_min == null && (args.minPrice != null || args.priceMin != null)) {
     args.price_min = args.minPrice ?? args.priceMin;
   }
@@ -606,6 +612,17 @@ export function answerQueryLotFromSnapshot(
   // units or an honest "can't find one". Counts still come only from the sheet.
   let missSpeech = "";
   let closest: string[] = [];
+  let featureMiss = false;
+  // "Class B with a residential refrigerator": the feature words matched no
+  // coach in the class, so the search kept the class. That is a miss on the
+  // feature, said with the friendly line, then the closest real units.
+  if (!bareCount && found.dropped_words?.length && found.matched > 0) {
+    featureMiss = true;
+    const line = lotMissLine(text || str(searchArgs.query));
+    const label = found.applied.body_type || "coach";
+    closest = found.units.slice(0, 3).map(closestUnitLine);
+    missSpeech = `${line} None of our ${label} listings mention ${found.dropped_words.join(" ")}. Closest on our lot: ${closest.join("; ")}.`;
+  }
   if (!bareCount && found.matched === 0 && !found.name_roster?.length) {
     const named = lotQueryNamedWords(text, snapshot.units);
     const modelArg = str(searchArgs.model);
@@ -729,11 +746,11 @@ export function answerQueryLotFromSnapshot(
   }
   return {
     ok: true,
-    none: found.matched === 0,
-    matched: found.matched,
+    none: featureMiss || found.matched === 0,
+    matched: featureMiss ? 0 : found.matched,
     filter_label,
     counts: found.counts,
-    units: found.units.map((unit) => ({
+    units: (featureMiss ? [] : found.units).map((unit) => ({
       ...unit,
       length_ft: unit.length_ft,
       length_source: unit.length_source,
@@ -745,6 +762,10 @@ export function answerQueryLotFromSnapshot(
     ...(found.did_you_mean ? { did_you_mean: found.did_you_mean } : {}),
     ...(found.close ? { close: found.close } : {}),
     ...(found.feature_blank ? { feature_blank: found.feature_blank } : {}),
+    ...(found.feature_words?.length
+      ? { feature_words: found.feature_words, feature_confirmed: found.feature_confirmed }
+      : {}),
+    ...(found.dropped_words?.length ? { dropped_words: found.dropped_words } : {}),
     speech,
     lotMemory: memory,
     lot_total: found.lot_total,

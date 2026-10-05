@@ -53,8 +53,8 @@ test("a made-up model is an honest can't-find, never a bare None", () => {
     assert.doesNotMatch(spoken, /^None\b/, said);
     assert.doesNotMatch(spoken, /stk /, said);
   }
-  // A model arg he never spoke the words for is the same.
-  const { spoken } = ask("anything", { model: "Zorbatron" });
+  // The model's own model arg for that miss is the same.
+  const { spoken } = ask("do we have a Zorbatron", { model: "Zorbatron" });
   assert.ok(startsWithLotMissLine(spoken), spoken);
 });
 
