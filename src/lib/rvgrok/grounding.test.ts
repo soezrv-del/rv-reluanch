@@ -938,7 +938,7 @@ test("2025 Aspire 44R grounding injects VERIFIED GVWR 49000 — never teach I-do
   const speech = src(root, "speechPolicy.ts");
   assert.match(prompts, /RV_GROK_LEAN_CORE/);
   assert.match(voiceSrc, /RV_GROK_LEAN_CORE/);
-  assert.match(live, /RV_VOICE_INSTRUCTIONS/);
+  assert.match(live, /LIVE_VOICE_PROMPT/);
   assert.match(
     speech,
     /never say you don't have/i,

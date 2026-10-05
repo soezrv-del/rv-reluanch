@@ -220,8 +220,8 @@ test("how about used Super Cs after a Lineage question still calls the tool and 
     description: string;
     parameters: { properties: Record<string, unknown> };
   };
-  assert.match(tool.description, /ANY count or availability/);
-  assert.match(tool.description, /matched is 0/);
+  assert.match(tool.description, /not web search, for a lot count, availability/);
+  assert.doesNotMatch(tool.description, /matched is 0/);
   assert.ok(tool.parameters.properties.condition);
   assert.ok(tool.parameters.properties.status);
   assert.ok(tool.parameters.properties.query);

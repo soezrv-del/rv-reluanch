@@ -36,7 +36,8 @@ test("chat, agent, and voice share David's lean standing core", () => {
 
   assert.match(prompts, /RV_GROK_LEAN_CORE/);
   assert.match(voice, /RV_GROK_LEAN_CORE/);
-  assert.match(live, /RV_VOICE_INSTRUCTIONS/);
+  assert.match(live, /LIVE_VOICE_PROMPT/);
+  assert.doesNotMatch(live, /RV_VOICE_INSTRUCTIONS/);
   assert.match(speech, /RV_GROK_LEAN_CORE/);
 });
 
@@ -145,7 +146,8 @@ test("visitor personalization is a small hook and named cold-open is Hello", () 
   assert.match(src("../../routes/api/rvgrok.ts"), /loadVisitorMemoryBlockFromRequest/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /VISITOR MEMORY/);
   assert.match(src("stream.ts"), /visitorFirstName/);
-  assert.match(src("liveVoice.ts"), /visitorPersonalizationBlock/);
+  assert.doesNotMatch(src("liveVoice.ts"), /visitorPersonalizationBlock/);
+  assert.match(src("liveVoice.ts"), /voiceSessionIntroInstructions/);
 });
 
 test("speechPolicy still owns intro, hold, and sales-mission detectors", () => {
@@ -250,6 +252,6 @@ test("no Grok prompt string contains perfectly exact, exact pin, or exact live f
     }
   }
   assert.match(src("screenGuides.ts"), /exactly as written/);
-  assert.match(src("liveVoice.ts"), /Say exactly:/);
+  assert.match(src("speechPolicy.ts"), /Speak only these words, then stop:/);
   assert.match(src("webSearch.ts"), /spelled exactly as the OEM string/);
 });

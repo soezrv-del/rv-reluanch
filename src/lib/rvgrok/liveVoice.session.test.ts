@@ -38,8 +38,8 @@ test("unlocked session.update does not inject standing CATALOG GAP", () => {
   );
   const factsSession = factsEmpty.session as { instructions: string };
   assert.doesNotMatch(factsSession.instructions, standing);
-  assert.match(factsSession.instructions, /native web_search/);
-  assert.match(factsSession.instructions, /I'm RvGrok/);
+  assert.match(factsSession.instructions, /web_search/);
+  assert.doesNotMatch(factsSession.instructions, /I'm RvGrok/);
 });
 
 test("session.update enables native web_search on the Realtime session", () => {
@@ -69,7 +69,7 @@ test("session.update enables native web_search on the Realtime session", () => {
   assert.equal(session.audio.output.format.type, "audio/pcm");
   assert.equal(session.audio.output.format.rate, PCM_SAMPLE_RATE);
   assert.equal(session.audio.output.speed, 1.25);
-  assert.match(session.instructions, /native web_search/);
+  assert.match(session.instructions, /web_search/);
   assert.match(session.instructions, /He did not found RV Country/);
   assert.match(session.instructions, /Paul Evert founded RV Country in 1961/);
   assert.match(
@@ -80,49 +80,30 @@ test("session.update enables native web_search on the Realtime session", () => {
     session.instructions,
     /experienced RV salesman's pocket/,
   );
-  assert.match(session.instructions, /closest saved pin when one exists/);
+  assert.doesNotMatch(session.instructions, /closest saved pin/);
+  assert.match(session.instructions, /not verified/);
   assert.doesNotMatch(session.instructions, /the catalog pin in this turn wins/);
   assert.match(session.instructions, /give me one second/);
-  assert.match(session.instructions, /only when research is actually running/);
+  assert.match(session.instructions, /make the tool call in that same turn/);
   assert.doesNotMatch(session.instructions, /LIVE VOICE ACKNOWLEDGMENT/);
   assert.doesNotMatch(session.instructions, /rotating acknowledgment/);
-  assert.match(session.instructions, /I'm RvGrok/);
-  const introAt = session.instructions.indexOf("Never repeat this intro.");
-  const micAt = session.instructions.indexOf("say that last part again");
-  const energyAt = session.instructions.indexOf("VOICE LOT ENERGY");
-  assert.ok(micAt > introAt, "mic rules stay at the end of the voice prompt");
-  assert.ok(energyAt > micAt, "lot energy sits with the mic rules, not in chat");
+  assert.doesNotMatch(session.instructions, /I'm RvGrok/);
+  assert.doesNotMatch(session.instructions, /SESSION START/);
+  assert.doesNotMatch(session.instructions, /VOICE LOT ENERGY/);
+  assert.match(session.instructions, /say that last part again/);
   assert.doesNotMatch(session.instructions, /STANDING LESSONS \(desk SoT\)/);
   assert.doesNotMatch(session.instructions, /sales-floor wingman/);
   assert.doesNotMatch(session.instructions, /CARFAX-style coach report/);
   assert.doesNotMatch(session.instructions, /Their first name is/);
 });
 
-test("lot energy coaches one spoken line and stays out of chat", () => {
+test("stall coaching is one spoken line and stays out of chat", () => {
   const msg = buildRealtimeSessionUpdate("ara");
   const session = msg.session as { instructions: string };
-  assert.match(
-    session.instructions,
-    /never invent a spec, price, or lot unit to stay upbeat/,
-  );
-  assert.match(session.instructions, /fun, playful, glad to know the coach/);
-  assert.match(session.instructions, /Knowledge is the confidence/);
-  assert.doesNotMatch(session.instructions, /We'll figure this out/);
-  assert.doesNotMatch(session.instructions, /good thing you checked/);
-  assert.match(session.instructions, /It does not mean you go silent/);
-  assert.match(session.instructions, /Hand him ONE line he can say out loud\. Then stop\./);
-  assert.match(session.instructions, /The sit is a look, not a buy/);
-  assert.match(
-    session.instructions,
-    /I'm not asking you to buy it\. Two minutes, no credit app/,
-  );
-  assert.match(session.instructions, /what do I have to do today/);
-  assert.match(session.instructions, /this one will be gone/);
-  assert.match(session.instructions, /your wife will love it/);
-  assert.match(session.instructions, /Never invent a number to get them in the chair/);
-  assert.match(session.instructions, /not a truck question/);
-  assert.match(session.instructions, /Ask "what's their truck\?" only when he named a towable or a truck/);
-  assert.match(session.instructions, /It is not their truck/);
+  assert.match(session.instructions, /Never invent a unit or a price/);
+  assert.match(session.instructions, /hand him one line he can say, then stop\. No second ask/);
+  assert.match(session.instructions, /Ask about a truck only when he named a towable or a truck/);
+  assert.match(session.instructions, /fake urgency/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /VOICE LOT ENERGY/);
   assert.doesNotMatch(RV_SYSTEM_PROMPT, /VOICE LOT ENERGY/);
   assert.doesNotMatch(RV_SYSTEM_PROMPT, /just looking/);
@@ -131,12 +112,13 @@ test("lot energy coaches one spoken line and stays out of chat", () => {
 test("named visitor cold-open is Hello, first name — not I'm RvGrok", () => {
   const msg = buildRealtimeSessionUpdate("ara", 1, "", "David Hansen");
   const session = msg.session as { instructions: string };
-  assert.match(session.instructions, /Their first name is David/);
-  assert.match(session.instructions, /Welcome them back by that first name once/);
-  assert.match(session.instructions, /address them by David/);
+  assert.match(session.instructions, /his first name is David/);
+  assert.match(session.instructions, /A named visitor gets one welcome, then is addressed by first name/);
+  assert.match(session.instructions, /Address him as David/);
   assert.doesNotMatch(session.instructions, /only occasionally/);
   assert.doesNotMatch(session.instructions, /not every turn/);
-  assert.match(session.instructions, /Say exactly: Hello, David/);
+  assert.doesNotMatch(session.instructions, /Hello, David/);
+  assert.doesNotMatch(session.instructions, /Say exactly/);
   assert.doesNotMatch(session.instructions, /Say exactly: I'm RvGrok/);
   assert.doesNotMatch(session.instructions, /I'm RvGrok, David/);
   assert.equal(session.instructions.includes(`I'm RvGrok, David`), false);
@@ -158,8 +140,9 @@ test("visitor memory is additive and does not change the spoken intro", () => {
     session.instructions.indexOf("You are RV Grok") <
       session.instructions.indexOf("VISITOR MEMORY"),
   );
+  assert.match(session.instructions, /PHONE MEMORY \(continuity only, never spec truth\)/);
   assert.doesNotMatch(session.instructions, /STANDING LESSONS/);
-  assert.match(session.instructions, /Say exactly: Hello, David/);
+  assert.doesNotMatch(session.instructions, /Hello, David/);
   assert.doesNotMatch(session.instructions, /Say exactly: I'm RvGrok/);
   assert.doesNotMatch(session.instructions, /I'm RvGrok, David/);
 });
@@ -185,7 +168,7 @@ test("catalog lock session.update still ships voice, VAD, audio, and web_search"
   assert.equal(session.turn_detection.threshold, 0.3);
   assert.equal(session.audio.output.speed, 1);
   assert.match(session.instructions, /2022 Newmar Dutch Star 4369/);
-  assert.match(session.instructions, /native web_search/);
+  assert.match(session.instructions, /web_search/);
 });
 
 test("standing lessons no longer stack the retired desk bullets", () => {
@@ -291,7 +274,7 @@ test("empty or noise transcripts do not start a lot reply, and a lot line is not
   assert.match(realtime, /repeatsLotLine/);
   const session = buildRealtimeSessionUpdate("ara").session as { instructions: string };
   assert.match(session.instructions, /at most 3 units/);
-  assert.match(session.instructions, /Never say None and then list units/);
+  assert.match(session.instructions, /never "none" followed by units/);
   assert.match(session.instructions, /Do not describe this screen/);
   assert.match(session.instructions, /Recommendations/);
 });

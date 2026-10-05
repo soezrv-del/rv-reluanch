@@ -112,14 +112,14 @@ test("Facts voice searches for specs; the session prompt matches the other scree
     "",
     "Lot",
   ).session as { instructions: string };
-  assert.match(facts.instructions, /Call query_lot for ANY count or availability question/);
-  assert.match(lot.instructions, /Call query_lot for ANY count or availability question/);
-  assert.match(facts.instructions, /Say none only when that tool returns matched 0/);
+  assert.match(facts.instructions, /call query_lot once for any count, availability/);
+  assert.match(lot.instructions, /call query_lot once for any count, availability/);
+  assert.match(facts.instructions, /On matched 0, say the friendly miss line and the closest units/);
   assert.doesNotMatch(facts.instructions, /Do not call query_lot for that/);
   assert.doesNotMatch(facts.instructions, /SCRAPE ROW WINS/);
   assert.doesNotMatch(facts.instructions, /override an injected lot snapshot/);
   assert.doesNotMatch(lot.instructions, /override an injected lot snapshot/);
-  assert.match(facts.instructions, /closest saved pin when one exists/);
+  assert.match(facts.instructions, /Otherwise say "not verified"/);
   const decision = decideVoiceWebResearch({
     transcript: SPEC,
     screen: "Facts",
