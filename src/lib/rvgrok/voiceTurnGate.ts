@@ -67,6 +67,38 @@ export function lotSummaryForSpeech(summary: string, matched: number): string {
   return line;
 }
 
+/** Spoken when the lot lookup itself failed. Never "None.": that is a real zero. */
+export const LOT_LOOKUP_FAILED_LINE =
+  "I can't reach the lot sheet right now, so I won't guess on stock.";
+
+/** Tool instructions for a failed lookup: the fixed line, no zero, no invented coach. */
+export const LOT_LOOKUP_FAILED_SPEAK = `The lot lookup failed. Do not say none or zero. Do not name a coach, a price, or a store. Speak only these words, then stop: ${LOT_LOOKUP_FAILED_LINE}`;
+
+/**
+ * Why a /api/rvgrok/query-lot response is not a search result, or null when
+ * it is one. A 403 access_required or a 500 body has no matched count; read
+ * as matched 0 it was spoken as "None." for coaches that are on the lot.
+ */
+export function queryLotFailure(
+  httpOk: boolean,
+  status: number,
+  data: unknown,
+): string | null {
+  const body =
+    data && typeof data === "object" ? (data as Record<string, unknown>) : null;
+  const error = typeof body?.error === "string" && body.error ? body.error : "";
+  if (!httpOk) return error || `http ${status}`;
+  if (!body || Object.keys(body).length === 0) return "empty result";
+  if (error) return error;
+  if (body.unavailable === true || body.ok === false) {
+    return typeof body.reason === "string" && body.reason ? body.reason : "lot unavailable";
+  }
+  if (typeof body.matched !== "number" || !Number.isFinite(body.matched)) {
+    return "no match count";
+  }
+  return null;
+}
+
 /** The spoken lot line ends by offering more, so the caller can say "yes". */
 export function lotLineWithDetailsAsk(line: string): string {
   const t = (line || "").trim().replace(/[,;:\s]+$/, "");

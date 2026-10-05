@@ -9,7 +9,11 @@ import {
 } from "./ownLotAsk.ts";
 import {
   initialToolSpeakGate,
+  LOT_LOOKUP_FAILED_LINE,
+  LOT_LOOKUP_FAILED_SPEAK,
+  queryLotFailure,
   reduceToolSpeak,
+  spokenLotPayload,
 } from "./voiceTurnGate.ts";
 import {
   formatOwnLotMissLine,
@@ -168,4 +172,62 @@ test("a fixture cheapest Class A speaks the Mirada, not a market Bounder", () =>
   assert.doesNotMatch(spoken, /Bounder/i);
   assert.doesNotMatch(spoken, /14,?995/);
   assert.doesNotMatch(spoken, /Central Auto/);
+});
+
+
+test("a 403 / 500 / unavailable query-lot body is a failed lookup, not None", () => {
+  // Oct 4 preview: every /api/rvgrok/query-lot call was 403 access_required
+  // (no access phone on that origin). The handler read it as matched 0 and
+  // she said "None. We don't show any current Winnebago Views on the lot."
+  const denied = {
+    error: "access_required",
+    browseOnly: true,
+    message: "This part of RvFOX is limited to the approved list.",
+  };
+  assert.equal(queryLotFailure(false, 403, denied), "access_required");
+  assert.equal(queryLotFailure(false, 500, null), "http 500");
+  assert.equal(queryLotFailure(false, 502, { message: "bad gateway" }), "http 502");
+  assert.equal(queryLotFailure(true, 200, null), "empty result");
+  assert.equal(queryLotFailure(true, 200, {}), "empty result");
+  assert.equal(queryLotFailure(true, 200, { error: "Invalid JSON body" }), "Invalid JSON body");
+  assert.equal(
+    queryLotFailure(true, 200, { ok: false, unavailable: true, matched: 0, reason: "lot snapshot unavailable" }),
+    "lot snapshot unavailable",
+  );
+  assert.equal(queryLotFailure(true, 200, { ok: true, units: [] }), "no match count");
+  // A real search result, including a real zero, is not a failure.
+  assert.equal(queryLotFailure(true, 200, { ok: true, none: true, matched: 0, units: [], speech: "None." }), null);
+  assert.equal(queryLotFailure(true, 200, { ok: true, none: false, matched: 2, units: [{}, {}], speech: "x" }), null);
+});
+
+test("the payload the route returns for a real search passes the failure check", () => {
+  const snapshot = snapshotFromJson(
+    [
+      { year: 2022, make: "Winnebago", model: "View", trim: "24D", condition: "Used", body_type: "Class C", lot_status: "Available", location: "Laughlin NV", stock_number: "UPB9945", price: 129995 },
+      { year: 2012, make: "Winnebago", model: "View Profile", trim: "24G", condition: "Used", body_type: "Class C", lot_status: "Available", location: "Sparks NV", stock_number: "UCS9704", price: 49995 },
+    ],
+    { pathTried: "inline" },
+  );
+  const q = "Do we have any Winnebago Views in stock?";
+  const found = spokenLotPayload(
+    answerQueryLotFromSnapshot(snapshot, { query: q, make: "Winnebago", model: "Views" }, null, q),
+  );
+  assert.equal(found.matched, 2);
+  assert.equal(queryLotFailure(true, 200, found), null);
+});
+
+test("failed lookups speak the fixed line, never None and never a guessed unit", () => {
+  assert.doesNotMatch(LOT_LOOKUP_FAILED_LINE, /\bnone\b/i);
+  assert.match(LOT_LOOKUP_FAILED_SPEAK, /Do not say none/);
+  assert.ok(LOT_LOOKUP_FAILED_SPEAK.endsWith(LOT_LOOKUP_FAILED_LINE), "ends with the spoken line");
+  const realtime = readFileSync(new URL("./realtime.ts", import.meta.url), "utf8");
+  const start = realtime.indexOf("private async handleQueryLotCall");
+  const end = realtime.indexOf("private cancelAutoReply");
+  const handler = realtime.slice(start, end);
+  assert.match(handler, /queryLotFailure\(res\.ok, res\.status, data\)/);
+  // The failure check runs before matched is read.
+  assert.ok(handler.indexOf("queryLotFailure(") < handler.indexOf("const matched ="), "check before matched");
+  // Both failure paths speak the fixed line instead of going silent.
+  assert.equal(handler.split("LOT_LOOKUP_FAILED_SPEAK").length - 1, 2, "both failure paths");
+  assert.doesNotMatch(handler, /error: "empty result" \}, undefined, false/);
 });
