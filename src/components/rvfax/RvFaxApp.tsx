@@ -1159,7 +1159,6 @@ export function RvFaxApp({
             <section
               className="space-y-2.5"
               data-saved-compare-list=""
-              data-copper-primary="compare"
             >
               <div className="garage-head">
                 <div className="flex items-center justify-between gap-2 px-0.5">

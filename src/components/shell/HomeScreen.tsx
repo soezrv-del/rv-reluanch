@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { fetchLotSnapshot, type LotUnit } from "@/lib/lot/ownLotPage";
-import { MetalVerifiedTrue } from "@/components/shell/Launchpad";
 import { readTheme, serverTheme, subscribeTheme } from "@/lib/theme";
 import type { AppTab } from "@/components/shell/BottomTabs";
 
@@ -12,6 +11,14 @@ import {
   spotlightLotUnit,
   spotlightSpecs,
 } from "@/lib/home/homeCoach";
+
+/** City-ish place label from lot location (e.g. "Fresno CA" → "Fresno"). */
+function placeLabel(raw: string): string {
+  const loc = raw.trim();
+  if (!loc) return "";
+  const stripped = loc.replace(/\s+[A-Z]{2}$/, "").trim();
+  return stripped || loc;
+}
 
 export function HomeScreen({
   onOpen,
@@ -41,7 +48,7 @@ export function HomeScreen({
   const model = specs?.model || SHOWROOM_SPOTLIGHT.series;
   const spotYear = (spotUnit?.year || SHOWROOM_SPOTLIGHT.year).trim();
   const spotMake = (spotUnit?.make || SHOWROOM_SPOTLIGHT.make).trim();
-  const place = (spotUnit?.location || "").trim();
+  const place = placeLabel(spotUnit?.location || "");
   const who = [spotYear, spotMake].filter(Boolean).join(" ");
   const heroSrc = SHOWROOM_SPOTLIGHT.image;
   const openSpot = () => {
@@ -58,8 +65,8 @@ export function HomeScreen({
       data-no-swipe
       className="showroom-home absolute inset-0 z-30 flex flex-col overflow-x-hidden overflow-y-auto"
     >
-      {/* One featured coach. Placard + Open coach at the top (both
-          orientations); photo on the studio floor below. No whole-lot count. */}
+      {/* Placard + Open coach at the top (both orientations); photo on the
+          studio floor below. No whole-lot count. VERIFIED is a small pill. */}
       <section className="showroom-hero" data-hero-kind="cutout">
         <div className="showroom-placard" data-home-placard>
           {who ? <p className="showroom-spotyear">{who}</p> : null}
@@ -80,9 +87,9 @@ export function HomeScreen({
               <span className="showroom-spotplace">{place}</span>
             </p>
           ) : null}
-          <div className="showroom-spot-verified" data-home-verified="">
-            <MetalVerifiedTrue size="sm" />
-          </div>
+          <span className="showroom-verified-pill" data-home-verified="">
+            VERIFIED
+          </span>
         </div>
         {spotUnit ? (
           <button

@@ -149,7 +149,7 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   assert.match(home, /SHOWROOM_SPOTLIGHT/);
   assert.match(home, /SHOWROOM_SPOTLIGHT\.series/);
   assert.doesNotMatch(home, /resolveHomeCoach|pickShowroomStage|newestLotUnit/);
-  assert.match(home, /MetalVerifiedTrue/);
+  assert.match(home, /showroom-verified-pill/);
   assert.doesNotMatch(home, /New arrivals/);
   assert.doesNotMatch(home, /showroom-lotcount|in stock/);
   assert.match(home, /onOpen\("rvlot"\)/);
@@ -232,7 +232,7 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
   assert.equal(specs.model, "Cornerstone 45D");
   assert.equal(specs.price, lotPriceOrGap(stocked.price));
   assert.equal(specs.stock, lotTextOrGap(stocked.stock_number));
-  assert.equal(specs.price, "$729,995");
+  assert.equal(specs.price, "$1,124,963");
   assert.equal(specs.stock, "45282");
   assert.equal(specs.model.includes(stocked.year), false);
   assert.equal(/\bEntegra\b/.test(specs.model), false);

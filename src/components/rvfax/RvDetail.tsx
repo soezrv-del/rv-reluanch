@@ -1602,7 +1602,7 @@ export function RvDetail({
             <div className="mt-3 flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <p className="text-[13px] font-medium text-sky-200/90">{year}</p>
-                <h1 className="mt-0.5 text-[26px] font-semibold leading-[1.12] tracking-tight text-white">
+                <h1 data-coach-name="" className="mt-0.5 text-[26px] font-semibold leading-[1.12] tracking-tight text-white">
                   {make} {model}
                 </h1>
                 {floorplan ? (
@@ -1627,7 +1627,7 @@ export function RvDetail({
               </div>
             </div>
 
-            {/* Dark copper look: glass 2x2 (Length / Engine / Slides / Fuel).
+            {/* Dark copper look: solid warm-charcoal 2x2 (Length / Engine / Slides / Fuel).
                 Only tiles with a real value render — never guess or show "—". */}
             {(() => {
               const engineTile = (() => {

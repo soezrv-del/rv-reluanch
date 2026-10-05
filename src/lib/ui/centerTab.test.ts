@@ -60,6 +60,7 @@ test("light selected tabs are graphite, not sapphire", () => {
   assert.doesNotMatch(lightDock, /#1648c8/);
   // Dark Ask is copper; active non-Ask uses a soft inset pill (no sapphire).
   assert.match(dock, /\.is-ask/);
+  assert.match(dock, /\.is-ask\.is-active/);
   {
     const dark = dock.includes("/* Dark dock")
       ? dock.slice(dock.indexOf("/* Dark dock"))

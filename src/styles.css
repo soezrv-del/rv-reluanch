@@ -4161,6 +4161,33 @@ html[data-theme="light"] .showroom-spotprice {
   -webkit-text-fill-color: #111111 !important;
   text-shadow: none !important;
 }
+/* Both-theme: price + stock stay visible; year eyebrow is its own line. */
+html[data-theme="light"] .showroom-spotstock {
+  display: block !important;
+}
+html[data-theme="light"] .showroom-verified-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+  min-height: 22px;
+  padding: 0 0.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(17, 17, 17, 0.12);
+  background: rgba(23, 26, 32, 0.06);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #3d4d68;
+  -webkit-text-fill-color: #3d4d68;
+}
+/* Open coach stays below placard stock line (document flow). */
+html[data-theme="light"] .showroom-hero-primary {
+  position: relative;
+  z-index: 5;
+}
+
 html[data-theme="light"] .showroom-lotcount {
   color: #3d4d68 !important;
   -webkit-text-fill-color: #3d4d68 !important;
