@@ -1,7 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { denyUnlessWhitelisted } from "@/lib/access/httpGate";
-import { injectStandingLessons } from "@/lib/rvgrok/promptLessons";
-import { readStandingLessonsBlock } from "@/lib/rvgrok/promptLessonsStore";
+import { chatLessonsAfterSave, injectStandingLessons } from "@/lib/rvgrok/promptLessons";
+import {
+  queuePendingPromptLesson,
+  readStandingLessonsBlock,
+} from "@/lib/rvgrok/promptLessonsStore";
+import { chatCorrectionForPending } from "@/lib/rvgrok/sessionLearn";
 import {
   countSoftFollowUps,
   keepTalkingCue,
@@ -1328,10 +1332,11 @@ export const Route = createFileRoute("/api/rvgrok")({
           await sink.pipe(response);
         };
         const run = async (): Promise<void> => {
-          const [visitorMemory, standingLessons] = await Promise.all([
+          const [visitorMemory, standingLoaded] = await Promise.all([
             phoneKey ? loadVisitorMemoryBlockFromRequest(request) : "",
             readStandingLessonsBlock(),
           ]);
+          let standingLessons = standingLoaded;
           const lastUser = [...messages].reverse().find((m) => m.role === "user");
           const lastPlain = lastUser ? contentToPlain(lastUser.content) : "";
           const softFollowUpsUsed = countSoftFollowUps(
@@ -1343,6 +1348,18 @@ export const Route = createFileRoute("/api/rvgrok")({
             role: m.role,
             text: contentToPlain(m.content).slice(0, 800),
           }));
+          // Typed correction: queue pending for the desk, and fold the line into
+          // this turn only. Pending is not promoted; next session still loads
+          // desk-approved standing only.
+          const typed = chatCorrectionForPending(memoryTurns);
+          if (typed) {
+            await queuePendingPromptLesson(typed.lesson, {
+              trigger: typed.trigger,
+              phoneDigits: phoneKey,
+              source: "chat",
+            });
+            standingLessons = chatLessonsAfterSave(standingLessons, typed.lesson);
+          }
           // Same memory tap as before, on the same inner reply stream.
           const finish = (response: Response) =>
             deliver(

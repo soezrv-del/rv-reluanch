@@ -105,8 +105,9 @@ export const Route = createFileRoute("/api/rvgrok/memory")({
           }
         }
 
-        // Typed chat: queue a correction for desk review only. Never injected,
-        // never spoken, never promoted here; `lessons` stays empty for chat.
+        // Typed chat: queue a correction for desk review only. Never promoted
+        // here; `lessons` stays empty for chat. Same-turn inject is in run()
+        // (rvgrok.ts), not this after-reply path.
         if (!voice) {
           const typed = chatCorrectionForPending(raw);
           if (typed) {

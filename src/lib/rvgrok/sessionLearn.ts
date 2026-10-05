@@ -1,8 +1,9 @@
 /**
  * What a Live Voice hangup is allowed to keep.
  * Her replies never enter. Status bubbles and cut-off fragments never enter.
- * A correction becomes a pending lesson. It is not injected until approved.
- * Typed chat uses the same detector on his latest line only.
+ * A correction becomes a pending lesson until the desk approves.
+ * Typed chat: same detector on his latest line; run() may fold that line into
+ * this turn's standingLessons once, without promoting pending.
  */
 
 import {
