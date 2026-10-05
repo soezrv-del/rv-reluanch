@@ -40,8 +40,10 @@ html[data-theme="dark"] .showroom-home .showroom-hero {
   flex: 1 1 0%;
   min-height: 0;
   height: 100%;
-  display: flex;
-  flex-direction: column;
+  /* Placard + Open coach + 1fr stage so the coach pack can center in leftover. */
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
 }
 
 html[data-theme="dark"] .showroom-home .showroom-placard {
@@ -168,34 +170,32 @@ html[data-theme="dark"] .showroom-home .showroom-hero-primary:focus-visible {
 }
 
 /*
-  Coach stage: directly under Open coach (~20px), vertically centered in the
-  leftover space above the dock. Full graphic via contain + ~104% bleed.
-  Short fading reflection ONLY — never a second full flipped coach.
+  Coach stage: full coach at content width (24px side pad, contain, centered).
+  Floor flex:1 + justify-content:center packs coach+reflection in the free
+  space under Open coach (no dead void). Warm glow behind. Short reflection.
 */
 html[data-theme="dark"] .showroom-home .showroom-floor {
-  --floor-mirror: 2.75rem; /* short fade ~25–30% of coach height */
+  --floor-mirror: 2.75rem;
   --floor-pull: 0px;
-  --coach-max-h: min(50vh, 20rem);
+  --coach-max-h: min(58vh, 22rem);
   position: relative;
   z-index: 2;
-  /* Shrink-wrap coach + reflection so the mirror sits under the wheels
-     (not at the bottom of a tall flex area). Leftover stage height is
-     empty floor below — never a void between Open coach and the coach. */
-  flex: 0 0 auto;
-  display: block;
+  min-height: 0;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
   width: 100%;
-  margin: 12px 0 0;
-  padding: 0 0 var(--floor-mirror);
+  margin: 0;
+  padding: 12px 24px 0;
   background: transparent;
   line-height: 0;
   overflow: visible;
 }
-/* Absorb leftover height under the stage so Home still fills the viewport. */
 html[data-theme="dark"] .showroom-home .showroom-hero::after {
-  content: "";
-  flex: 1 1 auto;
-  min-height: 0;
-  pointer-events: none;
+  content: none;
+  display: none;
 }
 
 /* Warm rim glow behind the coach (not a second reflection). */
@@ -203,13 +203,13 @@ html[data-theme="dark"] .showroom-home .showroom-floor::before {
   content: "";
   position: absolute;
   z-index: 0;
-  left: 4%;
-  right: 4%;
-  top: 18%;
-  bottom: var(--floor-mirror);
+  left: 24px;
+  right: 24px;
+  top: 12%;
+  bottom: 8%;
   pointer-events: none;
   background: radial-gradient(
-    closest-side at 50% 62%,
+    closest-side at 50% 55%,
     rgba(200, 160, 110, 0.22) 0%,
     rgba(140, 100, 65, 0.08) 46%,
     transparent 100%
@@ -220,30 +220,35 @@ html[data-theme="dark"] .showroom-home .showroom-floor .showroom-coach {
   position: relative;
   z-index: 2;
   display: block;
-  width: 106% !important;
-  max-width: 106% !important;
+  flex: 0 0 auto;
+  width: 100% !important;
+  max-width: 100% !important;
   height: auto !important;
   max-height: var(--coach-max-h) !important;
-  margin: 0 -3% !important;
+  margin: 0 !important;
   padding: 0 !important;
   object-fit: contain !important;
-  object-position: center bottom !important;
+  object-position: center center !important;
   background: transparent !important;
   filter: none !important;
   border: 0 !important;
+  transform: none !important;
   -webkit-box-reflect: none !important;
 }
 
-/* Reflection well: hangs ONLY below the wheels; clips the flipped copy. */
+/* Reflection well in normal flow under the coach (so flex centering packs both). */
 html[data-theme="dark"] .showroom-home .showroom-floor-mirror {
   display: block !important;
-  position: absolute !important;
+  position: relative !important;
   z-index: 1;
-  left: -3%;
-  right: -3%;
+  left: auto !important;
+  right: auto !important;
   top: auto !important;
-  bottom: 0 !important;
+  bottom: auto !important;
+  flex: 0 0 auto;
+  width: 100% !important;
   height: var(--floor-mirror) !important;
+  margin: 0 !important;
   overflow: hidden !important;
   pointer-events: none;
   -webkit-mask-image: linear-gradient(
@@ -264,23 +269,22 @@ html[data-theme="dark"] .showroom-home .showroom-floor .showroom-coach-reflect {
   position: absolute;
   left: 0;
   right: 0;
-  /* Sit above the mirror, then flip downward into it (wheels at the seam). */
   top: auto;
   bottom: 100%;
   display: block;
   width: 100% !important;
+  max-width: 100% !important;
   height: auto !important;
   max-height: var(--coach-max-h) !important;
   margin: 0 !important;
   padding: 0 !important;
   object-fit: contain !important;
-  object-position: center bottom !important;
+  object-position: center center !important;
   transform: scaleY(-1);
   transform-origin: center bottom;
   opacity: 0.3 !important;
   filter: none !important;
   -webkit-box-reflect: none !important;
-  /* Mirror container owns the fade; kill the base long mask. */
   -webkit-mask-image: none !important;
   mask-image: none !important;
 }
@@ -288,9 +292,11 @@ html[data-theme="dark"] .showroom-home .showroom-floor .showroom-coach-reflect {
 html[data-theme="dark"] .showroom-home .showroom-floor-gloss {
   position: absolute;
   z-index: 3;
-  left: 18%;
-  right: 18%;
-  bottom: calc(var(--floor-mirror) - 0.35rem);
+  left: calc(24px + 18%);
+  right: calc(24px + 18%);
+  /* Near the wheels / top of the in-flow mirror pack — approx mid-lower stage. */
+  top: auto;
+  bottom: calc(var(--floor-mirror) + 0.15rem);
   height: 0.7rem;
   border-radius: 50%;
   pointer-events: none;
@@ -338,14 +344,23 @@ html[data-theme="dark"] .showroom-home .showroom-floor-gloss {
     font-size: 14px;
   }
   html[data-theme="dark"] .showroom-home .showroom-floor {
-    --coach-max-h: min(36vh, 8.5rem);
-    --floor-mirror: 1.85rem;
-    margin-top: 8px;
+    --coach-max-h: min(34vh, 7.5rem);
+    --floor-mirror: 1.6rem;
+    padding: 6px 16px 0;
+  }
+  html[data-theme="dark"] .showroom-home .showroom-floor::before {
+    left: 16px;
+    right: 16px;
+  }
+  html[data-theme="dark"] .showroom-home .showroom-floor-gloss {
+    left: calc(16px + 18%);
+    right: calc(16px + 18%);
   }
   html[data-theme="dark"] .showroom-home .showroom-floor .showroom-coach {
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
+    transform: none !important;
   }
   html[data-theme="dark"] .showroom-home .showroom-floor .showroom-coach-reflect {
     opacity: 0.28 !important;

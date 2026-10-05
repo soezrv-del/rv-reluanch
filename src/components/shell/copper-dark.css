@@ -173,26 +173,34 @@ html[data-theme="dark"] .showroom-app[data-home-open] > .showroom-stage {
     linear-gradient(180deg, var(--warm-charcoal-0) 0%, var(--warm-charcoal-1) 45%, var(--warm-charcoal-2) 100%) !important;
 }
 
-/* Detail: full coach (no rear crop), soft floor fade under title / overview */
+/* Detail: full coach at content width, top padding, fade into floor; title under. */
 html[data-theme="dark"] [data-coach-detail] .SuiteRaidhoBackdrop,
 html[data-theme="dark"] [data-coach-detail] [data-raidho-backdrop] {
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 52%, transparent 94%);
-  mask-image: linear-gradient(to bottom, #000 0%, #000 52%, transparent 94%);
+  overflow: visible !important;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 58%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 58%, transparent 100%);
+  padding: 12px 24px 0;
+  box-sizing: border-box;
 }
 html[data-theme="dark"] [data-coach-detail] .SuiteRaidhoBackdrop img,
 html[data-theme="dark"] [data-coach-detail] [data-raidho-backdrop] img,
 html[data-theme="dark"] [data-coach-detail] img[data-coach-hero],
 html[data-theme="dark"] [data-coach-detail] .showroom-coach {
+  display: block !important;
   object-fit: contain !important;
-  object-position: center bottom !important;
+  object-position: center center !important;
   width: 100% !important;
   max-width: 100% !important;
+  height: auto !important;
+  max-height: min(42vh, 17rem) !important;
+  margin: 0 !important;
+  transform: none !important;
 }
 html[data-theme="dark"] [data-coach-detail] #rvfax-vehicle-report::before {
   content: "";
   display: block;
-  height: 4.5rem;
-  margin: -1rem 0 0.5rem;
+  height: 3.25rem;
+  margin: -0.5rem 24px 0.35rem;
   pointer-events: none;
   background: linear-gradient(
     to bottom,
@@ -206,17 +214,17 @@ html[data-theme="dark"] [data-coach-detail] [data-coach-overview] {
   border-top-color: var(--glass-top);
   box-shadow: var(--glass-shadow);
 }
-/* Solid warm-charcoal 2x2 — not glass. Values louder than labels. */
+/* Solid warm-charcoal 2x2 — not glass. 24px side margins + rounded on all sides. */
 html[data-theme="dark"] .detail-spec-glass {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0;
   overflow: hidden;
-  margin-top: 1.1rem;
+  margin: 1.1rem 24px 0 !important;
   background: #1a1714 !important;
   border: 1px solid rgba(243, 235, 227, 0.1);
   border-top-color: rgba(243, 235, 227, 0.2);
-  border-radius: var(--glass-radius);
+  border-radius: var(--glass-radius, 1.15rem) !important;
   box-shadow: 0 14px 32px rgba(0, 0, 0, 0.32);
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
