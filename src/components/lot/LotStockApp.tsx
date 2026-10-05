@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Calculator, Check, ChevronLeft, Search, X } from "lucide-react";
+import { Check, ChevronLeft, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RAIDHO_R_MARK } from "@/assets/prestige";
 import { SuitePage } from "@/components/shell/SuitePage";
@@ -604,16 +604,13 @@ function LotDetail({
         {price > 0 ? (
           <button
             type="button"
-            className="lot-cal-tab"
+            className="lot-detail-tab"
             data-lot-cal
-            aria-label="Estimate payment"
-            title="Estimate payment"
             onClick={() =>
               nav?.openCalWithPrice(price, showroomUnitLabel(unit))
             }
           >
-            <Calculator className="size-4" aria-hidden />
-            <span className="lot-cal-tab-label">Estimate payment</span>
+            Estimate payment
           </button>
         ) : null}
         {listing ? (
