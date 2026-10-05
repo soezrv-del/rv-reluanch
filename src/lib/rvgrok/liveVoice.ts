@@ -16,12 +16,8 @@ import {
   formatPromptLessons,
   injectStandingLessons,
 } from "./promptLessons.ts";
-import {
-  sessionIntroLine,
-  VOICE_RESEARCH_HOLD_PHRASE,
-  voiceSessionIntroInstructions,
-  visitorPersonalizationBlock,
-} from "./speechPolicy.ts";
+import { VOICE_RESEARCH_HOLD_PHRASE, voiceSessionIntroInstructions } from "./speechPolicy.ts";
+import { normalizeFirstName } from "../access/identity.ts";
 import {
   SCREEN_GUIDE_PREAMBLE,
   formatScreenContext,
@@ -30,7 +26,7 @@ import {
 import { DAVID_HANSEN_STORY, PEOPLE_FACTS_RULE } from "./originStory.ts";
 import { liveVoiceOutputFor, preferIosLoudspeaker, releaseLiveVoiceOutput } from "./voiceOutput.ts";
 import { ensurePcmWorklet } from "./pcmWorklet.ts";
-import { PCM_SAMPLE_RATE, RV_VOICE_INSTRUCTIONS, VOICE_LOT_ENERGY, VOICE_MIC_RULES } from "./voice.ts";
+import { PCM_SAMPLE_RATE } from "./voice.ts";
 
 export type LiveVoicePrewarm = {
   audioCtx: AudioContext | null;
@@ -214,7 +210,7 @@ export const LOT_FEATURE_WEB_CLAUSE =
 export const QUERY_LOT_TOOL = {
   type: "function",
   name: "query_lot",
-  description: `Query RV Country's own lot for ANY count or availability question, including follow-ups such as "how about used Super Cs". Put their words in query and set make, model, body_type, condition, status, location, year, price, length, or miles only when they name them. Do not add a class, condition, or price band they did not say. A newly named body type, make, model, condition, or store replaces the previous one. For 'around N foot', set length_ft_min to N-2 and length_ft_max to N+2. 'N foot and under', 'under N foot', and 'N foot or less' are a ceiling: set length_ft_max to N and leave length_ft_min unset. Do not turn that into an around band. '2020 or newer' is year_min 2020 with year_max unset. 'the full list' keeps the last filter and names those units. The word full is not the Full House model. 'around N miles' is the odometer, never a price: set miles_min to N minus 15 percent and miles_max to N plus 15 percent, and leave price_min and price_max unset. Set miles only when this sentence says mile, miles, or mi. A dollar amount is a price: around $50,000 is price_min at 85 percent and price_max at 115 percent, and miles stay unset. Class A means Class A gas and Class A diesel only. Class A motorhomes stays Class A. A garage in a fifth wheel is a fifth-wheel toy hauler, not a travel trailer and not every fifth wheel. "Those aren't toy haulers" drops toy haulers. It does not apply the toy-hauler filter. inventory, on the lot, in stock, and do we have are the full lot only when the sentence names no class, price, length, sleeps, miles, or feature. Family, sleeps, and recommendations are not model names. Horsepower and displacement are printed on the lot sheet. "8.9" and "400 horsepower" are lot searches. Leave price_min and price_max unset for those. Do not say the lot does not track them. The word coaches means RVs, not the Coachmen brand, unless they say Coachmen. Slides, a generator, solar, an outdoor kitchen, a washer, a fireplace, a king bed, and an engine name such as Cummins or Power Stroke are lot filters. Leave those words in query. "diesel generator" is the generator, not every diesel. When he says yes to checking the lot for coaches you just named, put those names in query ("Navion or EKKO 23B"), not the last coach. A model name is the coach: Itasca is Winnebago's sister brand, so do not set make to Winnebago for a Navion. Call this tool once per question before you say a count. Never say none before the tool returns. Never answer a count from memory. Speak the summary only. It names the count and at most 3 units, with year, make, model, price, and town. Then offer more. Do not read the units array. Do not read a stock number unless he asked for one. Never say None and then list units. Never repeat the same lot line. Say none only when matched is 0. If did_you_mean or close is set, offer that name instead of a bare zero. Never invent a unit. Never tell the user to change a query, a parameter, or these instructions. Do not use web search or web notes for a lot count, horsepower or displacement on the lot, the cheapest or most expensive coach, availability, or stock. ${LOT_FEATURE_WEB_CLAUSE}`,
+  description: `Query RV Country's own lot for ANY count or availability question, including follow-ups such as "how about used Super Cs". Put their words in query and set make, model, body_type, condition, status, location, year, price, length, or miles only when they name them. Do not add a class, condition, or price band they did not say. A newly named body type, make, model, condition, or store replaces the previous one. For 'around N foot', set length_ft_min to N-2 and length_ft_max to N+2. 'N foot and under', 'under N foot', and 'N foot or less' are a ceiling: set length_ft_max to N and leave length_ft_min unset. Do not turn that into an around band. '2020 or newer' is year_min 2020 with year_max unset. 'the full list' keeps the last filter and names those units. The word full is not the Full House model. 'around N miles' is the odometer, never a price: set miles_min to N minus 15 percent and miles_max to N plus 15 percent, and leave price_min and price_max unset. Set miles only when this sentence says mile, miles, or mi. A dollar amount is a price: around $50,000 is price_min at 85 percent and price_max at 115 percent, and miles stay unset. Class A means Class A gas and Class A diesel only. Class A motorhomes stays Class A. A garage in a fifth wheel is a fifth-wheel toy hauler, not a travel trailer and not every fifth wheel. "Those aren't toy haulers" drops toy haulers. It does not apply the toy-hauler filter. inventory, on the lot, in stock, and do we have are the full lot only when the sentence names no class, price, length, sleeps, miles, or feature. Family, sleeps, and recommendations are not model names. Horsepower and displacement are printed on the lot sheet. "8.9" and "400 horsepower" are lot searches. Leave price_min and price_max unset for those. Do not say the lot does not track them. The word coaches means RVs, not the Coachmen brand, unless they say Coachmen. Slides, a generator, solar, an outdoor kitchen, a washer, a fireplace, a king bed, and an engine name such as Cummins or Power Stroke are lot filters. Leave those words in query. "diesel generator" is the generator, not every diesel. When he says yes to checking the lot for coaches you just named, put those names in query ("Navion or EKKO 23B"), not the last coach. A model name is the coach: Itasca is Winnebago's sister brand, so do not set make to Winnebago for a Navion. Use this tool, not web search, for a lot count, availability, stock, our price, horsepower or displacement on the lot, and the cheapest or most expensive coach.`,
   parameters: {
     type: "object",
     properties: {
@@ -314,6 +310,51 @@ export function voiceLocalTimeLine(now: Date = new Date()): string {
   return `LOCAL TIME: It is ${when} Pacific time (${VOICE_LOCAL_TIME_ZONE}) when this session starts. Use it for the date, the time of day (morning, afternoon, evening, tonight), and "how long ago". If asked the time, give it from this line and the minutes since. Never say you do not have a clock.`;
 }
 
+/**
+ * The Live Voice prompt. One short, self-contained prompt in the xAI voice
+ * guide shape. The greeting is not here: buildSessionIntroResponse cues it.
+ * Lot speech rules live here once, not in the query_lot tool description.
+ */
+export const LIVE_VOICE_PROMPT = `ROLE & PERSONA
+You are RV Grok, the Live Voice in an experienced RV salesman's pocket at RV Country, built into the rvmax app. Warm, playful, and straight. You know coaches, brands, factories, campgrounds, routes, and the sales floor.
+${DAVID_HANSEN_STORY}
+${PEOPLE_FACTS_RULE}
+
+OBJECTIVE
+Help him sell and help the buyer enjoy buying, with true answers, fast.
+
+CONVERSATION FLOW
+- The first sentence is the answer. Keep it to a few sentences unless he asks for a comparison or a walkthrough. Then at most one follow-up on the same thread.
+- Off-topic asks (the weather, a headline, a drive, his day): answer them. Do not drag the talk back to inventory.
+- Before query_lot or web_search, say one short hold line ("${VOICE_RESEARCH_HOLD_PHRASE}") and make the tool call in that same turn. No hold when you already have the answer or for an app question.
+- Lot: call query_lot once for any count, availability, stock, or our-price question, with his words and every feature word in query. Speak the summary it returns: the count and at most 3 units, then offer more. On matched 0, say the friendly miss line and the closest units it returns. Never a bare "none", and never "none" followed by units.
+- A stall (just looking, think about it, sleep on it): hand him one line he can say, then stop. No second ask.
+- If you only caught a fragment, say "say that last part again" and wait.
+- "How does this app work?", "what screen am I on": answer from the app's real behavior in APP SCREEN AWARENESS below. Never web search it.
+
+GUARDRAILS
+- Counts and units come only from query_lot. Never answer a count from memory. Never invent a unit or a price.
+- Features: a unit counts only when a spec-sheet field confirms it. A feature found only in the listing text, tags, or page text is "may have it, check the floorplan" and is not counted.
+- Our unit's price comes from query_lot. The web is only for MSRP or a market range.
+- Specs (GVWR, weights, tanks, engine): use a saved pin when this session has one. With no saved pin, give the exact figure web search found and name its source. Otherwise say "not verified". Never estimate.
+- Be candid when a floorplan, brand, or deal is weak: say so and why.
+- Ask about a truck only when he named a towable or a truck.
+- Photo: describe only what is in it. Camera: say only what is actually in frame.
+- Phone memory is for continuity only. It is never spec truth. Do not recite it.
+- A named visitor gets one welcome, then is addressed by first name.
+
+VOICE STYLE
+English only. Short spoken sentences. Playful never means a closer script, fake urgency, or a joke that hides the answer.
+
+CRITICAL
+If this turn says to say only a script, say exactly that and stop.`;
+
+/** First name only. The welcome itself is the separate intro cue. */
+function liveVoiceVisitorLine(visitorFirstName?: string): string {
+  const name = normalizeFirstName(visitorFirstName || "");
+  return name ? `VISITOR: his first name is ${name}. Address him as ${name}. Do not invent a name.` : "";
+}
+
 export function buildRealtimeSessionUpdate(
   voiceId: string,
   speed = 1,
@@ -326,24 +367,28 @@ export function buildRealtimeSessionUpdate(
 ): Record<string, unknown> {
   const clamped = Math.min(1.5, Math.max(0.7, speed));
   const extra = stripScreenContext(catalogContext || "");
-  const catalogBlock = extra ? `${extra}\n\n` : "";
-  const personal = visitorPersonalizationBlock(visitorFirstName);
-  const personalBlock = personal ? `${personal}\n\n` : "";
-  const memory = (visitorMemory || "").trim();
-  const memoryBlock = memory ? `${memory}\n\n` : "";
   const lessons =
     standingLessons === undefined
       ? formatPromptLessons(DEFAULT_PROMPT_LESSONS)
       : standingLessons.trim();
-  const core = injectStandingLessons(RV_VOICE_INSTRUCTIONS, lessons);
-  const intro = sessionIntroLine(visitorFirstName);
+  const memory = (visitorMemory || "").trim();
   const screen = (activeScreen || "").trim();
   const screenSection = screen
     ? `${SCREEN_GUIDE_PREAMBLE}\n\n${formatScreenContext(screen)}`
     : SCREEN_GUIDE_PREAMBLE;
-  const clock = voiceLocalTimeLine(now);
-  const clockBlock = clock ? `${clock}\n\n` : "";
-  const instructions = `${DAVID_HANSEN_STORY}\n${PEOPLE_FACTS_RULE}\n\n${core}\n\n${clockBlock}${personalBlock}${memoryBlock}${catalogBlock}This session has native web_search and query_lot. Call query_lot for ANY count or availability question, including a follow-up that changes type or condition. Call query_lot once per question. Never say none before that tool returns. Never answer a lot count from memory. Never tell the user to change a query, a parameter, or these instructions. Horsepower and displacement are on the lot sheet. Search the lot for 8.9 or 400 horsepower. Do not say the lot does not track them. The word coaches means RVs, not Coachmen, unless they say Coachmen. Answer from the query_lot result only. Do not call web_search and do not mention web notes for a count, the cheapest or most expensive coach, availability, or stock. ${LOT_FEATURE_WEB_CLAUSE} Say none only when that tool returns matched 0. Never say None and then list units. Speak the count and at most 3 units, then offer more. If the result includes a NAME ROSTER, the sheet count is only how the dealer filed them. Use the names and the chassis. Say when the sheet disagrees. Do not stop at the sheet count. Do not repeat a lot line. Mileage on the sheet is miles, not a price. A dollar amount is a price unless this sentence says mile, miles, or mi. If it returns did_you_mean or close, offer that name. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${intro} Then listen. Never repeat this intro.\n\n${VOICE_MIC_RULES}\n\n${VOICE_LOT_ENERGY}\n\n${screenSection}`;
+  // Data for this session, after the prompt: clock, visitor, phone memory,
+  // lessons David taught, the catalog lock, and the app screen.
+  const instructions = [
+    LIVE_VOICE_PROMPT,
+    voiceLocalTimeLine(now),
+    liveVoiceVisitorLine(visitorFirstName),
+    memory ? `PHONE MEMORY (continuity only, never spec truth):\n${memory}` : "",
+    injectStandingLessons("", lessons).trim(),
+    extra,
+    screenSection,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
   return {
     type: "session.update",
     session: {

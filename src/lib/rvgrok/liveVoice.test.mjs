@@ -147,7 +147,7 @@ test("Live Voice session start introduces RV Grok once — not the old stall", (
     /I'm RV Grok — ask me anything\. Name a year, make, and model for the spec report/,
   );
   assert.match(live, /buildSessionIntroResponse/);
-  assert.match(live, /sessionIntroLine/);
+  assert.match(live, /voiceSessionIntroInstructions\(firstName\)/);
   assert.match(policy, /This is SALES\. Every question matters/);
   assert.match(policy, /SALES_MISSION_POLICY/);
   assert.match(policy, /HONESTY_STANDING_POLICY/);
@@ -185,8 +185,8 @@ test("liveVoice.ts session.update payload includes native web_search", () => {
   assert.match(live, /tools:\s*REALTIME_SESSION_TOOLS/);
   assert.match(live, /name:\s*"query_lot"/);
   assert.match(live, /REALTIME_SESSION_TOOLS/);
-  assert.match(live, /native web_search/);
-  assert.match(live, /Say exactly: \$\{intro\}/);
-  assert.match(live, /sessionIntroLine\(visitorFirstName\)/);
+  assert.match(live, /web_search/);
+  assert.doesNotMatch(live, /Say exactly: \$\{intro\}/);
+  assert.doesNotMatch(live, /SESSION START/);
   assert.doesNotMatch(live, /input_audio_transcription/);
 });
