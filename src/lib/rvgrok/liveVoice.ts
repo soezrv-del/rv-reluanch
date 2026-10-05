@@ -289,6 +289,30 @@ export function isNativeRealtimeTool(name: string): boolean {
   );
 }
 
+/** The dealership clock. The lots are on Pacific time. */
+export const VOICE_LOCAL_TIME_ZONE = "America/Los_Angeles";
+
+/**
+ * "LOCAL TIME: Sunday, October 4, 2026, 6:04 PM Pacific." She has no clock of
+ * her own. Without this she says "this morning" at 6 PM and "I don't have a
+ * clock" when asked the time.
+ */
+export function voiceLocalTimeLine(now: Date = new Date()): string {
+  if (Number.isNaN(now.getTime())) return "";
+  const when = new Intl.DateTimeFormat("en-US", {
+    timeZone: VOICE_LOCAL_TIME_ZONE,
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  })
+    .format(now)
+    .replace(/\u202f/g, " ");
+  return `LOCAL TIME: It is ${when} Pacific time (${VOICE_LOCAL_TIME_ZONE}) when this session starts. Use it for the date, the time of day (morning, afternoon, evening, tonight), and "how long ago". If asked the time, give it from this line and the minutes since. Never say you do not have a clock.`;
+}
+
 export function buildRealtimeSessionUpdate(
   voiceId: string,
   speed = 1,
@@ -297,6 +321,7 @@ export function buildRealtimeSessionUpdate(
   visitorMemory?: string,
   standingLessons?: string,
   activeScreen?: string,
+  now: Date = new Date(),
 ): Record<string, unknown> {
   const clamped = Math.min(1.5, Math.max(0.7, speed));
   const extra = stripScreenContext(catalogContext || "");
@@ -315,7 +340,9 @@ export function buildRealtimeSessionUpdate(
   const screenSection = screen
     ? `${SCREEN_GUIDE_PREAMBLE}\n\n${formatScreenContext(screen)}`
     : SCREEN_GUIDE_PREAMBLE;
-  const instructions = `${DAVID_HANSEN_STORY}\n${PEOPLE_FACTS_RULE}\n\n${core}\n\n${personalBlock}${memoryBlock}${catalogBlock}This session has native web_search and query_lot. Call query_lot for ANY count or availability question, including a follow-up that changes type or condition. Call query_lot once per question. Never say none before that tool returns. Never answer a lot count from memory. Never tell the user to change a query, a parameter, or these instructions. Horsepower and displacement are on the lot sheet. Search the lot for 8.9 or 400 horsepower. Do not say the lot does not track them. The word coaches means RVs, not Coachmen, unless they say Coachmen. Answer from the query_lot result only. Do not call web_search and do not mention web notes for a count, the cheapest or most expensive coach, availability, or stock. ${LOT_FEATURE_WEB_CLAUSE} Say none only when that tool returns matched 0. Never say None and then list units. Speak the count and at most 3 units, then offer more. If the result includes a NAME ROSTER, the sheet count is only how the dealer filed them. Use the names and the chassis. Say when the sheet disagrees. Do not stop at the sheet count. Do not repeat a lot line. Mileage on the sheet is miles, not a price. A dollar amount is a price unless this sentence says mile, miles, or mi. If it returns did_you_mean or close, offer that name. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${intro} Then listen. Never repeat this intro.\n\n${VOICE_MIC_RULES}\n\n${VOICE_LOT_ENERGY}\n\n${screenSection}`;
+  const clock = voiceLocalTimeLine(now);
+  const clockBlock = clock ? `${clock}\n\n` : "";
+  const instructions = `${DAVID_HANSEN_STORY}\n${PEOPLE_FACTS_RULE}\n\n${core}\n\n${clockBlock}${personalBlock}${memoryBlock}${catalogBlock}This session has native web_search and query_lot. Call query_lot for ANY count or availability question, including a follow-up that changes type or condition. Call query_lot once per question. Never say none before that tool returns. Never answer a lot count from memory. Never tell the user to change a query, a parameter, or these instructions. Horsepower and displacement are on the lot sheet. Search the lot for 8.9 or 400 horsepower. Do not say the lot does not track them. The word coaches means RVs, not Coachmen, unless they say Coachmen. Answer from the query_lot result only. Do not call web_search and do not mention web notes for a count, the cheapest or most expensive coach, availability, or stock. ${LOT_FEATURE_WEB_CLAUSE} Say none only when that tool returns matched 0. Never say None and then list units. Speak the count and at most 3 units, then offer more. If the result includes a NAME ROSTER, the sheet count is only how the dealer filed them. Use the names and the chassis. Say when the sheet disagrees. Do not stop at the sheet count. Do not repeat a lot line. Mileage on the sheet is miles, not a price. A dollar amount is a price unless this sentence says mile, miles, or mi. If it returns did_you_mean or close, offer that name. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${intro} Then listen. Never repeat this intro.\n\n${VOICE_MIC_RULES}\n\n${VOICE_LOT_ENERGY}\n\n${screenSection}`;
   return {
     type: "session.update",
     session: {

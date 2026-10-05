@@ -17,6 +17,7 @@ import {
   isLotGoAhead,
   lotQueryHasSubject,
   lotQueryIsBareCount,
+  lotQueryIsWholeLotAsk,
   offeredCoachNames,
   reconcileLotArgs,
   searchLot,
@@ -474,7 +475,12 @@ export function answerQueryLotFromSnapshot(
   // "in inventory" is the same full-lot count as "in stock" / "on the lot".
   // A model price or make stuffed onto that sentence does not shrink it.
   const referBack = looksLikeOwnLotFollowUp(text);
-  const wordsBare = Boolean(text) && lotQueryIsBareCount(text) && !referBack;
+  // "Testing, how many coaches are sitting on the lot right now" is the same
+  // whole-lot count. Spare words are not a model filter.
+  const wordsBare =
+    Boolean(text) &&
+    (lotQueryIsBareCount(text) || lotQueryIsWholeLotAsk(text, snapshot.units)) &&
+    !referBack;
   const listAll = isLotListExpansion(text);
   const isBare =
     !listAll &&
