@@ -173,11 +173,20 @@ html[data-theme="dark"] .showroom-app[data-home-open] > .showroom-stage {
     linear-gradient(180deg, var(--warm-charcoal-0) 0%, var(--warm-charcoal-1) 45%, var(--warm-charcoal-2) 100%) !important;
 }
 
-/* Detail: soft floor fade under title / overview */
+/* Detail: full coach (no rear crop), soft floor fade under title / overview */
 html[data-theme="dark"] [data-coach-detail] .SuiteRaidhoBackdrop,
 html[data-theme="dark"] [data-coach-detail] [data-raidho-backdrop] {
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 48%, transparent 92%);
-  mask-image: linear-gradient(to bottom, #000 0%, #000 48%, transparent 92%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 52%, transparent 94%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 52%, transparent 94%);
+}
+html[data-theme="dark"] [data-coach-detail] .SuiteRaidhoBackdrop img,
+html[data-theme="dark"] [data-coach-detail] [data-raidho-backdrop] img,
+html[data-theme="dark"] [data-coach-detail] img[data-coach-hero],
+html[data-theme="dark"] [data-coach-detail] .showroom-coach {
+  object-fit: contain !important;
+  object-position: center bottom !important;
+  width: 100% !important;
+  max-width: 100% !important;
 }
 html[data-theme="dark"] [data-coach-detail] #rvfax-vehicle-report::before {
   content: "";
@@ -411,4 +420,24 @@ html[data-theme="dark"] [data-coach-detail] [data-coach-name],
 html[data-theme="dark"] [data-coach-detail] [data-coach-overview] h1,
 html[data-theme="dark"] [data-coach-detail] [data-coach-overview] h2 {
   font-family: var(--font-display), "Iowan Old Style", Georgia, ui-serif, serif;
+}
+
+/* Dock clearance: scrolling home/detail/suite content never ends under the bar. */
+html[data-theme="dark"] {
+  --dock-clearance: calc(
+    var(--dock-tab-h, 60px) + env(safe-area-inset-bottom, 0px) + 1.75rem + 12px
+  );
+}
+html[data-theme="dark"] [data-coach-detail] #rvfax-vehicle-report,
+html[data-theme="dark"] [data-coach-detail] [data-coach-overview],
+html[data-theme="dark"] .suite-page,
+html[data-theme="dark"] [data-suite-page],
+html[data-theme="dark"] .more-sheet-scroll,
+html[data-theme="dark"] [data-more-sheet] .more-sheet-body,
+html[data-theme="dark"] .facts-cascade-scroll-pad,
+html[data-theme="dark"] [data-lot-stock],
+html[data-theme="dark"] .lot-stock-screen .suite-scroll,
+html[data-theme="dark"] .showroom-page {
+  padding-bottom: max(1.25rem, var(--dock-clearance)) !important;
+  scroll-padding-bottom: max(1.25rem, var(--dock-clearance));
 }
