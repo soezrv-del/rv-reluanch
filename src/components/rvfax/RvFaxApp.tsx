@@ -11,7 +11,6 @@ import {
 import {
   AlertTriangle,
   BedDouble,
-  Bookmark,
   Check,
   ChevronDown,
   Filter,
@@ -1155,109 +1154,159 @@ export function RvFaxApp({
             </section>
           ) : null}
 
-          {/* Saved */}
+          {/* Saved / Garage — overlapping glass cards in dark mode */}
           {savedRows.length > 0 ? (
-            <section className="space-y-2.5" data-saved-compare-list="">
-              <div className="flex items-center justify-between px-0.5">
-                <p className="flex items-center gap-1.5 text-[11px] font-bold tracking-[0.12em] text-white">
-                  <Bookmark className="size-3.5" />
-                  SAVED UNITS
-                </p>
-                <button
-                  type="button"
-                  onClick={() => persistSaved([])}
-                  className="inline-flex min-h-[36px] items-center gap-1 text-[11px] font-semibold text-white"
-                >
-                  <Trash2 className="size-3" />
-                  Clear
-                </button>
-              </div>
-              {savedRows.map((r) => {
-                const key = compareSelectionKey(r);
-                const comparing = comparePick.some(
-                  (c) => compareSelectionKey(c) === key,
-                );
-                return (
-                <div
-                  key={`saved-${key}`}
-                  data-saved-compare-row={comparing ? "on" : "off"}
-                  className={cn(
-                    "glass-prestige flex min-h-[52px] w-full items-center gap-1 rounded-xl pr-1",
-                    comparing && "ring-2 ring-sky-400/70 bg-sky-500/15",
-                  )}
-                >
+            <section
+              className="space-y-2.5"
+              data-saved-compare-list=""
+              data-copper-primary="compare"
+            >
+              <div className="garage-head">
+                <div className="flex items-center justify-between gap-2 px-0.5">
+                  <p className="garage-title">Your garage</p>
                   <button
                     type="button"
-                    onClick={() => openFactsUnit(r, r.floorplan)}
-                    className="flex min-h-[52px] min-w-0 flex-1 items-center justify-between gap-2 px-3.5 py-3 text-left active:scale-[0.99]"
+                    onClick={() => persistSaved([])}
+                    className="inline-flex min-h-[36px] items-center gap-1 text-[11px] font-semibold text-white"
                   >
-                    <div className="min-w-0">
-                      <p className="truncate text-[13px] font-bold text-white">
-                        {r.year} {r.make} {r.model}
-                      </p>
-                      <p className="text-[11px] text-white">
-                        {r.floorplan || r.data.type}
-                      </p>
-                    </div>
-                    <ChevronDown className="size-4 -rotate-90 shrink-0 text-white" />
-                  </button>
-                  <div
-                    className="flex shrink-0 items-center gap-1"
-                    data-saved-sold-compare=""
-                  >
-                    {isPro ? (
-                      <button
-                        type="button"
-                        aria-label={`Sold ${r.year} ${r.make} ${r.model}`}
-                        onClick={() => beginSell(r)}
-                        disabled={soldFlash?.key === compareSelectionKey(r)}
-                        className={cn(
-                          "inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border px-3 text-[11px] font-bold transition-colors",
-                          soldFlash?.key === compareSelectionKey(r)
-                            ? "border-ruby-border bg-ruby text-white"
-                            : "border-green/40 bg-green/15 text-green",
-                        )}
-                      >
-                        Sold
-                      </button>
-                    ) : null}
-                    <button
-                      type="button"
-                      data-saved-compare=""
-                      aria-label={
-                        comparing
-                          ? `Remove ${r.year} ${r.make} ${r.model} from compare`
-                          : `Compare ${r.year} ${r.make} ${r.model}`
-                      }
-                      aria-pressed={comparing}
-                      disabled={!comparing && comparePick.length >= 3}
-                      onClick={() => toggleSavedCompare(r)}
-                      className={cn(
-                        "inline-flex size-11 shrink-0 items-center justify-center rounded-full border",
-                        comparing
-                          ? "border-sky-400/50 bg-sky-500/25 text-white"
-                          : "border-white/20 bg-white/5 text-white/80",
-                        !comparing && comparePick.length >= 3 && "opacity-40",
-                      )}
-                    >
-                      {comparing ? (
-                        <Check className="size-4" />
-                      ) : (
-                        <GitCompare className="size-4" />
-                      )}
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    aria-label={`Remove ${r.year} ${r.make} ${r.model} from saved`}
-                    onClick={() => toggleSave(r)}
-                    className="flex size-11 shrink-0 items-center justify-center rounded-full text-white/80 hover:bg-white/10 hover:text-white"
-                  >
-                    <X className="size-4" />
+                    <Trash2 className="size-3" />
+                    Clear
                   </button>
                 </div>
-                );
-              })}
+                <hr className="garage-rule" />
+                <p className="garage-count">
+                  {savedRows.length} saved
+                </p>
+              </div>
+              <div className="garage-stack" data-garage-stack="">
+                {savedRows.slice(0, 2).map((r, i) => {
+                  const key = compareSelectionKey(r);
+                  const modelLabel = [r.model, r.floorplan].filter(Boolean).join(" ");
+                  const [lo, hi] = r.data.msrpRange || [0, 0];
+                  const priceLabel =
+                    lo > 0 && hi > 0 && lo === hi
+                      ? `$${lo.toLocaleString("en-US")}`
+                      : lo > 0 && hi > 0
+                        ? `$${lo.toLocaleString("en-US")}–$${hi.toLocaleString("en-US")}`
+                        : lo > 0
+                          ? `$${lo.toLocaleString("en-US")}`
+                          : "";
+                  return (
+                    <button
+                      key={`garage-${key}`}
+                      type="button"
+                      className="garage-stack-card"
+                      data-saved-compare-row="off"
+                      data-garage-card={i}
+                      onClick={() => openFactsUnit(r, r.floorplan)}
+                    >
+                      <img
+                        src={resolveCardImage(r.data)}
+                        alt=""
+                        className="garage-stack-photo"
+                        crossOrigin="anonymous"
+                      />
+                      <div className="garage-stack-meta">
+                        <p className="garage-stack-model">{modelLabel || `${r.make} ${r.model}`}</p>
+                        {priceLabel ? (
+                          <p className="garage-stack-price">{priceLabel}</p>
+                        ) : null}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="garage-actions" data-saved-sold-compare="">
+                {savedRows.length >= 2 ? (
+                  <button
+                    type="button"
+                    data-saved-compare=""
+                    className="garage-compare-pill"
+                    aria-label="Compare saved coaches"
+                    onClick={() => {
+                      const a = savedRows[0];
+                      const b = savedRows[1];
+                      if (!a || !b) return;
+                      setComparePick([a, b]);
+                      setCompareOpen(true);
+                    }}
+                  >
+                    Compare →
+                  </button>
+                ) : null}
+              </div>
+              {/* Compact rows for 3+ saved + Sold/remove controls (real data only). */}
+              {savedRows.length > 2 || isPro ? (
+                <div className="space-y-1.5">
+                  {savedRows.map((r) => {
+                    const key = compareSelectionKey(r);
+                    const comparing = comparePick.some(
+                      (c) => compareSelectionKey(c) === key,
+                    );
+                    return (
+                      <div
+                        key={`saved-row-${key}`}
+                        data-saved-compare-row={comparing ? "on" : "off"}
+                        className={cn(
+                          "glass-prestige flex min-h-[44px] w-full items-center gap-1 rounded-xl pr-1",
+                          comparing && "ring-2 ring-sky-400/70 bg-sky-500/15",
+                        )}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => openFactsUnit(r, r.floorplan)}
+                          className="flex min-h-[44px] min-w-0 flex-1 items-center justify-between gap-2 px-3 py-2 text-left"
+                        >
+                          <p className="truncate text-[12px] font-semibold text-white">
+                            {r.year} {r.make} {r.model}
+                            {r.floorplan ? ` ${r.floorplan}` : ""}
+                          </p>
+                        </button>
+                        <div className="flex shrink-0 items-center gap-1">
+                          {isPro ? (
+                            <button
+                              type="button"
+                              aria-label={`Sold ${r.year} ${r.make} ${r.model}`}
+                              onClick={() => beginSell(r)}
+                              disabled={soldFlash?.key === compareSelectionKey(r)}
+                              className={cn(
+                                "inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border px-3 text-[11px] font-bold transition-colors",
+                                soldFlash?.key === compareSelectionKey(r)
+                                  ? "border-ruby-border bg-ruby text-white"
+                                  : "border-green/40 bg-green/15 text-green",
+                              )}
+                            >
+                              Sold
+                            </button>
+                          ) : null}
+                          <button
+                            type="button"
+                            aria-label={`Remove ${r.year} ${r.make} ${r.model} from saved`}
+                            onClick={() => toggleSave(r)}
+                            className="flex size-11 shrink-0 items-center justify-center rounded-full text-white/80"
+                          >
+                            <X className="size-4" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="flex justify-end gap-1">
+                  {savedRows.map((r) => (
+                    <button
+                      key={`rm-${compareSelectionKey(r)}`}
+                      type="button"
+                      aria-label={`Remove ${r.year} ${r.make} ${r.model} from saved`}
+                      onClick={() => toggleSave(r)}
+                      className="flex size-11 items-center justify-center rounded-full text-white/70"
+                    >
+                      <X className="size-4" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </section>
           ) : null}
 

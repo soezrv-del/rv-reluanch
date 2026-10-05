@@ -339,6 +339,7 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
   assert.match(home, /requestLotUnit\(lotArrivalQuery\(spotUnit\)\)/);
   assert.match(home, /showroom-spotmodel/);
   assert.match(home, /Stock \{specs\.stock\}/);
+  assert.match(home, /showroom-spot-verified|data-home-verified/);
   assert.doesNotMatch(home, /Stock #|showroom-count|showroom-onlot|showroom-coachline|showroom-spotfacts|showroom-spotmeta|useCountUp|spotlightLabel|data-home-count|data-home-spotlight-specs/);
   const arrivalRail = readFileSync(join(root, "../../components/lot/LotArrivals.tsx"), "utf8");
   assert.match(arrivalRail, /Newest arrivals/);
@@ -380,7 +381,7 @@ test("home hero shows one coach; the whole-lot count lives on Inventory; no cent
   assert.match(lot, /const total = snap\?\.units\.length/);
   assert.match(lot, /total\.toLocaleString\("en-US"\)\} units/);
 
-  // Four tabs, no plus / Action Button between them (Live Chat is already a tab).
+  // Four tabs, no plus / Action Button (Ask replaces Live Chat / Chat).
   assert.match(tabs, /type DockTab = "rvfax" \| "rvlot" \| "rvgrok" \| "more"/);
   assert.doesNotMatch(tabs, /Action Button|bottom-tab-action|bottom-tab-center|\bPlus\b/);
 
@@ -389,9 +390,10 @@ test("home hero shows one coach; the whole-lot count lives on Inventory; no cent
   assert.ok(darkStart > 0, "dark dock block");
   const darkDock = dock.slice(darkStart);
   assert.doesNotMatch(darkDock, /data-theme="light"/);
-  assert.match(darkDock, /--dock-ink:\s*rgba\(255, 255, 255, 0\.7\)/);
-  assert.match(darkDock, /\.bottom-tab-btn:not\(\.is-active\):active \{[^}]*background/);
-  assert.match(darkDock, /\.bottom-tab-btn\.is-active,[\s\S]*?background:\s*#1648c8/);
+  assert.match(darkDock, /--dock-ink:\s*rgba\(243, 235, 227, 0\.7\)/);
+  assert.match(darkDock, /\.bottom-tab-btn:not\(\.is-ask\):not\(\.is-active\):active \{[^}]*background/);
+  assert.match(darkDock, /\.bottom-tab-btn\.is-ask/);
+  assert.doesNotMatch(darkDock, /#1648c8/);
   assert.match(darkDock, /border-radius:\s*var\(--btn-radius, 12px\)/);
   assert.doesNotMatch(darkDock, /aqua|cyan|#00ffff/i);
   const darkHero = truth.slice(truth.indexOf("/* Dark home"));
@@ -406,5 +408,6 @@ test("home hero shows one coach; the whole-lot count lives on Inventory; no cent
       }
     }
   }
-  assert.match(darkHero, /\.showroom-hero-primary \{[^}]*#1648c8/);
+  assert.match(darkHero, /\.showroom-hero-primary \{[^}]*backdrop-filter/);
+  assert.doesNotMatch(darkHero, /#1648c8/);
 });

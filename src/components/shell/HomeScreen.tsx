@@ -58,8 +58,8 @@ export function HomeScreen({
       data-no-swipe
       className="showroom-home absolute inset-0 z-30 flex flex-col overflow-x-hidden overflow-y-auto"
     >
-      {/* One featured coach. The whole-lot count lives on Inventory, not here:
-          next to a stock number it read like N of this one coach. */}
+      {/* One featured coach. Placard + Open coach at the top (both
+          orientations); photo on the studio floor below. No whole-lot count. */}
       <section className="showroom-hero" data-hero-kind="cutout">
         <div className="showroom-placard" data-home-placard>
           {who ? <p className="showroom-spotyear">{who}</p> : null}
@@ -67,11 +67,32 @@ export function HomeScreen({
           {specs?.price ? <p className="showroom-spotprice">{specs.price}</p> : null}
           {specs?.stock ? (
             <p className="showroom-spotstock">
+              {place ? (
+                <>
+                  <span className="showroom-spotplace">{place}</span>
+                  {" · "}
+                </>
+              ) : null}
               Stock {specs.stock}
-              {place ? <span className="showroom-spotplace"> · {place}</span> : null}
+            </p>
+          ) : place ? (
+            <p className="showroom-spotstock">
+              <span className="showroom-spotplace">{place}</span>
             </p>
           ) : null}
+          <div className="showroom-spot-verified" data-home-verified="">
+            <MetalVerifiedTrue size="sm" />
+          </div>
         </div>
+        {spotUnit ? (
+          <button
+            type="button"
+            className="showroom-hero-primary"
+            onClick={openSpot}
+          >
+            Open coach
+          </button>
+        ) : null}
         <div className="showroom-floor" data-hero-kind="cutout">
           <img
             src={heroSrc}
@@ -84,20 +105,7 @@ export function HomeScreen({
           </div>
           <div className="showroom-floor-gloss" aria-hidden />
         </div>
-        {spotUnit ? (
-          <button
-            type="button"
-            className="showroom-hero-primary"
-            onClick={openSpot}
-          >
-            Open coach
-          </button>
-        ) : null}
       </section>
-
-      <div className="home-truth">
-        <MetalVerifiedTrue size="md" />
-      </div>
     </div>
   );
 }

@@ -12,7 +12,7 @@ import {
 import { markAskBarGrokEntry } from "@/lib/rvgrok/screenContext";
 
 /**
- * Ask bar plus the four-tab dock (Facts · Inventory · Live Chat · More).
+ * Ask bar plus the four-tab dock (Facts · Inventory · Ask · More).
  * The dock does not slide. More opens the tools sheet above the dock.
  * A typed ask is appended to the open RV Grok thread.
  */

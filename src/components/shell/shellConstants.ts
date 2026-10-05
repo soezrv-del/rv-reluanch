@@ -14,7 +14,7 @@ export const TAB_ORDER = [
   "rvtrips",
 ] as const satisfies readonly AppTab[];
 
-/** The four dock tabs — Facts · Inventory · Live Chat · More. */
+/** The four dock tabs — Facts · Inventory · Ask · More. */
 export const DOCK_TABS = [
   "rvfax",
   "rvlot",

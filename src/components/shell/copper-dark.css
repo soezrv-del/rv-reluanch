@@ -1,0 +1,385 @@
+/* Copper dark look — dark mode only. Light mode untouched.
+   Accent = one copper lacquer variable, used once per screen on the
+   primary control. Glass = blur + 1px warm top edge + low wide shadow. */
+
+
+/* Structural garage stack (layout). Visual glass/copper stays dark-scoped. */
+.garage-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+.garage-stack-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 1.15rem;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  background: rgba(0, 0, 0, 0.25);
+  color: inherit;
+}
+.garage-stack-photo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  object-position: center 40%;
+}
+.garage-stack-meta {
+  position: absolute;
+  left: 0.55rem;
+  right: 0.55rem;
+  bottom: 0.55rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.75rem;
+  background: rgba(10, 12, 18, 0.72);
+}
+.garage-stack-model {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 650;
+}
+.garage-stack-price {
+  margin: 0.15rem 0 0;
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.8;
+}
+.garage-title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 650;
+}
+.garage-rule {
+  display: none;
+}
+.garage-count {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.7;
+}
+.garage-compare-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 0.95rem;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+html[data-theme="dark"] {
+  --copper: #c4784a;
+  --copper-hi: #e0a078;
+  --copper-lo: #8a4e2e;
+  --copper-ink: #1a120c;
+  --copper-lacquer: linear-gradient(
+    180deg,
+    var(--copper-hi) 0%,
+    var(--copper) 38%,
+    var(--copper-lo) 100%
+  );
+  --warm-charcoal-0: #1c1916;
+  --warm-charcoal-1: #141210;
+  --warm-charcoal-2: #0c0b0a;
+  --warm-ink: #f3ebe3;
+  --warm-ink-70: rgba(243, 235, 227, 0.7);
+  --warm-ink-55: rgba(243, 235, 227, 0.55);
+  --glass-fill: rgba(32, 28, 24, 0.55);
+  --glass-fill-solid: rgba(28, 24, 20, 0.92);
+  --glass-edge: rgba(243, 235, 227, 0.14);
+  --glass-top: rgba(243, 235, 227, 0.22);
+  --glass-shadow: 0 18px 40px rgba(0, 0, 0, 0.38);
+  --glass-radius: 1.15rem;
+  --press-scale: 0.97;
+}
+
+/* Shared glass surface */
+html[data-theme="dark"] .copper-glass,
+html[data-theme="dark"] .detail-spec-glass,
+html[data-theme="dark"] .garage-stack-card,
+html[data-theme="dark"] [data-saved-compare-list] .garage-stack-card {
+  background: var(--glass-fill-solid);
+  border: 1px solid var(--glass-edge);
+  border-top-color: var(--glass-top);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow);
+}
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  html[data-theme="dark"]:not(.android-native) .copper-glass,
+  html[data-theme="dark"]:not(.android-native) .detail-spec-glass,
+  html[data-theme="dark"]:not(.android-native) .garage-stack-card {
+    background: var(--glass-fill);
+    -webkit-backdrop-filter: blur(22px) saturate(1.35);
+    backdrop-filter: blur(22px) saturate(1.35);
+  }
+}
+
+/* Copper lacquer control — one filled accent per screen */
+html[data-theme="dark"] .copper-lacquer,
+html[data-theme="dark"] .bottom-tab-btn[data-bottom-tab="rvgrok"]:not([data-ask-outline]),
+html[data-theme="dark"] .garage-compare-pill {
+  background: var(--copper-lacquer) !important;
+  border: 1px solid rgba(224, 160, 120, 0.35) !important;
+  color: #fff8f2 !important;
+  -webkit-text-fill-color: #fff8f2 !important;
+  box-shadow:
+    0 10px 22px rgba(140, 70, 36, 0.38),
+    inset 0 1px 0 rgba(255, 236, 214, 0.45),
+    inset 0 -10px 18px rgba(80, 36, 16, 0.22) !important;
+}
+html[data-theme="dark"] .copper-lacquer:active,
+html[data-theme="dark"] .bottom-tab-btn[data-bottom-tab="rvgrok"]:not([data-ask-outline]):active,
+html[data-theme="dark"] .garage-compare-pill:active,
+html[data-theme="dark"] .showroom-hero-primary:active {
+  transform: scale(var(--press-scale));
+  filter: brightness(1.08);
+}
+
+/* Ask outline when another copper primary owns the screen */
+html[data-theme="dark"] .bottom-tab-btn[data-bottom-tab="rvgrok"][data-ask-outline],
+html[data-theme="dark"] [data-copper-primary]:not([data-copper-primary="ask"])
+  ~ * .bottom-tab-btn[data-bottom-tab="rvgrok"],
+html[data-theme="dark"] .showroom-app:has([data-copper-primary]:not([data-copper-primary="ask"]))
+  .bottom-tab-btn[data-bottom-tab="rvgrok"] {
+  background: transparent !important;
+  border: 1.5px solid var(--copper-hi) !important;
+  color: var(--warm-ink) !important;
+  -webkit-text-fill-color: var(--warm-ink) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 236, 214, 0.12) !important;
+}
+html[data-theme="dark"] .showroom-app:has([data-copper-primary]:not([data-copper-primary="ask"]))
+  .bottom-tab-btn[data-bottom-tab="rvgrok"] .bottom-tab-glyph,
+html[data-theme="dark"] .showroom-app:has([data-copper-primary]:not([data-copper-primary="ask"]))
+  .bottom-tab-btn[data-bottom-tab="rvgrok"] .bottom-tab-caption {
+  color: var(--warm-ink) !important;
+  -webkit-text-fill-color: var(--warm-ink) !important;
+}
+
+/* Slim dock: hide typed ask row in dark (Ask tab opens chat) */
+html[data-theme="dark"] .showroom-dock > [data-room-ask-bar],
+html[data-theme="dark"] .showroom-ask-row {
+  display: none !important;
+}
+
+/* Warm stage ground */
+html[data-theme="dark"] .showroom-app[data-home-open] > .showroom-stage {
+  background:
+    radial-gradient(90% 50% at 50% 42%, rgba(180, 140, 100, 0.14) 0%, transparent 62%),
+    linear-gradient(180deg, var(--warm-charcoal-0) 0%, var(--warm-charcoal-1) 45%, var(--warm-charcoal-2) 100%) !important;
+}
+
+/* Detail: soft floor fade under title / overview */
+html[data-theme="dark"] [data-coach-detail] .SuiteRaidhoBackdrop,
+html[data-theme="dark"] [data-coach-detail] [data-raidho-backdrop] {
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 48%, transparent 92%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 48%, transparent 92%);
+}
+html[data-theme="dark"] [data-coach-detail] #rvfax-vehicle-report::before {
+  content: "";
+  display: block;
+  height: 4.5rem;
+  margin: -1rem 0 0.5rem;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(20, 16, 12, 0) 0%,
+    rgba(20, 16, 12, 0.55) 45%,
+    var(--warm-charcoal-2) 100%
+  );
+}
+html[data-theme="dark"] [data-coach-detail] [data-coach-overview] {
+  border-color: var(--glass-edge);
+  border-top-color: var(--glass-top);
+  box-shadow: var(--glass-shadow);
+}
+html[data-theme="dark"] .detail-spec-glass {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  overflow: hidden;
+  margin-top: 1.1rem;
+}
+html[data-theme="dark"] .detail-spec-glass[data-tiles="1"] {
+  grid-template-columns: 1fr;
+}
+html[data-theme="dark"] .detail-spec-tile {
+  padding: 0.95rem 1rem;
+  border-right: 1px solid rgba(243, 235, 227, 0.08);
+  border-bottom: 1px solid rgba(243, 235, 227, 0.08);
+  text-align: left;
+}
+html[data-theme="dark"] .detail-spec-tile:nth-child(2n) {
+  border-right: 0;
+}
+html[data-theme="dark"] .detail-spec-glass[data-tiles="1"] .detail-spec-tile,
+html[data-theme="dark"] .detail-spec-glass[data-tiles="2"] .detail-spec-tile,
+html[data-theme="dark"] .detail-spec-glass[data-tiles="3"] .detail-spec-tile:nth-last-child(-n + 1) {
+  border-bottom: 0;
+}
+html[data-theme="dark"] .detail-spec-glass[data-tiles="2"] .detail-spec-tile {
+  border-bottom: 0;
+}
+html[data-theme="dark"] .detail-spec-glass[data-tiles="3"] .detail-spec-tile:nth-child(1),
+html[data-theme="dark"] .detail-spec-glass[data-tiles="3"] .detail-spec-tile:nth-child(2) {
+  border-bottom: 1px solid rgba(243, 235, 227, 0.08);
+}
+html[data-theme="dark"] .detail-spec-glass[data-tiles="3"] .detail-spec-tile:nth-child(3) {
+  border-bottom: 0;
+  border-right: 0;
+  grid-column: 1 / -1;
+}
+html[data-theme="dark"] .detail-spec-label {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--warm-ink-55);
+}
+html[data-theme="dark"] .detail-spec-value {
+  margin: 0.35rem 0 0;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--warm-ink);
+}
+
+/* Garage: overlapping offset glass cards */
+html[data-theme="dark"] [data-saved-compare-list] {
+  position: relative;
+}
+html[data-theme="dark"] .garage-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.85rem;
+}
+html[data-theme="dark"] .garage-title {
+  margin: 0;
+  font-size: 1.55rem;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  color: var(--warm-ink);
+}
+html[data-theme="dark"] .garage-rule {
+  height: 1px;
+  width: 100%;
+  border: 0;
+  background: linear-gradient(90deg, var(--copper) 0%, transparent 88%);
+}
+html[data-theme="dark"] .garage-count {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--warm-ink-55);
+}
+html[data-theme="dark"] .garage-stack {
+  position: relative;
+  display: block;
+  min-height: 11.5rem;
+  margin: 0.5rem 0 1rem;
+}
+html[data-theme="dark"] .garage-rule {
+  display: block;
+}
+html[data-theme="dark"] .garage-stack-card {
+  position: absolute;
+  width: min(78%, 18rem);
+  overflow: hidden;
+  transition: transform 120ms ease-out, filter 120ms ease-out;
+}
+html[data-theme="dark"] .garage-stack-card:nth-child(1) {
+  left: 0;
+  top: 2.4rem;
+  z-index: 2;
+}
+html[data-theme="dark"] .garage-stack-card:nth-child(2) {
+  right: 0;
+  top: 0;
+  z-index: 1;
+  width: min(72%, 16.5rem);
+  opacity: 0.92;
+}
+html[data-theme="dark"] .garage-stack-card:nth-child(n + 3) {
+  display: none;
+}
+html[data-theme="dark"] .garage-stack-card:active {
+  transform: scale(var(--press-scale));
+  filter: brightness(1.06);
+}
+html[data-theme="dark"] .garage-stack-photo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  object-position: center 40%;
+}
+html[data-theme="dark"] .garage-stack-meta {
+  position: absolute;
+  left: 0.55rem;
+  right: 0.55rem;
+  bottom: 0.55rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.75rem;
+  background: rgba(20, 16, 12, 0.72);
+  border: 1px solid var(--glass-edge);
+  border-top-color: var(--glass-top);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+html[data-theme="dark"] .garage-stack-model {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--warm-ink);
+}
+html[data-theme="dark"] .garage-stack-price {
+  margin: 0.15rem 0 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--warm-ink-70);
+}
+html[data-theme="dark"] .garage-compare-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 0.95rem;
+  border-radius: 999px !important;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--copper-ink) !important;
+  -webkit-text-fill-color: var(--copper-ink) !important;
+}
+html[data-theme="dark"] .garage-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+/* Dark button/card consistency: warm ink, glass edge, press scale */
+html[data-theme="dark"] .glass-prestige {
+  border-color: var(--glass-edge);
+  border-top-color: var(--glass-top);
+  box-shadow: var(--glass-shadow);
+}
+html[data-theme="dark"] .app-shell button:not(.bottom-tab-btn):not(.showroom-mic):not(.theme-switch):active {
+  transform: scale(var(--press-scale));
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="dark"] .copper-lacquer,
+  html[data-theme="dark"] .bottom-tab-btn[data-bottom-tab="rvgrok"],
+  html[data-theme="dark"] .garage-compare-pill,
+  html[data-theme="dark"] .showroom-hero-primary,
+  html[data-theme="dark"] .garage-stack-card,
+  html[data-theme="dark"] .app-shell button {
+    transition: none;
+    transform: none !important;
+  }
+}

@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, type ReactNode } from "react";
-import { FileText, LayoutGrid, MessagesSquare } from "lucide-react";
+import { FileText, LayoutGrid, Sparkles } from "lucide-react";
+import "./copper-dark.css";
 import { cn } from "@/lib/utils";
 import { hapticLight } from "@/lib/haptics";
 import {
@@ -22,7 +23,8 @@ export type AppTab =
 
 type DockTab = "rvfax" | "rvlot" | "rvgrok" | "more";
 
-/** Four dock tabs. Tow, Cal and RV GPS live in the More sheet. */
+/** Four dock tabs. Tow, Cal and RV GPS live in the More sheet.
+ *  Ask replaces the old Live Chat / Chat label; it still opens rvgrok. */
 const TABS: {
   id: DockTab;
   label: string;
@@ -30,7 +32,7 @@ const TABS: {
 }[] = [
   { id: "rvfax", label: "RvFACTS", short: "Facts" },
   { id: "rvlot", label: "Inventory", short: "Inventory" },
-  { id: "rvgrok", label: "Live Chat", short: "Live Chat" },
+  { id: "rvgrok", label: "Ask", short: "Ask" },
   { id: "more", label: "More", short: "More" },
 ];
 
@@ -42,7 +44,7 @@ const glyph = {
 
 function DockGlyph({ id }: { id: DockTab }) {
   if (id === "rvfax") return <FileText {...glyph} />;
-  if (id === "rvgrok") return <MessagesSquare {...glyph} />;
+  if (id === "rvgrok") return <Sparkles {...glyph} />;
   if (id === "more") return <LayoutGrid {...glyph} />;
   return <InventoryGlyph />;
 }
@@ -134,8 +136,9 @@ function placeDock(dock: HTMLDivElement, smooth: boolean) {
 }
 
 /**
- * Four tabs share the row at equal width: Facts · Inventory · Live Chat ·
- * More. More opens the tools sheet and stays lit while a sheet tool is open.
+ * Four tabs share the row at equal width: Facts · Inventory · Ask · More.
+ * Ask opens the RV Grok chat page (same route as the old Live Chat tab).
+ * More opens the tools sheet and stays lit while a sheet tool is open.
  * placeDock still centers a tab if the row ever overflows.
  * Android WebView: do NOT put pointer-events-none on this nav.
  */
@@ -232,6 +235,7 @@ export function BottomTabs({
                 "transition-[background-color,color,opacity] duration-200 ease-out",
                 "pointer-events-auto active:opacity-70 touch-manipulation select-none",
                 active && "is-active",
+                id === "rvgrok" && "is-ask",
               )}
             >
               <DockGlyph id={id} />
