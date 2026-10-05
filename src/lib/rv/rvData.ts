@@ -25639,6 +25639,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Diesel",
       floorplans: ["42G", "42R", "45A", "42Q", "42V", "42B", "42X", "45T"],
       floorplansByYear: {
+        // 2005–2017 repeat 42G / 42R / 45A with no dated card on the row. Not a lock. Do not copy them onto a later year.
         "2005": ["42G", "42R", "45A"],
         "2006": ["42G", "42R", "45A"],
         "2007": ["42G", "42R", "45A"],
@@ -25869,7 +25870,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "American Dream": {
       type: "Class A Diesel",
-      floorplans: ["42G", "45A", "45B", "42C", "44Q", "42Q", "45P"],
+      floorplans: ["42G", "42B", "42S", "45A", "45B", "45D", "42C", "44Q", "42Q", "45P"],
       floorplansByYear: {
         "2005": ["42G", "45A", "45B"],
         "2006": ["42G", "45A", "45B"],
@@ -25885,16 +25886,16 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2016": ["42G", "45A", "45B"],
         "2017": ["42G", "45A", "45B"],
         "2018": ["42G", "45A", "45B"],
-        // RVUSA 2019 Dream brochure: 42B | 42Q | 42S | 45A. Keep existing 42G/45B chips; add sourced 42Q (42-foot L9). Do not invent 42B/42S onto the year row.
-        "2019": ["42G", "45A", "45B", "42Q"],
+        // RVUSA 2019 Dream brochure: 42B | 42Q | 42S | 45A. Same card as the 2019 engine split. 42G and 45B are not on that card.
+        "2019": ["42B", "42Q", "42S", "45A"],
         "2020": ["42G", "45A", "45B"],
         "2021": ["42G", "45A", "45B"],
         "2022": ["45A", "45B"],
         // RVUSA 2023 Dream year index lists 42Q (42' 11"). Do not stamp 42Q onto 2026.
         "2023": ["45A", "45B", "42Q"],
         "2024": ["45A", "45B", "42Q"],
-        // 2025 dealer spec table CHASSIS: 42Q | 45A | 45D | 45P. Keep 45B chip; add sourced 42Q. Do not invent 45D onto this row.
-        "2025": ["45A", "45B", "42Q"],
+        // 2025 dealer spec table: 42Q | 45A | 45D | 45P. Same table as the 2025 GVWR pins. 45B is not on that table.
+        "2025": ["42Q", "45A", "45D", "45P"],
         "2026": ["45A", "45B", "42C", "44Q"],
         // LOCK americancoach.com/models/2027-american-dream/ + library 2027-American-Coach-American-Dream.pdf (DREAM27F1, 3/26)
         // PDF MODELS: 42Q | 45A | 45P. Omit option-text-only 45Q. Do not copy 2026 45B/42C/44Q forward.
@@ -34215,7 +34216,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
   "Renegade RV": {
     Valencia: {
       type: "Class C Diesel",
-      floorplans: ["35MB", "38RW", "38RB", "38RBB", "40RBB", "45RB", "45RBB", "36SB", "39BB", "39FW", "39RB"],
+      floorplans: ["35MB", "36SB", "38BB", "38RB", "38RW", "39BB", "39FW", "39RB"],
       floorplansByYear: {
         "2014": ["35MB", "38RW"],
         "2015": ["35MB", "38RW"],
@@ -34227,11 +34228,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2021": ["35MB", "38RW", "38RB"],
         "2022": ["35MB", "38RW", "38RB"],
         "2023": ["35MB", "38RW", "38RB"],
-        "2024": ["35MB", "38RW", "38RB"],
-        "2025": ["35MB", "38RW"],
-        "2026": ["35MB", "38RW", "38RBB", "40RBB", "45RB", "45RBB"],
+        // OEM MY24 Valencia Brochure: 36SB | 38BB | 38RB | 38RW. Leftover 35MB is not this year.
+        "2024": ["36SB", "38BB", "38RB", "38RW"],
+        // OEM 2025 VALENCIA Version 2025.1: 36SB | 38BB | 38RB | 38RW. Leftover 35MB is not this year.
+        "2025": ["36SB", "38BB", "38RB", "38RW"],
+        // OEM 2026 VALENCIA Version 2026.1: 36SB | 39BB | 39RB. Not 39FW. Not leftover 35MB / 38RW / 38RBB / 40RBB / 45RB / 45RBB.
+        "2026": ["36SB", "39BB", "39RB"],
         // LOCK renegaderv.com/rvmodel/valencia-2027/ + library 2027-Renegade-RV-Valencia.pdf (VALENCIA, 4/26)
-        // PDF CLASS C • DIESEL: 36SB | 39BB | 39FW | 39RB. Do not copy 2026 35MB/38RW/38RBB/40RBB/45RB/45RBB forward.
+        // PDF CLASS C • DIESEL: 36SB | 39BB | 39FW | 39RB. 2026 is 36SB | 39BB | 39RB only. Do not copy 39FW back, and do not restore leftover 35MB / 38RW / 38RBB / 40RBB / 45RB / 45RBB.
         "2027": ["36SB", "39BB", "39FW", "39RB"]
       },
       lengthRange: [
