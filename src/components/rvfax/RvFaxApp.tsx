@@ -195,17 +195,14 @@ export function RvFaxApp({
       /* */
     }
   }, []);
-  const refreshFax = useCallback(() => {
+  // Pull / report Back: clean RV fax home at top. Reloads saved/deals
+  // but must NOT re-hydrate or re-open the coach report.
+  const pullResetFax = useCallback(() => {
     setSaved(loadSavedUnits());
     setDeals(loadSoldDeals());
-    setDetail((prev) => (prev ? hydrateShareCoachResult(prev) : prev));
-    try {
-      scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-    } catch {
-      /* */
-    }
-  }, []);
-  const pull = usePullToReset(scrollRef, refreshFax);
+    resetFax();
+  }, [resetFax]);
+  const pull = usePullToReset(scrollRef, pullResetFax);
 
 
   const savedRef = useRef(saved);
@@ -804,7 +801,7 @@ export function RvFaxApp({
             result={detail}
             shareFocusToken={shareFocusToken}
             marketFocusToken={marketFocusToken}
-            onBack={() => setDetail(null)}
+            onBack={pullResetFax}
             onToggleSave={() => toggleSave(detail)}
             saved={isSavedUnit(saved, detail)}
             comparing={comparePick.some(
@@ -1080,7 +1077,7 @@ export function RvFaxApp({
             </section>
           ) : null}
 
-          {/* Results (multi-hit or after back from report) */}
+          {/* Results (multi-hit search) */}
           {hasSearched && !searching ? (
             <section className="space-y-3">
               <div className="flex items-center justify-between gap-2 px-0.5">
