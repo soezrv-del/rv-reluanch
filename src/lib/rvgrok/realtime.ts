@@ -91,8 +91,10 @@ import type { LotMemory } from "./lotMemory";
 import {
   isIgnorableVoiceTranscript,
   isSameLotLine,
+  LOT_LOOKUP_FAILED_SPEAK,
   lotSummaryForSpeech,
   NAME_ROSTER_SPEAK,
+  queryLotFailure,
   lotLineWithDetailsAsk,
   reduceToolSpeak,
   repeatsLotLine,
@@ -873,10 +875,13 @@ export class GrokRealtimeSession {
           priorAssistant: this.priorAssistantForLot,
         }),
       });
-      const data = (await res.json()) as { lotMemory?: LotMemory | null } | null;
-      if (data == null || (typeof data === "object" && Object.keys(data).length === 0)) {
-        console.warn("[rvgrok] empty tool result", { name, payload: data });
-        this.sendToolOutput(callId, { ok: false, error: "empty result" }, undefined, false);
+      const data = (await res.json().catch(() => null)) as { lotMemory?: LotMemory | null } | null;
+      // A 403 / 500 / unavailable body is not "matched 0". Say the lookup
+      // failed instead of "None.", and do not let her guess at units.
+      const failure = queryLotFailure(res.ok, res.status, data);
+      if (failure) {
+        console.warn("[rvgrok] query_lot failed", { name, status: res.status, failure });
+        this.sendToolOutput(callId, { ok: false, error: failure }, LOT_LOOKUP_FAILED_SPEAK);
         return;
       }
       if (data?.lotMemory) this.lotMemory = data.lotMemory;
@@ -899,12 +904,7 @@ export class GrokRealtimeSession {
       );
     } catch (err) {
       console.warn("[rvgrok] query_lot failed", { name, payload: err });
-      this.sendToolOutput(
-        callId,
-        { ok: false, error: "lookup failed" },
-        undefined,
-        false,
-      );
+      this.sendToolOutput(callId, { ok: false, error: "lookup failed" }, LOT_LOOKUP_FAILED_SPEAK);
     }
   }
 
