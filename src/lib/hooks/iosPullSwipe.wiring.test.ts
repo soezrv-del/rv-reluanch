@@ -14,7 +14,8 @@ test("Facts / Grok / Sold / Trips / More wire a real pull handler", () => {
   const cal = read("../../components/rvcal/RvCalApp.tsx");
   const tow = read("../../components/rvtow/RvTowApp.tsx");
 
-  assert.match(fax, /usePullToReset\(scrollRef, refreshFax\)/);
+  assert.match(fax, /usePullToReset\(scrollRef, pullResetFax\)/);
+  assert.doesNotMatch(fax, /usePullToReset\(scrollRef, refreshFax\)/);
   assert.doesNotMatch(fax, /enabled:\s*false/);
   assert.match(fax, /loadSavedUnits\(\)/);
   assert.match(grok, /usePullToReset\(listRef, startNewChat/);
@@ -23,6 +24,35 @@ test("Facts / Grok / Sold / Trips / More wire a real pull handler", () => {
   assert.match(more, /onPullReset=\{\(\) => setRefreshTick/);
   assert.match(cal, /onPullReset=\{resetCal\}/);
   assert.match(tow, /onPullReset=\{clearVehicle\}/);
+});
+
+test("RV fax Back and pull reset to clean home (no coach re-open)", () => {
+  const fax = read("../../components/rvfax/RvFaxApp.tsx");
+  const detail = read("../../components/rvfax/RvDetail.tsx");
+
+  // Report Back clears picker + detail via pullResetFax → resetFax
+  assert.match(fax, /onBack=\{pullResetFax\}/);
+  assert.doesNotMatch(fax, /onBack=\{\(\) => setDetail\(null\)\}/);
+
+  // pullResetFax reloads saved/deals then resetFax — never re-hydrates the open report
+  const pullResetBlock = fax.match(
+    /const pullResetFax = useCallback\(\(\) => \{[\s\S]*?\}, \[resetFax\]\);/,
+  );
+  assert.ok(pullResetBlock, "pullResetFax callback missing");
+  assert.match(pullResetBlock[0], /setSaved\(loadSavedUnits\(\)\)/);
+  assert.match(pullResetBlock[0], /setDeals\(loadSoldDeals\(\)\)/);
+  assert.match(pullResetBlock[0], /resetFax\(\)/);
+  assert.doesNotMatch(pullResetBlock[0], /hydrateShareCoachResult/);
+
+  // resetFax clears selections + hasSearched + detail so cascade reveal / single-hit reopen cannot fire
+  assert.match(
+    fax,
+    /const resetFax = useCallback\(\(\) => \{[\s\S]*?setHasSearched\(false\);[\s\S]*?setDetail\(null\);/,
+  );
+
+  // Report pull-to-refresh still goes through onBack (now pullResetFax)
+  assert.match(detail, /usePullToReset\(scrollRef, onBack\)/);
+  assert.match(detail, /Release to go back/);
 });
 
 test("Tow and Trips no longer block the whole page from tab swipe", () => {
