@@ -806,7 +806,7 @@ test("spoken lot line names at most 3 units and does not open a hit with None", 
     speech: "None. Matching units: 8 Keystone Montana High Country.",
   });
   assert.doesNotMatch(glued.speech, /^None\./);
-  assert.match(glued.speech, /Matching units: 8/);
+  assert.match(glued.speech, /^We've got 8 on the lot: Keystone Montana High Country/);
   assert.doesNotMatch(spoken.speech, /\bstk\b/i);
 });
 
@@ -1154,6 +1154,96 @@ test("anything like a View is the other Sprinter coaches, not those Views", () =
   assert.match(next.speech, /Itasca Navion/);
   assert.doesNotMatch(next.speech, /Super C/);
   assert.doesNotMatch(next.speech, /Matching units: 2 Winnebago View/);
+});
+
+test("tonight's View call: natural likeness asks and a bare similar follow-up find the other Sprinters", () => {
+  const snap = units();
+  const views = "Do we have any Winnebago Views in stock?";
+  const first = answerQueryLotFromSnapshot(snap, { query: views }, null, views);
+  assert.equal(first.matched, 2, first.summary);
+  const notViews = (rows: { make: string; model: string }[]) =>
+    rows.every((unit) => !(/winnebago/i.test(unit.make) && /view/i.test(unit.model)));
+  const checkSimilar = (
+    label: string,
+    hit: {
+      matched?: number;
+      summary?: string;
+      did_you_mean?: string;
+      feature_words?: string[];
+      dropped_words?: string[];
+      units: { make: string; model: string }[];
+    },
+  ) => {
+    assert.ok((hit.matched ?? 0) > 20, `${label}\n${hit.summary}`);
+    assert.match(String(hit.summary), /Other Sprinter coaches near that size/, label);
+    assert.match(hit.units[0]?.model || "", /navion/i, `${label}: Itasca Navion first`);
+    assert.ok(notViews(hit.units), `${label}\n${hit.summary}`);
+    assert.equal(hit.did_you_mean, undefined, label);
+    assert.equal(hit.feature_words, undefined, label);
+    assert.equal(hit.dropped_words, undefined, label);
+    assert.doesNotMatch(String(hit.summary), /Salem|mentioned in these listings|Super C/, label);
+  };
+  for (const like of [
+    "Is there anything on the lot that's like a Winnebago View?",
+    "Anything that's like a View?",
+    "Something comparable to a View",
+    "What's close to a View?",
+    "Alternatives to a View",
+    "Any similar units to the Winnebago View?",
+    "Similar coaches to a View",
+    "Something similar to a Winnebago View",
+  ]) {
+    for (const args of [{ query: like }, { query: like, body_type: "Class C" }]) {
+      checkSimilar(`${like} ${args.body_type || ""}`, searchLot(snap.units, { ...args, utterance: like }));
+      checkSimilar(
+        `${like} ${args.body_type || ""} (after the View turn)`,
+        answerQueryLotFromSnapshot(snap, { ...args }, first.lotMemory, like),
+      );
+    }
+  }
+  // No coach named: the anchor is the View from the last lot turn.
+  for (const said of [
+    "That's the same units. I was looking for similar units.",
+    "Anything similar?",
+    "Something similar.",
+    "Similar coaches?",
+  ]) {
+    for (const args of [{ query: said }, { query: said, body_type: "Class C" }]) {
+      checkSimilar(said, answerQueryLotFromSnapshot(snap, args, first.lotMemory, said));
+    }
+  }
+  // After a likeness turn, "similar units" stays on the View, not the whole lot.
+  const like = "Is there anything on the lot that's like a Winnebago View?";
+  const second = answerQueryLotFromSnapshot(snap, { query: like }, first.lotMemory, like);
+  checkSimilar(like, second);
+  const again = "That's the same units. I was looking for similar units.";
+  checkSimilar(again, answerQueryLotFromSnapshot(snap, { query: again }, second.lotMemory, again));
+  // The plain ask is still the two Views.
+  const still = answerQueryLotFromSnapshot(snap, { query: views }, second.lotMemory, views);
+  assert.equal(still.matched, 2, still.summary);
+});
+
+test("the spoken lot line says counts like a person, with no zero class", () => {
+  const snap = units();
+  const views = "Do we have any Winnebago Views in stock?";
+  const spoken = spokenLotPayload(answerQueryLotFromSnapshot(snap, { query: views }, null, views));
+  assert.match(spoken.speech, /^We've got 2 on the lot: Winnebago View, all used\. Top: 2012 Winnebago View Profile/);
+  assert.doesNotMatch(spoken.speech, /Matching units/);
+  const classC = searchLot(snap.units, { query: "Winnebago View", body_type: "Class C" });
+  assert.equal(classC.matched, 2, classC.summary);
+  assert.doesNotMatch(classC.summary, /0 Class Super C|Class C on the lot, 2 Class C/);
+  assert.match(classC.summary, /^Matching units: 2 Winnebago View, all used\./);
+  const voiced = spokenLotPayload({ ...classC, speech: classC.summary, none: false });
+  assert.match(voiced.speech, /^We've got 2 on the lot: Winnebago View, all used\./);
+  const mixed = searchLot(snap.units, { query: "Class C" });
+  const superC = mixed.counts.body_type["Class Super C"] || 0;
+  const plainC = mixed.counts.body_type["Class C"] || 0;
+  assert.match(mixed.summary, new RegExp(`^Matching units: ${mixed.matched} Class C, ${plainC} Class C and ${superC} Class Super C\\.`));
+  const mixedSpoken = spokenLotPayload({ ...mixed, speech: mixed.summary, none: false });
+  assert.match(
+    mixedSpoken.speech,
+    new RegExp(`^We've got ${mixed.matched} Class Cs on the lot, ${plainC} regular and ${superC} Super C\\.`),
+  );
 });
 
 test("a named coach survives the spare words around it", () => {
