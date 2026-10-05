@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { startsWithLotMissLine } from "./voiceTurnGate.ts";
 import {
   formatOwnLotBlock,
   parseOwnLotAsk,
@@ -97,7 +98,7 @@ test("make and model fields still match when the tool splits Odyssey and 29V", (
   assert.deepEqual(stocksFor({ model: "45D" }), ["45282"]);
 });
 
-test("Odyssey 29V does not swallow Odyssey SE, and a real miss is plain none", () => {
+test("Odyssey 29V does not swallow Odyssey SE, and a real miss is an honest miss, not a bare None", () => {
   const se = answerQueryLotFromSnapshot(fixture(), { model: "Odyssey SE" }, null);
   assert.equal(se.none, false);
   assert.ok(se.units.some((unit) => unit.stock_number === "47664"));
@@ -108,7 +109,9 @@ test("Odyssey 29V does not swallow Odyssey SE, and a real miss is plain none", (
     assert.equal(miss.none, true, model);
     assert.equal(miss.matched, 0, model);
     assert.equal(miss.units.length, 0, model);
-    assert.match(miss.speech, /^None\./);
+    assert.ok(startsWithLotMissLine(miss.speech), `${model}: ${miss.speech}`);
+    assert.match(miss.speech, /can't find/, model);
+    assert.doesNotMatch(miss.speech, /^None\b/, model);
     assert.doesNotMatch(miss.speech, /own-lot hit/);
     assert.doesNotMatch(miss.speech, /stk /);
   }

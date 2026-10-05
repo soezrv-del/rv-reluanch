@@ -2107,7 +2107,7 @@ export function lotQueryHasSubject(query: string): boolean {
 const LOT_FILLER = new Set([
   "actually", "again", "ago", "alright", "also", "anyway", "approx", "approximately",
   "ask", "asking", "ballpark", "basically", "bunch", "can", "check", "cool", "curious",
-  "dealer", "dealership", "entire", "estimate", "exactly", "gonna", "good", "got",
+  "dealer", "dealership", "dollar", "dollars", "bucks", "entire", "estimate", "exactly", "gonna", "good", "got",
   "gotta", "great", "guess", "hand", "hmm", "honestly", "idea", "just", "kind", "kinds",
   "know", "let", "lets", "like", "listen", "lot", "lots", "many", "maybe", "me", "mean",
   "moment", "much", "need", "nice", "ok", "okay", "okey", "on", "our", "overall",
@@ -2162,6 +2162,22 @@ function wholeLotAsk(units: LotQueryUnit[], parsed: Parsed, text: string): boole
     (token) =>
       isLotFillerWord(token) ||
       (modelWordMiss(token, units) && !suggestName([token], units)),
+  );
+}
+
+/**
+ * The words in a lot question that could name a coach: what is left after
+ * class, price, place, and spare talk are read off. Empty when he named no coach.
+ */
+export function lotQueryNamedWords(text: string, units: LotQueryUnit[]): string[] {
+  if (!text) return [];
+  return parseArgs(units, { query: text }).tokens.filter((token) => !isLotFillerWord(token));
+}
+
+/** Named words that are on no sheet coach at all ("Zorbatron" in "Winnebago Zorbatron"). */
+export function lotQueryMissWords(text: string, units: LotQueryUnit[]): string[] {
+  return lotQueryNamedWords(text, units).filter(
+    (token) => !units.some((unit) => tokenHitsIdentity(unit, token)),
   );
 }
 

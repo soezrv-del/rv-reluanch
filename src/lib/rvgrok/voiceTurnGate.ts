@@ -52,6 +52,34 @@ export function repeatsLotLine(text: string): boolean {
  * Matched units are the answer. Do not say None and then list them.
  * A real miss stays "None."
  */
+/**
+ * A lot miss is never a bare "None." She says one of these (picked from the
+ * question, so the same question gets the same line, once), then the closest
+ * real units or an honest "can't find one". Counts still come only from the sheet.
+ */
+export const LOT_MISS_LINES = [
+  "Hang on bud, it's not in our sheet, so I'm looking a little harder.",
+  "Give me a sec, that one's not jumping out of our sheet, so I dug a little deeper.",
+  "Hmm, I'm not seeing that one on our sheet, so I looked a little wider.",
+] as const;
+
+/** Same question, same line. */
+export function lotMissLine(question: string): string {
+  const key = (question || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+  return LOT_MISS_LINES[hash % LOT_MISS_LINES.length]!;
+}
+
+/** True when the line already opens with a friendly miss line. */
+export function startsWithLotMissLine(line: string): boolean {
+  const t = (line || "").trim();
+  return LOT_MISS_LINES.some((miss) => t.startsWith(miss));
+}
+
+/** Spoken for a miss with nothing else to say. Never a bare "None." */
+export const LOT_MISS_EMPTY_LINE = "I can't find one on our sheet.";
+
 export function lotSummaryForSpeech(summary: string, matched: number): string {
   let line = (summary || "")
     .replace(/\nNAME ROSTER\b[\s\S]*$/i, "")
@@ -60,10 +88,13 @@ export function lotSummaryForSpeech(summary: string, matched: number): string {
   if (matched > 0) {
     line = line.replace(/^none\.\s*/i, "");
     line = line.replace(/\bnone\.\s+(?=matching units\b)/i, "");
+  } else if (startsWithLotMissLine(line)) {
+    return line;
   } else if (line && !/^none\b/i.test(line)) {
     line = `None. ${line}`;
   }
-  if (!line) return matched > 0 ? "" : "None.";
+  if (!line) return matched > 0 ? "" : LOT_MISS_EMPTY_LINE;
+  if (/^none\.?$/i.test(line)) return LOT_MISS_EMPTY_LINE;
   return line;
 }
 
