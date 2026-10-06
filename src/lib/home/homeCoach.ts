@@ -99,12 +99,8 @@ function feetInches(ft: number): string {
   return `${whole} ft ${inches} in`;
 }
 
-/** Dark home spec row. Lot fields first. Blank 2026 Cornerstone 45D uses the same pin as lot detail. */
+/** Dark home spec card. Locked 2×2: Length, Engine, Slides, Fuel. */
 export function spotlightCard(unit: LotUnit): SpotlightCardCell[] {
-  const cells: SpotlightCardCell[] = [];
-  if (unit.length_ft != null && unit.length_ft > 0) {
-    cells.push({ value: feetInches(unit.length_ft), label: "LENGTH" });
-  }
   const year = Number(unit.year);
   const plan = `${unit.trim} ${unit.model}`;
   const cornerstone =
@@ -112,28 +108,26 @@ export function spotlightCard(unit: LotUnit): SpotlightCardCell[] {
     /entegra/i.test(unit.make) &&
     /cornerstone/i.test(unit.model) &&
     /\b45d\b/i.test(plan);
-  if (unit.slides != null && unit.slides > 0) {
-    cells.push({
-      value: `${unit.slides} slide${unit.slides === 1 ? "" : "s"}`,
-      label: "FLOORPLAN",
-    });
-  } else if (cornerstone) {
-    cells.push({ value: "4 slides", label: "FLOORPLAN" });
-  }
+
+  const length =
+    unit.length_ft != null && unit.length_ft > 0 ? feetInches(unit.length_ft) : "";
   const hpRaw = `${unit.printed.horsepower || ""} ${unit.engine || ""}`;
   const hpHit = hpRaw.match(/(\d{2,4})\s*hp\b/i);
   const hp = hpHit ? Number(hpHit[1]) : NaN;
-  if (hp >= 100 && hp <= 800) {
-    cells.push({ value: `${hp} hp`, label: "ENGINE" });
-  } else if (cornerstone) {
-    cells.push({ value: "605 hp", label: "ENGINE" });
-  }
-  if (unit.gvwr != null && unit.gvwr > 0) {
-    cells.push({
-      value: Math.round(unit.gvwr).toLocaleString("en-US"),
-      label: "GVWR",
-    });
-  }
+  const engine = hp >= 100 && hp <= 800 ? `${hp} hp` : cornerstone ? "605 hp" : "";
+  const slides =
+    unit.slides != null && unit.slides > 0
+      ? String(unit.slides)
+      : cornerstone
+        ? "4"
+        : "";
+  const fuel = unit.fuel_type.trim() || (cornerstone ? "Diesel" : "");
+
+  const cells: SpotlightCardCell[] = [];
+  if (length) cells.push({ value: length, label: "LENGTH" });
+  if (engine) cells.push({ value: engine, label: "ENGINE" });
+  if (slides) cells.push({ value: slides, label: "SLIDES" });
+  if (fuel) cells.push({ value: fuel, label: "FUEL" });
   return cells;
 }
 

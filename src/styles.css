@@ -6492,3 +6492,117 @@ html:not([data-theme="light"]) [data-rvgrok-composer] textarea {
   box-shadow: none !important;
   border-radius: 0 !important;
 }
+
+/* One dock. The home screen was hiding it and drawing a second bar. */
+html[data-theme="dark"] [data-home-open] .showroom-dock {
+  display: flex !important;
+}
+
+html[data-theme="dark"] .dark-home-stats {
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px 0;
+}
+
+html[data-theme="dark"] .dark-home-coach {
+  max-height: 46vh !important;
+}
+
+html:not([data-theme="light"]) .showroom-mark {
+  filter: grayscale(1) brightness(2.4) contrast(1.05) !important;
+}
+
+html:not([data-theme="light"]) .metal-hammered {
+  display: none !important;
+}
+
+html:not([data-theme="light"]) :is(
+  .glass-prestige,
+  .glass-prestige-deep,
+  .glass-prestige-gold,
+  .glass-panel,
+  .glass-surface,
+  .suite-glass,
+  .lot-card
+) {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-radius: 24px !important;
+}
+
+html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tabs-dock,
+html:not([data-theme="light"]) .showroom-dock .bottom-tabs-dock {
+  background: #000 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.28) !important;
+  box-shadow: none !important;
+}
+
+html:not([data-theme="light"]) .bottom-tab-btn {
+  justify-content: center !important;
+}
+
+html:not([data-theme="light"]) .rvfax-report-chrome {
+  background: #000 !important;
+}
+
+html:not([data-theme="light"]) [data-facts-sold],
+html:not([data-theme="light"]) [data-facts-compare] {
+  background: #161618 !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  color: #f7f5f2 !important;
+}
+
+html:not([data-theme="light"]) .showroom-ask,
+html:not([data-theme="light"]) .grok-composer-pill {
+  background: #141416 !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+}
+
+html:not([data-theme="light"]) .lot-share-dock {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+html:not([data-theme="light"]) .lot-share-dock :is(.lot-cal-tab, .lot-detail-tab, .report-share-main) {
+  background: #161618 !important;
+  color: #f7f5f2 !important;
+  -webkit-text-fill-color: #f7f5f2 !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  width: 100%;
+}
+
+html:not([data-theme="light"]) .lot-share-dock [data-lot-cal] {
+  background: linear-gradient(180deg, #f2c7a6 0%, #c47b50 100%) !important;
+  color: #1a120c !important;
+  -webkit-text-fill-color: #1a120c !important;
+  border: 0 !important;
+}
+
+html:not([data-theme="light"]) .app-shell [class*="text-emerald"] {
+  color: #e8c090 !important;
+}
+
+html:not([data-theme="light"]) .app-shell [class*="border-emerald"] {
+  border-color: rgba(196, 138, 94, 0.45) !important;
+}
+
+html:not([data-theme="light"]) .app-shell [class*="bg-emerald"] {
+  background-color: rgba(196, 138, 94, 0.14) !important;
+}
+
+html:not([data-theme="light"]) .rvfax-screen input:not([data-room-ask-input]) {
+  background: #101114 !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+}
+
+html:not([data-theme="light"]) .rvfax-screen input:not([data-room-ask-input]):not(:placeholder-shown) {
+  background: #1c1c20 !important;
+  border-color: rgba(232, 192, 144, 0.55) !important;
+}
+
+
+
+
+
+
+
+

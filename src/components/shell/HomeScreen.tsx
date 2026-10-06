@@ -146,24 +146,6 @@ export function HomeScreen({
           >
             Ask RV Grok
           </button>
-          <nav className="dark-home-nav" aria-label="Home">
-            <button type="button" className="is-on" onClick={() => onOpen("rvfax")}>
-              <img src="/assets/showroom/tab-facts.png" alt="" width="28" height="27" />
-              <span>Facts</span>
-            </button>
-            <button type="button" onClick={() => onOpen("rvlot")}>
-              <img src="/assets/showroom/tab-inventory.png" alt="" width="40" height="25" />
-              <span>Inventory</span>
-            </button>
-            <button type="button" onClick={() => onOpen("rvgrok")}>
-              <img src="/assets/showroom/tab-chat.png" alt="" width="26" height="27" />
-              <span>Chat</span>
-            </button>
-            <button type="button" onClick={() => onOpen("more")}>
-              <img src="/assets/showroom/tab-more.png" alt="" width="28" height="15" />
-              <span>More</span>
-            </button>
-          </nav>
         </section>
       </div>
     );

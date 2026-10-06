@@ -45,6 +45,10 @@ export const Route = createRootRoute({
       ...(xBanner ? [{ property: "x:game:image", content: xBanner }] : []),
     ],
     links: [
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap",
+      },
       { rel: "stylesheet", href: appCss },
       { rel: "stylesheet", href: buttonsCss },
       { rel: "stylesheet", href: cardsCss },

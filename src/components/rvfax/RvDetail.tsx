@@ -1327,7 +1327,7 @@ export function RvDetail({
         <PullRefreshLayer state={pull} label="Release to go back">
         {/* Sticky under the iPhone clock / Dynamic Island */}
         <div
-          className="rvfax-report-chrome sticky top-0 z-30 border-b border-white/15"
+          className="rvfax-report-chrome sticky top-0 z-30 border-b border-white/15 bg-black"
           data-no-export
         >
           <div className="mx-auto flex w-full max-w-lg items-center gap-1.5 px-3 pb-2 sm:px-5">
@@ -1340,7 +1340,7 @@ export function RvDetail({
               Back
             </button>
             <p
-              className="min-w-0 flex-1 truncate text-[12px] font-bold text-white"
+              className="min-w-0 flex-1 text-[13px] font-semibold leading-snug text-[#f7f5f2] line-clamp-2"
               title={coachChip}
             >
               {coachShort}
@@ -1491,7 +1491,7 @@ export function RvDetail({
                   data-facts-sold=""
                   onClick={onSell}
                   className={cn(
-                    "inline-flex min-h-11 items-center justify-center rounded-full border border-green/40 bg-green/15 px-4 text-[13px] font-bold text-green",
+                    "inline-flex min-h-11 items-center justify-center rounded-full border border-white/18 bg-[#161618] px-4 text-[13px] font-bold text-[#f7f5f2]",
                     onStartCompare ? "flex-1" : "w-full",
                   )}
                 >
@@ -1504,7 +1504,7 @@ export function RvDetail({
                   data-facts-compare=""
                   onClick={onStartCompare}
                   className={cn(
-                    "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full border border-sky-400/50 bg-sky-500/25 px-4 text-[13px] font-bold text-white",
+                    "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full border border-white/18 bg-[#161618] px-4 text-[13px] font-bold text-[#f7f5f2]",
                     onSell ? "flex-1" : "w-full",
                   )}
                 >

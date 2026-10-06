@@ -442,7 +442,7 @@ function lotGlance(unit: LotUnit): { label: string; value: string }[] {
   if (length !== LOT_GAP) stats.push({ label: "Length", value: length });
   const gvwr = lotLbsOrGap(unit.gvwr);
   if (gvwr !== LOT_GAP) stats.push({ label: "GVWR", value: gvwr });
-  if (unit.sleeps != null && unit.sleeps >= 0) {
+  if (unit.sleeps != null && unit.sleeps > 0) {
     stats.push({ label: "Sleeps", value: String(unit.sleeps) });
   } else if (unit.slides != null && unit.slides >= 0) {
     stats.push({ label: "Slides", value: String(unit.slides) });
