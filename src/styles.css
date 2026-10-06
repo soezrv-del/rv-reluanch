@@ -6353,3 +6353,95 @@ html:not([data-theme="light"]) ::selection {
   background: rgba(196, 138, 94, 0.45);
   color: #fff;
 }
+
+/* Homepage is the reference. Dark screens share its void, card, and copper action.
+   Light mode is untouched. */
+html:not([data-theme="light"]) body,
+html:not([data-theme="light"]) .app-shell,
+html:not([data-theme="light"]) .showroom-app,
+html:not([data-theme="light"]) .showroom-stage,
+html:not([data-theme="light"]) .showroom-plain,
+html:not([data-theme="light"]) .showroom-page,
+html:not([data-theme="light"]) .rvfax-screen,
+html:not([data-theme="light"]) .rvtow-screen,
+html:not([data-theme="light"]) [data-trips-screen],
+html:not([data-theme="light"]) [data-cal-screen],
+html:not([data-theme="light"]) [data-rvgrok-landing],
+html:not([data-theme="light"]) [data-coach-detail] {
+  background-color: #000 !important;
+  color: #f7f5f2;
+}
+
+html:not([data-theme="light"]) :is(
+  .glass-prestige,
+  .glass-prestige-deep,
+  .glass-prestige-gold,
+  .glass-panel,
+  .glass-surface,
+  .suite-glass,
+  .lot-card,
+  .grok-frost,
+  .grok-landing-card,
+  .showroom-card,
+  .showroom-float
+) {
+  background: linear-gradient(180deg, #2c2a28 0%, #161618 22%, #101113 100%) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 26px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 196, 140, 0.45) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  color: #f7f5f2 !important;
+  text-shadow: none !important;
+}
+
+html:not([data-theme="light"]) .sapphire-header-inner {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html:not([data-theme="light"]) .sapphire-header-inner > .pointer-events-none,
+html:not([data-theme="light"]) .sapphire-banner-ambient,
+html:not([data-theme="light"]) .sapphire-banner-edge,
+html:not([data-theme="light"]) .sapphire-banner-shine,
+html:not([data-theme="light"]) .sapphire-title-ambient,
+html:not([data-theme="light"]) .sapphire-title-shine {
+  display: none !important;
+}
+
+html:not([data-theme="light"]) .sapphire-header-title,
+html:not([data-theme="light"]) .sapphire-title-sheen,
+html:not([data-theme="light"]) .suite-title-display {
+  color: #f7f5f2 !important;
+  -webkit-text-fill-color: #f7f5f2 !important;
+  background-image: none !important;
+  text-shadow: none !important;
+}
+
+html:not([data-theme="light"]) .text-muted,
+html:not([data-theme="light"]) .text-dim,
+html:not([data-theme="light"]) .text-label {
+  color: #9c978f !important;
+  text-shadow: none !important;
+}
+
+html:not([data-theme="light"]) :is(button, a).suite-cta-copper,
+html:not([data-theme="light"]) button.bg-sapphire,
+html:not([data-theme="light"]) button.bg-blue,
+html:not([data-theme="light"]) a.bg-sapphire,
+html:not([data-theme="light"]) a.bg-blue {
+  background: linear-gradient(180deg, #f2c7a6 0%, #d89468 28%, #c47b50 62%, #a5643c 100%) !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -10px 16px rgba(120, 52, 22, 0.28),
+    0 10px 22px rgba(150, 72, 32, 0.28) !important;
+  text-shadow: none !important;
+}

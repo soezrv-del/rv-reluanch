@@ -170,3 +170,21 @@ html.android-native .showroom-dock .bottom-tabs-nav[data-dock-icons="platinum"] 
     --dock-label: 12px;
   }
 }
+
+/* Dark dock matches the home bar: black, no copper pill, white active word. */
+html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] {
+  --dock-ink: #8e8e93;
+  --dock-ink-active: #ffffff;
+}
+html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tabs-dock {
+  background: #000 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  border-top: 1px solid rgba(244, 246, 248, 0.10) !important;
+}
+html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active,
+html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] {
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #fff !important;
+}
