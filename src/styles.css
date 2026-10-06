@@ -6259,3 +6259,33 @@ html[data-theme="dark"] .dark-home-nav .is-on span {
 html[data-theme="dark"] [data-home-open] .showroom-dock {
   display: none !important;
 }
+
+/* The coach is width 100% with no cap, so a wide preview makes the photo
+   taller than the screen and overflow:hidden clips the title, card, and tabs. */
+html[data-theme="dark"] .dark-home-stage {
+  flex: 1 1 auto !important;
+  min-height: 120px !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: center !important;
+}
+
+html[data-theme="dark"] .dark-home-floor {
+  width: 100% !important;
+  max-height: 100% !important;
+}
+
+html[data-theme="dark"] .dark-home-coach {
+  width: 100% !important;
+  height: auto !important;
+  max-height: 34vh !important;
+  object-fit: contain !important;
+  object-position: center bottom !important;
+}
+
+
+
+
+
+
