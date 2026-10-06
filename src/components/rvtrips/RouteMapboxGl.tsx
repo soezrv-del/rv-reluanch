@@ -72,7 +72,7 @@ const PLAIN_ROUTE = {
 function navRoutePaint(theme: SuiteTheme) {
   return {
     casing: { color: "#ffffff", width: 13, opacity: 0.92 },
-    line: { color: theme === "dark" ? "#1648c8" : "#3e6ae1", width: 8.5 },
+    line: { color: theme === "dark" ? "#c48a5e" : "#d4a06a", width: 8.5 },
     traveled: theme === "dark" ? "#5b6577" : "#a3acb9",
   };
 }

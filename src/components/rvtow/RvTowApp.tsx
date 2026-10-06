@@ -816,8 +816,8 @@ export function RvTowApp() {
       }
     >
       <div className="landscape-content mx-auto w-full max-w-lg space-y-2.5 px-3 pb-8 sm:px-4">
-        <section className="tow-hero-panel glass-prestige rounded-[var(--radius-xl)] px-4 py-3.5 sm:px-5">
-          <p className="text-[22px] font-extrabold tracking-tight text-white sm:text-[24px]">
+        <section className="tow-hero-panel suite-glass glass-prestige rounded-[var(--radius-xl)] px-4 py-3.5 sm:px-5">
+          <p className="suite-title-display text-[22px] tracking-tight text-white sm:text-[24px]">
             Know before you hitch,
           </p>
           <p className="mt-1 text-[13px] leading-snug text-white/70">
@@ -828,7 +828,7 @@ export function RvTowApp() {
         {toadMode && prefill.kind === "motorhome" ? (
           <section
             data-tow-coach
-            className="glass-surface rounded-[var(--radius-xl)] p-3"
+            className="suite-glass glass-surface rounded-[var(--radius-xl)] p-3"
           >
             <p className="mb-1 text-[10px] font-bold tracking-[0.12em] text-sky-200">
               COACH
@@ -854,7 +854,7 @@ export function RvTowApp() {
             {reverseMode ? null : (
               <section
                 data-tow-truck
-                className="glass-prestige space-y-1 rounded-[var(--radius-xl)] p-3"
+                className="suite-glass glass-prestige space-y-1 rounded-[var(--radius-xl)] p-3"
               >
                 <div className="mb-1 flex items-center justify-between gap-2">
                   <p className="flex items-center gap-1.5 text-[12px] font-bold text-blue">
@@ -969,13 +969,13 @@ export function RvTowApp() {
             {reverseMode || reveal.answer || prefill.kind === "towable" ? (
             <section
               data-tow-coach
-              className="glass-surface rounded-[var(--radius-xl)] p-3"
+              className="suite-glass glass-surface rounded-[var(--radius-xl)] p-3"
             >
               <p className="mb-1 text-[10px] font-bold tracking-[0.12em] text-blue">
                 Coach
               </p>
               {prefill.kind === "towable" ? (
-                <div className="mb-2 rounded-[var(--radius-md)] border border-sky-400/30 bg-sky-500/10 px-3 py-2">
+                <div className="mb-2 rounded-[var(--radius-md)] border border-[rgba(196,138,94,0.35)] bg-[rgba(196,138,94,0.1)] px-3 py-2">
                   <p className="text-[13px] font-bold text-white">
                     {formatActiveCoachChip(prefill.offer)}
                   </p>
@@ -1294,7 +1294,7 @@ export function RvTowApp() {
                 <button
                   type="button"
                   onClick={openReverse}
-                  className="inline-flex min-h-11 w-full items-center justify-center gap-1 rounded-full border border-sky-300/40 bg-sky-500/20 px-3.5 text-[12px] font-bold text-white"
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-1 rounded-full border border-[rgba(196,138,94,0.45)] bg-[rgba(196,138,94,0.18)] px-3.5 text-[12px] font-bold text-[var(--color-copper-bright,#e8c090)]"
                 >
                   <Search className="size-3.5" />
                   Can I tow this coach?
@@ -1371,7 +1371,7 @@ function SuiteHandoffCard({
       <button
         type="button"
         onClick={onOpenTrips}
-        className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full border border-sky-300/40 bg-sky-500/20 px-3.5 text-[12px] font-bold text-white"
+        className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full border border-[rgba(196,138,94,0.45)] bg-[rgba(196,138,94,0.18)] px-3.5 text-[12px] font-bold text-[var(--color-copper-bright,#e8c090)]"
       >
         <MapPin className="size-3.5" />
         Use for trip alerts

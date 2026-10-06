@@ -1,4 +1,4 @@
-/* Four tabs share one row: Facts · Inventory · Live Chat · More.
+/* Four tabs share one row: Facts · Inventory · Chat · More.
    ~95px wide x 60px tall at 390px, 28px icons, 13px semibold labels. */
 .bottom-tabs-nav[data-dock-icons="platinum"] {
   --dock-tab-h: 60px;
@@ -35,7 +35,7 @@ html[data-theme="light"] .showroom-dock:has([data-dock-icons="platinum"]) {
   overscroll-behavior-x: contain;
   max-width: none !important;
   height: auto !important;
-  background: #12141a !important;
+  background: #0a0a0c !important;
   border: 0 !important;
   border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
   border-radius: 1.05rem 1.05rem 0 0 !important;
@@ -99,10 +99,10 @@ html[data-theme="light"] .showroom-dock .bottom-tabs-dock {
   background-image: none;
 }
 
-/* Active pill: sapphire #1648c8 in dark, graphite #171a20 in light. */
+/* Active pill: copper #c48a5e in dark, graphite #171a20 in light. */
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active,
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] {
-  background: #1648c8 !important;
+  background: #c48a5e !important;
   border-color: transparent !important;
   border-top-color: transparent !important;
   box-shadow: none !important;
@@ -169,4 +169,34 @@ html.android-native .showroom-dock .bottom-tabs-nav[data-dock-icons="platinum"] 
     --dock-icon: 24px;
     --dock-label: 12px;
   }
+}
+
+/* Dark dock matches the home bar: black, no copper pill, white active word. */
+html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] {
+  --dock-ink: #8e8e93;
+  --dock-ink-active: #ffffff;
+}
+html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tabs-dock {
+  background: #000 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  border-top: 1px solid rgba(244, 246, 248, 0.10) !important;
+}
+html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active,
+html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] {
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #fff !important;
+}
+
+/* Same icons as the home tab bar. Inactive fades so the active one stays white. */
+html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] img.bottom-tab-glyph {
+  width: 28px !important;
+  height: 22px !important;
+  object-fit: contain;
+  opacity: 0.45;
+}
+html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active img.bottom-tab-glyph,
+html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] img.bottom-tab-glyph {
+  opacity: 1;
 }

@@ -2,7 +2,7 @@
    RV Grok — one voice status bar above the composer.
 
    Neutral surface, 12px radius, button-family heights (see buttons.css).
-   Light: graphite #171a20 primary. Dark: sapphire #1648c8 primary.
+   Light: graphite #171a20 primary. Dark: sapphire #c48a5e primary.
    No aqua, no gold, no colored tints. Loaded after cards.css.
    --------------------------------------------------------------------------- */
 .voice-status-bar {
@@ -103,8 +103,8 @@ html[data-theme="dark"] .voice-status-detail {
   color: rgba(255, 255, 255, 0.68);
 }
 html[data-theme="dark"] .voice-status-bar .voice-status-interrupt {
-  background: #1648c8;
-  border-color: #1648c8;
+  background: #c48a5e;
+  border-color: #c48a5e;
 }
 html[data-theme="dark"] .voice-status-bar .voice-status-end {
   background: transparent;

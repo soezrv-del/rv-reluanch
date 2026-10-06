@@ -394,7 +394,7 @@ export function SelectSheet({
   };
 
   const dismissProgress = Math.min(1, Math.max(0, dragY / 160));
-  const backdropOpacity = 0.55 * (1 - dismissProgress * 0.65);
+  const backdropOpacity = 0.82 * (1 - dismissProgress * 0.85);
   const kbPad =
     kb.open || keyboardOn ? Math.max(kb.inset, keyboardOn ? 12 : 0) : 0;
 
@@ -428,7 +428,7 @@ export function SelectSheet({
       />
 
       <div
-        className="select-sheet-panel glass-prestige-deep relative z-10 flex min-h-0 w-full max-w-md flex-1 flex-col overflow-hidden rounded-[1.35rem] border border-white/30 shadow-[0_20px_60px_rgba(0,0,0,0.55)] sm:rounded-[1.5rem]"
+        className="select-sheet-panel relative z-10 flex min-h-0 w-full max-w-md flex-1 flex-col overflow-hidden rounded-[1.35rem] border border-white/12 bg-[#121214] shadow-[0_20px_60px_rgba(0,0,0,0.55)] sm:rounded-[1.5rem]"
         style={{
           maxHeight: kbPad > 0 ? `calc(100% - ${kbPad}px)` : "100%",
           transform:

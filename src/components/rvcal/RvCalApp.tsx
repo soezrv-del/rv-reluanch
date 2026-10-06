@@ -671,7 +671,7 @@ export function RvCalApp() {
       {coachLabel ? <p className="rounded-full border border-gold/30 bg-gold/10 px-3 py-1.5 text-center text-[12px] font-semibold text-gold-bright">
   {coachLabel}
 </p> : null}
-      <section className="glass-prestige-gold rounded-[var(--radius-xl)] px-4 py-5 text-center">
+      <section className="suite-glass glass-prestige-gold rounded-[var(--radius-xl)] px-4 py-5 text-center">
         <div className="mb-2 flex items-center justify-center">
           <p className="text-[11px] font-bold tracking-[0.16em] text-amber">
             {paymentDriven ? "TARGET /MO" : "MONTHLY"}
@@ -719,7 +719,7 @@ export function RvCalApp() {
           {paymentDriven ? ` · sticker ${formatMoney(price)}` : ""}
         </p>
       </section>
-      <section className="glass-prestige rounded-[var(--radius-xl)] p-3.5">
+      <section className="suite-glass glass-prestige rounded-[var(--radius-xl)] p-3.5">
         <div>
           <div className="mb-1.5 flex items-center justify-between gap-2">
             <span className="flex items-center gap-1.5 text-[10px] font-bold tracking-[0.12em] text-gold">
@@ -977,7 +977,7 @@ export function RvCalApp() {
 </div>}
         </div>
       </section>
-      <section className="glass-prestige rounded-[var(--radius-xl)] p-3.5">
+      <section className="suite-glass glass-prestige rounded-[var(--radius-xl)] p-3.5">
         <p className="mb-2 flex items-center gap-1.5 text-[10px] font-bold tracking-[0.12em] text-amber">
           <ArrowLeftRight className="size-3.5" />
           TRADE
@@ -1071,7 +1071,7 @@ export function RvCalApp() {
           />
         </label>
       </section>
-      <section className="glass-prestige rounded-[var(--radius-xl)] p-3.5">
+      <section className="suite-glass glass-prestige rounded-[var(--radius-xl)] p-3.5">
         <p className="mb-2 flex items-center gap-1.5 text-[10px] font-bold tracking-[0.12em] text-white">
           <DollarSign className="size-3.5 text-gold" />
           BREAKDOWN

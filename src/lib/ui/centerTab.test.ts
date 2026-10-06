@@ -51,14 +51,14 @@ test("light selected tabs are graphite, not sapphire", () => {
     .filter((rule) => rule.includes('html[data-theme="light"]') && rule.includes(".lot-chip.is-on"))
     .join("}");
   assert.match(lightLot, /#171a20/);
-  assert.doesNotMatch(lightLot, /#1648c8/);
+  assert.doesNotMatch(lightLot, /#c48a5e/);
   const lightDock = dock
     .split("}")
     .filter((rule) => rule.includes('html[data-theme="light"]') && rule.includes(".is-active"))
     .join("}");
   assert.match(lightDock, /#171a20/);
-  assert.doesNotMatch(lightDock, /#1648c8/);
+  assert.doesNotMatch(lightDock, /#c48a5e/);
   // Dark active pill is sapphire.
-  assert.match(dock, /\.is-active,[^{]*\{[^}]*background:\s*#1648c8 !important/);
+  assert.match(dock, /\.is-active,[^{]*\{[^}]*background:\s*#c48a5e !important/);
   assert.doesNotMatch(dock, /rgba\(255, 255, 255, 0\.14\)/);
 });

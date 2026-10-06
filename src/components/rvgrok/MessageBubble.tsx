@@ -185,7 +185,7 @@ export function MessageBubble({
             {message.generatedImages.map((src, i) => (
               <div
                 key={`${src.slice(0, 48)}-${i}`}
-                className="overflow-hidden rounded-lg border border-[#1648c8]/40 bg-black/40"
+                className="overflow-hidden rounded-lg border border-[#c48a5e]/40 bg-black/40"
               >
                 <img
                   src={src}

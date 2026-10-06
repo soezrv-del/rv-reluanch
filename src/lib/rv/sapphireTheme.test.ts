@@ -13,11 +13,11 @@ function read(rel: string) {
 test("theme tokens are sapphire / cobalt — not Tiimo lavender", () => {
   const css = read("../../styles.css");
 
-  assert.match(css, /--color-ink-black:\s*#061228/);
-  assert.match(css, /--color-ink-surface:\s*#0c1c40/);
-  assert.match(css, /--color-sapphire:\s*#1648c8/);
-  assert.match(css, /--color-sapphire-deep:\s*#0a2a8a/);
-  assert.match(css, /--color-sapphire-glow:\s*#3d6ee0/);
+  assert.match(css, /--color-ink-black:\s*#000000/);
+  assert.match(css, /--color-ink-surface:\s*#12141a/);
+  assert.match(css, /--color-sapphire:\s*#c48a5e/);
+  assert.match(css, /--color-sapphire-deep:\s*#8b5e3c/);
+  assert.match(css, /--color-sapphire-glow:\s*#e8c090/);
   assert.match(css, /--color-bg:\s*var\(--color-ink-black\)/);
   assert.match(css, /--color-accent:\s*var\(--color-sapphire\)/);
   assert.match(css, /--color-tiimo-lavender:\s*var\(--color-sapphire\)/);
