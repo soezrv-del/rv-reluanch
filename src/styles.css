@@ -6606,3 +6606,70 @@ html:not([data-theme="light"]) .rvfax-screen input:not([data-room-ask-input]):no
 
 
 
+
+/* Contrast. Dark text on copper clears 4.5. Edges clear 3. */
+html:not([data-theme="light"]) :is(
+  .dark-home-ask,
+  .suite-cta-copper,
+  .bg-copper,
+  .bg-sapphire,
+  [data-lot-cal]
+) {
+  background: linear-gradient(180deg, #f0d3b8 0%, #e0b184 46%, #c9956a 100%) !important;
+  color: #141311 !important;
+  -webkit-text-fill-color: #141311 !important;
+  text-shadow: none !important;
+}
+
+html[data-theme="dark"] .dark-home-stat span {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.08em !important;
+  color: #d4cfc6 !important;
+  -webkit-text-fill-color: #d4cfc6 !important;
+}
+
+html:not([data-theme="light"]) :is(
+  .dark-home-card,
+  .glass-prestige,
+  .glass-prestige-deep,
+  .glass-prestige-gold,
+  .glass-surface,
+  .glass-panel,
+  .suite-glass,
+  .lot-card,
+  .showroom-ask,
+  .grok-composer-pill,
+  .more-sheet,
+  .more-sheet-tile,
+  .more-sheet-row,
+  .glass-field,
+  .select-sheet-panel,
+  .lot-search
+) {
+  border-color: #6e6e73 !important;
+}
+
+html:not([data-theme="light"]) .bottom-tabs-dock,
+html:not([data-theme="light"]) .showroom-dock .bottom-tabs-dock {
+  border-top: 1px solid #6e6e73 !important;
+}
+
+html:not([data-theme="light"]) .app-shell :is(input, select, textarea),
+html:not([data-theme="light"]) .app-shell button.rounded-full,
+html:not([data-theme="light"]) .app-shell a.rounded-full {
+  border-color: #6e6e73 !important;
+}
+
+html:not([data-theme="light"]) [data-voice-chip] {
+  border-color: #6e6e73 !important;
+  color: #f7f5f2 !important;
+  -webkit-text-fill-color: #f7f5f2 !important;
+}
+
+html:not([data-theme="light"]) [data-voice-chip][data-selected] {
+  background: #c9956a !important;
+  border-color: #c9956a !important;
+  color: #141311 !important;
+  -webkit-text-fill-color: #141311 !important;
+}
