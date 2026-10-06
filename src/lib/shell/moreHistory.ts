@@ -2,7 +2,7 @@
  * History entries for screens under More (Tow, Cal, RV GPS, Premium, Sold)
  * and for the More sheet / VIN overlay.
  *
- * Main tabs (Facts, Inventory, Live Chat) never push. Opening the sheet,
+ * Main rooms (Home, Facts, Inventory, Ask) never push. Opening the sheet,
  * the VIN Decoder, or a tool pushes one entry, so Android back
  * (MainActivity → webView.goBack()) closes the sheet or returns to the
  * screen the tool was opened from instead of leaving the app. Going back

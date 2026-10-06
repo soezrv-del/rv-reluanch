@@ -142,7 +142,8 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   const retired = join(root, "../../../public/assets/brand/raidho-shell-mark.png");
   assert.ok(existsSync(mark), "owner mark asset");
   assert.equal(existsSync(retired), false, "old shell mark removed");
-  assert.match(shell, /<SuiteBrand onHome=\{\(\) => setHomeOpen\(true\)\} showMenu=\{homeOpen\} \/>/);
+  assert.match(shell, /<SuiteBrand[\s\S]*onHome=/);
+  assert.match(shell, /onOpenTow=\{openTowTool\}/);
   assert.match(brand, /aria-label="Home"/);
   assert.match(shell, /homeOpen/);
   assert.match(shell, /initialTab = "rvgrok"/);
@@ -179,7 +180,7 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   assert.doesNotMatch(suite, /RAIDHO_R_MARK/);
   assert.doesNotMatch(suite, /suite-raidho-bleed/);
   assert.doesNotMatch(suite, /raidho-r-mark/);
-  assert.match(bar, /Ask RV Grok/);
+  assert.match(bar, /placeholder="Ask"|aria-label="Ask"/);
   assert.match(bar, /roomAskMic\(\)/);
   assert.match(bar, /<BottomTabs/);
   assert.doesNotMatch(bar, /ROOM_CHIPS|Rv Facts|Lot Inventory|Learn more/);

@@ -74,7 +74,7 @@ export function MoreSheet({
         data-no-swipe
         role="dialog"
         aria-modal="true"
-        aria-label="More tools"
+        aria-label="Settings"
       >
         <div className="more-sheet-grab" aria-hidden />
         <p className="more-sheet-heading">Tools</p>

@@ -1,22 +1,27 @@
 import { cn } from "@/lib/utils";
 import type { AppTab } from "./BottomTabs";
-import { PremiumMenuButton } from "./PremiumMenuButton";
-import { ThemeSwitch } from "./ThemeSwitch";
 import { MetalVerifiedTrue } from "./Launchpad";
 import { PAGE_ACCENT, PAGE_COPY } from "./shellConstants";
 
 /** Navy lead + one sapphire word. Light mode only paints this split. */
 function splitSuiteTitle(title: string): { lead: string; accent: string } {
   const known: Record<string, readonly [string, string]> = {
+    Facts: ["", "Facts"],
+    Cal: ["", "Cal"],
+    Tow: ["", "Tow"],
+    Ask: ["", "Ask"],
+    Share: ["", "Share"],
+    "RV GPS": ["RV ", "GPS"],
+    Inventory: ["", "Inventory"],
+    Settings: ["", "Settings"],
+    SOLD: ["", "SOLD"],
     RvFACTS: ["Rv", "FACTS"],
     RvCAL: ["Rv", "CAL"],
     RvTOW: ["Rv", "TOW"],
     RvGROK: ["Rv", "GROK"],
     RvSHARE: ["Rv", "SHARE"],
-    "RV GPS": ["RV ", "GPS"],
     LOT: ["", "LOT"],
     PREMIUM: ["", "PREMIUM"],
-    SOLD: ["", "SOLD"],
   };
   const hit = known[title];
   if (hit) return { lead: hit[0], accent: hit[1] };
@@ -104,11 +109,6 @@ export function SapphireHeader({ tab }: { tab: AppTab }) {
           className="sapphire-banner-shine sapphire-banner-shine-primary pointer-events-none absolute inset-y-0 left-0 z-[1] w-[45%]"
         />
         <div className="pointer-events-none absolute inset-[1px] rounded-[1.3rem] border border-white/10" />
-
-        <div className="sapphire-header-tools absolute right-2.5 top-2.5 z-[4] sm:right-3 sm:top-3">
-          <ThemeSwitch />
-          <PremiumMenuButton size="sm" />
-        </div>
 
         <div className="sapphire-header-copy relative z-[2] flex w-full flex-col items-center text-center">
           {copy.badge ? (

@@ -13,7 +13,7 @@ export type TripsHandoff = {
   offer: TowHandoffOffer | null;
 };
 
-/** One-shot Facts → Tow. Dock / swipe never sets this. */
+/** One-shot Facts → Tow. Dock never sets this. */
 export type FactsTowHandoff = {
   token: number;
   offer: FactsTowHandoffOffer | null;
@@ -24,7 +24,7 @@ export type ShellNavValue = {
   setTab: (tab: AppTab) => void;
   /** One-shot Facts Check payment seed — consume then drop */
   calSeed: CalSeed | null;
-  /** Bumps on every plain Cal tab / swipe / launch open (not Check payment) */
+  /** Bumps on every plain Cal tab / launch open (not Estimate payment) */
   calCleanToken: number;
   openCalWithPrice: (price: number, label?: string) => void;
   clearCalSeed: () => void;

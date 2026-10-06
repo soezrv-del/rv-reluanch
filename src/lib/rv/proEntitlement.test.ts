@@ -99,7 +99,8 @@ test("Facts / More gate Sold to isProfessionalTier — dock has no Sold square",
   assert.doesNotMatch(dock, /formatSoldDockMoney/);
   assert.doesNotMatch(dock, /formatSoldDockAria/);
   assert.doesNotMatch(dock, /formatSoldMoney/);
-  assert.match(dock, /type DockTab = "rvfax" \| "rvlot" \| "rvgrok" \| "more"/);
+  assert.match(dock, /export type DockRoomId|DOCK_ROOM_IDS/);
+  assert.doesNotMatch(dock, /export type DockTab/);
   assert.match(shell, /SoldBookApp/);
   assert.match(shell, /show\("rvsold"\)/);
   assert.match(shell, /TAB_ORDER\.map\(/);

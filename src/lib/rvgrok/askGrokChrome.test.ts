@@ -28,7 +28,7 @@ test("Grok dock tab still opens the Grok page as today", () => {
   const tabs = read("../../components/shell/BottomTabs.tsx");
   const shell = read("../../components/shell/AppShell.tsx");
 
-  assert.match(tabs, /\{ id: "rvgrok", label: "Live Chat", short: "Live Chat" \}/);
+  assert.match(tabs, /\{ id: "rvgrok", label: "Ask", short: "Ask" \}/);
 
   const pageMount = shell.match(
     /id === "rvgrok" \? \([\s\S]*?<RvGrokApp[\s\S]*?\/>/,
@@ -65,7 +65,7 @@ test("Facts Ask Grok seeds the Grok tab; dock tap stays a clean page", () => {
   assert.match(pageMount, /entryToken=\{grokEntryToken\}/);
   assert.match(pageMount, /seedPrompt=\{grokSeed\}/);
 
-  assert.match(tabs, /\{ id: "rvgrok", label: "Live Chat", short: "Live Chat" \}/);
+  assert.match(tabs, /\{ id: "rvgrok", label: "Ask", short: "Ask" \}/);
   assert.doesNotMatch(tabs, /short: "LIVE!"/);
 });
 
@@ -76,7 +76,7 @@ test("old bottom dock is not mounted and keyboard does not gate the shell", () =
   assert.doesNotMatch(shell, /hideDock/);
   assert.doesNotMatch(shell, /askGrokOpen/);
   assert.match(shell, /blurSuiteFocus/);
-  assert.match(shell, /enabled: swipeArmed,/);
+  assert.doesNotMatch(shell, /useSwipeTabs|swipeArmed|SWIPE_ORDER/);
 });
 
 test("the dock is four line-icon tabs and does not use the Einstein photo", () => {
@@ -91,7 +91,7 @@ test("the dock is four line-icon tabs and does not use the Einstein photo", () =
   assert.match(tabs, /bottom-tab-glyph/);
   assert.match(
     tabs,
-    /short: "Facts"[\s\S]*short: "Inventory"[\s\S]*short: "Live Chat"[\s\S]*short: "More"/,
+    /short: "Home"[\s\S]*short: "Facts"[\s\S]*short: "Inventory"[\s\S]*short: "Ask"/,
   );
   assert.doesNotMatch(tabs, /icon-rvgrok|bottom-tab-einstein|Einstein|<img\b/);
   assert.match(tabs, /aria-label=\{label\}/);
@@ -107,7 +107,7 @@ test("Removing overlay chrome does not rewrite dock plate or Facts/Tow internals
   const fax = read("../../components/rvfax/RvFaxApp.tsx");
   const tow = read("../../components/rvtow/RvTowApp.tsx");
 
-  assert.match(tabs, /\{ id: "rvgrok", label: "Live Chat", short: "Live Chat" \}/);
+  assert.match(tabs, /\{ id: "rvgrok", label: "Ask", short: "Ask" \}/);
   assert.match(css, /--dock-surface:\s*#000000/);
   assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?background:\s*var\(--dock-surface\)/);
   assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?backdrop-filter:\s*none/);

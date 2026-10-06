@@ -67,14 +67,16 @@ test("Android back closes the sheet, then returns to the tab a tool came from", 
   assert.equal(popTarget(null, 0, facts), null);
 });
 
-test("shell wires the dock split, sheet history, and swipe to the main three", () => {
+test("shell wires the four-room dock, sheet history, and no swipe", () => {
   const shell = read("../../components/shell/AppShell.tsx");
   const constants = read("../../components/shell/shellConstants.ts");
   const ask = read("../../components/shell/RoomAskBar.tsx");
-  assert.match(constants, /DOCK_TABS = \[\s*"rvfax",\s*"rvlot",\s*"rvgrok",\s*"more",\s*\]/);
-  assert.match(constants, /SWIPE_ORDER = \[\s*"rvfax",\s*"rvlot",\s*"rvgrok",\s*\]/);
+  assert.match(constants, /DOCK_TABS = DOCK_ROOM_IDS/);
+  assert.match(constants, /SWIPE_ORDER = \[\] as const/);
   assert.match(shell, /TAB_ORDER\.map\(/);
-  assert.match(shell, /order: SWIPE_ORDER,/);
+  assert.doesNotMatch(shell, /order: SWIPE_ORDER,/);
+  assert.doesNotMatch(shell, /useSwipeTabs/);
+  assert.doesNotMatch(shell, /\bDockTab\b/);
   assert.match(shell, /history\.pushState\(/);
   assert.match(shell, /history\.replaceState\(/);
   assert.match(shell, /addEventListener\("popstate"/);
