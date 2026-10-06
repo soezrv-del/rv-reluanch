@@ -73,6 +73,10 @@
       .showroom-mic,
       .showroom-menu,
       .premium-menu-btn,
+      .showroom-open-coach,
+      .showroom-ask-pill,
+      .showroom-ask-tab,
+      .showroom-ask-card,
       .lot-cal-tab
     )
   ) {
@@ -148,6 +152,24 @@ html[data-theme] .showroom-cta-copper {
   min-height: var(--btn-h-lg);
   border-radius: 999px;
   padding-inline: var(--btn-px-lg);
+}
+html[data-theme] button.showroom-open-coach {
+  height: 44px;
+  min-height: 44px;
+  border-radius: 8px;
+  padding-inline: 16px;
+}
+html[data-theme] button.showroom-ask-pill {
+  height: 48px;
+  min-height: 48px;
+  border-radius: 24px;
+  padding-inline: 16px;
+}
+html[data-theme] button.showroom-ask-tab {
+  height: 48px;
+  min-height: 48px;
+  border-radius: 0;
+  padding: 0;
 }
 .lot-detail-ask,
 html[data-theme] .lot-detail-ask {

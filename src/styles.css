@@ -3120,7 +3120,8 @@ button.showroom-hero {
   text-shadow: none;
 }
 .home-truth-line {
-  margin: 0.4rem 0 0;
+  margin: auto 0 8px;
+  text-align: center;
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.18em;
@@ -4192,7 +4193,7 @@ html[data-theme="light"] [aria-label="Price input mode"] {
   gap: 0.5rem;
 }
 
-html[data-theme="light"] .app-shell button:not(.showroom-brand):not(.bottom-tab-btn):not(.showroom-hero):not(.showroom-placard):not(.showroom-arrival):not(.lot-card):not(.lot-card-hit):not(.grok-mic-btn):not(.showroom-mic):not(.showroom-hero-primary):not(.theme-switch):not(.home-jump):not(.grok-followup):not(.appearance-choice):not(.lot-detail-ask):not(.lot-cal-tab):not(.lot-detail-tab):not(.grok-last-chats):not([data-on-dark]):not([data-voice-panel] *) {
+html[data-theme="light"] .app-shell button:not(.showroom-brand):not(.bottom-tab-btn):not(.showroom-hero):not(.showroom-placard):not(.showroom-arrival):not(.lot-card):not(.lot-card-hit):not(.grok-mic-btn):not(.showroom-mic):not(.showroom-hero-primary):not(.showroom-open-coach):not(.showroom-ask-pill):not(.showroom-ask-tab):not(.theme-switch):not(.home-jump):not(.grok-followup):not(.appearance-choice):not(.lot-detail-ask):not(.lot-cal-tab):not(.lot-detail-tab):not(.grok-last-chats):not([data-on-dark]):not([data-voice-panel] *) {
   background: #ffffff;
   background-color: #ffffff;
   color: var(--light-action);
@@ -5389,7 +5390,7 @@ html[data-theme="dark"] .rv-nav-screen,
 
 /* Copper showroom redesign — keep placard centered in dark */
 html[data-theme="dark"] .showroom-placard {
-  text-align: center;
+  text-align: left;
 }
 html[data-theme="dark"] .showroom-spotmodel {
   font-family: var(--font-display), Georgia, serif;

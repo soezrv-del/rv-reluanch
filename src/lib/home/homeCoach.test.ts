@@ -17,6 +17,7 @@ import {
   newestArrivals,
   spotlightLotUnit,
   spotlightSpecs,
+  spotlightCard,
 } from "./homeCoach.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -97,6 +98,57 @@ test("newest arrivals follow received_date, newest first, and stop at the limit"
   assert.equal(capped.length, 6);
   assert.equal(capped[0]?.title, "U9");
   assert.equal(capped[5]?.title, "U4");
+});
+
+test("ask-card strip uses the unit's numbers and drops a blank cell", () => {
+  const full = spotlightCard(
+    unit({
+      length_ft: 44.92,
+      slides: 4,
+      gvwr: 54000,
+      printed: { horsepower: "605" },
+    }),
+  );
+  assert.deepEqual(
+    full.map((cell) => [cell.value, cell.label]),
+    [
+      ["44 ft 11 in", "LENGTH"],
+      ["4", "SLIDES"],
+      ["605 hp", "ENGINE"],
+      ["54,000", "GVWR"],
+    ],
+  );
+  const messy = spotlightCard(
+    unit({
+      slides: 0,
+      engine: "",
+      printed: { horsepower: "1800 | 605 | 605 hp @ 1,800 RPM", number_of_slideouts: "4" },
+    }),
+  );
+  assert.deepEqual(
+    messy.map((cell) => [cell.value, cell.label]),
+    [
+      ["4", "SLIDES"],
+      ["605 hp", "ENGINE"],
+    ],
+  );
+  const thin = spotlightCard(
+    unit({
+      length_ft: 44.92,
+      slides: 0,
+      gvwr: 54000,
+      engine: "Cummins",
+      printed: { engine_model: "X15" },
+    }),
+  );
+  assert.deepEqual(
+    thin.map((cell) => cell.label),
+    ["LENGTH", "GVWR"],
+  );
+  assert.equal(
+    thin.some((cell) => cell.label === "FLOORPLAN" || /slides/i.test(cell.value)),
+    false,
+  );
 });
 
 test("covered coach variant is stable and rotates from stock, vin, and id", () => {
@@ -235,7 +287,7 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
   assert.equal(specs.model, "Cornerstone 45D");
   assert.equal(specs.price, lotPriceOrGap(stocked.price));
   assert.equal(specs.stock, lotTextOrGap(stocked.stock_number));
-  assert.equal(specs.price, "$729,995");
+  assert.equal(specs.price, "$1,124,963");
   assert.equal(specs.stock, "45282");
   assert.equal(specs.model.includes(stocked.year), false);
   assert.equal(/\bEntegra\b/.test(specs.model), false);
