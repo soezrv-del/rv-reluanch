@@ -22,10 +22,10 @@ test("light theme rules use graphite and link blue, not sapphire", () => {
   const light = lightRules(css);
   assert.match(css, /--light-action:\s*#171a20/);
   assert.match(css, /--light-action-hover:\s*#393c41/);
-  assert.match(css, /--light-link:\s*#1648c8/);
-  assert.match(css, /--color-blue:\s*#1648c8/);
-  assert.doesNotMatch(css, /#3e6ae1|#6aafff|#7fa2ff/);
-  assert.match(css, /html\[data-theme="dark"\][\s\S]*?#1648c8/);
+  assert.match(css, /--light-link:\s*#c48a5e/);
+  assert.match(css, /--color-blue:\s*#c48a5e/);
+  assert.doesNotMatch(css, /#d4a06a|#6aafff|#7fa2ff/);
+  assert.match(css, /html\[data-theme="dark"\][\s\S]*?#c48a5e/);
   assert.doesNotMatch(css, /background(?:-color)?:\s*[^;{]*var\(--light-link\)/);
 });
 

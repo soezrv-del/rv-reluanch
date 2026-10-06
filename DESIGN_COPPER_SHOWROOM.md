@@ -50,3 +50,23 @@ Home · Facts · Inventory · Chat · More · Cal
 | **CSS** | Shared hairline glow on `.suite-glass.glass-prestige*`; tow blue labels → copper-bright |
 
 Map route paint stays sapphire/blue for legibility. Copper is the **one action**, not the basemap.
+
+## Pass 3 — Palette lock (PR #670) · layout unchanged
+
+Home mock is the **only** UI palette:
+
+| Role | Values |
+|------|--------|
+| Void | `#000000`, glass greys `#0a0a0c` / `#12141a` / `#18181c` |
+| Ink | `#ffffff`, muted foam |
+| Copper | `#8b5e3c` · `#b07a4e` · `#c48a5e` · `#d4a06a` · `#e8c090` |
+
+**What changed (colors only):**
+- All design tokens (`sapphire`, `blue`, `gold`, `amber`, `ruby`, `green`, ink navy) remap onto void/white/copper
+- Page accents (sapphire/ruby/gold) all resolve to copper
+- Hardcoded hex blues in Grok/MessageBubble/dock/map/OG image → copper
+- Blueish `rgba(...)` glows in CSS → copper-tinted
+- Shell override for fixed Tailwind `sky-*` / `emerald-*` utilities
+- Tests updated for new hex SoT
+
+**What did not change:** layout, spacing, component structure, catalog data.

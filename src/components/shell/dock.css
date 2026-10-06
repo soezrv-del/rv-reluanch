@@ -1,4 +1,4 @@
-/* Four tabs share one row: Facts · Inventory · Live Chat · More.
+/* Four tabs share one row: Facts · Inventory · Chat · More.
    ~95px wide x 60px tall at 390px, 28px icons, 13px semibold labels. */
 .bottom-tabs-nav[data-dock-icons="platinum"] {
   --dock-tab-h: 60px;
@@ -99,10 +99,10 @@ html[data-theme="light"] .showroom-dock .bottom-tabs-dock {
   background-image: none;
 }
 
-/* Active pill: sapphire #1648c8 in dark, graphite #171a20 in light. */
+/* Active pill: copper #c48a5e in dark, graphite #171a20 in light. */
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active,
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] {
-  background: #1648c8 !important;
+  background: #c48a5e !important;
   border-color: transparent !important;
   border-top-color: transparent !important;
   box-shadow: none !important;

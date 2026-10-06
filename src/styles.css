@@ -4,24 +4,21 @@
 
 @theme {
   /*
-   * SoT = Raidho sapphire / cobalt (David voice 2026-09-21).
-   * App chrome + field are sapphire-navy, not Tiimo slate-lavender
-   * (#372). Dock plate matches the Raidho mark ground exactly
-   * (#000000 sampled from public/assets/brand/raidho-r-mark-v2.png)
-   * so the tab square disappears into the icon — not a contrasting
-   * sapphire plate. Mark itself stays electric-blue + chrome/silver
-   * on that black. One highlight.
+   * SoT = Home showroom mock (PR #670 / 2026-10-05).
+   * Palette ONLY: void black · white · glass grey · copper.
+   * No sapphire navy, gold chrome, ruby, emerald, sky, or amber in UI.
+   * Layout unchanged — tokens remap so every page inherits home colors.
    */
-  --color-ink-black: #061228;
-  --color-ink-elevated: #0a1834;
-  --color-ink-surface: #0c1c40;
-  --color-ink-surface-2: #12244e;
-  --color-ink-foam: #e8eef8;
-  --color-ink-ink: #f4f7fb;
+  --color-ink-black: #000000;
+  --color-ink-elevated: #0a0a0c;
+  --color-ink-surface: #12141a;
+  --color-ink-surface-2: #18181c;
+  --color-ink-foam: #f0f0f2;
+  --color-ink-ink: #ffffff;
 
-  --color-sapphire: #1648c8;
-  --color-sapphire-deep: #0a2a8a;
-  --color-sapphire-glow: #3d6ee0;
+  --color-sapphire: #c48a5e;
+  --color-sapphire-deep: #8b5e3c;
+  --color-sapphire-glow: #e8c090;
 
   /* Leftover Tide / Tiimo aliases remap onto sapphire so nothing leaks purple. */
   --color-tiimo-bg: var(--color-ink-black);
@@ -45,27 +42,27 @@
   --color-fg: var(--color-ink-ink);
   --color-muted: color-mix(in srgb, var(--color-ink-foam) 78%, transparent);
   --color-dim: color-mix(in srgb, var(--color-ink-foam) 52%, transparent);
-  --color-accent: var(--color-sapphire);
+  --color-accent: var(--color-copper, #c48a5e);
 
   --color-border: color-mix(in srgb, var(--color-ink-foam) 16%, transparent);
   --color-border-strong: color-mix(in srgb, var(--color-ink-foam) 26%, transparent);
 
-  --color-ruby: #d42535;
-  --color-ruby-deep: #c01f2e;
-  --color-ruby-glow: #e03040;
-  --color-ruby-dim: #7a1220;
-  --color-ruby-border: rgba(212, 37, 53, 0.5);
-  --color-ruby-soft: rgba(192, 31, 46, 0.14);
-  --color-ruby-mid: rgba(192, 31, 46, 0.24);
+  --color-ruby: #b07a4e;
+  --color-ruby-deep: #8b5e3c;
+  --color-ruby-glow: #e8c090;
+  --color-ruby-dim: #5c3d28;
+  --color-ruby-border: rgba(196, 138, 94, 0.5);
+  --color-ruby-soft: rgba(196, 138, 94, 0.14);
+  --color-ruby-mid: rgba(196, 138, 94, 0.24);
 
-  --color-blue: #1648c8;
-  --color-green: #3dba8a;
-  --color-amber: #e0a04a;
+  --color-blue: #c48a5e;
+  --color-green: #e8c090;
+  --color-amber: #d4a06a;
 
-  --color-gold: #d0be8a;
-  --color-gold-bright: #e8d6a4;
-  --color-gold-dim: rgba(208, 190, 138, 0.16);
-  --color-gold-border: rgba(208, 190, 138, 0.36);
+  --color-gold: #d4a06a;
+  --color-gold-bright: #e8c090;
+  --color-gold-dim: rgba(196, 138, 94, 0.16);
+  --color-gold-border: rgba(196, 138, 94, 0.36);
 
   /* Copper — primary CTA metal (home showroom mock 2026-10-05) */
   --color-copper: #c48a5e;
@@ -101,10 +98,10 @@
   --color-lot-dusk-sun: #c4a078;
   --color-lot-dusk-ground: #161410;
 
-  --page-accent: var(--color-sapphire);
-  --page-accent-soft: color-mix(in srgb, var(--color-sapphire) 16%, transparent);
-  --page-accent-border: color-mix(in srgb, var(--color-sapphire) 40%, transparent);
-  --page-accent-glow: color-mix(in srgb, var(--color-sapphire) 35%, transparent);
+  --page-accent: var(--color-copper, #c48a5e);
+  --page-accent-soft: color-mix(in srgb, var(--color-copper, #c48a5e) 16%, transparent);
+  --page-accent-border: color-mix(in srgb, var(--color-copper, #c48a5e) 40%, transparent);
+  --page-accent-glow: color-mix(in srgb, var(--color-copper, #c48a5e) 35%, transparent);
 
   --font-sans: "SF Pro Display", "Segoe UI", system-ui, -apple-system, sans-serif;
   --font-display: "Fraunces", ui-serif, Georgia, serif;
@@ -117,17 +114,17 @@
   --radius-2xl: 28px;
   --radius-pill: 999px;
 
-  --shadow-glow-ruby: 0 0 28px rgba(212, 37, 53, 0.4);
-  --shadow-glow-gold: 0 0 28px rgba(208, 190, 138, 0.22);
-  --shadow-glow-sapphire: 0 0 36px color-mix(in srgb, var(--color-sapphire) 35%, transparent);
-  --shadow-panel: 0 16px 48px rgba(4, 12, 32, 0.36);
+  --shadow-glow-ruby: 0 0 28px rgba(196, 138, 94, 0.4);
+  --shadow-glow-gold: 0 0 28px rgba(196, 138, 94, 0.28);
+  --shadow-glow-sapphire: 0 0 36px color-mix(in srgb, var(--color-copper, #c48a5e) 35%, transparent);
+  --shadow-panel: 0 16px 48px rgba(0, 0, 0, 0.5);
   --shadow-glass:
-    0 12px 36px rgba(4, 12, 32, 0.28),
+    0 12px 36px rgba(0, 0, 0, 0.28),
     inset 0 1px 0 color-mix(in srgb, var(--color-ink-foam) 22%, transparent),
     inset 0 -1px 0 color-mix(in srgb, var(--color-sapphire) 8%, transparent);
 
   --color-showroom: #000000;
-  --color-showroom-accent: #1e63d6;
+  --color-showroom-accent: #c48a5e;
   --color-showroom-ink: #eef2f8;
   --color-showroom-muted: #c5cedb;
   --color-showroom-glass: rgba(22, 22, 26, 0.92);
@@ -226,7 +223,7 @@
   }
 
   ::selection {
-    background: rgba(80, 160, 255, 0.4);
+    background: rgba(196, 138, 94, 0.4);
     color: #fff;
   }
 
@@ -274,9 +271,9 @@
     width: 22px;
     height: 22px;
     border-radius: 999px;
-    border: 2px solid rgba(186, 220, 255, 0.22);
-    border-top-color: rgba(186, 220, 255, 0.95);
-    border-right-color: rgba(186, 220, 255, 0.55);
+    border: 2px solid rgba(232, 192, 144, 0.22);
+    border-top-color: rgba(232, 192, 144, 0.95);
+    border-right-color: rgba(232, 192, 144, 0.55);
   }
   .ios-pull-spinner-spin {
     animation: ios-pull-spin 0.7s linear infinite;
@@ -393,7 +390,7 @@
     background: transparent;
   }
   .rv-scroll::-webkit-scrollbar-thumb {
-    background: rgba(120, 180, 255, 0.35);
+    background: rgba(232, 192, 144, 0.35);
     border-radius: 999px;
   }
 
@@ -672,8 +669,8 @@
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 0 10px rgba(80, 170, 255, 0.85))
-      drop-shadow(0 0 28px rgba(40, 120, 255, 0.55))
+    filter: drop-shadow(0 0 10px rgba(232, 192, 144, 0.85))
+      drop-shadow(0 0 28px rgba(232, 192, 144, 0.55))
       drop-shadow(0 3px 6px rgba(0, 20, 60, 0.65));
     letter-spacing: -0.03em;
   }
@@ -691,7 +688,7 @@
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 0 14px rgba(140, 200, 255, 0.75))
+    filter: drop-shadow(0 0 14px rgba(232, 192, 144, 0.75))
       drop-shadow(0 2px 4px rgba(0, 30, 80, 0.55));
     letter-spacing: -0.02em;
   }
@@ -702,16 +699,16 @@
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 0 10px rgba(120, 190, 255, 0.55));
+    filter: drop-shadow(0 0 10px rgba(232, 192, 144, 0.55));
   }
 
   @keyframes ice-pulse {
     0%,
     100% {
-      filter: drop-shadow(0 0 12px rgba(140, 200, 255, 0.55));
+      filter: drop-shadow(0 0 12px rgba(232, 192, 144, 0.55));
     }
     50% {
-      filter: drop-shadow(0 0 22px rgba(160, 220, 255, 0.9));
+      filter: drop-shadow(0 0 22px rgba(232, 192, 144, 0.9));
     }
   }
 
@@ -784,7 +781,7 @@
   }
 
   .glass-field:focus {
-    border-color: rgba(94, 176, 255, 0.55);
+    border-color: rgba(232, 192, 144, 0.55);
     outline: none;
   }
 
@@ -900,7 +897,7 @@
     background: linear-gradient(
       90deg,
       rgba(201, 184, 150, 0.4),
-      rgba(94, 176, 255, 0.45)
+      rgba(232, 192, 144, 0.45)
     );
     outline: none;
   }
@@ -986,22 +983,22 @@
 }
 
 [data-page-accent="sapphire"] {
-  --page-accent: var(--color-sapphire);
-  --page-accent-soft: color-mix(in srgb, var(--color-sapphire) 16%, transparent);
-  --page-accent-border: color-mix(in srgb, var(--color-sapphire) 42%, transparent);
-  --page-accent-glow: color-mix(in srgb, var(--color-sapphire) 32%, transparent);
+  --page-accent: var(--color-copper, #c48a5e);
+  --page-accent-soft: color-mix(in srgb, var(--color-copper, #c48a5e) 16%, transparent);
+  --page-accent-border: color-mix(in srgb, var(--color-copper, #c48a5e) 42%, transparent);
+  --page-accent-glow: color-mix(in srgb, var(--color-copper, #c48a5e) 32%, transparent);
 }
 [data-page-accent="ruby"] {
-  --page-accent: var(--color-ruby);
-  --page-accent-soft: rgba(212, 37, 53, 0.14);
-  --page-accent-border: rgba(212, 37, 53, 0.45);
-  --page-accent-glow: rgba(212, 37, 53, 0.38);
+  --page-accent: var(--color-copper, #c48a5e);
+  --page-accent-soft: rgba(196, 138, 94, 0.14);
+  --page-accent-border: rgba(196, 138, 94, 0.45);
+  --page-accent-glow: rgba(196, 138, 94, 0.38);
 }
 [data-page-accent="gold"] {
-  --page-accent: var(--color-gold);
-  --page-accent-soft: rgba(201, 184, 150, 0.16);
-  --page-accent-border: rgba(201, 184, 150, 0.45);
-  --page-accent-glow: rgba(201, 184, 150, 0.3);
+  --page-accent: var(--color-copper, #c48a5e);
+  --page-accent-soft: rgba(196, 138, 94, 0.16);
+  --page-accent-border: rgba(196, 138, 94, 0.45);
+  --page-accent-glow: rgba(196, 138, 94, 0.3);
 }
 
 .text-ice { color: rgba(255, 255, 255, 0.94); }
@@ -1367,7 +1364,7 @@
   height: 1.7rem;
   place-items: center;
   border-radius: 999px;
-  box-shadow: inset 0 0 0 1.5px #1648c8;
+  box-shadow: inset 0 0 0 1.5px #c48a5e;
 }
 .bottom-tab-grok .bottom-tab-glyph {
   width: 1.05rem;
@@ -1431,7 +1428,7 @@
 .sapphire-banner-ambient {
   background: radial-gradient(
     ellipse 80% 70% at 50% 0%,
-    rgba(80, 140, 255, 0.18) 0%,
+    rgba(232, 192, 144, 0.18) 0%,
     transparent 55%
   );
   opacity: 0.55;
@@ -1440,7 +1437,7 @@
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(180, 210, 255, 0.5),
+    rgba(232, 192, 144, 0.5),
     transparent
   );
 }
@@ -1466,7 +1463,7 @@
 .sapphire-title-ambient {
   background: radial-gradient(
     circle at 50% 50%,
-    rgba(100, 170, 255, 0.2) 0%,
+    rgba(232, 192, 144, 0.2) 0%,
     transparent 65%
   );
   opacity: 0.5;
@@ -1553,7 +1550,7 @@
   }
 }
 .ice-text-live {
-  filter: drop-shadow(0 0 14px rgba(100, 180, 255, 0.35));
+  filter: drop-shadow(0 0 14px rgba(232, 192, 144, 0.35));
 }
 .ice-text-live-ruby {
   filter: drop-shadow(0 0 14px rgba(255, 80, 100, 0.4));
@@ -1871,7 +1868,7 @@
   background: linear-gradient(
     160deg,
     rgba(255, 255, 255, 0.1) 0%,
-    rgba(22, 72, 200, 0.22) 8%,
+    rgba(232, 192, 144, 0.22) 8%,
     rgba(6, 14, 32, 0.78) 55%,
     rgba(6, 14, 32, 0.86) 100%
   );
@@ -1887,7 +1884,7 @@
   background: linear-gradient(
     160deg,
     rgba(255, 255, 255, 0.1) 0%,
-    rgba(22, 72, 200, 0.22) 8%,
+    rgba(232, 192, 144, 0.22) 8%,
     rgba(6, 14, 32, 0.78) 55%,
     rgba(6, 14, 32, 0.86) 100%
   );
@@ -1923,7 +1920,7 @@
 
 /* Live field upgrade flash */
 @keyframes live-field-flash {
-  0% { background-color: rgba(94, 176, 255, 0.28); }
+  0% { background-color: rgba(232, 192, 144, 0.28); }
   100% { background-color: transparent; }
 }
 .live-flash {
@@ -1952,14 +1949,14 @@
 @keyframes rvfax-step-shimmer {
   0% {
     background-position: 0% 50%;
-    box-shadow: 0 0 0 0 rgba(142, 197, 255, 0);
+    box-shadow: 0 0 0 0 rgba(232, 192, 144, 0);
   }
   40% {
-    box-shadow: 0 0 22px 1px rgba(142, 197, 255, 0.35);
+    box-shadow: 0 0 22px 1px rgba(232, 192, 144, 0.35);
   }
   100% {
     background-position: 200% 50%;
-    box-shadow: 0 0 0 0 rgba(142, 197, 255, 0);
+    box-shadow: 0 0 0 0 rgba(232, 192, 144, 0);
   }
 }
 
@@ -1972,14 +1969,14 @@
   background-image: linear-gradient(
     110deg,
     rgba(255, 255, 255, 0.04) 0%,
-    rgba(142, 197, 255, 0.22) 42%,
+    rgba(232, 192, 144, 0.22) 42%,
     rgba(255, 255, 255, 0.28) 50%,
-    rgba(142, 197, 255, 0.18) 58%,
+    rgba(232, 192, 144, 0.18) 58%,
     rgba(255, 255, 255, 0.04) 100%
   );
   background-size: 220% 100%;
   animation: rvfax-step-shimmer 1.15s ease-out 1 both;
-  border-color: rgba(142, 197, 255, 0.55) !important;
+  border-color: rgba(232, 192, 144, 0.55) !important;
 }
 
 .rvfax-step-rail {
@@ -1997,7 +1994,7 @@
   border-radius: 2px;
   background: linear-gradient(
     180deg,
-    rgba(142, 197, 255, 0.55) 0%,
+    rgba(232, 192, 144, 0.55) 0%,
     rgba(201, 162, 39, 0.35) 55%,
     rgba(255, 255, 255, 0.12) 100%
   );
@@ -2014,12 +2011,12 @@
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  border: 1px solid rgba(142, 197, 255, 0.55);
+  border: 1px solid rgba(232, 192, 144, 0.55);
   background: rgba(8, 18, 40, 0.9);
   font-size: 8px;
   font-weight: 800;
   color: #cfe4ff;
-  box-shadow: 0 0 10px rgba(100, 180, 255, 0.25);
+  box-shadow: 0 0 10px rgba(232, 192, 144, 0.25);
 }
 
 .rvfax-step-dot[data-done="true"] {
@@ -2030,7 +2027,7 @@
 
 .rvfax-step-dot[data-active="true"] {
   border-color: rgba(255, 255, 255, 0.85);
-  box-shadow: 0 0 14px rgba(142, 197, 255, 0.55);
+  box-shadow: 0 0 14px rgba(232, 192, 144, 0.55);
 }
 
 /* ── RVFAX Mark Class Premium · formal paper print ── */
@@ -2518,7 +2515,7 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   height: 40px;
   border: 0;
   border-radius: 8px;
-  background: #1648c8;
+  background: #c48a5e;
   color: #ffffff;
   -webkit-text-fill-color: #ffffff;
   font-size: 14px;
@@ -2528,7 +2525,7 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   margin: 0.35rem 0 0;
   font-size: 12px;
   font-weight: 600;
-  color: #1648c8;
+  color: #c48a5e;
 }
 .lot-detail-rows,
 .lot-detail-section dl {
@@ -2632,7 +2629,7 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   -webkit-text-fill-color: var(--on-dark-fg);
 }
 [data-bubble="assistant"] a {
-  color: #1648c8;
+  color: #c48a5e;
   text-decoration: underline;
 }
 .bubble-quiet {
@@ -2680,7 +2677,7 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   height: 280px;
   pointer-events: none;
   background:
-    radial-gradient(ellipse at 50% 28%, rgba(22, 72, 200, 0.22), transparent 62%),
+    radial-gradient(ellipse at 50% 28%, rgba(232, 192, 144, 0.22), transparent 62%),
     radial-gradient(ellipse at 72% 70%, rgba(255, 255, 255, 0.06), transparent 55%);
 }
 .grok-landing-card {
@@ -2688,7 +2685,7 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   border-radius: 2rem;
 }
 .grok-avatar-ring {
-  background: #1648c8;
+  background: #c48a5e;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
 }
 .grok-avatar-well {
@@ -2701,8 +2698,8 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
 html[data-theme="light"] .grok-status-word,
 .app-shell [data-rvgrok-wingman] .grok-status-word {
   letter-spacing: 0.22em;
-  color: #1648c8 !important;
-  -webkit-text-fill-color: #1648c8 !important;
+  color: #c48a5e !important;
+  -webkit-text-fill-color: #c48a5e !important;
 }
 .grok-last-note {
   margin-top: 0.85rem;
@@ -2717,10 +2714,10 @@ html[data-theme="light"] .grok-status-word,
   height: 34px;
   padding: 0 0.95rem;
   border-radius: 999px;
-  border: 1px solid #1648c8;
+  border: 1px solid #c48a5e;
   background: transparent;
-  color: #1648c8;
-  -webkit-text-fill-color: #1648c8;
+  color: #c48a5e;
+  -webkit-text-fill-color: #c48a5e;
   font-size: 13px;
   font-weight: 650;
 }
@@ -2729,22 +2726,22 @@ html[data-theme="light"] .grok-status-word,
 }
 .grok-mic-btn {
   background: transparent;
-  color: #1648c8;
-  border: 1.5px solid rgba(22, 72, 200, 0.45);
+  color: #c48a5e;
+  border: 1.5px solid rgba(232, 192, 144, 0.45);
   box-shadow: none;
 }
 .grok-mic-btn.is-armed {
   background: transparent;
-  color: #1648c8;
-  border: 1.5px solid #1648c8;
-  box-shadow: 0 0 0 3px rgba(22, 72, 200, 0.35);
+  color: #c48a5e;
+  border: 1.5px solid #c48a5e;
+  box-shadow: 0 0 0 3px rgba(232, 192, 144, 0.35);
 }
 .grok-mic-btn.is-live,
 .grok-mic-btn.is-rec {
-  background: #1648c8;
+  background: #c48a5e;
   color: #ffffff;
   border: 0;
-  box-shadow: 0 0 0 6px rgba(22, 72, 200, 0.38), 0 8px 22px rgba(22, 72, 200, 0.45);
+  box-shadow: 0 0 0 6px rgba(232, 192, 144, 0.38), 0 8px 22px rgba(232, 192, 144, 0.45);
 }
 .grok-send-btn.is-ready {
   background: color-mix(in srgb, var(--color-ink-foam) 88%, transparent);
@@ -2779,7 +2776,7 @@ html.kb-open [data-rvgrok-composer-dock] {
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 .grok-lot-dot {
-  background: #1648c8;
+  background: #c48a5e;
 }
 .grok-report-pill {
   background: #1e2126;
@@ -2792,7 +2789,7 @@ html.kb-open [data-rvgrok-composer-dock] {
 @keyframes speak-glow {
   0%,
   100% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, #1648c8 35%, transparent);
+    box-shadow: 0 0 0 0 color-mix(in srgb, #c48a5e 35%, transparent);
   }
   50% {
     box-shadow: 0 0 0 10px transparent;
@@ -3062,7 +3059,7 @@ button.showroom-hero {
   background: radial-gradient(
     ellipse at center,
     rgba(255, 255, 255, 0.62) 0%,
-    rgba(186, 214, 255, 0.2) 30%,
+    rgba(232, 192, 144, 0.2) 30%,
     rgba(255, 255, 255, 0.04) 54%,
     transparent 72%
   );
@@ -3414,7 +3411,7 @@ button.showroom-hero {
   align-items: flex-end;
   justify-content: center;
   overflow: hidden;
-  background: radial-gradient(90% 90% at 50% 0%, rgba(200, 215, 245, 0.1), transparent 70%);
+  background: radial-gradient(90% 90% at 50% 0%, rgba(232, 192, 144, 0.1), transparent 70%);
 }
 .showroom-arrival-photo img {
   max-height: 4.6rem;
@@ -3490,9 +3487,9 @@ button.showroom-hero {
   background:
     linear-gradient(
       90deg,
-      rgba(30, 99, 214, 0.12) 0%,
-      rgba(36, 105, 220, 0.14) 55%,
-      rgba(42, 111, 224, 0.2) 100%
+      rgba(232, 192, 144, 0.12) 0%,
+      rgba(232, 192, 144, 0.14) 55%,
+      rgba(232, 192, 144, 0.2) 100%
     ),
     rgba(11, 16, 28, 0.84);
 }
@@ -3525,11 +3522,11 @@ button.showroom-hero {
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  background: radial-gradient(circle at 35% 28%, #4f8ef0 0%, #2a6fe0 45%, #1e63d6 75%, #1553bd 100%);
+  background: radial-gradient(circle at 35% 28%, #4f8ef0 0%, #2a6fe0 45%, #c48a5e 75%, #1553bd 100%);
   color: #ffffff;
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.18),
-    0 6px 18px -4px rgba(30, 99, 214, 0.6);
+    0 6px 18px -4px rgba(232, 192, 144, 0.6);
 }
 .showroom-mic.is-live {
   box-shadow:
@@ -3628,7 +3625,7 @@ body:has(.report-page) {
   align-items: center;
   gap: 0.85rem;
   padding: calc(env(safe-area-inset-top) + 1rem) 1.15rem 1rem;
-  background: #1648c8;
+  background: #c48a5e;
   color: #fff;
 }
 
@@ -3718,7 +3715,7 @@ body:has(.report-page) {
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #1648c8;
+  color: #c48a5e;
 }
 
 .report-section dl {
@@ -3759,7 +3756,7 @@ body:has(.report-page) {
 .report-foot a {
   display: inline-block;
   margin-top: 0.35rem;
-  color: #1648c8;
+  color: #c48a5e;
   font-weight: 700;
 }
 
@@ -3775,7 +3772,7 @@ body:has(.report-page) {
 .lot-share-dock .report-share-main {
   height: 44px;
   min-height: 44px;
-  background: #1648c8;
+  background: #c48a5e;
   border: 0;
   color: #fff;
   -webkit-text-fill-color: #fff;
@@ -3822,7 +3819,7 @@ body:has(.report-page) {
 
 .report-share-main {
   border: 0;
-  background: #1648c8;
+  background: #c48a5e;
   color: #fff;
 }
 
@@ -3884,7 +3881,7 @@ html[data-theme="light"] {
   color-scheme: light;
   --light-action: #171a20;
   --light-action-hover: #393c41;
-  --light-link: #1648c8;
+  --light-link: #c48a5e;
   --color-bg: #ffffff;
   --color-bg-elevated: #ffffff;
   --color-surface: #ffffff;
@@ -4574,12 +4571,12 @@ html[data-theme="light"] .lot-detail-row {
   border-top-color: rgba(0, 0, 0, 0.08);
 }
 html[data-theme="light"] .lot-detail-ask {
-  background: #1648c8 !important;
+  background: #c48a5e !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
 html[data-theme="light"] .lot-garage-note {
-  color: #3e6ae1;
+  color: #d4a06a;
 }
 html[data-theme="light"] .text-sapphire,
 html[data-theme="light"] .text-sapphire-glow {
@@ -4692,8 +4689,8 @@ html[data-theme="light"] .slider-tab[aria-pressed="true"] {
   transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
 }
 .slider-tab.is-on {
-  background: #1648c8;
-  border-color: #1648c8;
+  background: #c48a5e;
+  border-color: #c48a5e;
   color: #ffffff;
 }
 html[data-theme="light"] .text-blue {
@@ -4901,8 +4898,8 @@ html[data-theme="light"] [data-tow-truck] .text-blue {
   -webkit-text-fill-color: var(--light-link) !important;
 }
 html[data-theme="light"] .grok-avatar-ring {
-  background: #1648c8 !important;
-  box-shadow: 0 12px 32px rgba(22, 72, 200, 0.28) !important;
+  background: #c48a5e !important;
+  box-shadow: 0 12px 32px rgba(232, 192, 144, 0.28) !important;
 }
 html[data-theme="light"] .grok-landing-glow {
   background: none;
@@ -4968,7 +4965,7 @@ html[data-theme="light"] .grok-followup:focus-visible {
   box-shadow: none;
 }
 .appearance-choice[aria-pressed="true"] {
-  background: #1648c8 !important;
+  background: #c48a5e !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
@@ -5062,7 +5059,7 @@ html[data-theme="dark"] .sapphire-title-sheen {
   max-width: 100%;
 }
 html[data-theme="dark"] .showroom-hero-primary {
-  background: #1648c8;
+  background: #c48a5e;
   border: 0;
   color: #fff;
   border-radius: 8px;
@@ -5156,13 +5153,13 @@ html[data-theme="light"] :is(
   color: #ffffff;
 }
 html[data-theme="light"] .lot-detail-ask {
-  background: #1648c8 !important;
+  background: #c48a5e !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
 html[data-theme="light"] .lot-share-dock :is(.lot-cal-tab, .lot-detail-tab, .report-share-main) {
-  background: #1648c8 !important;
-  border-color: #1648c8 !important;
+  background: #c48a5e !important;
+  border-color: #c48a5e !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   box-shadow: none !important;
@@ -5222,8 +5219,8 @@ html:not([data-theme="light"]) :is([data-request-access-sheet], [data-admin-whit
 
 /* ---------------------------------------------------------------------
  * Trips full-screen nav mode (Mapbox GL JS, no Navigation SDK).
- * Light: graphite #171a20 primary, soft blue #3e6ae1, labels #3d4d68.
- * Dark: sapphire #1648c8. No gold / aqua in nav chrome.
+ * Light: graphite #171a20 primary, soft blue #d4a06a, labels #3d4d68.
+ * Dark: sapphire #c48a5e. No gold / aqua in nav chrome.
  * ------------------------------------------------------------------- */
 .rv-nav-screen {
   position: fixed;
@@ -5253,20 +5250,20 @@ html[data-theme="dark"] .rv-nav-screen,
   width: 24px;
   height: 24px;
   border-width: 4px;
-  background: #3e6ae1;
-  box-shadow: 0 0 0 8px color-mix(in srgb, #3e6ae1 28%, transparent),
+  background: #d4a06a;
+  box-shadow: 0 0 0 8px color-mix(in srgb, #d4a06a 28%, transparent),
     0 4px 10px rgba(0, 0, 0, 0.25);
 }
 .rv-nav-screen .rv-map-puck[data-nav-puck]::before {
-  border-bottom-color: #3e6ae1;
+  border-bottom-color: #d4a06a;
   top: -13px;
 }
 .rv-nav-screen[data-theme-tone="dark"] .rv-map-puck[data-nav-puck] {
-  background: #1648c8;
-  box-shadow: 0 0 0 8px color-mix(in srgb, #1648c8 35%, transparent);
+  background: #c48a5e;
+  box-shadow: 0 0 0 8px color-mix(in srgb, #c48a5e 35%, transparent);
 }
 .rv-nav-screen[data-theme-tone="dark"] .rv-map-puck[data-nav-puck]::before {
-  border-bottom-color: #1648c8;
+  border-bottom-color: #c48a5e;
 }
 
 .rv-nav-banner {
@@ -5284,7 +5281,7 @@ html[data-theme="dark"] .rv-nav-screen,
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
 }
 .rv-nav-screen[data-theme-tone="dark"] .rv-nav-banner {
-  background: #1648c8;
+  background: #c48a5e;
 }
 .rv-nav-banner-turn {
   display: flex;
@@ -5390,8 +5387,8 @@ html[data-theme="dark"] .rv-nav-screen,
   color: #171a20;
 }
 .rv-nav-round-on {
-  border-color: #3e6ae1;
-  color: #3e6ae1;
+  border-color: #d4a06a;
+  color: #d4a06a;
 }
 .rv-nav-end {
   min-height: 46px;
@@ -5427,11 +5424,11 @@ html[data-theme="dark"] .rv-nav-screen,
   color: #ffffff;
 }
 .rv-nav-screen[data-theme-tone="dark"] .rv-nav-round-on {
-  border-color: #1648c8;
-  background: #1648c8;
+  border-color: #c48a5e;
+  background: #c48a5e;
 }
 .rv-nav-screen[data-theme-tone="dark"] .rv-nav-end {
-  background: #1648c8;
+  background: #c48a5e;
 }
 
 
@@ -6289,3 +6286,70 @@ html[data-theme="dark"] .dark-home-coach {
 
 
 
+
+
+/* ===== PR #670 — home-mock palette lock (layout unchanged) =====
+ * Forces fixed Tailwind sky / emerald / blue hex classes in the shell
+ * onto copper / white / void. Tokens above already remapped.
+ */
+html:not([data-theme="light"]) .app-shell {
+  /* Fixed sky → copper */
+  --tw-shadow-color: rgba(196, 138, 94, 0.25);
+}
+html:not([data-theme="light"]) .app-shell .bg-sky-500\/10,
+html:not([data-theme="light"]) .app-shell .bg-sky-500\/12,
+html:not([data-theme="light"]) .app-shell .bg-sky-500\/15,
+html:not([data-theme="light"]) .app-shell .bg-sky-500\/20 {
+  background-color: rgba(196, 138, 94, 0.14) !important;
+}
+html:not([data-theme="light"]) .app-shell .border-sky-300\/40,
+html:not([data-theme="light"]) .app-shell .border-sky-400\/30,
+html:not([data-theme="light"]) .app-shell .border-sky-400\/35 {
+  border-color: rgba(196, 138, 94, 0.4) !important;
+}
+html:not([data-theme="light"]) .app-shell .text-sky-200,
+html:not([data-theme="light"]) .app-shell .text-sky-300,
+html:not([data-theme="light"]) .app-shell .text-sky-400 {
+  color: #e8c090 !important;
+}
+html:not([data-theme="light"]) .app-shell .bg-emerald-500\/12,
+html:not([data-theme="light"]) .app-shell .bg-emerald-500\/15,
+html:not([data-theme="light"]) .app-shell .bg-emerald-500\/20 {
+  background-color: rgba(196, 138, 94, 0.12) !important;
+}
+html:not([data-theme="light"]) .app-shell .border-emerald-400\/35,
+html:not([data-theme="light"]) .app-shell .border-emerald-400\/40 {
+  border-color: rgba(196, 138, 94, 0.35) !important;
+}
+html:not([data-theme="light"]) .app-shell .text-emerald-300,
+html:not([data-theme="light"]) .app-shell .text-emerald-400,
+html:not([data-theme="light"]) .app-shell .text-emerald-200 {
+  color: #e8c090 !important;
+}
+/* Hardcoded blue hex leftovers often used for route chrome — copper-tinted on non-map UI */
+html:not([data-theme="light"]) .app-shell .bg-\[\#c48a5e\],
+html:not([data-theme="light"]) .app-shell .bg-\[\#c48a5e\]\/15,
+html:not([data-theme="light"]) .app-shell .bg-\[\#c48a5e\]\/70 {
+  background-color: rgba(196, 138, 94, 0.2) !important;
+}
+html:not([data-theme="light"]) .app-shell .border-\[\#c48a5e\]\/70 {
+  border-color: rgba(196, 138, 94, 0.45) !important;
+}
+html:not([data-theme="light"]) .app-shell .text-\[\#c48a5e\] {
+  color: #e8c090 !important;
+}
+/* Mapbox route paint is JS — leave canvas alone. Only CSS chrome above. */
+
+/* Body / shell field pure void */
+html:not([data-theme="light"]) body,
+html:not([data-theme="light"]) .app-shell,
+html:not([data-theme="light"]) .showroom-app {
+  background-color: #000000 !important;
+  color: #ffffff;
+}
+
+/* Selection tint copper instead of blue */
+html:not([data-theme="light"]) ::selection {
+  background: rgba(196, 138, 94, 0.45);
+  color: #fff;
+}

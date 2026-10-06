@@ -216,7 +216,7 @@ function cardSvg(report: ShareReport, logo: string | null, photo: string | null)
 <svg width="${REPORT_CARD_WIDTH}" height="${HEIGHT}" viewBox="0 0 ${REPORT_CARD_WIDTH} ${HEIGHT}" xmlns="http://www.w3.org/2000/svg">
   <defs>${clips}</defs>
   <rect width="${REPORT_CARD_WIDTH}" height="${HEIGHT}" fill="#f4f1ea"/>
-  <rect width="${REPORT_CARD_WIDTH}" height="148" fill="#0a2a8a"/>
+  <rect width="${REPORT_CARD_WIDTH}" height="148" fill="#8b5e3c"/>
   ${logoImg}
   <text x="${brandX}" y="78" fill="#ffffff" font-family="Geist" font-size="36" font-weight="600">RvFAX</text>
   <text x="${brandX}" y="110" fill="#d6e2ff" font-family="Geist" font-size="16" letter-spacing="2">VEHICLE REPORT</text>

@@ -147,7 +147,7 @@ test("status bar styling stays in the design family", () => {
   assert.match(css, /\.voice-status-interrupt \{[^}]*background:\s*#171a20/);
   assert.match(
     css,
-    /html\[data-theme="dark"\] \.voice-status-bar \.voice-status-interrupt \{[^}]*background:\s*#1648c8/,
+    /html\[data-theme="dark"\] \.voice-status-bar \.voice-status-interrupt \{[^}]*background:\s*#c48a5e/,
   );
   // No aqua, no gold, no colored tints.
   const code = (css + bar).replace(/\/\*[\s\S]*?\*\//g, "");
