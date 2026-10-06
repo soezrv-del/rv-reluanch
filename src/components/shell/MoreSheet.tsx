@@ -35,10 +35,10 @@ const ROWS: { id: MorePick; title: string; icon: ReactNode }[] = [
 ];
 
 /**
- * Half-sheet above the dock: Tow Check, Payments and RV GPS as big tiles,
- * then VIN Decoder, Share a brochure and Premium & settings. The dock stays
- * visible under it, so More toggles it shut. Android back closes it (the
- * shell pushes a history entry on open).
+ * Half-sheet above the dock (opened from the header Settings control):
+ * Tow Check, Payments and RV GPS as big tiles, then VIN Decoder, Share a
+ * brochure and Premium & settings (theme + voice). The dock stays visible.
+ * Android back closes it (the shell pushes a history entry on open).
  */
 export function MoreSheet({
   open,
@@ -74,7 +74,7 @@ export function MoreSheet({
         data-no-swipe
         role="dialog"
         aria-modal="true"
-        aria-label="More tools"
+        aria-label="Settings"
       >
         <div className="more-sheet-grab" aria-hidden />
         <p className="more-sheet-heading">Tools</p>

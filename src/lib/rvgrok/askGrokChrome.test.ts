@@ -76,7 +76,7 @@ test("old bottom dock is not mounted and keyboard does not gate the shell", () =
   assert.doesNotMatch(shell, /hideDock/);
   assert.doesNotMatch(shell, /askGrokOpen/);
   assert.match(shell, /blurSuiteFocus/);
-  assert.match(shell, /enabled: swipeArmed,/);
+  assert.doesNotMatch(shell, /useSwipeTabs|swipeArmed|SWIPE_ORDER/);
 });
 
 test("the dock is four line-icon tabs and does not use the Einstein photo", () => {
@@ -91,8 +91,9 @@ test("the dock is four line-icon tabs and does not use the Einstein photo", () =
   assert.match(tabs, /bottom-tab-glyph/);
   assert.match(
     tabs,
-    /short: "Facts"[\s\S]*short: "Inventory"[\s\S]*short: "Ask"[\s\S]*short: "More"/,
+    /short: "Home"[\s\S]*short: "Facts"[\s\S]*short: "Inventory"[\s\S]*short: "Ask"/,
   );
+  assert.doesNotMatch(tabs, /short: "More"/);
   assert.doesNotMatch(tabs, /short: "Live Chat"|\bshort: "Chat"/);
   assert.doesNotMatch(tabs, /Action Button|bottom-tab-action|\bPlus\b/);
   assert.doesNotMatch(tabs, /icon-rvgrok|bottom-tab-einstein|Einstein|<img\b/);

@@ -10,16 +10,14 @@ import {
   type ErrorInfo,
   type ReactNode,
 } from "react";
-import { type AppTab } from "./BottomTabs";
+import { type AppTab, type DockTab } from "./BottomTabs";
 import { RoomAskBar } from "./RoomAskBar";
 import { SuiteBrand } from "./SuiteBrand";
 import { HomeScreen } from "./HomeScreen";
 import {
-  isSwipeTab,
   isUnderMore,
   PAGE_ACCENT,
   paneSlot,
-  SWIPE_ORDER,
   TAB_ORDER,
 } from "./shellConstants";
 import type { MorePick } from "./MoreSheet";
@@ -53,7 +51,6 @@ import {
   type ActiveCoachInput,
 } from "@/lib/rv/activeCoach";
 import { normalizeCalHandoff } from "@/lib/rv/calHandoff";
-import { useSwipeTabs } from "@/lib/hooks/useSwipeTabs";
 import {
   useFocusScrollIntoView,
   useKeyboardInset,
@@ -339,14 +336,14 @@ export function AppShell({
     (next: AppTab, opts?: { skipVoice?: boolean }) => {
       const alreadyOnGrok = !homeOpen && tab === "rvgrok";
       setHomeOpen(false);
-      // Hidden Grok composer can keep focus after a swipe — that sticks
+      // Hidden Grok composer can keep focus after a room switch — that sticks
       // html.kb-open and used to unmount the dock on re-entry.
       blurSuiteFocus();
       if (next === "rvshare") {
         openFactsShare();
         return;
       }
-      // Dock / swipe / More → Facts always lands on clean catalog search.
+      // Dock / settings → Facts always lands on clean catalog search.
       // Chip “change” uses the same openFactsPicker token.
       if (next === "rvfax") {
         openFactsPicker();
@@ -364,7 +361,7 @@ export function AppShell({
         else if (voicePlan === "greet") {
           greetRoomVoice(beginLiveVoiceFromUserGesture());
         }
-        // Dock tap / swipe / More — never restore a leftover Ask-Grok seed.
+        // Dock tap / settings — never restore a leftover Ask-Grok seed.
         // The open thread stays; only a Facts Ask Grok seed starts fresh.
         setGrokSeed(clearGrokSeedOnDockTap());
         setGrokEntryToken((n) => n + 1);
@@ -377,12 +374,8 @@ export function AppShell({
   );
 
   const isPro = isProfessionalTier();
-  // Swipe moves between Facts, Inventory and Live Chat only. Tools under
-  // More (Tow, Cal, RV GPS) still render as panes from TAB_ORDER.
-  const swipeArmed =
-    !launchOpen && !homeOpen && !moreOpen && !vinOpen && isSwipeTab(tab);
 
-  /* ── History for More: sheet, VIN overlay, and tools ───────────────
+  /* ── History for settings sheet / tools: sheet, VIN overlay, and tools ───────────────
    * Android back is webView.goBack(). Main tabs never push. The sheet,
    * the VIN Decoder, and every tool under More push one entry so back
    * closes the sheet or returns to the screen the tool came from.
@@ -500,26 +493,40 @@ export function AppShell({
     if (topNavIs("vin")) popNav(1);
   }, [popNav]);
 
-  /** Dock tap. More toggles the sheet; another tab shuts it. */
+  /** Dock tap. Home opens the home room; Ask opens chat with coach pinned. */
   const onDockTap = useCallback(
-    (next: AppTab, opts?: { skipVoice?: boolean }) => {
-      if (next === "more") {
-        if (moreOpenRef.current) closeMore();
-        else openMore();
-        return;
-      }
+    (next: DockTab, opts?: { skipVoice?: boolean }) => {
       if (moreOpenRef.current) {
+        if (next === "home" && homeOpen) {
+          closeMore();
+          return;
+        }
         if (!homeOpen && next === tab) {
           closeMore();
           return;
         }
-        // The tab change unwinds the sheet entry with any tool entries.
         setMoreOpen(false);
+      }
+      if (next === "home") {
+        blurSuiteFocus();
+        setHomeOpen(true);
+        return;
       }
       onTabChange(next, opts);
     },
-    [closeMore, openMore, onTabChange, homeOpen, tab],
+    [closeMore, onTabChange, homeOpen, tab],
   );
+
+  const openTowTool = useCallback(() => {
+    if (moreOpenRef.current) setMoreOpen(false);
+    onTabChange("rvtow");
+  }, [onTabChange]);
+
+  const openCalTool = useCallback(() => {
+    if (moreOpenRef.current) setMoreOpen(false);
+    requestCleanCal();
+    onTabChange("rvcal");
+  }, [onTabChange, requestCleanCal]);
 
   const onMorePick = useCallback(
     (id: MorePick) => {
@@ -562,22 +569,6 @@ export function AppShell({
     window.addEventListener(OPEN_SOLD_EVENT, openSold);
     return () => window.removeEventListener(OPEN_SOLD_EVENT, openSold);
   }, [onTabChange]);
-
-  const peekTab = useCallback((next: AppTab) => {
-    markVisited(next);
-  }, [markVisited]);
-
-  useSwipeTabs({
-    order: SWIPE_ORDER,
-    active: tab,
-    onChange: onTabChange,
-    // Suite panes only — never the dock. Ancestor capture listeners on
-    // the shell eat Android WebView clicks on Facts/Cal/Tow/Trips/Grok.
-    targetRef: mainRef,
-    threshold: 24,
-    enabled: swipeArmed,
-    onPeek: peekTab,
-  });
 
   const nav = useMemo(
     () => ({
@@ -650,7 +641,20 @@ export function AppShell({
         }}
       >
         <div className="showroom-stage" aria-hidden />
-        <SuiteBrand onHome={() => setHomeOpen(true)} showMenu={homeOpen} />
+        <SuiteBrand
+          onHome={() => {
+            blurSuiteFocus();
+            setHomeOpen(true);
+            if (moreOpenRef.current) setMoreOpen(false);
+          }}
+          onOpenTow={openTowTool}
+          onOpenCal={openCalTool}
+          onOpenSettings={() => {
+            if (moreOpenRef.current) closeMore();
+            else openMore();
+          }}
+          settingsOpen={moreOpen}
+        />
         <main
           ref={mainRef}
           className="suite-swipe-viewport relative min-h-0 flex-1 overflow-hidden"
@@ -682,13 +686,13 @@ export function AppShell({
                         : id === "rvcal"
                           ? "RvCAL"
                           : id === "rvgrok"
-                            ? "RvGROK"
+                            ? "Ask"
                             : id === "rvtow"
                               ? "RvTOW"
                               : id === "rvtrips"
                                 ? "RV GPS"
                                 : id === "rvlot"
-                                  ? "Lot stock"
+                                  ? "Inventory"
                                   : "Suite"
                     }
                   >

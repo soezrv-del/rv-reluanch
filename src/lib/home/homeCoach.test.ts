@@ -142,7 +142,9 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   const retired = join(root, "../../../public/assets/brand/raidho-shell-mark.png");
   assert.ok(existsSync(mark), "owner mark asset");
   assert.equal(existsSync(retired), false, "old shell mark removed");
-  assert.match(shell, /<SuiteBrand onHome=\{\(\) => setHomeOpen\(true\)\} showMenu=\{homeOpen\} \/>/);
+  assert.match(shell, /<SuiteBrand[\s\S]*onHome=/);
+  assert.match(shell, /onOpenTow=\{openTowTool\}/);
+  assert.match(shell, /onOpenCal=\{openCalTool\}/);
   assert.match(brand, /aria-label="Home"/);
   assert.match(shell, /homeOpen/);
   assert.match(shell, /initialTab = "rvgrok"/);
@@ -179,7 +181,7 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   assert.doesNotMatch(suite, /RAIDHO_R_MARK/);
   assert.doesNotMatch(suite, /suite-raidho-bleed/);
   assert.doesNotMatch(suite, /raidho-r-mark/);
-  assert.match(bar, /Ask RV Grok/);
+  assert.match(bar, /placeholder="Ask"|aria-label="Ask"/);
   assert.match(bar, /roomAskMic\(\)/);
   assert.match(bar, /<BottomTabs/);
   assert.doesNotMatch(bar, /ROOM_CHIPS|Rv Facts|Lot Inventory|Learn more/);
@@ -381,8 +383,8 @@ test("home hero shows one coach; the whole-lot count lives on Inventory; no cent
   assert.match(lot, /const total = snap\?\.units\.length/);
   assert.match(lot, /total\.toLocaleString\("en-US"\)\} units/);
 
-  // Four tabs, no plus / Action Button (Ask replaces Live Chat / Chat).
-  assert.match(tabs, /type DockTab = "rvfax" \| "rvlot" \| "rvgrok" \| "more"/);
+  // Four rooms, no plus / Action Button / More (Home · Facts · Inventory · Ask).
+  assert.match(tabs, /type DockTab = "home" \| "rvfax" \| "rvlot" \| "rvgrok"/);
   assert.doesNotMatch(tabs, /Action Button|bottom-tab-action|bottom-tab-center|\bPlus\b/);
 
   // Dark-only dock and hero rules: nothing new reaches light mode.
@@ -391,8 +393,9 @@ test("home hero shows one coach; the whole-lot count lives on Inventory; no cent
   const darkDock = dock.slice(darkStart);
   assert.doesNotMatch(darkDock, /data-theme="light"/);
   assert.match(darkDock, /--dock-ink:\s*rgba\(243, 235, 227, 0\.7\)/);
-  assert.match(darkDock, /\.bottom-tab-btn:not\(\.is-ask\):not\(\.is-active\):active \{[^}]*background/);
-  assert.match(darkDock, /\.bottom-tab-btn\.is-ask/);
+  assert.match(darkDock, /\.bottom-tab-btn:not\(\.is-active\):active \{[^}]*background/);
+  assert.doesNotMatch(darkDock, /\.bottom-tab-btn\.is-ask/);
+  assert.match(darkDock, /Active room caption/);
   assert.doesNotMatch(darkDock, /#1648c8/);
   assert.match(darkDock, /border-radius:\s*var\(--btn-radius, 12px\)/);
   assert.doesNotMatch(darkDock, /aqua|cyan|#00ffff/i);

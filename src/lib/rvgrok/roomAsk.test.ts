@@ -51,18 +51,20 @@ test("room tabs sit above the ask bar and the old dock is not mounted", () => {
   assert.doesNotMatch(shell, /<BottomTabs/);
   assert.doesNotMatch(shell, /data-bottom-dock/);
 
-  assert.match(bar, /Ask RV Grok/);
+  assert.match(bar, /placeholder="Ask"|aria-label="Ask"/);
   assert.match(bar, /<BottomTabs/);
-  assert.match(bar, /onChange=\{\(id\) => \(onDockTap \? onDockTap\(id\) : onOpen\(id\)\)\}/);
+  assert.match(bar, /onDockTap\)\s*onDockTap\(id\)/);
+  assert.match(bar, /id !== "home"/);
   assert.doesNotMatch(bar, /ROOM_CHIPS|Rv Facts|Lot Inventory|showroom-pills/);
   const askAt = bar.indexOf("data-room-ask-bar");
   const dockAt = bar.indexOf("<BottomTabs");
   assert.ok(askAt !== -1 && dockAt > askAt, "ask bar sits above the icon dock");
   const tabs = read("../../components/shell/BottomTabs.tsx");
+  assert.match(tabs, /id: "home"/);
   assert.match(tabs, /id: "rvfax"/);
   assert.match(tabs, /id: "rvlot"/);
   assert.match(tabs, /id: "rvgrok"/);
-  assert.match(tabs, /id: "more"/);
+  assert.doesNotMatch(tabs, /id: "more"/);
   assert.doesNotMatch(tabs, /id: "rvcal"|id: "rvtow"|id: "rvtrips"/);
   const sheet = read("../../components/shell/MoreSheet.tsx");
   assert.match(sheet, /id: "rvtow"/);
@@ -72,9 +74,9 @@ test("room tabs sit above the ask bar and the old dock is not mounted", () => {
   assert.doesNotMatch(tabs, /icon-rvgrok|bottom-tab-einstein|Einstein/);
   const grok = read("../../components/rvgrok/RvGrokApp.tsx");
   const landing = read("../../components/rvgrok/GrokLanding.tsx");
-  assert.match(grok, /starters=\{\[\]\}/);
+  assert.match(grok, /startersOrThread/);
   assert.doesNotMatch(grok, /starters=\{GROK_STARTERS\}/);
-  assert.match(landing, /starters\.length > 0/);
+  assert.match(landing, /GrokStarter|RV_GROK_SESSION_INTRO/);
   assert.match(bar, /roomAskMic\(\)/);
   assert.match(bar, /roomAskSend\(q\)/);
   assert.match(bar, /onOpen\("rvgrok", \{ skipVoice: true \}\)/);

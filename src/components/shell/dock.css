@@ -1,4 +1,4 @@
-/* Four tabs share one row: Facts · Inventory · Live Chat · More.
+/* Four tabs share one row: Home · Facts · Inventory · Ask.
    ~95px wide x 60px tall at 390px, 28px icons, 13px semibold labels. */
 .bottom-tabs-nav[data-dock-icons="platinum"] {
   --dock-tab-h: 60px;
@@ -172,7 +172,7 @@ html.android-native .showroom-dock .bottom-tabs-nav[data-dock-icons="platinum"] 
 }
 
 /* Dark dock (copper look). Light mode keeps the rules above untouched.
-   Slim floating glass bar: Facts · Inventory · Ask · More.
+   Slim floating glass bar: Home · Facts · Inventory · Ask.
    Ask = word INSIDE the capsule (no sparkle / no under-label).
    Copper lacquer only when Ask is the active section; otherwise quiet glass.
    Inactive tabs: outline icons + labels. Press = scale .97 + brighten.
@@ -238,7 +238,7 @@ html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab
 }
 
 /* Pressed inactive: brighten + scale */
-html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn:not(.is-ask):not(.is-active):active {
+html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn:not(.is-active):active {
   background: rgba(243, 235, 227, 0.09) !important;
   box-shadow: inset 0 1px 0 rgba(243, 235, 227, 0.08) !important;
   transform: scale(0.97);
@@ -261,86 +261,15 @@ html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab
   outline-offset: -2px;
 }
 
-/* Active non-Ask: soft inset pill, full-strength warm ink (no sapphire). */
-html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active:not(.is-ask),
-html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"]:not(.is-ask) {
-  background: rgba(243, 235, 227, 0.12) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(243, 235, 227, 0.16),
-    inset 0 0 0 1px rgba(243, 235, 227, 0.06) !important;
-  color: var(--dock-ink-active) !important;
-}
-html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active:not(.is-ask) .bottom-tab-glyph,
-html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"]:not(.is-ask) .bottom-tab-glyph {
-  color: var(--dock-ink-active) !important;
-  filter: var(--dock-glow-active);
-}
-html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active:not(.is-ask) .bottom-tab-caption,
-html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"]:not(.is-ask) .bottom-tab-caption {
-  color: var(--dock-ink-active) !important;
-  -webkit-text-fill-color: var(--dock-ink-active) !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
-}
-
-/* Ask capsule: word INSIDE; hide sparkle glyph; never clip the label. */
-html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-ask {
-  flex: 1.2 1 0 !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 0 !important;
-  margin: 5px 4px !important;
-  padding: 0 0.85rem !important;
-  border-radius: 999px !important;
-  min-height: calc(var(--dock-tab-h) - 10px) !important;
-  height: calc(var(--dock-tab-h) - 10px) !important;
-  overflow: visible !important;
-  /* Quiet glass/outline when Ask is not the open section */
-  background: rgba(32, 28, 24, 0.45) !important;
-  border: 1.5px solid rgba(243, 235, 227, 0.22) !important;
-  box-shadow: inset 0 1px 0 rgba(243, 235, 227, 0.12) !important;
-}
-html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-ask .bottom-tab-glyph {
-  display: none !important;
-}
-html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-ask .bottom-tab-caption {
-  display: block !important;
-  position: static !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  max-width: none !important;
-  overflow: visible !important;
-  font-size: 14px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.02em;
-  line-height: 1.1 !important;
-  white-space: nowrap !important;
-  color: var(--dock-ink-active) !important;
-  -webkit-text-fill-color: var(--dock-ink-active) !important;
-  text-shadow: none !important;
-  filter: none !important;
-}
-
-/* Copper only when Ask / chat is the open (active) section. */
-html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-ask.is-active,
-html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-ask[aria-current="page"] {
-  background: var(--copper-lacquer, linear-gradient(180deg, #e0a078 0%, #c4784a 38%, #8a4e2e 100%)) !important;
-  border: 1px solid rgba(224, 160, 120, 0.35) !important;
-  box-shadow:
-    0 10px 22px rgba(140, 70, 36, 0.38),
-    inset 0 1px 0 rgba(255, 236, 214, 0.45),
-    inset 0 -10px 18px rgba(80, 36, 16, 0.22) !important;
-}
-html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-ask.is-active .bottom-tab-caption,
-html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-ask[aria-current="page"] .bottom-tab-caption {
+/* Active room caption — copper fill comes from copper-dark.css.
+   All four rooms share one switcher look (no Ask-only capsule). */
+html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active .bottom-tab-glyph,
+html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] .bottom-tab-glyph,
+html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active .bottom-tab-caption,
+html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] .bottom-tab-caption {
   color: #fff8f2 !important;
   -webkit-text-fill-color: #fff8f2 !important;
   filter: drop-shadow(0 1px 1px rgba(60, 28, 12, 0.35));
-}
-html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-ask.is-active:active,
-html[data-theme="dark"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-ask[aria-current="page"]:active {
-  transform: scale(0.97);
-  filter: brightness(1.08);
 }
 
 @media (prefers-reduced-motion: reduce) {
