@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { fetchLotSnapshot, type LotUnit } from "@/lib/lot/ownLotPage";
 import { MetalVerifiedTrue } from "@/components/shell/Launchpad";
-import { readTheme, serverTheme, subscribeTheme } from "@/lib/theme";
+import { Sun } from "lucide-react";
+import { readTheme, serverTheme, setTheme, subscribeTheme } from "@/lib/theme";
 import type { AppTab } from "@/components/shell/BottomTabs";
 
 const EMPTY_UNITS: LotUnit[] = [];
@@ -54,11 +55,11 @@ export function HomeScreen({
   const spotYear = (spotUnit?.year || SHOWROOM_SPOTLIGHT.year).trim();
   const spotMake = (spotUnit?.make || SHOWROOM_SPOTLIGHT.make).trim();
   const place = (spotUnit?.location || "").trim();
-  const city = place.replace(/\s+[A-Z]{2}$/, "").trim();
   const who = [spotYear, spotMake].filter(Boolean).join(" ");
   const heroSrc = SHOWROOM_SPOTLIGHT.image;
-  const lotTotal =
-    units && units.length > 0 ? units.length.toLocaleString("en-US") : "";
+  const stockLine = [darkPlace(place), specs?.stock ? `Stock ${specs.stock}` : ""]
+    .filter(Boolean)
+    .join(" · ");
   const openSpot = () => {
     if (!spotUnit) return;
     requestLotUnit(lotArrivalQuery(spotUnit));
@@ -108,6 +109,16 @@ export function HomeScreen({
                 <polyline points="16 6 12 2 8 6" stroke="#fff" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
                 <line x1="12" y1="2" x2="12" y2="15" stroke="#fff" strokeWidth="1.7" strokeLinecap="round" />
               </svg>
+            </button>
+            <button
+              type="button"
+              className="dark-home-tool"
+              data-tool-rail="theme"
+              aria-label="Switch to light mode"
+              title="Switch to light mode"
+              onClick={() => setTheme("light")}
+            >
+              <Sun width={22} height={22} color="#fff" strokeWidth={1.7} aria-hidden />
             </button>
           </div>
         </header>
@@ -182,20 +193,7 @@ export function HomeScreen({
           {who ? <p className="showroom-spotyear">{who}</p> : null}
           <p className="showroom-spotmodel">{model}</p>
           {specs?.price ? <p className="showroom-spotprice">{specs.price}</p> : null}
-          {lotTotal ? <p className="showroom-lotcount">{lotTotal} in stock</p> : null}
-          {specs?.stock ? (
-            <>
-              <p className="showroom-spotstock showroom-spotstock-light">
-                Stock {specs.stock}
-                {place ? <span className="showroom-spotplace"> · {place}</span> : null}
-              </p>
-              <p className="showroom-spotstock showroom-spotstock-dark">
-                {city ? `${city} · ` : null}
-                Stock {specs.stock}
-                <span className="showroom-verified">Verified</span>
-              </p>
-            </>
-          ) : null}
+          {stockLine ? <p className="showroom-spotstock">{stockLine}</p> : null}
           {spotUnit ? (
             <button
               type="button"
@@ -223,6 +221,17 @@ export function HomeScreen({
 
       <div className="home-truth">
         <MetalVerifiedTrue size="md" />
+      </div>
+
+      <div className="light-home-ask-wrap">
+        <button
+          type="button"
+          className="light-home-ask"
+          data-ask-grok
+          onClick={() => onOpen("rvgrok")}
+        >
+          Ask RV Grok
+        </button>
       </div>
     </div>
   );

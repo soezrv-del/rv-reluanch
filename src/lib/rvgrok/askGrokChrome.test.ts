@@ -28,7 +28,7 @@ test("Grok dock tab still opens the Grok page as today", () => {
   const tabs = read("../../components/shell/BottomTabs.tsx");
   const shell = read("../../components/shell/AppShell.tsx");
 
-  assert.match(tabs, /\{ id: "rvgrok", label: "Ask", short: "Ask" \}/);
+  assert.match(tabs, /\{ id: "rvgrok", label: "Chat", short: "Chat" \}/);
 
   const pageMount = shell.match(
     /id === "rvgrok" \? \([\s\S]*?<RvGrokApp[\s\S]*?\/>/,
@@ -65,7 +65,7 @@ test("Facts Ask Grok seeds the Grok tab; dock tap stays a clean page", () => {
   assert.match(pageMount, /entryToken=\{grokEntryToken\}/);
   assert.match(pageMount, /seedPrompt=\{grokSeed\}/);
 
-  assert.match(tabs, /\{ id: "rvgrok", label: "Ask", short: "Ask" \}/);
+  assert.match(tabs, /\{ id: "rvgrok", label: "Chat", short: "Chat" \}/);
   assert.doesNotMatch(tabs, /short: "LIVE!"/);
 });
 
@@ -79,7 +79,7 @@ test("old bottom dock is not mounted and keyboard does not gate the shell", () =
   assert.doesNotMatch(shell, /useSwipeTabs|swipeArmed|SWIPE_ORDER/);
 });
 
-test("the dock is four line-icon tabs and does not use the Einstein photo", () => {
+test("the dock is the original four tabs with dark Home's icons, no Einstein photo", () => {
   const tabs = read("../../components/shell/BottomTabs.tsx");
   const bubble = read("../../components/rvgrok/MessageBubble.tsx");
   const dock = read("../../components/shell/dock.css");
@@ -91,9 +91,13 @@ test("the dock is four line-icon tabs and does not use the Einstein photo", () =
   assert.match(tabs, /bottom-tab-glyph/);
   assert.match(
     tabs,
-    /short: "Home"[\s\S]*short: "Facts"[\s\S]*short: "Inventory"[\s\S]*short: "Ask"/,
+    /short: "Facts"[\s\S]*short: "Inventory"[\s\S]*short: "Chat"[\s\S]*short: "More"/,
   );
-  assert.doesNotMatch(tabs, /icon-rvgrok|bottom-tab-einstein|Einstein|<img\b/);
+  assert.doesNotMatch(tabs, /short: "Home"|short: "Ask"/);
+  for (const icon of ["tab-facts", "tab-inventory", "tab-chat", "tab-more"]) {
+    assert.match(tabs, new RegExp(`/assets/showroom/${icon}\\.png`));
+  }
+  assert.doesNotMatch(tabs, /icon-rvgrok|bottom-tab-einstein|Einstein/);
   assert.match(tabs, /aria-label=\{label\}/);
   assert.match(tabs, /title=\{label\}/);
   assert.match(dock, /--dock-icon:\s*28px/);
@@ -107,7 +111,7 @@ test("Removing overlay chrome does not rewrite dock plate or Facts/Tow internals
   const fax = read("../../components/rvfax/RvFaxApp.tsx");
   const tow = read("../../components/rvtow/RvTowApp.tsx");
 
-  assert.match(tabs, /\{ id: "rvgrok", label: "Ask", short: "Ask" \}/);
+  assert.match(tabs, /\{ id: "rvgrok", label: "Chat", short: "Chat" \}/);
   assert.match(css, /--dock-surface:\s*#000000/);
   assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?background:\s*var\(--dock-surface\)/);
   assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?backdrop-filter:\s*none/);

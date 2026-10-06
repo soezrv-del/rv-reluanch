@@ -1,7 +1,7 @@
 /** Owner R mark. Shared shell chrome — not a room header. */
 import { useSyncExternalStore } from "react";
-import { Calculator, Settings } from "lucide-react";
-import { readTheme, serverTheme, subscribeTheme } from "@/lib/theme";
+import { Calculator, Moon, Settings, Sun } from "lucide-react";
+import { readTheme, serverTheme, setTheme, subscribeTheme } from "@/lib/theme";
 import { TowGlyph } from "./BottomTabs";
 import "./tool-rail.css";
 
@@ -11,8 +11,8 @@ export const RAIDHO_SHELL_MARK_LIGHT_WEBP = "/assets/brand/r-mark-final-60.webp"
 export const RAIDHO_SHELL_MARK_LIGHT_3X = "/assets/brand/r-mark-final-90.png";
 
 /**
- * Logo + persistent Tow / Cal / Settings.
- * No back chevron on Home. Theme lives inside Settings — no standalone switch.
+ * Logo + persistent Tow / Cal / Theme / Settings.
+ * No back chevron on Home. Theme button uses the same setTheme as Settings.
  */
 export function SuiteBrand({
   onHome,
@@ -79,6 +79,20 @@ export function SuiteBrand({
         >
           <Calculator className="tool-rail-glyph" strokeWidth={1.75} aria-hidden />
           <span className="tool-rail-label">Cal</span>
+        </button>
+        <button
+          type="button"
+          className="tool-rail-btn is-settings"
+          data-tool-rail="theme"
+          aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+        >
+          {theme === "dark" ? (
+            <Sun className="tool-rail-glyph" strokeWidth={1.75} aria-hidden />
+          ) : (
+            <Moon className="tool-rail-glyph" strokeWidth={1.75} aria-hidden />
+          )}
         </button>
         <button
           type="button"

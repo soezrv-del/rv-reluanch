@@ -6492,3 +6492,19 @@ html:not([data-theme="light"]) [data-rvgrok-composer] textarea {
   box-shadow: none !important;
   border-radius: 0 !important;
 }
+
+/* Light Home: Open coach is a small pill tab under the placard text, left-aligned with it. */
+html[data-theme="light"] [data-home-placard] .showroom-hero-primary {
+  align-self: flex-start !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: 100%;
+  height: 36px !important;
+  min-height: 36px !important;
+  margin: 14px 0 0 !important;
+  padding: 0 18px !important;
+  border-radius: 999px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  line-height: 1;
+}

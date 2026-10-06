@@ -178,7 +178,8 @@ test("a chip change during Live Voice updates the screen, and the ask bar openin
   assert.match(voice, /type: "navigate"/);
   assert.match(voice, /type: "user-start"/);
   assert.match(voice, /type: "reply-done"/);
-  assert.match(bar, /markAskBarGrokEntry\(\);\s*onOpen\("rvgrok", \{ skipVoice: true \}\)/);
+  // The separate Ask bar is gone; Chat in the dock opens the Grok room.
+  assert.doesNotMatch(bar, /data-room-ask-bar|roomAskSend/);
   off();
   setActiveScreen("");
 });

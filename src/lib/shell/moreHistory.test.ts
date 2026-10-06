@@ -67,7 +67,7 @@ test("Android back closes the sheet, then returns to the tab a tool came from", 
   assert.equal(popTarget(null, 0, facts), null);
 });
 
-test("shell wires the four-room dock, sheet history, and no swipe", () => {
+test("shell wires the Facts/Inventory/Chat/More dock, sheet history, and no swipe", () => {
   const shell = read("../../components/shell/AppShell.tsx");
   const constants = read("../../components/shell/shellConstants.ts");
   const ask = read("../../components/shell/RoomAskBar.tsx");
@@ -81,4 +81,9 @@ test("shell wires the four-room dock, sheet history, and no swipe", () => {
   assert.match(shell, /history\.replaceState\(/);
   assert.match(shell, /addEventListener\("popstate"/);
   assert.match(ask, /<MoreSheet/);
+  // More in the dock toggles the sheet, as before #668.
+  assert.match(
+    shell,
+    /if \(next === "more"\) \{\s*if \(moreOpenRef\.current\) closeMore\(\);\s*else openMore\(\);/,
+  );
 });

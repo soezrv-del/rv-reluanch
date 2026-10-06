@@ -1,5 +1,4 @@
 import { useLayoutEffect, useRef, useSyncExternalStore, type ReactNode } from "react";
-import { FileText, Home, Sparkles } from "lucide-react";
 import { readTheme, serverTheme, subscribeTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import { hapticLight } from "@/lib/haptics";
@@ -27,41 +26,46 @@ export type AppTab =
  * name that can be stripped while a runtime reference remains (Safari:
  * "Can't find variable" for that type name).
  */
-export const DOCK_ROOM_IDS = ["home", "rvfax", "rvlot", "rvgrok"] as const;
+export const DOCK_ROOM_IDS = ["rvfax", "rvlot", "rvgrok", "more"] as const;
 export type DockRoomId = (typeof DOCK_ROOM_IDS)[number];
 
+/** The original bar, same as dark Home's row: Facts · Inventory · Chat · More. */
 const TABS: {
   id: DockRoomId;
   label: string;
   short: string;
 }[] = [
-  { id: "home", label: "Home", short: "Home" },
   { id: "rvfax", label: "Facts", short: "Facts" },
   { id: "rvlot", label: "Inventory", short: "Inventory" },
-  { id: "rvgrok", label: "Ask", short: "Ask" },
+  { id: "rvgrok", label: "Chat", short: "Chat" },
+  { id: "more", label: "More", short: "More" },
 ];
 
-const glyph = {
-  className: "bottom-tab-glyph",
-  strokeWidth: 1.75,
-  "aria-hidden": true as const,
-};
-
-const HOME_TAB_ICON: Partial<Record<DockRoomId, string>> = {
+/** Same raster icons as dark Home's row (HomeScreen dark-home-nav). */
+export const DOCK_TAB_ICON: Record<DockRoomId, string> = {
   rvfax: "/assets/showroom/tab-facts.png",
   rvlot: "/assets/showroom/tab-inventory.png",
   rvgrok: "/assets/showroom/tab-chat.png",
+  more: "/assets/showroom/tab-more.png",
 };
 
+/**
+ * Dark: the white icon as-is. Light: the same icon used as a mask so it
+ * takes the dock ink (graphite, white when lit) instead of vanishing on white.
+ */
 function DockGlyph({ id, dark }: { id: DockRoomId; dark: boolean }) {
-  const icon = dark ? HOME_TAB_ICON[id] : undefined;
-  if (icon) {
+  const icon = DOCK_TAB_ICON[id];
+  if (dark) {
     return <img src={icon} alt="" className="bottom-tab-glyph" draggable={false} />;
   }
-  if (id === "home") return <Home {...glyph} />;
-  if (id === "rvfax") return <FileText {...glyph} />;
-  if (id === "rvgrok") return <Sparkles {...glyph} />;
-  return <InventoryGlyph />;
+  const mask = `url("${icon}") center / contain no-repeat`;
+  return (
+    <span
+      className="bottom-tab-glyph bottom-tab-mask"
+      aria-hidden
+      style={{ WebkitMask: mask, mask }}
+    />
+  );
 }
 
 /** The RV glyph the Inventory tab always used. */
@@ -140,8 +144,9 @@ function placeDock(dock: HTMLDivElement, smooth: boolean) {
 }
 
 /**
- * Four rooms: Home · Facts · Inventory · Ask.
- * Ask opens the chat room (rvgrok). Settings is a header control, not a tab.
+ * Four tabs: Facts · Inventory · Chat · More (the original bar).
+ * Chat opens the RV Grok room (rvgrok). More toggles the More sheet.
+ * Home is the RvFOX logo in the header.
  * Android WebView: do NOT put pointer-events-none on this nav.
  */
 export function BottomTabs({
@@ -227,6 +232,8 @@ export function BottomTabs({
                 fire(id);
               }}
               aria-current={active ? "page" : undefined}
+              aria-expanded={id === "more" ? moreOpen : undefined}
+              aria-haspopup={id === "more" ? "dialog" : undefined}
               aria-label={label}
               title={label}
               className={cn(

@@ -152,7 +152,8 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   assert.doesNotMatch(home, /resolveHomeCoach|pickShowroomStage|newestLotUnit/);
   assert.match(home, /MetalVerifiedTrue/);
   assert.doesNotMatch(home, /New arrivals/);
-  assert.match(home, /showroom-lotcount/);
+  assert.doesNotMatch(home, /showroom-lotcount|showroom-spotstock-dark|showroom-verified/);
+  assert.equal(home.match(/className="showroom-spotstock"/g)?.length, 1);
   assert.match(home, /onOpen\("rvlot"\)/);
   const arrivals = readFileSync(join(root, "../../components/lot/LotArrivals.tsx"), "utf8");
   assert.match(arrivals, /CoveredCoach/);
@@ -180,10 +181,22 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   assert.doesNotMatch(suite, /RAIDHO_R_MARK/);
   assert.doesNotMatch(suite, /suite-raidho-bleed/);
   assert.doesNotMatch(suite, /raidho-r-mark/);
-  assert.match(bar, /placeholder="Ask"|aria-label="Ask"/);
-  assert.match(bar, /roomAskMic\(\)/);
+  assert.doesNotMatch(bar, /placeholder="Ask"|roomAskMic/);
   assert.match(bar, /<BottomTabs/);
   assert.doesNotMatch(bar, /ROOM_CHIPS|Rv Facts|Lot Inventory|Learn more/);
+});
+
+test("theme switch sits on the shell rail and in the dark Home header, wired to setTheme", () => {
+  const home = readFileSync(join(root, "../../components/shell/HomeScreen.tsx"), "utf8");
+  const brand = readFileSync(join(root, "../../components/shell/SuiteBrand.tsx"), "utf8");
+  assert.match(brand, /data-tool-rail="theme"/);
+  assert.match(brand, /Switch to light mode/);
+  assert.match(brand, /Switch to dark mode/);
+  assert.match(brand, /setTheme\(/);
+  assert.ok(brand.indexOf('data-tool-rail="theme"') < brand.indexOf('data-tool-rail="settings"'));
+  const darkBar = home.slice(home.indexOf('className="dark-home-bar"'), home.indexOf("</header>"));
+  assert.match(darkBar, /className="dark-home-tool"[\s\S]*data-tool-rail="theme"/);
+  assert.match(darkBar, /setTheme\("light"\)/);
 });
 
 test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-first", () => {
