@@ -170,6 +170,6 @@ html[data-theme="light"] .app-shell .lot-card .lot-well[data-lot-scene="empty"] 
   box-shadow: none !important;
 }
 html[data-theme="light"] .app-shell .lot-card .lot-well[data-lot-scene="empty"] :is(.text-prestige, [class*="text-white"]) {
-  color: #c5cedb !important;
-  -webkit-text-fill-color: #c5cedb !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }

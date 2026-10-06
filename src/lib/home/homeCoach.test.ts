@@ -150,7 +150,9 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   assert.match(home, /SHOWROOM_SPOTLIGHT/);
   assert.match(home, /SHOWROOM_SPOTLIGHT\.series/);
   assert.doesNotMatch(home, /resolveHomeCoach|pickShowroomStage|newestLotUnit/);
-  assert.match(home, /MetalVerifiedTrue/);
+  assert.match(home, /home-truth-line/);
+  assert.match(home, /Verified and True/);
+  assert.doesNotMatch(home, /MetalVerifiedTrue/);
   assert.doesNotMatch(home, /New arrivals/);
   assert.match(home, /showroom-lotcount/);
   assert.match(home, /onOpen\("rvlot"\)/);

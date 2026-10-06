@@ -99,24 +99,23 @@ html[data-theme="light"] .showroom-dock .bottom-tabs-dock {
   background-image: none;
 }
 
-/* Active pill: copper #c48a5e in dark, graphite #171a20 in light. */
+/* Active tab: copper icon and label. No pill behind the word. */
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active,
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] {
-  background: #c48a5e !important;
-  border-color: transparent !important;
-  border-top-color: transparent !important;
-  box-shadow: none !important;
-  color: var(--dock-ink-active) !important;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: var(--color-copper);
 }
 
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active .bottom-tab-glyph,
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] .bottom-tab-glyph,
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active .bottom-tab-caption,
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] .bottom-tab-caption {
-  color: var(--dock-ink-active) !important;
-  -webkit-text-fill-color: var(--dock-ink-active) !important;
+  color: var(--color-copper);
+  -webkit-text-fill-color: var(--color-copper);
   stroke: currentColor;
-  background-image: none;
+  background: none;
 }
 
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active .bottom-tab-caption,
@@ -126,23 +125,23 @@ html[data-theme="light"] .showroom-dock .bottom-tabs-dock {
 
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active,
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] {
-  background: #171a20 !important;
-  box-shadow: none !important;
+  background: transparent;
+  box-shadow: none;
 }
 
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-glyph,
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-caption {
-  color: #5c5e62 !important;
-  -webkit-text-fill-color: #5c5e62 !important;
+  color: #5c5e62;
+  -webkit-text-fill-color: #5c5e62;
 }
 
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active .bottom-tab-glyph,
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active .bottom-tab-caption,
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] .bottom-tab-glyph,
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] .bottom-tab-caption {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-  stroke: #ffffff;
+  color: var(--color-copper);
+  -webkit-text-fill-color: var(--color-copper);
+  stroke: currentColor;
 }
 
 .showroom-dock .bottom-tabs-nav[data-dock-icons="platinum"],
@@ -184,9 +183,9 @@ html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bot
 }
 html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active,
 html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] {
-  background: transparent !important;
-  box-shadow: none !important;
-  color: #fff !important;
+  background: transparent;
+  box-shadow: none;
+  color: var(--color-copper);
 }
 
 /* Same icons as the home tab bar. Inactive fades so the active one stays white. */

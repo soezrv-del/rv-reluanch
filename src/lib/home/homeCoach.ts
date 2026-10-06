@@ -99,40 +99,28 @@ function feetInches(ft: number): string {
   return `${whole} ft ${inches} in`;
 }
 
-/** Dark home spec row. Lot fields first. Blank 2026 Cornerstone 45D uses the same pin as lot detail. */
+/** Home spec row. A cell is shown only when the lot value begins with a number. */
 export function spotlightCard(unit: LotUnit): SpotlightCardCell[] {
   const cells: SpotlightCardCell[] = [];
+  const push = (value: string, label: string) => {
+    const shown = value.trim();
+    if (!/^\d/.test(shown)) return;
+    cells.push({ value: shown, label });
+  };
   if (unit.length_ft != null && unit.length_ft > 0) {
-    cells.push({ value: feetInches(unit.length_ft), label: "LENGTH" });
+    push(feetInches(unit.length_ft), "LENGTH");
   }
-  const year = Number(unit.year);
-  const plan = `${unit.trim} ${unit.model}`;
-  const cornerstone =
-    year === 2026 &&
-    /entegra/i.test(unit.make) &&
-    /cornerstone/i.test(unit.model) &&
-    /\b45d\b/i.test(plan);
   if (unit.slides != null && unit.slides > 0) {
-    cells.push({
-      value: `${unit.slides} slide${unit.slides === 1 ? "" : "s"}`,
-      label: "FLOORPLAN",
-    });
-  } else if (cornerstone) {
-    cells.push({ value: "4 slides", label: "FLOORPLAN" });
+    push(`${unit.slides} slide${unit.slides === 1 ? "" : "s"}`, "FLOORPLAN");
   }
   const hpRaw = `${unit.printed.horsepower || ""} ${unit.engine || ""}`;
   const hpHit = hpRaw.match(/(\d{2,4})\s*hp\b/i);
   const hp = hpHit ? Number(hpHit[1]) : NaN;
   if (hp >= 100 && hp <= 800) {
-    cells.push({ value: `${hp} hp`, label: "ENGINE" });
-  } else if (cornerstone) {
-    cells.push({ value: "605 hp", label: "ENGINE" });
+    push(`${hp} hp`, "ENGINE");
   }
   if (unit.gvwr != null && unit.gvwr > 0) {
-    cells.push({
-      value: Math.round(unit.gvwr).toLocaleString("en-US"),
-      label: "GVWR",
-    });
+    push(Math.round(unit.gvwr).toLocaleString("en-US"), "GVWR");
   }
   return cells;
 }
