@@ -35,7 +35,7 @@ html[data-theme="light"] .showroom-dock:has([data-dock-icons="platinum"]) {
   overscroll-behavior-x: contain;
   max-width: none !important;
   height: auto !important;
-  background: #12141a !important;
+  background: #0a0a0c !important;
   border: 0 !important;
   border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
   border-radius: 1.05rem 1.05rem 0 0 !important;

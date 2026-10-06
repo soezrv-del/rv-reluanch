@@ -28,9 +28,9 @@ const TABS: {
   label: string;
   short: string;
 }[] = [
-  { id: "rvfax", label: "RvFACTS", short: "Facts" },
+  { id: "rvfax", label: "Facts", short: "Facts" },
   { id: "rvlot", label: "Inventory", short: "Inventory" },
-  { id: "rvgrok", label: "Live Chat", short: "Live Chat" },
+  { id: "rvgrok", label: "Chat", short: "Chat" },
   { id: "more", label: "More", short: "More" },
 ];
 
@@ -134,7 +134,7 @@ function placeDock(dock: HTMLDivElement, smooth: boolean) {
 }
 
 /**
- * Four tabs share the row at equal width: Facts · Inventory · Live Chat ·
+ * Four tabs share the row at equal width: Facts · Inventory · Chat ·
  * More. More opens the tools sheet and stays lit while a sheet tool is open.
  * placeDock still centers a tab if the row ever overflows.
  * Android WebView: do NOT put pointer-events-none on this nav.

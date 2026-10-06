@@ -414,7 +414,7 @@ function StatusCard({
         <button
           type="button"
           onClick={onAction}
-          className="mt-3 min-h-11 rounded-full bg-sapphire px-4 text-[13px] font-bold text-white"
+          className="mt-3 min-h-11 rounded-full suite-cta-copper text-[13px] font-bold"
         >
           {action}
         </button>
@@ -517,7 +517,7 @@ function LotUnitCard({
               />
             </span>
           )}
-          <span className="absolute left-3 top-3 rounded-full bg-sapphire px-2.5 py-1 text-[11px] font-bold text-white shadow-lg">
+          <span className="absolute left-3 top-3 rounded-full bg-copper px-2.5 py-1 text-[11px] font-bold text-white shadow-lg">
             {shortLotTypeLabel(unit.body_type)}
           </span>
           <span

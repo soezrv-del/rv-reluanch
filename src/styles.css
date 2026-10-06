@@ -67,6 +67,29 @@
   --color-gold-dim: rgba(208, 190, 138, 0.16);
   --color-gold-border: rgba(208, 190, 138, 0.36);
 
+  /* Copper — primary CTA metal (home showroom mock 2026-10-05) */
+  --color-copper: #c48a5e;
+  --color-copper-deep: #8b5e3c;
+  --color-copper-bright: #e8c090;
+  --color-copper-mid: #d4a06a;
+  --color-copper-glow: rgba(200, 140, 90, 0.5);
+  --shadow-glow-copper:
+    0 0 18px rgba(200, 140, 90, 0.5),
+    0 0 36px rgba(180, 120, 70, 0.25),
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    inset 0 1.5px 1px rgba(255, 255, 255, 0.4),
+    inset 0 -1.5px 2px rgba(60, 30, 10, 0.35);
+  --gradient-copper: linear-gradient(
+    105deg,
+    #8b5e3c 0%,
+    #b07a4e 18%,
+    #d4a06a 40%,
+    #e8c090 50%,
+    #d4a06a 60%,
+    #b07a4e 82%,
+    #8b5e3c 100%
+  );
+
   --color-lot-void: #07080d;
   --color-lot-plate: #11141c;
   --color-lot-well: #0a0c12;
@@ -103,11 +126,11 @@
     inset 0 1px 0 color-mix(in srgb, var(--color-ink-foam) 22%, transparent),
     inset 0 -1px 0 color-mix(in srgb, var(--color-sapphire) 8%, transparent);
 
-  --color-showroom: #05070c;
+  --color-showroom: #000000;
   --color-showroom-accent: #1e63d6;
   --color-showroom-ink: #eef2f8;
   --color-showroom-muted: #c5cedb;
-  --color-showroom-glass: rgba(11, 16, 28, 0.84);
+  --color-showroom-glass: rgba(22, 22, 26, 0.92);
   --shadow-showroom: 0 18px 50px -12px rgba(0, 0, 0, 0.85), 0 2px 10px rgba(0, 0, 0, 0.45);
 
   --dock-surface: #000000;
@@ -2979,7 +3002,7 @@ button.showroom-hero {
   display: block;
   width: 100% !important;
   height: auto !important;
-  max-height: 15rem !important;
+  max-height: 16.5rem !important;
   aspect-ratio: auto !important;
   margin: 0 !important;
   padding: 0 !important;
@@ -3062,58 +3085,63 @@ button.showroom-hero {
 .showroom-placard {
   position: relative;
   inset: auto;
-  order: -1;
+  order: 0;
   z-index: 4;
   width: auto;
-  margin: 0;
+  margin: 0.35rem 0 0;
   border: 0;
   border-radius: 0;
   background: transparent;
   box-shadow: none;
-  padding: 0 20px;
-  text-align: left;
+  padding: 0 1.35rem;
+  text-align: center;
   pointer-events: none;
 }
 .showroom-hero-primary {
   pointer-events: auto;
-  align-self: flex-start;
+  align-self: stretch;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 40px;
-  min-height: 40px;
-  min-width: 160px;
-  margin: 16px 20px 0;
+  height: 48px;
+  min-height: 48px;
+  min-width: 0;
+  width: 100%;
+  margin: 0;
   padding: 0 1.15rem;
-  border-radius: 8px;
+  border-radius: 999px;
   border: 0;
-  background: #1648c8;
+  background: var(--gradient-copper, #c48a5e);
   color: #fff;
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 0;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.15px;
+  box-shadow: var(--shadow-glow-copper);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
 }
 .showroom-spotyear {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 0.7rem;
   font-weight: 500;
-  letter-spacing: -0.02em;
-  line-height: 1.15;
-  color: #ffffff;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
 }
 .showroom-spotmodel {
-  margin: 0.08rem 0 0;
-  font-size: 1.85rem;
-  font-weight: 600;
-  letter-spacing: -0.03em;
-  line-height: 1.05;
+  margin: 0.55rem 0 0;
+  font-family: var(--font-display), "Iowan Old Style", Georgia, serif;
+  font-size: 2.35rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
   overflow-wrap: break-word;
-  color: #ffffff;
+  color: #f8f8f8;
 }
 .showroom-spotprice {
-  margin-top: 0.35rem;
-  font-size: 1.75rem;
-  font-weight: 600;
+  margin-top: 0.45rem;
+  font-size: 1.9rem;
+  font-weight: 400;
   letter-spacing: -0.03em;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
@@ -3129,13 +3157,194 @@ button.showroom-hero {
   color: rgba(255, 255, 255, 0.72);
 }
 .showroom-spotstock {
-  margin-top: 0.12rem;
-  font-size: 0.78rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
   line-height: 1.35;
   overflow-wrap: break-word;
-  color: rgba(255, 255, 255, 0.62);
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* Home glass card — specs strip + copper CTA (coordinates all suite screens) */
+.showroom-home-card {
+  position: relative;
+  z-index: 5;
+  margin: 0.85rem 0.9rem 0;
+  padding: 1.15rem 0.65rem 1rem;
+  border-radius: 1.75rem;
+  background: linear-gradient(
+    165deg,
+    rgba(48, 48, 52, 0.75) 0%,
+    rgba(24, 24, 28, 0.92) 50%,
+    rgba(18, 18, 20, 0.98) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
+}
+.showroom-home-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 18%;
+  right: 18%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 210, 160, 0.4), transparent);
+  border-radius: 1px;
+}
+.showroom-spec-strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  margin-bottom: 1.05rem;
+  padding: 0.15rem 0.1rem 0;
+}
+.showroom-spec {
+  flex: 1;
+  text-align: center;
+  position: relative;
+  padding: 0 0.15rem;
+}
+.showroom-spec:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 12%;
+  height: 76%;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+.showroom-spec-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.3rem;
+  color: #fff;
+  white-space: nowrap;
+}
+.showroom-spec-label {
+  font-size: 0.56rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.38);
+  text-transform: uppercase;
+}
+.showroom-cta-wrap {
+  padding: 0 0.45rem;
+}
+.showroom-cta-copper {
+  display: block;
+  width: 100%;
+  padding: 0.9rem 1.4rem;
+  border: none;
+  border-radius: 999px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.15px;
+  color: #fff;
+  cursor: pointer;
+  background: var(--gradient-copper);
+  box-shadow: var(--shadow-glow-copper);
+  position: relative;
+  overflow: hidden;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+}
+.showroom-cta-copper::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.28), transparent);
+  border-radius: 999px 999px 50% 50%;
+  pointer-events: none;
+}
+.showroom-hero-secondary {
+  display: block;
+  width: calc(100% - 0.9rem);
+  margin: 0.7rem auto 0;
+  padding: 0.55rem 1rem;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* Shared suite glass panels — use on Facts / Lot / Cal / Tow / More cards */
+.suite-glass {
+  background: linear-gradient(
+    165deg,
+    rgba(48, 48, 52, 0.72) 0%,
+    rgba(24, 24, 28, 0.9) 55%,
+    rgba(16, 16, 18, 0.96) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 1.5rem;
+  box-shadow:
+    0 10px 32px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+}
+.suite-glass-glow::before {
+  content: "";
+  display: block;
+  height: 1px;
+  margin: 0 18% 0.75rem;
+  background: linear-gradient(90deg, transparent, rgba(255, 210, 160, 0.35), transparent);
+}
+.suite-cta-copper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  width: 100%;
+  padding: 0.85rem 1.25rem;
+  border: none;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.12px;
+  color: #fff;
+  background: var(--gradient-copper);
+  box-shadow: var(--shadow-glow-copper);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+.suite-cta-copper::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.26), transparent);
+  border-radius: 999px 999px 50% 50%;
+  pointer-events: none;
+}
+.suite-kicker {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+.suite-title-display {
+  font-family: var(--font-display), "Iowan Old Style", Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: #f8f8f8;
 }
 .showroom-arrivals {
   position: relative;
@@ -5223,4 +5432,33 @@ html[data-theme="dark"] .rv-nav-screen,
 }
 .rv-nav-screen[data-theme-tone="dark"] .rv-nav-end {
   background: #1648c8;
+}
+
+
+/* Copper showroom redesign — keep placard centered in dark */
+html[data-theme="dark"] .showroom-placard {
+  text-align: center !important;
+}
+html[data-theme="dark"] .showroom-spotmodel {
+  font-family: var(--font-display), Georgia, serif !important;
+  font-weight: 500 !important;
+  font-size: 2.35rem !important;
+  color: #f8f8f8 !important;
+}
+html[data-theme="dark"] .showroom-spotyear {
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  font-size: 0.7rem !important;
+  color: rgba(255,255,255,0.55) !important;
+}
+html[data-theme="dark"] .showroom-spotprice {
+  font-weight: 400 !important;
+  font-size: 1.9rem !important;
+}
+html[data-theme="dark"] .showroom-hero-primary,
+html[data-theme="dark"] .showroom-cta-copper {
+  background: var(--gradient-copper) !important;
+  box-shadow: var(--shadow-glow-copper) !important;
+  border-radius: 999px !important;
+  color: #fff !important;
 }
