@@ -188,3 +188,15 @@ html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bot
   box-shadow: none !important;
   color: #fff !important;
 }
+
+/* Same icons as the home tab bar. Inactive fades so the active one stays white. */
+html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] img.bottom-tab-glyph {
+  width: 28px !important;
+  height: 22px !important;
+  object-fit: contain;
+  opacity: 0.45;
+}
+html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active img.bottom-tab-glyph,
+html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] img.bottom-tab-glyph {
+  opacity: 1;
+}

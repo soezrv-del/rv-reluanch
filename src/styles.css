@@ -6445,3 +6445,19 @@ html:not([data-theme="light"]) a.bg-blue {
     0 10px 22px rgba(150, 72, 32, 0.28) !important;
   text-shadow: none !important;
 }
+
+/* Tap targets need an edge. The void was swallowing rows and secondary buttons. */
+html:not([data-theme="light"]) .more-sheet-tile,
+html:not([data-theme="light"]) .more-sheet-row,
+html:not([data-theme="light"]) .app-shell button:not(.bottom-tab-btn):not(.suite-cta-copper):not(.dark-home-ask):not(.dark-home-tool):not(.showroom-hero-primary) {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18) !important;
+}
+html:not([data-theme="light"]) .app-shell :is(
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="button"], [type="submit"], [type="hidden"]),
+  select,
+  textarea,
+  .glass-field
+) {
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  background-color: #141416 !important;
+}
