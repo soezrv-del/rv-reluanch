@@ -1831,7 +1831,7 @@ export function RvTripsApp() {
                   type="button"
                   disabled={!canRoute && !(destPlace && locating)}
                   onClick={() => void geocodeAndRoute()}
-                  className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue px-3 py-3 text-[15px] font-bold text-white disabled:opacity-40"
+                  className="suite-cta-copper flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-3 py-3 text-[15px] font-bold text-white disabled:opacity-40"
                   data-plan-go
                 >
                   <Navigation className="size-4" />
@@ -2373,7 +2373,7 @@ export function RvTripsApp() {
                       <button
                         type="button"
                         onClick={() => routeToDump(d)}
-                        className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-blue py-2.5 text-[12px] font-bold text-white"
+                        className="suite-cta-copper flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-[12px] font-bold text-white"
                       >
                         <Navigation className="size-3.5" />
                         Route here

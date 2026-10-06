@@ -38,3 +38,15 @@ Home · Facts · Inventory · Chat · More · Cal
 - Invent floorplans or drivetrains for the spec strip — brochure values only
 - Reintroduce orange launchpad as the default home door without product sign-off
 - Put sapphire back on the primary full-width CTA
+
+## Pass 2 — Tow / Trips / Detail / Cal (2026-10-05)
+
+| Screen | Changes |
+|--------|---------|
+| **Tow** | `suite-glass` on hero + vehicle panels; sky CTAs → copper border/fill; display title |
+| **Trips** | Primary **Plan route** / start-nav → `suite-cta-copper` |
+| **Detail** | Full-width report CTAs → copper; report cards → `suite-glass` |
+| **Cal** | Payment + input panels → `suite-glass` (gold numbers kept as finance accent) |
+| **CSS** | Shared hairline glow on `.suite-glass.glass-prestige*`; tow blue labels → copper-bright |
+
+Map route paint stays sapphire/blue for legibility. Copper is the **one action**, not the basemap.

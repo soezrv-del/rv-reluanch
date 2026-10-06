@@ -5462,3 +5462,76 @@ html[data-theme="dark"] .showroom-cta-copper {
   border-radius: 999px !important;
   color: #fff !important;
 }
+
+
+/* ===== Copper suite coordination — Tow / Trips / Detail / Cal (2026-10-05) ===== */
+.rvtow-screen .suite-title-display,
+[data-trips-screen] .suite-title-display,
+[data-cal-screen] .suite-title-display,
+[data-coach-detail] .suite-title-display {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+/* Glass prestige panels inherit copper hairline when suite-glass is present */
+.suite-glass.glass-prestige,
+.suite-glass.glass-prestige-gold,
+.suite-glass.glass-surface {
+  position: relative;
+  overflow: hidden;
+}
+.suite-glass.glass-prestige::before,
+.suite-glass.glass-prestige-gold::before,
+.suite-glass.glass-surface::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 18%;
+  right: 18%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 210, 160, 0.35), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Primary copper CTA disabled state */
+.suite-cta-copper:disabled,
+button.suite-cta-copper:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Tow: soften blue labels toward copper-bright on dark void */
+.rvtow-screen .text-blue,
+.rvtow-screen .text-sky-200 {
+  color: var(--color-copper-bright, #e8c090) !important;
+}
+
+/* Trips: plan/nav primary already classed; map chrome stays blue for route legibility */
+[data-trips-screen] .suite-cta-copper {
+  border-radius: 999px;
+}
+
+/* Cal: keep gold numbers, copper only on primary actions; payment hero glass aligned */
+[data-cal-screen] .suite-glass.glass-prestige-gold {
+  background: linear-gradient(
+    165deg,
+    rgba(48, 48, 52, 0.72) 0%,
+    rgba(28, 24, 18, 0.9) 55%,
+    rgba(18, 16, 12, 0.96) 100%
+  );
+}
+
+/* Detail report cards */
+[data-coach-detail] .suite-glass,
+[data-readable-cards] .suite-glass {
+  border-radius: 1.25rem;
+}
+
+/* More sheet tools inherit glass */
+[data-more-sheet] .suite-glass,
+.more-sheet .suite-glass {
+  border-radius: 1.25rem;
+}

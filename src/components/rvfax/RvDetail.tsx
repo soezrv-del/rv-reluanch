@@ -1537,7 +1537,7 @@ export function RvDetail({
           ) : null}
 
           {/* Report header */}
-          <section className="glass-prestige rounded-[1.15rem] p-3.5">
+          <section className="suite-glass glass-prestige rounded-[1.15rem] p-3.5">
             <div className="flex items-start justify-between gap-2">
               <div>
                 <div className="flex items-center gap-2">
@@ -1592,7 +1592,7 @@ export function RvDetail({
 
           {/* Overview — frost on Raidho. No family / camping plate. */}
           <section
-            className="glass-prestige overflow-hidden rounded-[1.15rem]"
+            className="suite-glass glass-prestige overflow-hidden rounded-[1.15rem]"
             data-coach-overview=""
           >
             <div className="px-5 pb-6 pt-5">
@@ -1957,7 +1957,7 @@ export function RvDetail({
           ) : null}
 
           <section
-            className="glass-prestige overflow-hidden rounded-[1.15rem] px-5 py-5"
+            className="suite-glass glass-prestige overflow-hidden rounded-[1.15rem] px-5 py-5"
             data-testid="facts-ratings"
           >
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white">
@@ -2127,7 +2127,7 @@ export function RvDetail({
                     type="button"
                     data-facts-check-payment
                     onClick={() => openCheckPayment()}
-                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-gold/40 bg-gold/15 py-2.5 text-[12px] font-bold text-gold-bright"
+                    className="suite-cta-copper mt-3 flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-[12px] font-bold text-white"
                   >
                     <Calculator className="size-3.5" />
                     Check payment
@@ -2446,7 +2446,7 @@ export function RvDetail({
                     `${year} ${make} ${model} · local median`,
                   )
                 }
-                className="mt-2 flex w-full items-center justify-center gap-2 rounded-full border border-gold/40 bg-gold/15 py-2.5 text-[12px] font-bold text-gold-bright"
+                className="suite-cta-copper mt-2 flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-[12px] font-bold text-white"
               >
                 <Calculator className="size-3.5" />
                 Check payment · local median · {formatMoney(invMedian)}
@@ -2465,7 +2465,7 @@ export function RvDetail({
                   : "Notes"
               }
             >
-              <div className="rounded-2xl border border-white/10 bg-black/25 p-3">
+              <div className="suite-glass rounded-2xl border border-white/10 bg-black/25 p-3">
                 {live.ratingEstimate && live.ratingEstimate > 0 ? (
                   <p className="text-[15px] font-semibold text-white">
                     {live.ratingEstimate.toFixed(1)}
@@ -2636,7 +2636,7 @@ export function RvDetail({
                 {ownerReviews.map((r) => (
                   <article
                     key={r.id}
-                    className="rounded-2xl border border-white/10 bg-black/30 p-4"
+                    className="suite-glass rounded-2xl border border-white/10 bg-black/30 p-4"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
@@ -2808,7 +2808,7 @@ export function RvDetail({
           aria-modal="true"
           aria-label="Correct powertrain specs"
         >
-          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-white/15 bg-[#0c1220] p-4 shadow-2xl">
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto suite-glass rounded-2xl border border-white/15 bg-[#0c1220] p-4 shadow-2xl">
             <div className="mb-3 flex items-start justify-between gap-2">
               <div>
                 <p className="text-[11px] font-bold tracking-[0.14em] text-gold">
@@ -3209,7 +3209,7 @@ function MiniStat({
   warn?: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/25 px-2 py-3 text-center">
+    <div className="suite-glass rounded-2xl border border-white/10 bg-black/25 px-2 py-3 text-center">
       <p
         className={cn(
           "text-[13px] font-semibold tabular-nums",
