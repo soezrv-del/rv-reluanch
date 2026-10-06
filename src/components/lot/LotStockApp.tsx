@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Calculator, Check, ChevronLeft, Search, X } from "lucide-react";
+import { Check, ChevronLeft, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RAIDHO_R_MARK } from "@/assets/prestige";
 import { SuitePage } from "@/components/shell/SuitePage";
@@ -174,16 +174,29 @@ export function LotStockApp({
         data-lot-rendered={snap ? rail.length + (featured ? 1 : 0) : 0}
       >
         <header className="flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={() => nav?.setTab("more")}
-            className="inline-flex min-h-11 items-center gap-1 rounded-full border border-white/20 bg-black/30 px-3 text-[11px] font-bold text-white"
-          >
-            <ChevronLeft className="size-3.5" />
-            Premium
-          </button>
+          {openKey ? (
+            <button
+              type="button"
+              data-lot-back
+              aria-label="Back"
+              onClick={() => {
+                setOpenKey(null);
+                wantOpen.current = "";
+                setQuery("");
+                setAppliedQuery("");
+                setType("");
+                setCondition("");
+              }}
+              className="inline-flex min-h-11 items-center gap-1 rounded-full border border-white/20 bg-black/30 px-3 text-[11px] font-bold text-white"
+            >
+              <ChevronLeft className="size-3.5" />
+              Back
+            </button>
+          ) : (
+            <span className="min-h-11" aria-hidden />
+          )}
           <p className="text-[11px] font-semibold tracking-[0.12em] text-white/70">
-            {snap ? `${total.toLocaleString("en-US")} units` : "Lot"}
+            {snap ? `${total.toLocaleString("en-US")} units` : "Inventory"}
           </p>
         </header>
 
@@ -591,14 +604,13 @@ function LotDetail({
         {price > 0 ? (
           <button
             type="button"
-            className="lot-cal-tab"
+            className="lot-detail-tab"
             data-lot-cal
-            aria-label="Calculate payment"
             onClick={() =>
               nav?.openCalWithPrice(price, showroomUnitLabel(unit))
             }
           >
-            <Calculator className="size-4" aria-hidden />
+            Estimate payment
           </button>
         ) : null}
         {listing ? (

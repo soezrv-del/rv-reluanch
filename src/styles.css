@@ -3762,6 +3762,7 @@ body:has(.report-page) {
 
 .lot-share-dock {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   align-items: center;
   gap: 0.4rem;
@@ -3789,11 +3790,18 @@ body:has(.report-page) {
 .lot-detail-tab {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   border-radius: 999px;
   padding: 0 0.9rem;
   font-size: 12px;
   font-weight: 700;
   text-decoration: none;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+.lot-share-dock .report-share {
+  min-width: 0;
+  flex: 0 0 auto;
 }
 
 .report-share {

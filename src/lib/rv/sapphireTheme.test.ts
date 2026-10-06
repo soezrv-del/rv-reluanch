@@ -100,7 +100,8 @@ test("Sold and Premium share sapphire accent + Raidho suite chrome — no dock S
   assert.match(more, /raidhoOnly/);
   assert.match(more, /onNavigate\?\.\("rvsold"\)/);
   assert.doesNotMatch(dock, /id: "rvsold"/);
-  assert.match(dock, /type DockTab = "rvfax" \| "rvlot" \| "rvgrok" \| "more"/);
+  assert.match(dock, /export type DockRoomId|DOCK_ROOM_IDS/);
+  assert.doesNotMatch(dock, /export type DockTab/);
   assert.match(shell, /show\("rvsold"\) && isPro/);
   assert.match(css, /\[data-sold-book\] \.suite-raidho-field/);
   assert.match(css, /\[data-premium-screen\] \.suite-raidho-field/);

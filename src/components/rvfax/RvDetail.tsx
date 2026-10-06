@@ -1444,7 +1444,7 @@ export function RvDetail({
                   {shellNav ? (
                     <OverflowItem
                       icon={<Calculator className="size-3.5" />}
-                      label="Check payment"
+                      label="Estimate payment"
                       onClick={() => {
                         openCheckPayment();
                         setMoreOpen(false);
@@ -2130,7 +2130,7 @@ export function RvDetail({
                     className="suite-cta-copper mt-3 flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-[12px] font-bold text-white"
                   >
                     <Calculator className="size-3.5" />
-                    Check payment
+                    Estimate payment
                     {financePrice > 0 ? ` · ${formatMoney(financePrice)}` : ""}
                   </button>
                 ) : null}
@@ -2449,7 +2449,7 @@ export function RvDetail({
                 className="suite-cta-copper mt-2 flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-[12px] font-bold text-white"
               >
                 <Calculator className="size-3.5" />
-                Check payment · local median · {formatMoney(invMedian)}
+                Estimate payment · local median · {formatMoney(invMedian)}
               </button>
             ) : null}
             </div>
