@@ -4581,16 +4581,41 @@ html[data-theme="light"] .app-shell [data-lot-scene="photo"] :is(
   .text-sapphire-glow,
   [class*="text-white"]
 ) {
-  color: #c5cedb !important;
-  -webkit-text-fill-color: #c5cedb !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 html[data-theme="light"] .app-shell [data-camera-well] .absolute,
 html[data-theme="light"] .app-shell [data-camera-well] .absolute :is(span, button, p, .text-white) {
-  color: #c5cedb !important;
-  -webkit-text-fill-color: #c5cedb !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 html[data-theme="light"] [data-camera-well] .bg-black {
   background-color: #000000 !important;
+}
+/* A dark plate on a light page: the words on that plate are white.
+   Same element only, so a dark scrim around a white sheet is left alone. */
+html[data-theme="light"] .app-shell :is(
+  [class*="bg-black"],
+  [class*="bg-sapphire"],
+  [class*="bg-copper"],
+  .bg-copper,
+  .showroom-hero-primary,
+  .suite-cta-copper,
+  .showroom-cta-copper,
+  .lot-detail-ask,
+  .showroom-mic,
+  .report-share-main
+):is(
+  .text-white,
+  .text-prestige,
+  .text-fg,
+  .text-sky-50,
+  .text-sky-100,
+  .text-sky-200,
+  [class*="text-white"]
+):not([data-keep-ink]) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 html[data-theme="light"] .app-shell select,
 html[data-theme="light"] .app-shell input,
