@@ -42,3 +42,17 @@
   transform: scale(0.985);
   filter: brightness(1.15);
 }
+
+/* The same pill above the dock on every other screen (AskGrokPill).
+   Home's classes as-is; only the row spacing is set here (327px wide on a
+   393px phone, like Home's pill, in both themes). */
+.shell-ask-wrap {
+  position: relative;
+  z-index: 6;
+  padding: 0 33px;
+}
+
+html[data-theme="dark"] .shell-ask-wrap .dark-home-ask {
+  width: 100% !important;
+  margin: 0 !important;
+}
