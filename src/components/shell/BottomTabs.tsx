@@ -40,12 +40,6 @@ const TABS: {
   { id: "rvgrok", label: "Ask", short: "Ask" },
 ];
 
-const glyph = {
-  className: "bottom-tab-glyph",
-  strokeWidth: 1.75,
-  "aria-hidden": true as const,
-};
-
 function DockGlyph({ id }: { id: DockRoomId }) {
   if (id === "home") return <DockIcon name="home" />;
   if (id === "rvfax") return <DockIcon name="facts" />;
