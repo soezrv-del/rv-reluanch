@@ -171,32 +171,30 @@ html.android-native .showroom-dock .bottom-tabs-nav[data-dock-icons="platinum"] 
   }
 }
 
-/* Dark dock matches the home bar: black, no copper pill, white active word. */
+/* Dark dock: same four icons. Copper is the active tab only. No pill, no PNG. */
 html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] {
-  --dock-ink: #8e8e93;
-  --dock-ink-active: #ffffff;
+  --dock-ink: #9a9389;
+  --dock-ink-active: #d9a47a;
+  --dock-tab-h: 56px;
+  --dock-icon: 24px;
 }
 html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tabs-dock {
-  background: #000 !important;
+  background: #16130f !important;
   border-radius: 0 !important;
   box-shadow: none !important;
-  border-top: 1px solid rgba(244, 246, 248, 0.10) !important;
+  border-top: 1px solid rgba(255, 240, 220, 0.16) !important;
 }
 html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active,
 html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] {
   background: transparent !important;
   box-shadow: none !important;
-  color: #fff !important;
+  color: #d9a47a !important;
 }
-
-/* Same icons as the home tab bar. Inactive fades so the active one stays white. */
-html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] img.bottom-tab-glyph {
-  width: 28px !important;
-  height: 22px !important;
-  object-fit: contain;
-  opacity: 0.45;
-}
-html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active img.bottom-tab-glyph,
-html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] img.bottom-tab-glyph {
-  opacity: 1;
+html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active .bottom-tab-glyph,
+html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] .bottom-tab-glyph,
+html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active .bottom-tab-caption,
+html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] .bottom-tab-caption {
+  color: #d9a47a !important;
+  -webkit-text-fill-color: #d9a47a !important;
+  stroke: currentColor;
 }

@@ -1,6 +1,4 @@
-import { useLayoutEffect, useRef, useSyncExternalStore, type ReactNode } from "react";
-import { FileText, Home, Sparkles } from "lucide-react";
-import { readTheme, serverTheme, subscribeTheme } from "@/lib/theme";
+import { useLayoutEffect, useRef, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { hapticLight } from "@/lib/haptics";
 import {
@@ -9,6 +7,7 @@ import {
 } from "@/lib/hooks/nativeWebView";
 import "./dock.css";
 import { dockActiveTab } from "./dockActiveTab";
+import { DockIcon } from "./dockIcons";
 
 export type AppTab =
   | "rvgrok"
@@ -41,27 +40,11 @@ const TABS: {
   { id: "rvgrok", label: "Ask", short: "Ask" },
 ];
 
-const glyph = {
-  className: "bottom-tab-glyph",
-  strokeWidth: 1.75,
-  "aria-hidden": true as const,
-};
-
-const HOME_TAB_ICON: Partial<Record<DockRoomId, string>> = {
-  rvfax: "/assets/showroom/tab-facts.png",
-  rvlot: "/assets/showroom/tab-inventory.png",
-  rvgrok: "/assets/showroom/tab-chat.png",
-};
-
-function DockGlyph({ id, dark }: { id: DockRoomId; dark: boolean }) {
-  const icon = dark ? HOME_TAB_ICON[id] : undefined;
-  if (icon) {
-    return <img src={icon} alt="" className="bottom-tab-glyph" draggable={false} />;
-  }
-  if (id === "home") return <Home {...glyph} />;
-  if (id === "rvfax") return <FileText {...glyph} />;
-  if (id === "rvgrok") return <Sparkles {...glyph} />;
-  return <InventoryGlyph />;
+function DockGlyph({ id }: { id: DockRoomId }) {
+  if (id === "home") return <DockIcon name="home" />;
+  if (id === "rvfax") return <DockIcon name="facts" />;
+  if (id === "rvgrok") return <DockIcon name="ask" />;
+  return <DockIcon name="inventory" />;
 }
 
 /** The RV glyph the Inventory tab always used. */
@@ -182,7 +165,6 @@ export function BottomTabs({
     };
   }, [tab, homeOpen, moreOpen]);
 
-  const theme = useSyncExternalStore(subscribeTheme, readTheme, serverTheme);
   const lit = dockActiveTab(tab, homeOpen, moreOpen);
 
   return (
@@ -236,7 +218,7 @@ export function BottomTabs({
                 active && "is-active",
               )}
             >
-              <DockGlyph id={id} dark={theme === "dark"} />
+              <DockGlyph id={id} />
               <span className="bottom-tab-caption">{short}</span>
             </button>
           );
