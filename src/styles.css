@@ -6382,18 +6382,24 @@ html:not([data-theme="light"]) :is(
   .lot-card,
   .grok-frost,
   .grok-landing-card,
-  .showroom-card,
-  .showroom-float
+  .showroom-card
 ) {
-  background: linear-gradient(180deg, #2c2a28 0%, #161618 22%, #101113 100%) !important;
-  background-image: none !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background-color: #141416 !important;
+  background-image: linear-gradient(180deg, #2c2a28 0%, #161618 22%, #101113 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
   border-radius: 26px !important;
-  box-shadow: inset 0 1px 0 rgba(255, 196, 140, 0.45) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 196, 140, 0.35) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   color: #f7f5f2 !important;
   text-shadow: none !important;
+}
+html:not([data-theme="light"]) .select-sheet-panel {
+  background-color: #121214 !important;
+  background-image: none !important;
+}
+html:not([data-theme="light"]) .select-sheet-root > button[aria-label="Dismiss"] {
+  background: #000 !important;
 }
 
 html:not([data-theme="light"]) .sapphire-header-inner {
@@ -6448,16 +6454,33 @@ html:not([data-theme="light"]) a.bg-blue {
 
 /* Tap targets need an edge. The void was swallowing rows and secondary buttons. */
 html:not([data-theme="light"]) .more-sheet-tile,
-html:not([data-theme="light"]) .more-sheet-row,
-html:not([data-theme="light"]) .app-shell button:not(.bottom-tab-btn):not(.suite-cta-copper):not(.dark-home-ask):not(.dark-home-tool):not(.showroom-hero-primary) {
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18) !important;
+html:not([data-theme="light"]) .more-sheet-row {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16) !important;
+}
+html:not([data-theme="light"]) [data-suite-brand],
+html:not([data-theme="light"]) .showroom-mic,
+html:not([data-theme="light"]) .showroom-ask,
+html:not([data-theme="light"]) .showroom-float,
+html:not([data-theme="light"]) .grok-composer-pill {
+  box-shadow: none !important;
+  background-image: none !important;
 }
 html:not([data-theme="light"]) .app-shell :is(
   input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="button"], [type="submit"], [type="hidden"]),
   select,
-  textarea,
-  .glass-field
-) {
-  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  textarea
+):not([data-room-ask-input]):not(.grok-composer-input) {
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
   background-color: #141416 !important;
+  border-radius: 14px !important;
+}
+html:not([data-theme="light"]) [data-room-ask-input],
+html:not([data-theme="light"]) .grok-composer-pill input,
+html:not([data-theme="light"]) [data-rvgrok-composer] input,
+html:not([data-theme="light"]) [data-rvgrok-composer] textarea {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
 }
