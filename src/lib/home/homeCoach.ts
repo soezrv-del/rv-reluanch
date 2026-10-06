@@ -99,36 +99,7 @@ function feetInches(ft: number): string {
   return `${whole} ft ${inches} in`;
 }
 
-function horsepowerOf(unit: LotUnit): number | null {
-  const blobs = [unit.printed.horsepower, unit.printed.engine, unit.engine];
-  for (const blob of blobs) {
-    const text = (blob || "").trim();
-    if (!text) continue;
-    const labeled = text.match(/(\d{2,4})\s*hp\b/i);
-    if (labeled) {
-      const n = Number(labeled[1]);
-      if (n >= 100 && n <= 800) return n;
-    }
-    const bare = text.match(/^(\d{2,4})$/);
-    if (bare) {
-      const n = Number(bare[1]);
-      if (n >= 100 && n <= 800) return n;
-    }
-  }
-  return null;
-}
-
-function slideCount(unit: LotUnit): number | null {
-  if (unit.slides != null && unit.slides > 0) return unit.slides;
-  const printed = (unit.printed.number_of_slideouts || unit.printed.slideouts || "").replace(
-    /,/g,
-    "",
-  );
-  const n = Number(printed);
-  return Number.isFinite(n) && n > 0 ? n : null;
-}
-
-/** Spec strip for the ask card. A cell is omitted when the unit has no number. */
+/** Home spec row. A cell is shown only when the lot value begins with a number. */
 export function spotlightCard(unit: LotUnit): SpotlightCardCell[] {
   const cells: SpotlightCardCell[] = [];
   const push = (value: string, label: string) => {
@@ -139,10 +110,15 @@ export function spotlightCard(unit: LotUnit): SpotlightCardCell[] {
   if (unit.length_ft != null && unit.length_ft > 0) {
     push(feetInches(unit.length_ft), "LENGTH");
   }
-  const slides = slideCount(unit);
-  if (slides != null) push(String(slides), "SLIDES");
-  const hp = horsepowerOf(unit);
-  if (hp != null) push(`${hp} hp`, "ENGINE");
+  if (unit.slides != null && unit.slides > 0) {
+    push(`${unit.slides} slide${unit.slides === 1 ? "" : "s"}`, "FLOORPLAN");
+  }
+  const hpRaw = `${unit.printed.horsepower || ""} ${unit.engine || ""}`;
+  const hpHit = hpRaw.match(/(\d{2,4})\s*hp\b/i);
+  const hp = hpHit ? Number(hpHit[1]) : NaN;
+  if (hp >= 100 && hp <= 800) {
+    push(`${hp} hp`, "ENGINE");
+  }
   if (unit.gvwr != null && unit.gvwr > 0) {
     push(Math.round(unit.gvwr).toLocaleString("en-US"), "GVWR");
   }

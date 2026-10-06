@@ -2,15 +2,14 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { fetchLotSnapshot, type LotUnit } from "@/lib/lot/ownLotPage";
 import { readTheme, serverTheme, subscribeTheme } from "@/lib/theme";
 import type { AppTab } from "@/components/shell/BottomTabs";
-import { setHomeAskUnit } from "@/lib/home/askCardContext";
 import {
   SHOWROOM_SPOTLIGHT,
   lotArrivalQuery,
   requestLotUnit,
+  spotlightCard,
   spotlightLotUnit,
   spotlightSpecs,
 } from "@/lib/home/homeCoach";
-import "./ask-card.css";
 
 const EMPTY_UNITS: LotUnit[] = [];
 
@@ -39,6 +38,7 @@ export function HomeScreen({
   const listed = units ?? EMPTY_UNITS;
   const spotUnit = useMemo(() => spotlightLotUnit(listed), [listed]);
   const specs = spotUnit ? spotlightSpecs(spotUnit) : null;
+  const cells = spotUnit ? spotlightCard(spotUnit) : [];
   const model = specs?.model || SHOWROOM_SPOTLIGHT.series;
   const spotYear = (spotUnit?.year || SHOWROOM_SPOTLIGHT.year).trim();
   const spotMake = (spotUnit?.make || SHOWROOM_SPOTLIGHT.make).trim();
@@ -47,11 +47,6 @@ export function HomeScreen({
   const heroSrc = SHOWROOM_SPOTLIGHT.image;
   const lotTotal =
     units && units.length > 0 ? units.length.toLocaleString("en-US") : "";
-  useEffect(() => {
-    setHomeAskUnit(spotUnit);
-    return () => setHomeAskUnit(null);
-  }, [spotUnit]);
-
   const openSpot = () => {
     if (!spotUnit) return;
     requestLotUnit(lotArrivalQuery(spotUnit));
@@ -69,6 +64,7 @@ export function HomeScreen({
       <section className="showroom-hero" data-hero-kind="cutout">
         <div className="showroom-placard" data-home-placard>
           {who ? <p className="showroom-spotyear">{who}</p> : null}
+          <p className="home-truth-line">Verified and True</p>
           <p className="showroom-spotmodel">{model}</p>
           {specs?.price ? <p className="showroom-spotprice">{specs.price}</p> : null}
           {lotTotal ? <p className="showroom-lotcount">{lotTotal} in stock</p> : null}
@@ -78,10 +74,20 @@ export function HomeScreen({
               {place ? <span className="showroom-spotplace"> · {place}</span> : null}
             </p>
           ) : null}
+          {cells.length > 0 ? (
+            <div className="showroom-spec-strip">
+              {cells.map((cell) => (
+                <div key={cell.label} className="showroom-spec">
+                  <div className="showroom-spec-value">{cell.value}</div>
+                  <div className="showroom-spec-label">{cell.label}</div>
+                </div>
+              ))}
+            </div>
+          ) : null}
           {spotUnit ? (
             <button
               type="button"
-              className="showroom-open-coach"
+              className="showroom-hero-primary"
               data-open-coach
               onClick={openSpot}
             >
@@ -102,7 +108,6 @@ export function HomeScreen({
           <div className="showroom-floor-gloss" aria-hidden />
         </div>
       </section>
-      <p className="home-truth-line">Verified and True</p>
     </div>
   );
 }

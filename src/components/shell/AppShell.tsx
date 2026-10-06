@@ -12,10 +12,8 @@ import {
 } from "react";
 import type { AppTab, DockRoomId } from "./BottomTabs";
 import { RoomAskBar } from "./RoomAskBar";
-import { ShowroomAskCard } from "./ShowroomAskCard";
 import { SuiteBrand } from "./SuiteBrand";
 import { HomeScreen } from "./HomeScreen";
-import { useAskCard } from "@/lib/home/askCardContext";
 import {
   isUnderMore,
   PAGE_ACCENT,
@@ -172,7 +170,6 @@ export function AppShell({
   initialTab?: AppTab;
 }) {
   const access = useAccess();
-  const askCard = useAskCard();
   const [tab, setTab] = useState<AppTab>(initialTab);
   const [homeOpen, setHomeOpen] = useState(initialTab === "rvgrok");
   const [grokSeed, setGrokSeed] = useState<string | undefined>();
@@ -751,33 +748,15 @@ export function AppShell({
           </Suspense>
         ) : null}
 
-        {homeOpen && askCard.home ? (
-          <ShowroomAskCard
-            unit={askCard.home}
-            home
-            active={null}
-            onAsk={openGrok}
-            onOpen={onTabChange}
-          />
-        ) : !homeOpen && tab === "rvlot" && askCard.detail ? (
-          <ShowroomAskCard
-            unit={askCard.detail}
-            home={false}
-            active={tab}
-            onAsk={openGrok}
-            onOpen={onTabChange}
-          />
-        ) : (
-          <RoomAskBar
-            tab={tab}
-            homeOpen={homeOpen}
-            onOpen={onTabChange}
-            onDockTap={onDockTap}
-            moreOpen={moreOpen}
-            onMorePick={onMorePick}
-            onMoreClose={closeMore}
-          />
-        )}
+        <RoomAskBar
+          tab={tab}
+          homeOpen={homeOpen}
+          onOpen={onTabChange}
+          onDockTap={onDockTap}
+          moreOpen={moreOpen}
+          onMorePick={onMorePick}
+          onMoreClose={closeMore}
+        />
       </div>
     </ShellNavProvider>
   );

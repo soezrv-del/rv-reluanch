@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 import { RAIDHO_R_MARK } from "@/assets/prestige";
 import { SuitePage } from "@/components/shell/SuitePage";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
-import { setDetailAskUnit } from "@/lib/home/askCardContext";
 import {
   fetchLotSnapshot,
   filterLotBrowse,
@@ -451,7 +450,7 @@ function lotGlance(unit: LotUnit): { label: string; value: string }[] {
   return stats.slice(0, 3);
 }
 
-export function lotAskPrompt(unit: LotUnit): string {
+function lotAskPrompt(unit: LotUnit): string {
   const name = [unit.year, unit.make, unit.model, unit.trim]
     .map((part) => part.trim())
     .filter(Boolean)
@@ -580,10 +579,6 @@ function LotDetail({
   pins: GaragePinBook;
   onAsk?: (prompt: string) => void;
 }) {
-  useEffect(() => {
-    setDetailAskUnit(unit);
-    return () => setDetailAskUnit(null);
-  }, [unit]);
   const stats = lotGlance(unit);
   const sections = lotOpenSections(unit);
   const nav = useShellNavOptional();
