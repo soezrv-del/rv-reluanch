@@ -39,7 +39,7 @@ test("room ask bridge calls the registered Grok handlers", () => {
   assert.equal(roomAskMic(), false);
 });
 
-test("room tabs sit above the ask bar and the old dock is not mounted", () => {
+test("original dock (Facts · Inventory · Chat · More) with no separate Ask bar", () => {
   const shell = read("../../components/shell/AppShell.tsx");
   const bar = read("../../components/shell/RoomAskBar.tsx");
   const more = read("../../components/more/MoreApp.tsx");
@@ -51,20 +51,19 @@ test("room tabs sit above the ask bar and the old dock is not mounted", () => {
   assert.doesNotMatch(shell, /<BottomTabs/);
   assert.doesNotMatch(shell, /data-bottom-dock/);
 
-  assert.match(bar, /placeholder="Ask"|aria-label="Ask"/);
+  // The Ask input above the dock duplicated Chat; it is gone.
+  assert.doesNotMatch(bar, /data-room-ask-bar|data-room-ask-input|roomAskSend|placeholder="Ask"/);
   assert.match(bar, /<BottomTabs/);
+  assert.match(bar, /<MoreSheet/);
   assert.match(bar, /onDockTap\)\s*onDockTap\(id\)/);
-  assert.match(bar, /id !== "home"/);
   assert.doesNotMatch(bar, /ROOM_CHIPS|Rv Facts|Lot Inventory|showroom-pills/);
-  const askAt = bar.indexOf("data-room-ask-bar");
-  const dockAt = bar.indexOf("<BottomTabs");
-  assert.ok(askAt !== -1 && dockAt > askAt, "ask bar sits above the icon dock");
   const tabs = read("../../components/shell/BottomTabs.tsx");
-  assert.match(tabs, /id: "home"/);
+  assert.match(tabs, /DOCK_ROOM_IDS = \["rvfax", "rvlot", "rvgrok", "more"\]/);
   assert.match(tabs, /id: "rvfax"/);
   assert.match(tabs, /id: "rvlot"/);
   assert.match(tabs, /id: "rvgrok"/);
-  assert.doesNotMatch(tabs, /id: "more"/);
+  assert.match(tabs, /id: "more"/);
+  assert.doesNotMatch(tabs, /id: "home"/);
   assert.doesNotMatch(tabs, /id: "rvcal"|id: "rvtow"|id: "rvtrips"/);
   const sheet = read("../../components/shell/MoreSheet.tsx");
   assert.match(sheet, /id: "rvtow"/);
@@ -72,23 +71,10 @@ test("room tabs sit above the ask bar and the old dock is not mounted", () => {
   assert.match(sheet, /id: "rvtrips"/);
   assert.match(tabs, /data-dock-icons="platinum"/);
   assert.doesNotMatch(tabs, /icon-rvgrok|bottom-tab-einstein|Einstein/);
-  const grok = read("../../components/rvgrok/RvGrokApp.tsx");
-  const landing = read("../../components/rvgrok/GrokLanding.tsx");
-  assert.match(grok, /starters=\{\[\]\}/);
-  assert.doesNotMatch(grok, /starters=\{GROK_STARTERS\}/);
-  assert.match(landing, /starters\.length > 0/);
-  assert.match(bar, /roomAskMic\(\)/);
-  assert.match(bar, /roomAskSend\(q\)/);
-  assert.match(bar, /onOpen\("rvgrok", \{ skipVoice: true \}\)/);
-  assert.match(bar, /"Start live voice"/);
-  assert.match(bar, /const hidePinnedAsk = !homeOpen && tab === "rvgrok"/);
-  assert.match(bar, /hidePinnedAsk \? null/);
   assert.match(more, /label="RV GPS"/);
   assert.doesNotMatch(more, /title="RV GPS"/);
   assert.match(more, /title="VIN Decoder"/);
-  assert.match(bar, /onOpen\("rvgrok", \{ skipVoice: true \}\)/);
   assert.doesNotMatch(bar, /requestAnimationFrame|nextPillScroll|shouldLoopPills|PILL_LOOP/);
-  assert.doesNotMatch(bar, /aria-hidden="true"/);
   const ask = read("./roomAsk.ts");
   assert.doesNotMatch(ask, /nextPillScroll|shouldLoopPills|PILL_LOOP|nextSeamlessScroll/);
 });
@@ -115,13 +101,9 @@ test("top-of-page Live chip is gone; in-content Ask Grok stays", () => {
   assert.match(fax, />\s*RvGrok\s*</);
 });
 
-test("mic press on Tow does not open Grok and does call the bridge mic", () => {
+test("no pinned Ask mic on Tow; Grok room keeps voice when hidden", () => {
   const bar = read("../../components/shell/RoomAskBar.tsx");
-  const mic = bar.match(/data-room-ask-mic[\s\S]*?<\/button>/)?.[0] ?? "";
-  assert.match(mic, /roomAskMic\(\)/);
-  assert.doesNotMatch(mic, /onOpen\(/);
-  assert.doesNotMatch(mic, /markAskBarGrokEntry/);
-  assert.match(bar, /markAskBarGrokEntry\(\);\s*onOpen\("rvgrok", \{ skipVoice: true \}\)/);
+  assert.doesNotMatch(bar, /data-room-ask-mic|roomAskMic|markAskBarGrokEntry/);
 
   const app = read("../../components/rvgrok/RvGrokApp.tsx");
   const hidden = app.match(/if \(!active\) return;[\s\S]{0,500}/)?.[0] ?? "";

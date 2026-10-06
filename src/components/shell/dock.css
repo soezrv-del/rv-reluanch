@@ -200,3 +200,11 @@ html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bot
 html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] img.bottom-tab-glyph {
   opacity: 1;
 }
+
+/* Light: dark Home's raster icons as masks so they take the dock ink. */
+.bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-mask {
+  display: block;
+  width: 28px !important;
+  height: 22px !important;
+  background-color: currentColor;
+}

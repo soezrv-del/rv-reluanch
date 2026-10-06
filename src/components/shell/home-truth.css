@@ -9,3 +9,36 @@
 .lot-arrivals {
   margin-top: 0.15rem;
 }
+
+/* Light Home: Ask RV Grok in the spot dark Home has it — above the dock,
+   under the coach. Same size as dark Home's button, graphite instead of copper. */
+.light-home-ask-wrap {
+  margin-top: auto;
+  padding: 1rem 33px 12px;
+}
+
+.light-home-ask {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 52px;
+  margin: 0;
+  padding: 0;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: #171a20 !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0;
+  box-shadow: none !important;
+  cursor: pointer;
+}
+
+.light-home-ask:active {
+  transform: scale(0.985);
+  filter: brightness(1.15);
+}

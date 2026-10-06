@@ -222,6 +222,17 @@ export function HomeScreen({
       <div className="home-truth">
         <MetalVerifiedTrue size="md" />
       </div>
+
+      <div className="light-home-ask-wrap">
+        <button
+          type="button"
+          className="light-home-ask"
+          data-ask-grok
+          onClick={() => onOpen("rvgrok")}
+        >
+          Ask RV Grok
+        </button>
+      </div>
     </div>
   );
 }

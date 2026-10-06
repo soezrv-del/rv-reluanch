@@ -493,28 +493,28 @@ export function AppShell({
     if (topNavIs("vin")) popNav(1);
   }, [popNav]);
 
-  /** Dock tap. Home opens the home room; Ask opens chat. */
+  /**
+   * Dock tap. More toggles the sheet; another tab shuts it. Chat opens the
+   * RV Grok room. Home is the RvFOX logo (SuiteBrand onHome).
+   */
   const onDockTap = useCallback(
     (next: DockRoomId, opts?: { skipVoice?: boolean }) => {
+      if (next === "more") {
+        if (moreOpenRef.current) closeMore();
+        else openMore();
+        return;
+      }
       if (moreOpenRef.current) {
-        if (next === "home" && homeOpen) {
-          closeMore();
-          return;
-        }
         if (!homeOpen && next === tab) {
           closeMore();
           return;
         }
+        // The tab change unwinds the sheet entry with any tool entries.
         setMoreOpen(false);
-      }
-      if (next === "home") {
-        blurSuiteFocus();
-        setHomeOpen(true);
-        return;
       }
       onTabChange(next, opts);
     },
-    [closeMore, onTabChange, homeOpen, tab],
+    [closeMore, openMore, onTabChange, homeOpen, tab],
   );
 
   const openTowTool = useCallback(() => {

@@ -1,20 +1,11 @@
-import { useEffect, useState } from "react";
-import { Mic, Radio } from "lucide-react";
 import type { AppTab, DockRoomId } from "./BottomTabs";
 import { BottomTabs } from "./BottomTabs";
 import { MoreSheet, type MorePick } from "./MoreSheet";
-import {
-  roomAskMic,
-  roomAskSend,
-  subscribeRoomVoice,
-  type RoomVoicePhase,
-} from "@/lib/rvgrok/roomAsk";
-import { markAskBarGrokEntry } from "@/lib/rvgrok/screenContext";
 
 /**
- * Ask bar plus the four-room dock (Home · Facts · Inventory · Ask).
- * The dock does not slide. Settings opens the tools sheet above the dock.
- * A typed ask is appended to the open Ask thread.
+ * The original dock (Facts · Inventory · Chat · More) with the More sheet
+ * anchored above it. No separate Ask bar — Chat opens the RV Grok room,
+ * which has its own composer and live voice.
  */
 export function RoomAskBar({
   tab,
@@ -28,90 +19,21 @@ export function RoomAskBar({
   tab: AppTab;
   homeOpen?: boolean;
   onOpen: (tab: AppTab, opts?: { skipVoice?: boolean }) => void;
-  /** Dock taps — Home / Facts / Inventory / Ask. */
+  /** Dock taps — Facts / Inventory / Chat / More. */
   onDockTap?: (tab: DockRoomId) => void;
   moreOpen?: boolean;
   onMorePick?: (id: MorePick) => void;
   onMoreClose?: () => void;
 }) {
-  const [draft, setDraft] = useState("");
-  const [voice, setVoice] = useState<RoomVoicePhase>("idle");
-  const hidePinnedAsk = !homeOpen && tab === "rvgrok";
-  const live = voice !== "idle";
-
-  useEffect(() => subscribeRoomVoice(setVoice), []);
-
-  const send = () => {
-    const q = draft.trim();
-    if (!q) return;
-    setDraft("");
-    roomAskSend(q);
-    markAskBarGrokEntry();
-    onOpen("rvgrok", { skipVoice: true });
-  };
-
   return (
     <div data-room-ask data-no-swipe className="showroom-dock">
-      {hidePinnedAsk ? null : (
-        <form
-          data-room-ask-bar
-          className="showroom-ask-row"
-          onSubmit={(e) => {
-            e.preventDefault();
-            send();
-          }}
-        >
-          <div className="showroom-ask showroom-float">
-            <input
-              data-room-ask-input
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              placeholder="Ask"
-              aria-label="Ask"
-              enterKeyHint="send"
-            />
-            {live ? (
-              <span data-room-voice={voice} className="showroom-live">
-                {voice === "speaking" ? "Speaking" : "Listening"}
-              </span>
-            ) : null}
-            <button
-              type="button"
-              data-room-ask-mic
-              className={
-                "showroom-mic" +
-                (live ? " is-live" : "") +
-                (voice === "speaking" ? " is-armed" : "")
-              }
-              aria-pressed={live}
-              aria-label={
-                voice === "speaking"
-                  ? "Speaking, tap to stop"
-                  : live
-                    ? "Listening, tap to stop"
-                    : "Start live voice"
-              }
-              title={live ? "Stop Live Voice" : "Start Live Voice"}
-              onClick={() => {
-                roomAskMic();
-              }}
-            >
-              {live ? (
-                <Radio className="size-5" aria-hidden />
-              ) : (
-                <Mic className="size-5" aria-hidden />
-              )}
-            </button>
-          </div>
-        </form>
-      )}
       <BottomTabs
         tab={tab}
         homeOpen={homeOpen}
         moreOpen={moreOpen}
         onChange={(id) => {
           if (onDockTap) onDockTap(id);
-          else if (id !== "home") onOpen(id);
+          else onOpen(id);
         }}
       >
         <MoreSheet

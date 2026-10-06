@@ -181,8 +181,7 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   assert.doesNotMatch(suite, /RAIDHO_R_MARK/);
   assert.doesNotMatch(suite, /suite-raidho-bleed/);
   assert.doesNotMatch(suite, /raidho-r-mark/);
-  assert.match(bar, /placeholder="Ask"|aria-label="Ask"/);
-  assert.match(bar, /roomAskMic\(\)/);
+  assert.doesNotMatch(bar, /placeholder="Ask"|roomAskMic/);
   assert.match(bar, /<BottomTabs/);
   assert.doesNotMatch(bar, /ROOM_CHIPS|Rv Facts|Lot Inventory|Learn more/);
 });
