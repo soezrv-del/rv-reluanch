@@ -3,25 +3,26 @@ import { fetchLotSnapshot, type LotUnit } from "@/lib/lot/ownLotPage";
 import { MetalVerifiedTrue } from "@/components/shell/Launchpad";
 import { readTheme, serverTheme, subscribeTheme } from "@/lib/theme";
 import type { AppTab } from "@/components/shell/BottomTabs";
+
+const EMPTY_UNITS: LotUnit[] = [];
 import {
   SHOWROOM_SPOTLIGHT,
   lotArrivalQuery,
   requestLotUnit,
+  spotlightCard,
   spotlightLotUnit,
   spotlightSpecs,
 } from "@/lib/home/homeCoach";
-import { roomAskSend } from "@/lib/rvgrok/roomAsk";
-import { markAskBarGrokEntry } from "@/lib/rvgrok/screenContext";
 
-const EMPTY_UNITS: LotUnit[] = [];
+function darkEyebrow(year: string, make: string): string {
+  const brand = make.replace(/\s+coach$/i, "").trim().toUpperCase();
+  if (!year && !brand) return "";
+  return `${year} · ${brand} COACH`;
+}
 
-/** Static brochure specs for the locked Cornerstone spotlight. */
-const SPOTLIGHT_STRIP = [
-  { value: "44 ft 11 in", label: "LENGTH" },
-  { value: "4 slides", label: "FLOORPLAN" },
-  { value: "605 hp", label: "ENGINE" },
-  { value: "54,000", label: "GVWR" },
-] as const;
+function darkPlace(place: string): string {
+  return place.trim().replace(/([A-Za-z])\s+([A-Z]{2})$/, "$1, $2");
+}
 
 export function HomeScreen({
   onOpen,
@@ -30,6 +31,7 @@ export function HomeScreen({
 }) {
   const theme = useSyncExternalStore(subscribeTheme, readTheme, serverTheme);
   const [units, setUnits] = useState<LotUnit[] | null>(null);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     let cancel = false;
@@ -48,29 +50,124 @@ export function HomeScreen({
   const listed = units ?? EMPTY_UNITS;
   const spotUnit = useMemo(() => spotlightLotUnit(listed), [listed]);
   const specs = spotUnit ? spotlightSpecs(spotUnit) : null;
-  const model = specs?.model || `${SHOWROOM_SPOTLIGHT.series} 45D`;
+  const model = specs?.model || SHOWROOM_SPOTLIGHT.series;
   const spotYear = (spotUnit?.year || SHOWROOM_SPOTLIGHT.year).trim();
   const spotMake = (spotUnit?.make || SHOWROOM_SPOTLIGHT.make).trim();
-  const place = (spotUnit?.location || "Fresno, CA").trim();
-  const who = [spotYear, spotMake.toUpperCase().includes("ENTEGRA") ? "ENTEGRA COACH" : spotMake.toUpperCase()]
-    .filter(Boolean)
-    .join(" · ");
+  const place = (spotUnit?.location || "").trim();
+  const city = place.replace(/\s+[A-Z]{2}$/, "").trim();
+  const who = [spotYear, spotMake].filter(Boolean).join(" ");
   const heroSrc = SHOWROOM_SPOTLIGHT.image;
-  const price = specs?.price || "$1,124,963";
-  const stock = specs?.stock || SHOWROOM_SPOTLIGHT.stockNumber;
-
+  const lotTotal =
+    units && units.length > 0 ? units.length.toLocaleString("en-US") : "";
   const openSpot = () => {
     if (!spotUnit) return;
     requestLotUnit(lotArrivalQuery(spotUnit));
     onOpen("rvlot");
   };
 
-  const askGrok = () => {
-    const q = `Tell me about the ${spotYear} ${spotMake} ${model}`;
-    roomAskSend(q);
-    markAskBarGrokEntry();
-    onOpen("rvgrok", { skipVoice: true });
-  };
+  if (theme === "dark") {
+    const where = darkPlace(place);
+    const meta = [where, specs?.stock ? `Stock ${specs.stock}` : ""]
+      .filter(Boolean)
+      .join(" · ");
+    const cells = spotUnit ? spotlightCard(spotUnit) : [];
+    const share = () => {
+      const text = [darkEyebrow(spotYear, spotMake), model, specs?.price, meta]
+        .filter(Boolean)
+        .join("\n");
+      const nav = navigator as Navigator & { share?: (data: { title?: string; text?: string }) => Promise<void> };
+      if (nav.share) {
+        void nav.share({ title: "RVFOX", text }).catch(() => undefined);
+      }
+    };
+    return (
+      <div
+        data-home-screen
+        data-showroom-home=""
+        data-home-theme="dark"
+        data-no-swipe
+        className="showroom-home dark-home absolute inset-0 z-30 flex flex-col overflow-hidden"
+      >
+        <header className="dark-home-bar">
+          <p className="dark-home-mark">RVFOX</p>
+          <div className="dark-home-tools">
+            <button
+              type="button"
+              className="dark-home-tool"
+              aria-label="Bookmark"
+              aria-pressed={saved}
+              onClick={() => setSaved((on) => !on)}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill={saved ? "#fff" : "none"} aria-hidden="true">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" stroke="#fff" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            <button type="button" className="dark-home-tool" aria-label="Share" onClick={share}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" stroke="#fff" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                <polyline points="16 6 12 2 8 6" stroke="#fff" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                <line x1="12" y1="2" x2="12" y2="15" stroke="#fff" strokeWidth="1.7" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
+        </header>
+        <div className="dark-home-stage">
+          <div className="dark-home-floor">
+            <img
+              src="/assets/showroom/cornerstone-hero.jpg?v=5"
+              alt={SHOWROOM_SPOTLIGHT.alt}
+              className="dark-home-coach"
+              draggable={false}
+            />
+          </div>
+        </div>
+        <div className="dark-home-copy">
+          <p className="dark-home-eyebrow">{darkEyebrow(spotYear, spotMake)}</p>
+          <h1 className="dark-home-title">{model}</h1>
+          {specs?.price ? <p className="dark-home-price">{specs.price}</p> : null}
+          {meta ? <p className="dark-home-where">{meta}</p> : null}
+        </div>
+        <section className="dark-home-card">
+          {cells.length > 0 ? (
+            <div className="dark-home-stats">
+              {cells.map((cell) => (
+                <div key={cell.label} className="dark-home-stat">
+                  <b>{cell.value}</b>
+                  <span>{cell.label}</span>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          <button
+            type="button"
+            className="dark-home-ask"
+            data-ask-grok
+            onClick={() => onOpen("rvgrok")}
+          >
+            Ask RV Grok
+          </button>
+          <nav className="dark-home-nav" aria-label="Home">
+            <button type="button" className="is-on" onClick={() => onOpen("rvfax")}>
+              <img src="/assets/showroom/tab-facts.png" alt="" width="28" height="27" />
+              <span>Facts</span>
+            </button>
+            <button type="button" onClick={() => onOpen("rvlot")}>
+              <img src="/assets/showroom/tab-inventory.png" alt="" width="40" height="25" />
+              <span>Inventory</span>
+            </button>
+            <button type="button" onClick={() => onOpen("rvgrok")}>
+              <img src="/assets/showroom/tab-chat.png" alt="" width="26" height="27" />
+              <span>Chat</span>
+            </button>
+            <button type="button" onClick={() => onOpen("more")}>
+              <img src="/assets/showroom/tab-more.png" alt="" width="28" height="15" />
+              <span>More</span>
+            </button>
+          </nav>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -81,6 +178,35 @@ export function HomeScreen({
       className="showroom-home absolute inset-0 z-30 flex flex-col overflow-x-hidden overflow-y-auto"
     >
       <section className="showroom-hero" data-hero-kind="cutout">
+        <div className="showroom-placard" data-home-placard>
+          {who ? <p className="showroom-spotyear">{who}</p> : null}
+          <p className="showroom-spotmodel">{model}</p>
+          {specs?.price ? <p className="showroom-spotprice">{specs.price}</p> : null}
+          {lotTotal ? <p className="showroom-lotcount">{lotTotal} in stock</p> : null}
+          {specs?.stock ? (
+            <>
+              <p className="showroom-spotstock showroom-spotstock-light">
+                Stock {specs.stock}
+                {place ? <span className="showroom-spotplace"> · {place}</span> : null}
+              </p>
+              <p className="showroom-spotstock showroom-spotstock-dark">
+                {city ? `${city} · ` : null}
+                Stock {specs.stock}
+                <span className="showroom-verified">Verified</span>
+              </p>
+            </>
+          ) : null}
+          {spotUnit ? (
+            <button
+              type="button"
+              className="showroom-hero-primary"
+              data-open-coach
+              onClick={openSpot}
+            >
+              Open coach
+            </button>
+          ) : null}
+        </div>
         <div className="showroom-floor" data-hero-kind="cutout">
           <img
             src={heroSrc}
@@ -93,41 +219,7 @@ export function HomeScreen({
           </div>
           <div className="showroom-floor-gloss" aria-hidden />
         </div>
-
-        <div className="showroom-placard" data-home-placard>
-          {who ? <p className="showroom-spotyear">{who}</p> : null}
-          <p className="showroom-spotmodel">{model}</p>
-          {price ? <p className="showroom-spotprice">{price}</p> : null}
-          <p className="showroom-spotstock">
-            {place}
-            {stock ? <span className="showroom-spotplace"> · Stock {stock}</span> : null}
-          </p>
-        </div>
       </section>
-
-      {/* Glass card: specs · copper Ask CTA */}
-      <div className="showroom-home-card">
-        <div className="showroom-spec-strip" role="list">
-          {SPOTLIGHT_STRIP.map((row) => (
-            <div key={row.label} className="showroom-spec" role="listitem">
-              <div className="showroom-spec-value">{row.value}</div>
-              <div className="showroom-spec-label">{row.label}</div>
-            </div>
-          ))}
-        </div>
-
-        <div className="showroom-cta-wrap">
-          <button type="button" className="showroom-cta-copper" onClick={askGrok}>
-            Ask RV Grok
-          </button>
-        </div>
-
-        {spotUnit ? (
-          <button type="button" className="showroom-hero-secondary" onClick={openSpot}>
-            Open coach on lot
-          </button>
-        ) : null}
-      </div>
 
       <div className="home-truth">
         <MetalVerifiedTrue size="md" />
