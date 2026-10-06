@@ -141,10 +141,12 @@
   padding-block: var(--btn-py);
   padding-inline: var(--btn-px-lg);
 }
-html[data-theme] .showroom-hero-primary {
+html[data-theme] .showroom-hero-primary,
+html[data-theme] .suite-cta-copper,
+html[data-theme] .showroom-cta-copper {
   height: var(--btn-h-lg);
   min-height: var(--btn-h-lg);
-  border-radius: var(--btn-radius);
+  border-radius: 999px;
   padding-inline: var(--btn-px-lg);
 }
 .lot-detail-ask,
