@@ -3,6 +3,7 @@ import { fetchLotSnapshot, type LotUnit } from "@/lib/lot/ownLotPage";
 import { MetalVerifiedTrue } from "@/components/shell/Launchpad";
 import { readTheme, serverTheme, subscribeTheme } from "@/lib/theme";
 import type { AppTab } from "@/components/shell/BottomTabs";
+import { DockIcon } from "@/components/shell/dockIcons";
 
 const EMPTY_UNITS: LotUnit[] = [];
 import {
@@ -114,11 +115,14 @@ export function HomeScreen({
         <div className="dark-home-stage">
           <div className="dark-home-floor">
             <img
-              src="/assets/showroom/cornerstone-hero.jpg?v=5"
+              src={SHOWROOM_SPOTLIGHT.image}
               alt={SHOWROOM_SPOTLIGHT.alt}
               className="dark-home-coach"
               draggable={false}
             />
+            <div className="dark-home-mirror" aria-hidden>
+              <img src={SHOWROOM_SPOTLIGHT.image} alt="" className="dark-home-reflect" />
+            </div>
           </div>
         </div>
         <div className="dark-home-copy">
@@ -148,19 +152,19 @@ export function HomeScreen({
           </button>
           <nav className="dark-home-nav" aria-label="Home">
             <button type="button" className="is-on" onClick={() => onOpen("rvfax")}>
-              <img src="/assets/showroom/tab-facts.png" alt="" width="28" height="27" />
+              <DockIcon name="facts" />
               <span>Facts</span>
             </button>
             <button type="button" onClick={() => onOpen("rvlot")}>
-              <img src="/assets/showroom/tab-inventory.png" alt="" width="40" height="25" />
+              <DockIcon name="inventory" />
               <span>Inventory</span>
             </button>
             <button type="button" onClick={() => onOpen("rvgrok")}>
-              <img src="/assets/showroom/tab-chat.png" alt="" width="26" height="27" />
+              <DockIcon name="ask" />
               <span>Chat</span>
             </button>
             <button type="button" onClick={() => onOpen("more")}>
-              <img src="/assets/showroom/tab-more.png" alt="" width="28" height="15" />
+              <DockIcon name="more" />
               <span>More</span>
             </button>
           </nav>
