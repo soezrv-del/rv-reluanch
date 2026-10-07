@@ -22,7 +22,10 @@
  * `?lvroute=auto` to reset.
  */
 
-/** Makeup after the soft clipper. Peaks stay under full scale. */
+/**
+ * Makeup after the soft clipper for the `off` preset (non-iOS default).
+ * iPhone/iPad use LIVE_VOICE_GAIN_PRESETS[LIVE_VOICE_IOS_GAIN_LEVEL].
+ */
 export const LIVE_VOICE_OUTPUT_GAIN = 2;
 
 /**
@@ -35,6 +38,109 @@ export const LIVE_VOICE_SOFT_CLIP = {
   ceiling: 0.49,
   points: 2048,
 } as const;
+
+/** Output peaks (ceiling x makeup) must stay at or under this. */
+export const LIVE_VOICE_PEAK_LIMIT = 0.98;
+
+export type LiveVoiceGainProfile = {
+  /** Makeup gain after the clipper (also the gain below the knee). */
+  makeup: number;
+  /** Input level where the soft knee starts (linear below). */
+  kneeStart: number;
+  /** Asymptote of the tanh knee (clipper output never reaches it). */
+  ceiling: number;
+};
+
+export type LiveVoiceGainLevel = "off" | "1" | "2" | "3";
+
+/**
+ * Loudness presets. `off` is the pre-boost chain. Each step raises the
+ * makeup (gain on everything below the knee, i.e. the body of the
+ * speech) and lowers the knee/ceiling so peaks are rounded off by the
+ * tanh knee instead of clipping. ceiling x makeup stays under full
+ * scale, and knee/ceiling stays ~0.8 like `off`, so the knee is as
+ * smooth as today's (slope-continuous, no hard corner).
+ *
+ * Linear gain below the knee vs `off`, and measured RMS rise on
+ * speech-like test audio at -24 / -20 / -16 dBFS RMS input:
+ *   off: x2 (pre-boost), knee 0.40,  ceiling 0.49,  peak 0.980
+ *   1:   x4 (+6.0 dB),   knee 0.195, ceiling 0.244, peak 0.976  ~ +5.6 / +4.8 / +3.8 dB
+ *   2:   x6 (+9.5 dB),   knee 0.13,  ceiling 0.163, peak 0.978  ~ +8.3 / +6.9 / +5.3 dB
+ *   3:   x8 (+12.0 dB),  knee 0.098, ceiling 0.122, peak 0.976  ~ +9.9 / +8.1 / +6.2 dB
+ * iOS default is 2: about +7-8 dB on normal speech, so she carries at
+ * arm's length on the built-in speaker. Loud syllables are rounded off by
+ * the tanh knee (slope-continuous), never hard-clipped.
+ */
+export const LIVE_VOICE_GAIN_PRESETS: Record<LiveVoiceGainLevel, LiveVoiceGainProfile> = {
+  off: {
+    makeup: LIVE_VOICE_OUTPUT_GAIN,
+    kneeStart: LIVE_VOICE_SOFT_CLIP.kneeStart,
+    ceiling: LIVE_VOICE_SOFT_CLIP.ceiling,
+  },
+  "1": { makeup: 4, kneeStart: 0.195, ceiling: 0.244 },
+  "2": { makeup: 6, kneeStart: 0.13, ceiling: 0.163 },
+  "3": { makeup: 8, kneeStart: 0.098, ceiling: 0.122 },
+};
+
+/** iPhone/iPad (Safari and the native shell) get this preset by default. */
+export const LIVE_VOICE_IOS_GAIN_LEVEL: LiveVoiceGainLevel = "2";
+export const LIVE_VOICE_GAIN_KEY = "rvgrok.liveVoiceGain";
+
+function isGainLevel(v: string | null): v is LiveVoiceGainLevel {
+  return v === "off" || v === "1" || v === "2" || v === "3";
+}
+
+/**
+ * `?lvgain=off|1|2|3` (persisted in localStorage), `?lvgain=auto` resets
+ * to the platform default. No redeploy needed for an A/B on the phone.
+ */
+export function liveVoiceGainOverride(
+  search: string = typeof location !== "undefined" ? location.search : "",
+  storage: Pick<Storage, "getItem" | "setItem" | "removeItem"> | null =
+    typeof localStorage !== "undefined" ? localStorage : null,
+): LiveVoiceGainLevel | "auto" {
+  try {
+    const fromUrl = new URLSearchParams(search).get("lvgain");
+    if (fromUrl === "auto") {
+      storage?.removeItem(LIVE_VOICE_GAIN_KEY);
+      return "auto";
+    }
+    if (isGainLevel(fromUrl)) {
+      storage?.setItem(LIVE_VOICE_GAIN_KEY, fromUrl);
+      return fromUrl;
+    }
+    const stored = storage?.getItem(LIVE_VOICE_GAIN_KEY) ?? null;
+    return isGainLevel(stored) ? stored : "auto";
+  } catch {
+    return "auto";
+  }
+}
+
+/** Override wins; otherwise iOS gets the louder preset, everyone else `off`. */
+export function liveVoiceGainLevel(
+  override: LiveVoiceGainLevel | "auto" = liveVoiceGainOverride(),
+  ios: boolean = playbackNeedsSpeakerElement(),
+): LiveVoiceGainLevel {
+  if (override !== "auto") return override;
+  return ios ? LIVE_VOICE_IOS_GAIN_LEVEL : "off";
+}
+
+/** Keep any profile peak-safe: knee under ceiling, ceiling x makeup <= limit. */
+export function clampGainProfile(p: LiveVoiceGainProfile): LiveVoiceGainProfile {
+  const fallback = LIVE_VOICE_GAIN_PRESETS.off;
+  const ok = (n: number) => Number.isFinite(n) && n > 0;
+  if (!ok(p.makeup) || !ok(p.ceiling) || !ok(p.kneeStart)) return { ...fallback };
+  const ceiling = Math.min(p.ceiling, 1);
+  const kneeStart = Math.min(p.kneeStart, ceiling * 0.9);
+  const makeup = Math.min(p.makeup, LIVE_VOICE_PEAK_LIMIT / ceiling);
+  return { makeup, kneeStart, ceiling };
+}
+
+export function liveVoiceGainProfile(
+  level: LiveVoiceGainLevel = liveVoiceGainLevel(),
+): LiveVoiceGainProfile {
+  return clampGainProfile(LIVE_VOICE_GAIN_PRESETS[level] ?? LIVE_VOICE_GAIN_PRESETS.off);
+}
 
 /** Transfer curve for the WaveShaperNode (input -1..1 → output). */
 export function softClipCurve(
@@ -154,6 +260,22 @@ export function logLiveVoiceSession(
   }
 }
 
+/** Log the active loudness preset when `?lvdebug=1` is on. */
+export function logLiveVoiceGain(
+  level: LiveVoiceGainLevel,
+  profile: LiveVoiceGainProfile,
+  enabled: boolean = liveVoiceDebugEnabled(),
+): void {
+  if (!enabled) return;
+  try {
+    console.log(
+      `[lvdebug] lvgain=${level} makeup=${profile.makeup} knee=${profile.kneeStart} ceiling=${profile.ceiling} peak=${(profile.makeup * profile.ceiling).toFixed(3)}`,
+    );
+  } catch {
+    /* diagnostics only */
+  }
+}
+
 export function resumeLiveVoiceSpeaker(ctx: AudioContext | null): void {
   if (!ctx) return;
   void chains.get(ctx)?.speakerEl?.play().catch(() => {});
@@ -236,6 +358,8 @@ export type LiveVoiceOutput = {
   /** Set only on the iOS loudspeaker workaround. */
   speakerEl: HTMLAudioElement | null;
   route: "element" | "destination";
+  /** Loudness preset this chain was built with. */
+  gainLevel: LiveVoiceGainLevel;
   /**
    * The node that is actually playing. Mic capture has to join this or
    * iOS sometimes never pulls samples, so Listening never becomes Hearing.
@@ -256,14 +380,21 @@ export function liveVoiceOutputFor(ctx: AudioContext): LiveVoiceOutput {
   // No session write here. The chain can be built after beginSpeaking
   // set `playback`; forcing play-and-record here put her back on the
   // quiet call volume for the rest of that reply.
+  const gainLevel = liveVoiceGainLevel();
+  const profile = liveVoiceGainProfile(gainLevel);
+  logLiveVoiceGain(gainLevel, profile);
   const gain = ctx.createGain();
   gain.gain.value = 1;
   const clipper = ctx.createWaveShaper();
-  clipper.curve = softClipCurve();
+  clipper.curve = softClipCurve(
+    LIVE_VOICE_SOFT_CLIP.points,
+    profile.kneeStart,
+    profile.ceiling,
+  );
   clipper.oversample = "none";
   gain.connect(clipper);
   const makeup = ctx.createGain();
-  makeup.gain.value = LIVE_VOICE_OUTPUT_GAIN;
+  makeup.gain.value = profile.makeup;
   clipper.connect(makeup);
 
   let speakerEl: HTMLAudioElement | null = null;
@@ -294,6 +425,7 @@ export function liveVoiceOutputFor(ctx: AudioContext): LiveVoiceOutput {
     clipper,
     speakerEl,
     route: speakerEl ? "element" : "destination",
+    gainLevel,
     pull,
   };
   chains.set(ctx, chain);
