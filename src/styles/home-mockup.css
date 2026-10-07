@@ -1,0 +1,254 @@
+/* ===== light-side-mockup — dark Home matches Cornerstone mockup =====
+ * Layout: placard (left) → Open coach → hero + reflection → VERIFIED AND TRUE
+ * → Ask RV Grok dark-glass pill → global dock (Facts · Inventory · Chat · More).
+ * Uses existing showroom-* / dark-home-* / MetalVerifiedTrue / BottomTabs classes.
+ */
+
+/* Show the global dock on dark Home (inline dark-home-nav removed). */
+html[data-theme="dark"] [data-home-open] .showroom-dock {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Dark Home uses the light-side placard stack (showroom-hero). */
+html[data-theme="dark"] .dark-home.showroom-home {
+  background: #000 !important;
+  color: #f7f5f2;
+  padding: 0 !important;
+}
+
+html[data-theme="dark"] .dark-home .showroom-hero {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  padding: 8px 0 0;
+  margin: 0;
+  overflow: visible !important;
+}
+
+html[data-theme="dark"] .dark-home .showroom-placard,
+html[data-theme="dark"] .dark-home [data-home-placard] {
+  order: -1;
+  position: relative;
+  z-index: 4;
+  margin: 0;
+  padding: 0 20px;
+  text-align: left !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  pointer-events: none;
+}
+
+html[data-theme="dark"] .dark-home .showroom-spotyear {
+  display: block;
+  margin: 0;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  color: rgba(255, 255, 255, 0.72) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.72) !important;
+}
+
+html[data-theme="dark"] .dark-home .showroom-spotmodel {
+  display: block;
+  margin: 4px 0 0 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif !important;
+  font-size: 28px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.1 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  text-align: left !important;
+}
+
+html[data-theme="dark"] .dark-home .showroom-spotprice {
+  display: block;
+  margin: 6px 0 0 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif !important;
+  font-size: 26px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  text-align: left !important;
+}
+
+html[data-theme="dark"] .dark-home .showroom-lotcount {
+  display: block;
+  margin: 6px 0 0 !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: rgba(255, 255, 255, 0.65) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.65) !important;
+  text-align: left !important;
+}
+
+html[data-theme="dark"] .dark-home .showroom-spotstock {
+  display: block;
+  margin: 4px 0 0 !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  color: rgba(255, 255, 255, 0.55) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.55) !important;
+  text-align: left !important;
+}
+
+/* Open coach — navy pill matching mockup. */
+html[data-theme="dark"] .dark-home .showroom-hero-primary,
+html[data-theme="dark"] .dark-home [data-open-coach] {
+  pointer-events: auto !important;
+  align-self: flex-start !important;
+  display: inline-flex !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  margin: 16px 0 0 !important;
+  padding: 0 22px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: #163a7a !important;
+  background-image: linear-gradient(180deg, #1e4a96 0%, #163a7a 55%, #0f2d5c 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  box-shadow: 0 6px 18px rgba(15, 45, 92, 0.45) !important;
+  text-shadow: none !important;
+}
+
+html[data-theme="dark"] .dark-home .showroom-floor {
+  --floor-mirror: 2.4rem;
+  --floor-pull: 0.55rem;
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  margin: 8px 0 var(--floor-mirror);
+}
+
+html[data-theme="dark"] .dark-home .showroom-floor .showroom-coach {
+  max-height: 36vh !important;
+  width: 100% !important;
+  margin: 0 !important;
+  object-fit: contain !important;
+  object-position: center bottom !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+}
+
+html[data-theme="dark"] .dark-home .showroom-coach-reflect {
+  opacity: 0.55 !important;
+}
+
+html[data-theme="dark"] .dark-home .home-truth {
+  margin: 0.5rem 1.25rem 0;
+}
+
+html[data-theme="dark"] .dark-home .metal-hammered,
+html[data-theme="dark"] .dark-home .metal-hammered-face {
+  color: rgba(255, 255, 255, 0.55) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.55) !important;
+  letter-spacing: 0.18em;
+}
+
+/* Ask RV Grok — dark glass pill (not copper), centered above the dock. */
+html[data-theme="dark"] .dark-home .dark-home-ask-wrap,
+html[data-theme="dark"] .dark-home .light-home-ask-wrap {
+  margin-top: auto;
+  padding: 1rem 33px 12px;
+}
+
+html[data-theme="dark"] .dark-home .dark-home-ask,
+html[data-theme="dark"] .shell-ask-wrap .dark-home-ask {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 52px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 999px !important;
+  background: linear-gradient(
+    180deg,
+    rgba(48, 48, 52, 0.92) 0%,
+    rgba(22, 22, 26, 0.96) 55%,
+    rgba(12, 12, 14, 0.98) 100%
+  ) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  text-shadow: none !important;
+  cursor: pointer;
+}
+
+html[data-theme="dark"] .dark-home .dark-home-ask:active {
+  transform: scale(0.985);
+  filter: brightness(1.08);
+}
+
+/* Dark home bar (theme tools) sits under SuiteBrand; keep compact. */
+html[data-theme="dark"] .dark-home .dark-home-bar {
+  display: none !important; /* SuiteBrand already carries mark + theme; tools stay on shell rail */
+}
+
+/* When SuiteBrand is hidden in pure-home mock previews, restore bar if needed.
+   Tests still require dark-home-bar markup with data-tool-rail="theme". */
+
+/* Dock glass plate on home — rounded dark glass matching mockup tab bar. */
+html[data-theme="dark"] [data-home-open] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tabs-dock {
+  background: linear-gradient(
+    180deg,
+    rgba(36, 36, 40, 0.96) 0%,
+    rgba(14, 14, 16, 0.98) 100%
+  ) !important;
+  border-radius: 1.05rem 1.05rem 0 0 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.35) !important;
+  margin: 0 10px !important;
+  padding-bottom: max(0.45rem, env(safe-area-inset-bottom, 0px)) !important;
+}
+
+html[data-theme="dark"] [data-home-open] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn {
+  color: rgba(255, 255, 255, 0.88) !important;
+}
+
+html[data-theme="dark"] [data-home-open] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-caption {
+  color: rgba(255, 255, 255, 0.88) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.88) !important;
+}
+
+html[data-theme="dark"] [data-home-open] .bottom-tabs-nav[data-dock-icons="platinum"] img.bottom-tab-glyph {
+  opacity: 0.85;
+}
+
+html[data-theme="dark"] [data-home-open] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active,
+html[data-theme="dark"] [data-home-open] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] {
+  background: transparent !important;
+}
+
+html[data-theme="dark"] [data-home-open] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active img.bottom-tab-glyph,
+html[data-theme="dark"] [data-home-open] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] img.bottom-tab-glyph {
+  opacity: 1;
+}
+
+/* Light mode: keep existing light-side Open coach pill under placard. */
+html[data-theme="light"] [data-home-placard] .showroom-hero-primary {
+  align-self: flex-start !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  margin: 14px 0 0 !important;
+  padding: 0 18px !important;
+  border-radius: 999px !important;
+}

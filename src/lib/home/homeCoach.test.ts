@@ -152,7 +152,7 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   assert.doesNotMatch(home, /resolveHomeCoach|pickShowroomStage|newestLotUnit/);
   assert.match(home, /MetalVerifiedTrue/);
   assert.doesNotMatch(home, /New arrivals/);
-  assert.doesNotMatch(home, /showroom-lotcount|showroom-spotstock-dark|showroom-verified/);
+  assert.doesNotMatch(home, /showroom-spotstock-dark|showroom-verified/);
   assert.equal(home.match(/className="showroom-spotstock"/g)?.length, 1);
   assert.match(home, /onOpen\("rvlot"\)/);
   const arrivals = readFileSync(join(root, "../../components/lot/LotArrivals.tsx"), "utf8");
