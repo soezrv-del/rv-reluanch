@@ -40,8 +40,9 @@ export function RoomAskBar({
           else onOpen(id);
         }}
       >
+        {/* Home draws its own bar and hosts the same sheet above it. */}
         <MoreSheet
-          open={moreOpen}
+          open={moreOpen && !homeOpen}
           tab={tab}
           onPick={(id) => onMorePick?.(id)}
           onClose={() => onMoreClose?.()}

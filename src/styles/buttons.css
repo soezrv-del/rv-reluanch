@@ -141,12 +141,6 @@
   padding-block: var(--btn-py);
   padding-inline: var(--btn-px-lg);
 }
-html[data-theme] .showroom-hero-primary {
-  height: var(--btn-h-lg);
-  min-height: var(--btn-h-lg);
-  border-radius: var(--btn-radius);
-  padding-inline: var(--btn-px-lg);
-}
 .lot-detail-ask,
 html[data-theme] .lot-detail-ask {
   height: var(--btn-h-lg);

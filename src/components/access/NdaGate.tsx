@@ -24,6 +24,19 @@ export function NdaGate({ children }: { children: ReactNode }) {
     setReady(true);
   }, []);
 
+  // The agreement is a light sheet even on "/" (where the server HTML
+  // carries Home's dark theme-color): match the bars to it while it is up.
+  useEffect(() => {
+    if (!ready || accepted) return;
+    const meta = document.querySelector('meta[name="theme-color"]');
+    const prev = meta?.getAttribute("content");
+    const dark = document.documentElement.dataset.theme === "dark";
+    meta?.setAttribute("content", dark ? "#050505" : "#ffffff");
+    return () => {
+      if (prev) meta?.setAttribute("content", prev);
+    };
+  }, [ready, accepted]);
+
   const toggleAgree = () => setChecked((v) => !v);
   const confirm = () => {
     acceptNda(readStoredPhone());

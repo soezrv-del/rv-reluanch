@@ -1,20 +1,7 @@
-/* Home truth mark spacing. Type and metal live in styles.css under the theme. */
-
-.home-truth {
-  display: flex;
-  justify-content: center;
-  margin: 0.9rem 1.25rem 0;
-}
+/* Ask RV Grok pill (AskGrokPill, light theme) and lot arrivals spacing. */
 
 .lot-arrivals {
   margin-top: 0.15rem;
-}
-
-/* Light Home: Ask RV Grok in the spot dark Home has it — above the dock,
-   under the coach. Same size as dark Home's button, graphite instead of copper. */
-.light-home-ask-wrap {
-  margin-top: auto;
-  padding: 1rem 33px 12px;
 }
 
 .light-home-ask {

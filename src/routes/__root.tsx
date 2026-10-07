@@ -4,10 +4,11 @@ import {
   createRootRoute,
   HeadContent,
   Scripts,
+  useRouterState,
 } from "@tanstack/react-router";
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
-import { THEME_BOOT_SCRIPT } from "@/lib/theme";
+import { HOME_SHOWROOM_ATTR, THEME_BOOT_SCRIPT } from "@/lib/theme";
 import { resolveShareHost } from "@/lib/og/shareHost";
 import appCss from "../styles.css?url";
 import buttonsCss from "../styles/buttons.css?url";
@@ -68,8 +69,14 @@ function RootComponent() {
 }
 
 function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
+  // "/" opens on the showroom Home. Mark <html> in the server HTML so the
+  // dark page background (styles.css) and theme-color are right on first
+  // paint, before hydration. HomeScreen keeps the mark in sync with Home
+  // being on screen (it drops it for Facts/Inventory/Chat on "/").
+  const onHome = useRouterState({ select: (s) => s.location.pathname === "/" });
+  const homeAttr = { [HOME_SHOWROOM_ATTR]: onHome ? "" : undefined };
   return (
-    <html lang="en" data-theme="light" suppressHydrationWarning>
+    <html lang="en" data-theme="light" {...homeAttr} suppressHydrationWarning>
       <head>
         <HeadContent />
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
