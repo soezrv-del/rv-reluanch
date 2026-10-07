@@ -38,8 +38,8 @@ import { Route as ApiRvfaxDossierRouteImport } from './routes/api/rvfax.dossier'
 import { Route as ApiRvfaxPublicCompsRouteImport } from './routes/api/rvfax.public-comps'
 import { Route as ApiRvfaxSpecFallbackRouteImport } from './routes/api/rvfax.spec-fallback'
 import { Route as ApiRvgrokMemoryRouteImport } from './routes/api/rvgrok.memory'
-import { Route as ApiRvgrokTokenRouteImport } from './routes/api/rvgrok.token'
 import { Route as ApiRvgrokQueryLotRouteImport } from './routes/api/rvgrok.query-lot'
+import { Route as ApiRvgrokTokenRouteImport } from './routes/api/rvgrok.token'
 import { Route as ApiRvgrokWebResearchRouteImport } from './routes/api/rvgrok.web-research'
 import { Route as ReportUnitIdRouteImport } from './routes/report/unit/$id'
 
@@ -189,14 +189,14 @@ const ApiRvgrokMemoryRoute = ApiRvgrokMemoryRouteImport.update({
   path: '/memory',
   getParentRoute: () => ApiRvgrokRoute,
 } as any)
-const ApiRvgrokTokenRoute = ApiRvgrokTokenRouteImport.update({
-  id: '/token',
-  path: '/token',
-  getParentRoute: () => ApiRvgrokRoute,
-} as any)
 const ApiRvgrokQueryLotRoute = ApiRvgrokQueryLotRouteImport.update({
   id: '/query-lot',
   path: '/query-lot',
+  getParentRoute: () => ApiRvgrokRoute,
+} as any)
+const ApiRvgrokTokenRoute = ApiRvgrokTokenRouteImport.update({
+  id: '/token',
+  path: '/token',
   getParentRoute: () => ApiRvgrokRoute,
 } as any)
 const ApiRvgrokWebResearchRoute = ApiRvgrokWebResearchRouteImport.update({
@@ -240,8 +240,8 @@ export interface FileRoutesByFullPath {
   '/api/rvfax/public-comps': typeof ApiRvfaxPublicCompsRoute
   '/api/rvfax/spec-fallback': typeof ApiRvfaxSpecFallbackRoute
   '/api/rvgrok/memory': typeof ApiRvgrokMemoryRoute
-  '/api/rvgrok/token': typeof ApiRvgrokTokenRoute
   '/api/rvgrok/query-lot': typeof ApiRvgrokQueryLotRoute
+  '/api/rvgrok/token': typeof ApiRvgrokTokenRoute
   '/api/rvgrok/web-research': typeof ApiRvgrokWebResearchRoute
   '/report/unit/$id': typeof ReportUnitIdRoute
 }
@@ -275,8 +275,8 @@ export interface FileRoutesByTo {
   '/api/rvfax/public-comps': typeof ApiRvfaxPublicCompsRoute
   '/api/rvfax/spec-fallback': typeof ApiRvfaxSpecFallbackRoute
   '/api/rvgrok/memory': typeof ApiRvgrokMemoryRoute
-  '/api/rvgrok/token': typeof ApiRvgrokTokenRoute
   '/api/rvgrok/query-lot': typeof ApiRvgrokQueryLotRoute
+  '/api/rvgrok/token': typeof ApiRvgrokTokenRoute
   '/api/rvgrok/web-research': typeof ApiRvgrokWebResearchRoute
   '/report/unit/$id': typeof ReportUnitIdRoute
 }
@@ -311,8 +311,8 @@ export interface FileRoutesById {
   '/api/rvfax/public-comps': typeof ApiRvfaxPublicCompsRoute
   '/api/rvfax/spec-fallback': typeof ApiRvfaxSpecFallbackRoute
   '/api/rvgrok/memory': typeof ApiRvgrokMemoryRoute
-  '/api/rvgrok/token': typeof ApiRvgrokTokenRoute
   '/api/rvgrok/query-lot': typeof ApiRvgrokQueryLotRoute
+  '/api/rvgrok/token': typeof ApiRvgrokTokenRoute
   '/api/rvgrok/web-research': typeof ApiRvgrokWebResearchRoute
   '/report/unit/$id': typeof ReportUnitIdRoute
 }
@@ -348,8 +348,8 @@ export interface FileRouteTypes {
     | '/api/rvfax/public-comps'
     | '/api/rvfax/spec-fallback'
     | '/api/rvgrok/memory'
-    | '/api/rvgrok/token'
     | '/api/rvgrok/query-lot'
+    | '/api/rvgrok/token'
     | '/api/rvgrok/web-research'
     | '/report/unit/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -383,8 +383,8 @@ export interface FileRouteTypes {
     | '/api/rvfax/public-comps'
     | '/api/rvfax/spec-fallback'
     | '/api/rvgrok/memory'
-    | '/api/rvgrok/token'
     | '/api/rvgrok/query-lot'
+    | '/api/rvgrok/token'
     | '/api/rvgrok/web-research'
     | '/report/unit/$id'
   id:
@@ -418,8 +418,8 @@ export interface FileRouteTypes {
     | '/api/rvfax/public-comps'
     | '/api/rvfax/spec-fallback'
     | '/api/rvgrok/memory'
-    | '/api/rvgrok/token'
     | '/api/rvgrok/query-lot'
+    | '/api/rvgrok/token'
     | '/api/rvgrok/web-research'
     | '/report/unit/$id'
   fileRoutesById: FileRoutesById
@@ -637,18 +637,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRvgrokMemoryRouteImport
       parentRoute: typeof ApiRvgrokRoute
     }
-    '/api/rvgrok/token': {
-      id: '/api/rvgrok/token'
-      path: '/token'
-      fullPath: '/api/rvgrok/token'
-      preLoaderRoute: typeof ApiRvgrokTokenRouteImport
-      parentRoute: typeof ApiRvgrokRoute
-    }
     '/api/rvgrok/query-lot': {
       id: '/api/rvgrok/query-lot'
       path: '/query-lot'
       fullPath: '/api/rvgrok/query-lot'
       preLoaderRoute: typeof ApiRvgrokQueryLotRouteImport
+      parentRoute: typeof ApiRvgrokRoute
+    }
+    '/api/rvgrok/token': {
+      id: '/api/rvgrok/token'
+      path: '/token'
+      fullPath: '/api/rvgrok/token'
+      preLoaderRoute: typeof ApiRvgrokTokenRouteImport
       parentRoute: typeof ApiRvgrokRoute
     }
     '/api/rvgrok/web-research': {

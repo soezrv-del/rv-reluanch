@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import buttonsCss from "../styles/buttons.css?url";
 import cardsCss from "../styles/cards.css?url";
 import voiceBarCss from "../styles/voiceBar.css?url";
+import coachScreenCss from "../styles/coach-screen.css?url";
 
 const APP_NAME = "RvFOX · Know before you buy.";
 
@@ -34,8 +35,8 @@ export const Route = createRootRoute({
         content:
           "RvGrok — professional RV intelligence powered by xAI Grok. Specs, pricing, recalls, financing, and multi-step Agent research.",
       },
-      { name: "theme-color", content: "#ffffff" },
-      { name: "color-scheme", content: "light" },
+      { name: "theme-color", content: "#070b10" },
+      { name: "color-scheme", content: "dark" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       {
@@ -49,6 +50,7 @@ export const Route = createRootRoute({
       { rel: "stylesheet", href: buttonsCss },
       { rel: "stylesheet", href: cardsCss },
       { rel: "stylesheet", href: voiceBarCss },
+      { rel: "stylesheet", href: coachScreenCss },
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
       { rel: "icon", href: "/assets/brand/icon-rvfax.png" },
       { rel: "apple-touch-icon", href: "/assets/brand/icon-rvfax.png" },
