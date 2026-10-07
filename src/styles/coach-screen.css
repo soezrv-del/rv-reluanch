@@ -1,0 +1,240 @@
+/*
+ * Coach detail screen (/coach/cornerstone-45d), built to match the approved
+ * mockup (1008x1792). Every size/offset below is in mockup pixels via --u
+ * (1 mockup px = --u CSS px). Vertical anchors are a % of the screen height,
+ * so on 9:16 screens the layout is the mockup 1:1; taller phones spread the
+ * groups slightly and the showroom plate extends wall/floor to fill.
+ */
+.coach-screen {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+  container-type: size;
+  background: #07090d;
+  color: #e4e6ea;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.coach-screen > * {
+  /* stage width: full width on phones (9:16 or taller), height-limited on wider screens */
+  --W: min(100vw, 56.25vh);
+  --H: 100vh;
+  --u: calc(var(--W) / 1008);
+  /* plate width: up to 6% larger than the stage on tall phones (coach stays fully in frame) */
+  --pw: min(calc(var(--W) * 1.06), 56.25vh);
+}
+@supports (width: 1cqw) {
+  .coach-screen > * {
+    --W: min(100cqw, 56.25cqh);
+    --H: 100cqh;
+    --pw: min(calc(var(--W) * 1.06), 56.25cqh);
+  }
+}
+
+.coach-screen *,
+.coach-screen *::before,
+.coach-screen *::after { box-sizing: border-box; }
+
+/* Showroom plate: mockup row 0 is plate row 160. Placed so the coach roof
+   (mockup y=568) sits at 568/1792 of the screen height. */
+.coach-screen__plate {
+  position: absolute;
+  left: 50%;
+  top: calc((var(--H) - var(--pw) * 1.777778) * 0.316964 - var(--pw) * 0.158730);
+  width: var(--pw);
+  max-width: none;
+  height: auto;
+  transform: translateX(-50%);
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.coach-screen__stage {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: var(--W);
+  transform: translateX(-50%);
+  --tabs-top: min(calc(100% * 1583 / 1792), calc(100% - var(--u) * 202 - max(var(--u) * 7, env(safe-area-inset-bottom, 0px))));
+}
+
+.coach-screen__stage p,
+.coach-screen__stage h1 { margin: 0; }
+
+.coach-screen__brand,
+.coach-screen__details > *,
+.coach-screen__open,
+.coach-screen__verified,
+.coach-screen__ask,
+.coach-screen__tabs { position: absolute; }
+
+/* ---- brand ---- */
+.coach-screen__brand {
+  left: calc(var(--u) * 44);
+  top: calc(100% * 136 / 1792);
+  display: flex;
+  align-items: flex-start;
+  height: calc(var(--u) * 64);
+}
+.coach-screen__mark {
+  width: calc(var(--u) * 30);
+  height: calc(var(--u) * 66);
+  fill: none;
+  stroke: #2b3aa6;
+  stroke-width: 4.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  overflow: visible;
+}
+.coach-screen__brand > span {
+  position: absolute;
+  left: calc(var(--u) * 52);
+  top: calc(var(--u) * 14.794);
+  font-size: calc(var(--u) * 38);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: #e6e8ec;
+  white-space: nowrap;
+}
+
+/* ---- title block (anchored at the eyebrow, mockup y=278) ---- */
+.coach-screen__details { position: absolute; inset: 0; pointer-events: none; }
+.coach-screen__details > * { left: calc(var(--u) * 45); line-height: 1; white-space: nowrap; }
+.coach-screen__eyebrow { top: calc(100% * 278 / 1792 + var(--u) * -3.84); font-size: calc(var(--u) * 28); letter-spacing: -0.035em; color: #d9dce0; font-weight: 400; }
+.coach-screen__title { top: calc(100% * 278 / 1792 + var(--u) * 39.19); font-size: calc(var(--u) * 57); font-weight: 500; letter-spacing: -0.04em; color: #e8eaee; }
+.coach-screen__price { top: calc(100% * 278 / 1792 + var(--u) * 113.19); font-size: calc(var(--u) * 57); font-weight: 500; letter-spacing: -0.03em; color: #e8eaee; }
+.coach-screen__stock { font-size: calc(var(--u) * 28); letter-spacing: -0.01em; color: #d9dce0; }
+.coach-screen__stock--1 { top: calc(100% * 278 / 1792 + var(--u) * 189.16); }
+.coach-screen__stock--2 { top: calc(100% * 278 / 1792 + var(--u) * 229.16); }
+.coach-screen__stock--3 { top: calc(100% * 278 / 1792 + var(--u) * 270.16); left: calc(var(--u) * 42); }
+
+/* ---- Open coach ---- */
+.coach-screen__open {
+  left: calc(var(--u) * 42);
+  top: calc(100% * 1127 / 1792);
+  width: calc(var(--u) * 337);
+  height: calc(var(--u) * 106);
+  padding: 0;
+  border: calc(var(--u) * 2) solid rgba(118, 133, 182, 0.62);
+  border-top-color: rgba(150, 162, 205, 0.85);
+  border-radius: calc(var(--u) * 26);
+  background: linear-gradient(180deg, #0b2b7a 0%, #05246c 10%, #031b5c 38%, #001446 66%, #000f3b 90%, #031347 100%);
+  box-shadow: 0 calc(var(--u) * 10) calc(var(--u) * 28) rgba(0, 0, 0, 0.55), inset 0 calc(var(--u) * 2) 0 rgba(255, 255, 255, 0.10);
+  color: #e1e5f0;
+  font: inherit;
+  font-size: calc(var(--u) * 30.5);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* ---- VERIFIED AND TRUE ---- */
+.coach-screen__verified {
+  left: calc(var(--u) * 10);
+  right: 0;
+  top: calc(100% * 1306 / 1792 + var(--u) * -3.01);
+  text-align: center;
+  font-size: calc(var(--u) * 22);
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  color: #d4d7dc;
+  white-space: nowrap;
+}
+
+/* ---- Ask RV Grok ---- */
+.coach-screen__ask {
+  left: calc(var(--u) * 230);
+  top: min(calc(100% * 1391 / 1792), calc(var(--tabs-top) - var(--u) * 192));
+  width: calc(var(--u) * 570);
+  height: calc(var(--u) * 138);
+  padding: 0;
+  border: calc(var(--u) * 2.5) solid rgba(150, 152, 160, 0.5);
+  border-top-color: rgba(175, 177, 184, 0.62);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(64, 65, 71, 0.96) 0%, rgba(38, 39, 44, 0.96) 16%, rgba(20, 22, 27, 0.97) 42%, rgba(17, 19, 24, 0.97) 70%, rgba(28, 30, 35, 0.97) 90%, rgba(46, 47, 53, 0.97) 100%);
+  box-shadow: 0 calc(var(--u) * 16) calc(var(--u) * 36) rgba(0, 0, 0, 0.6), inset 0 calc(var(--u) * 2) 0 rgba(255, 255, 255, 0.10);
+  color: #eceef1;
+  font: inherit;
+  padding-left: calc(var(--u) * 12);
+  font-size: calc(var(--u) * 50);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* ---- tab bar ---- */
+.coach-screen__tabs {
+  left: calc(var(--u) * 22);
+  top: var(--tabs-top);
+  width: calc(var(--u) * 964);
+  height: calc(var(--u) * 202);
+  display: grid;
+  grid-template-columns: 242fr 256fr 256fr 184fr;
+  padding: 0 calc(var(--u) * 26) 0 0;
+  border: calc(var(--u) * 2.5) solid rgba(255, 255, 255, 0.13);
+  border-top-color: rgba(255, 255, 255, 0.2);
+  border-radius: calc(var(--u) * 44);
+  background: linear-gradient(180deg, rgba(38, 40, 45, 0.94) 0%, rgba(22, 24, 29, 0.95) 22%, rgba(11, 14, 19, 0.96) 60%, rgba(14, 16, 21, 0.96) 100%);
+  box-shadow: 0 calc(var(--u) * -10) calc(var(--u) * 34) rgba(0, 0, 0, 0.35), inset 0 calc(var(--u) * 2) 0 rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+.coach-screen__tab {
+  position: relative;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #c9ccd1;
+  font: inherit;
+  cursor: pointer;
+}
+.coach-screen__tab-icon {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--u) * 66);
+  transform: translate(-50%, -50%);
+  display: block;
+  line-height: 0;
+}
+.coach-screen__tab-label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--u) * 126.116);
+  text-align: center;
+  font-size: calc(var(--u) * 32);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  white-space: nowrap;
+}
+.coach-screen__icon { display: block; overflow: visible; }
+.coach-screen__icon--facts { width: calc(var(--u) * 80); height: calc(var(--u) * 66); }
+.coach-screen__icon--inventory { width: calc(var(--u) * 130); height: calc(var(--u) * 76); }
+.coach-screen__icon--inventory .rv-roof { fill: none; stroke: #dfe2e6; stroke-width: 4; stroke-linecap: round; }
+.coach-screen__icon--inventory .rv-glass { fill: #23262c; }
+.coach-screen__icon--inventory .rv-stripe { fill: none; stroke: #4b4f57; stroke-width: 3; stroke-linecap: round; }
+.coach-screen__icon--inventory .rv-wheel { fill: #1d2025; stroke: #d6d9de; stroke-width: 4; }
+.coach-screen__icon--inventory .rv-hub { fill: #c6c9ce; }
+.coach-screen__tab:nth-child(3) .coach-screen__tab-icon { margin: calc(var(--u) * -4) 0 0 calc(var(--u) * 3.5); }
+.coach-screen__tab:nth-child(4) .coach-screen__tab-icon { margin-top: calc(var(--u) * -3); }
+.coach-screen__icon--chat { width: calc(var(--u) * 78); height: calc(var(--u) * 80); fill: #d3d6db; }
+.coach-screen__icon--chat .chat-bubble { fill: none; stroke: #d3d6db; stroke-width: 4.5; stroke-linejoin: round; }
+.coach-screen__icon--more { width: calc(var(--u) * 68); height: calc(var(--u) * 16); fill: #d3d6db; }
+.coach-screen__tab.is-active { color: #e4e6ea; }
+.coach-screen__tab:focus-visible,
+.coach-screen__open:focus-visible,
+.coach-screen__ask:focus-visible { outline: 2px solid #5b8cff; outline-offset: 2px; }

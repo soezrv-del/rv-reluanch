@@ -21,6 +21,7 @@ import { Route as ApiMapTilesRouteImport } from './routes/api/map-tiles'
 import { Route as ApiOsrmRouteImport } from './routes/api/osrm'
 import { Route as ApiRvVideosRouteImport } from './routes/api/rv-videos'
 import { Route as ApiRvgrokRouteImport } from './routes/api/rvgrok'
+import { Route as CoachCornerstone45dRouteImport } from './routes/coach.cornerstone-45d'
 import { Route as ReportFactsRouteImport } from './routes/report/facts'
 import { Route as ApiAccessAdminRouteImport } from './routes/api/access.admin'
 import { Route as ApiAccessCheckRouteImport } from './routes/api/access.check'
@@ -102,6 +103,11 @@ const ApiRvgrokRoute = ApiRvgrokRouteImport.update({
   id: '/rvgrok',
   path: '/rvgrok',
   getParentRoute: () => ApiRouteRoute,
+} as any)
+const CoachCornerstone45dRoute = CoachCornerstone45dRouteImport.update({
+  id: '/coach/cornerstone-45d',
+  path: '/coach/cornerstone-45d',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ReportFactsRoute = ReportFactsRouteImport.update({
   id: '/report/facts',
@@ -223,6 +229,7 @@ export interface FileRoutesByFullPath {
   '/api/osrm': typeof ApiOsrmRoute
   '/api/rv-videos': typeof ApiRvVideosRoute
   '/api/rvgrok': typeof ApiRvgrokRouteWithChildren
+  '/coach/cornerstone-45d': typeof CoachCornerstone45dRoute
   '/report/facts': typeof ReportFactsRoute
   '/api/access/admin': typeof ApiAccessAdminRoute
   '/api/access/check': typeof ApiAccessCheckRoute
@@ -258,6 +265,7 @@ export interface FileRoutesByTo {
   '/api/osrm': typeof ApiOsrmRoute
   '/api/rv-videos': typeof ApiRvVideosRoute
   '/api/rvgrok': typeof ApiRvgrokRouteWithChildren
+  '/coach/cornerstone-45d': typeof CoachCornerstone45dRoute
   '/report/facts': typeof ReportFactsRoute
   '/api/access/admin': typeof ApiAccessAdminRoute
   '/api/access/check': typeof ApiAccessCheckRoute
@@ -294,6 +302,7 @@ export interface FileRoutesById {
   '/api/osrm': typeof ApiOsrmRoute
   '/api/rv-videos': typeof ApiRvVideosRoute
   '/api/rvgrok': typeof ApiRvgrokRouteWithChildren
+  '/coach/cornerstone-45d': typeof CoachCornerstone45dRoute
   '/report/facts': typeof ReportFactsRoute
   '/api/access/admin': typeof ApiAccessAdminRoute
   '/api/access/check': typeof ApiAccessCheckRoute
@@ -331,6 +340,7 @@ export interface FileRouteTypes {
     | '/api/osrm'
     | '/api/rv-videos'
     | '/api/rvgrok'
+    | '/coach/cornerstone-45d'
     | '/report/facts'
     | '/api/access/admin'
     | '/api/access/check'
@@ -366,6 +376,7 @@ export interface FileRouteTypes {
     | '/api/osrm'
     | '/api/rv-videos'
     | '/api/rvgrok'
+    | '/coach/cornerstone-45d'
     | '/report/facts'
     | '/api/access/admin'
     | '/api/access/check'
@@ -401,6 +412,7 @@ export interface FileRouteTypes {
     | '/api/osrm'
     | '/api/rv-videos'
     | '/api/rvgrok'
+    | '/coach/cornerstone-45d'
     | '/report/facts'
     | '/api/access/admin'
     | '/api/access/check'
@@ -428,6 +440,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiRouteRoute: typeof ApiRouteRouteWithChildren
   LotRoute: typeof LotRoute
+  CoachCornerstone45dRoute: typeof CoachCornerstone45dRoute
   ReportFactsRoute: typeof ReportFactsRoute
   ReportUnitIdRoute: typeof ReportUnitIdRoute
 }
@@ -517,6 +530,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/rvgrok'
       preLoaderRoute: typeof ApiRvgrokRouteImport
       parentRoute: typeof ApiRouteRoute
+    }
+    '/coach/cornerstone-45d': {
+      id: '/coach/cornerstone-45d'
+      path: '/coach/cornerstone-45d'
+      fullPath: '/coach/cornerstone-45d'
+      preLoaderRoute: typeof CoachCornerstone45dRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/report/facts': {
       id: '/report/facts'
@@ -748,6 +768,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiRouteRoute: ApiRouteRouteWithChildren,
   LotRoute: LotRoute,
+  CoachCornerstone45dRoute: CoachCornerstone45dRoute,
   ReportFactsRoute: ReportFactsRoute,
   ReportUnitIdRoute: ReportUnitIdRoute,
 }

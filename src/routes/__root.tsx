@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import buttonsCss from "../styles/buttons.css?url";
 import cardsCss from "../styles/cards.css?url";
 import voiceBarCss from "../styles/voiceBar.css?url";
+import coachScreenCss from "../styles/coach-screen.css?url";
 
 const APP_NAME = "RvFOX · Know before you buy.";
 
@@ -49,6 +50,7 @@ export const Route = createRootRoute({
       { rel: "stylesheet", href: buttonsCss },
       { rel: "stylesheet", href: cardsCss },
       { rel: "stylesheet", href: voiceBarCss },
+      { rel: "stylesheet", href: coachScreenCss },
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
       { rel: "icon", href: "/assets/brand/icon-rvfax.png" },
       { rel: "apple-touch-icon", href: "/assets/brand/icon-rvfax.png" },
