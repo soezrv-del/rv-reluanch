@@ -43,6 +43,12 @@
   filter: brightness(1.15);
 }
 
+/* Dark Home Ask wrap — same spacing as light; pill face lives in styles/home-mockup.css. */
+.dark-home-ask-wrap {
+  margin-top: auto;
+  padding: 1rem 33px 12px;
+}
+
 /* The same pill above the dock on every other screen (AskGrokPill).
    Home's classes as-is; only the row spacing is set here (327px wide on a
    393px phone, like Home's pill, in both themes). */

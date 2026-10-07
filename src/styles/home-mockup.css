@@ -1,0 +1,349 @@
+/* =============================================================================
+   Cornerstone home mockup — pixel source of truth
+   Spec: dark glass field, left placard, coach hero, navy Open coach,
+   VERIFIED AND TRUE, dark-glass Ask RV Grok pill, glass four-tab bar.
+   Does not inherit copper / light-home / platinum-dock styling.
+   ============================================================================= */
+
+/* Hide shell chrome while mockup home is open (any theme). */
+[data-home-open] .showroom-header {
+  display: none !important;
+}
+[data-home-open] .showroom-dock,
+[data-home-open] [data-room-ask] {
+  display: none !important;
+}
+[data-home-open].showroom-app,
+[data-home-open] .showroom-stage,
+[data-home-open] .suite-swipe-viewport {
+  background: #05070c !important;
+}
+
+/* —— Root field —— */
+.mock-home {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #05070c;
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+    system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.mock-home-atmosphere {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 90% 55% at 70% 18%, rgba(70, 90, 120, 0.22) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 50% at 20% 70%, rgba(40, 50, 70, 0.18) 0%, transparent 50%),
+    radial-gradient(ellipse 100% 80% at 50% 100%, rgba(0, 0, 0, 0.55) 0%, transparent 45%),
+    linear-gradient(180deg, #0a0e16 0%, #05070c 42%, #020308 100%);
+}
+
+.mock-home-header,
+.mock-home-body,
+.mock-home-tabs {
+  position: relative;
+  z-index: 1;
+}
+
+/* —— Brand (mockup top-left) —— */
+.mock-home-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  padding: calc(env(safe-area-inset-top, 0px) + 10px) 20px 6px;
+}
+
+.mock-home-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mock-home-mark {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  display: block;
+}
+
+.mock-home-word {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #f4f6f8;
+  line-height: 1;
+}
+
+/* —— Body —— */
+.mock-home-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 0 8px;
+}
+
+/* Placard — left, tight stack like mockup */
+.mock-home-placard {
+  flex: 0 0 auto;
+  padding: 8px 22px 0;
+  text-align: left;
+}
+
+.mock-home-year {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.35;
+  letter-spacing: 0;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.mock-home-title {
+  margin: 2px 0 0;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+  color: #ffffff;
+}
+
+.mock-home-price {
+  margin: 4px 0 0;
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: #ffffff;
+}
+
+.mock-home-meta {
+  margin: 3px 0 0;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.35;
+  letter-spacing: 0;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+/* Coach hero — large, centered, mirror floor vibe from asset */
+.mock-home-stage {
+  flex: 0 0 auto;
+  width: 100%;
+  margin: 10px 0 0;
+  padding: 0;
+  line-height: 0;
+}
+
+.mock-home-coach {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: min(38vh, 320px);
+  object-fit: contain;
+  object-position: center bottom;
+  background: transparent;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Open coach — navy glass pill, left under hero */
+.mock-home-open-row {
+  flex: 0 0 auto;
+  padding: 14px 22px 0;
+}
+
+.mock-home-open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 42px;
+  min-height: 42px;
+  padding: 0 26px;
+  margin: 0;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #1f4f9c 0%, #163a7a 48%, #0f2c5c 100%);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1;
+  box-shadow:
+    0 8px 20px rgba(12, 40, 90, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.mock-home-open:active {
+  transform: scale(0.98);
+  filter: brightness(1.06);
+}
+
+/* VERIFIED AND TRUE — centered, tracked */
+.mock-home-verified {
+  flex: 0 0 auto;
+  margin: 22px 20px 0;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.48);
+}
+
+/* Ask RV Grok — large dark glass pill */
+.mock-home-ask-wrap {
+  flex: 0 0 auto;
+  margin-top: 16px;
+  padding: 0 28px;
+}
+
+.mock-home-ask {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 54px;
+  min-height: 54px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    rgba(55, 55, 60, 0.95) 0%,
+    rgba(28, 28, 32, 0.98) 40%,
+    rgba(16, 16, 18, 1) 100%
+  );
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1;
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.mock-home-ask:active {
+  transform: scale(0.985);
+  filter: brightness(1.08);
+}
+
+/* —— Bottom tab bar (mockup glass plate) —— */
+.mock-home-tabs {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: center;
+  gap: 0;
+  margin: 14px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+  padding: 10px 6px 12px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(
+    180deg,
+    rgba(42, 42, 46, 0.96) 0%,
+    rgba(18, 18, 20, 0.98) 55%,
+    rgba(10, 10, 12, 1) 100%
+  );
+  box-shadow:
+    0 -8px 28px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+}
+
+.mock-home-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 52px;
+  margin: 0;
+  padding: 4px 2px;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.92);
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mock-home-tab-icon {
+  display: block;
+  width: 28px;
+  height: 22px;
+  object-fit: contain;
+  opacity: 0.95;
+  filter: brightness(1.15) contrast(1.05);
+}
+
+.mock-home-tab-label {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.mock-home-tab:active {
+  opacity: 0.7;
+}
+
+/* Short phones: keep hero readable */
+@media (max-height: 720px) {
+  .mock-home-coach {
+    max-height: min(30vh, 240px);
+  }
+  .mock-home-title {
+    font-size: 26px;
+  }
+  .mock-home-price {
+    font-size: 24px;
+  }
+  .mock-home-verified {
+    margin-top: 14px;
+  }
+  .mock-home-ask-wrap {
+    margin-top: 12px;
+  }
+}
+
+/* Kill any leftover copper / light overrides that target generic buttons on home */
+.mock-home button.mock-home-open,
+.mock-home button.mock-home-ask,
+.mock-home button.mock-home-tab {
+  text-shadow: none !important;
+  background-image: none;
+}
+.mock-home button.mock-home-open {
+  background-image: linear-gradient(180deg, #1f4f9c 0%, #163a7a 48%, #0f2c5c 100%) !important;
+}
+.mock-home button.mock-home-ask {
+  background-image: linear-gradient(
+    180deg,
+    rgba(55, 55, 60, 0.95) 0%,
+    rgba(28, 28, 32, 0.98) 40%,
+    rgba(16, 16, 18, 1) 100%
+  ) !important;
+}
