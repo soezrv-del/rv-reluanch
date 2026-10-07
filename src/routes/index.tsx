@@ -1,10 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CoachDetailScreen } from "@/components/CoachDetailScreen";
+import { AccessProvider } from "@/components/access/AccessProvider";
+import { NdaGate } from "@/components/access/NdaGate";
+import { AppShell } from "@/components/shell/AppShell";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
 function HomePage() {
-  return <CoachDetailScreen />;
+  return (
+    <NdaGate>
+      <AccessProvider>
+        <AppShell />
+      </AccessProvider>
+    </NdaGate>
+  );
 }

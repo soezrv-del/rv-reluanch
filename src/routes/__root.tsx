@@ -35,8 +35,8 @@ export const Route = createRootRoute({
         content:
           "RvGrok — professional RV intelligence powered by xAI Grok. Specs, pricing, recalls, financing, and multi-step Agent research.",
       },
-      { name: "theme-color", content: "#070b10" },
-      { name: "color-scheme", content: "dark" },
+      { name: "theme-color", content: "#ffffff" },
+      { name: "color-scheme", content: "light" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       {

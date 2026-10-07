@@ -1,75 +1,112 @@
+/*
+ * Coach detail screen (/coach/cornerstone-45d).
+ * Single-column flex layout: every block is in normal flow, so nothing can
+ * overlap at any viewport size. The coach image sits in its own band between
+ * the stock lines and the "Open coach" button; it is NOT a page background.
+ */
+.coach-screen,
+.coach-screen *,
+.coach-screen *::before,
+.coach-screen *::after { box-sizing: border-box; }
+
 .coach-screen {
   position: fixed;
   inset: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   isolation: isolate;
-  background: #070b10;
   color: #f5f5f7;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+  background-color: #070b10;
+  background-image:
+    radial-gradient(120% 42% at 58% 48%, rgba(86, 98, 116, 0.34) 0%, rgba(40, 47, 58, 0.16) 45%, rgba(7, 11, 16, 0) 75%),
+    radial-gradient(70% 30% at 88% 8%, rgba(120, 132, 150, 0.12) 0%, rgba(7, 11, 16, 0) 70%),
+    radial-gradient(90% 28% at 50% 102%, rgba(40, 46, 56, 0.4) 0%, rgba(7, 11, 16, 0) 70%),
+    linear-gradient(180deg, #0c1117 0%, #080c11 50%, #05070a 100%);
 }
 
-.coach-screen__art,
-.coach-screen__veil {
-  position: absolute;
-  inset: 0;
+.coach-screen__column {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  height: 100%;
-}
-
-.coach-screen__art {
-  z-index: -2;
-  object-fit: cover;
-  object-position: center;
-}
-
-.coach-screen__veil {
-  z-index: -1;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.03), rgba(0, 0, 0, 0.08));
-  pointer-events: none;
+  max-width: 30rem;
+  min-height: 100%;
+  margin: 0 auto;
+  padding:
+    max(1.25rem, env(safe-area-inset-top))
+    0
+    max(0.5rem, env(safe-area-inset-bottom));
 }
 
 .coach-screen__brand {
-  position: absolute;
-  top: 7.35%;
-  left: 4.35%;
+  flex: none;
   display: flex;
   align-items: center;
-  gap: 0.52rem;
-  font-size: clamp(1.8rem, 4.1vw, 3rem);
+  gap: 0.4rem;
+  padding: 0 1.25rem;
+  font-size: 1.3rem;
   font-weight: 500;
-  letter-spacing: -0.06em;
+  letter-spacing: -0.03em;
 }
 
 .coach-screen__mark {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 3.1rem;
+  width: 1.1rem;
+  height: 1.9rem;
   color: #263fbd;
   font-family: Georgia, serif;
-  font-size: 4rem;
+  font-size: 2.2rem;
   line-height: 1;
   transform: scaleX(0.7);
 }
 
 .coach-screen__details {
-  position: absolute;
-  top: 15.2%;
-  left: 4.35%;
+  flex: none;
+  margin: clamp(0.75rem, 4.5vh, 2.25rem) 0 clamp(0.25rem, 3.5vh, 2rem);
+  padding: 0 1.25rem;
   text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
 }
 
 .coach-screen__eyebrow,
+.coach-screen__price,
 .coach-screen__stock { margin: 0; }
-.coach-screen__eyebrow { font-size: clamp(1.25rem, 2.8vw, 2rem); }
-.coach-screen h1 { margin: 0.35rem 0 0; font-size: clamp(2.25rem, 5.8vw, 4rem); font-weight: 400; line-height: 1.05; letter-spacing: -0.045em; }
-.coach-screen__price { margin: 0.6rem 0 0; font-size: clamp(2.25rem, 5.5vw, 3.8rem); line-height: 1; }
-.coach-screen__stock { margin-top: 1.2rem; font-size: clamp(1.25rem, 3vw, 2rem); line-height: 1.42; }
+.coach-screen__eyebrow { font-size: 0.9rem; line-height: 1.3; color: rgba(245, 245, 247, 0.9); }
+.coach-screen h1 { margin: 0.2rem 0 0; font-size: clamp(1.7rem, 7.4vw, 2.2rem); font-weight: 400; line-height: 1.08; letter-spacing: -0.03em; }
+.coach-screen__price { margin-top: 0.3rem; font-size: clamp(1.55rem, 6.8vw, 2rem); line-height: 1.1; }
+.coach-screen__stock { margin-top: 0.6rem; font-size: 0.9rem; line-height: 1.4; color: rgba(245, 245, 247, 0.92); }
+
+/* Coach band: takes the free space, capped at the image's natural full-width height. */
+.coach-screen__hero {
+  position: relative;
+  flex: 3 1 0;
+  min-height: 6.5rem;
+  max-height: calc(min(100vw, 30rem) * 580 / 1008 + 1rem);
+  margin: 0.25rem 0 0;
+}
+
+.coach-screen__hero-img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  pointer-events: none;
+  user-select: none;
+}
+
+.coach-screen__cta {
+  flex: none;
+  padding: 0 1.25rem;
+  margin-top: 0.25rem;
+}
 
 .coach-screen__open,
 .coach-screen__ask {
-  position: absolute;
   border: 1px solid rgba(255, 255, 255, 0.28);
   color: #f7f7fa;
   font: inherit;
@@ -79,56 +116,56 @@
 }
 
 .coach-screen__open {
-  top: 63%;
-  left: 4.1%;
-  width: 33%;
-  min-height: 4.7rem;
-  border-radius: 1.5rem;
+  min-width: 9.75rem;
+  min-height: 2.9rem;
+  padding: 0 1.4rem;
+  border-radius: 0.9rem;
   background: linear-gradient(180deg, #1556d7, #06379b);
-  box-shadow: inset 0 1px rgba(255,255,255,.35), 0 10px 30px rgba(0,0,0,.34);
-  font-size: clamp(1.5rem, 3.2vw, 2.25rem);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.35), 0 10px 30px rgba(0, 0, 0, 0.34);
+  font-size: 1rem;
 }
 
-.coach-screen__verified { position: absolute; top: 72.6%; width: 100%; text-align: center; margin: 0; font-size: clamp(.75rem, 2vw, 1.4rem); letter-spacing: .24em; }
+.coach-screen__verified {
+  flex: none;
+  margin: clamp(1rem, 4vh, 2.25rem) 0 0;
+  text-align: center;
+  font-size: 0.72rem;
+  letter-spacing: 0.24em;
+  color: rgba(245, 245, 247, 0.85);
+}
+
+.coach-screen__spacer {
+  flex: 1 1 0;
+  min-height: 0.75rem;
+}
 
 .coach-screen__ask {
-  left: 22.5%;
-  right: 22.5%;
-  bottom: 14.5%;
-  width: 55%;
-  min-height: 4.8rem;
+  flex: none;
+  align-self: center;
+  width: min(72%, 20rem);
+  min-height: 3.25rem;
   border-radius: 999px;
-  background: linear-gradient(180deg, rgba(48,49,53,.86), rgba(15,16,19,.92));
-  box-shadow: inset 0 1px rgba(255,255,255,.25), 0 14px 34px rgba(0,0,0,.45);
-  font-size: clamp(1.6rem, 3.7vw, 2.5rem);
+  background: linear-gradient(180deg, rgba(48, 49, 53, 0.86), rgba(15, 16, 19, 0.92));
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.25), 0 14px 34px rgba(0, 0, 0, 0.45);
+  font-size: 1.25rem;
   font-weight: 600;
 }
 
 .coach-screen__tabs {
-  position: absolute;
-  right: 2.2%;
-  bottom: 0.45%;
-  left: 2.2%;
+  flex: none;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  min-height: 11.2%;
-  padding: 1rem 1.4rem .6rem;
-  border: 1px solid rgba(255, 255, 255, .24);
-  border-radius: 2rem;
-  background: linear-gradient(180deg, rgba(37,38,42,.86), rgba(25,26,30,.95));
-  box-shadow: inset 0 1px rgba(255,255,255,.22), 0 -12px 36px rgba(0,0,0,.25);
+  min-height: 4.6rem;
+  margin: clamp(0.75rem, 2.5vh, 1.25rem) 0.5rem 0;
+  padding: 0.55rem 0.5rem 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 1.4rem;
+  background: linear-gradient(180deg, rgba(37, 38, 42, 0.86), rgba(25, 26, 30, 0.95));
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.22), 0 -12px 36px rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
 }
 
-.coach-screen__tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .35rem; border: 0; background: transparent; color: rgba(255,255,255,.82); font: inherit; font-size: clamp(1.25rem, 3vw, 2rem); cursor: pointer; }
-.coach-screen__tab svg { width: clamp(2.8rem, 6vw, 4.2rem); height: clamp(2.8rem, 6vw, 4.2rem); stroke-width: 1.6; }
+.coach-screen__tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.25rem; border: 0; background: transparent; color: rgba(255, 255, 255, 0.82); font: inherit; font-size: 0.8rem; cursor: pointer; }
+.coach-screen__tab svg { width: 1.75rem; height: 1.75rem; stroke-width: 1.6; }
 .coach-screen__tab.is-active { color: #fff; }
-
-@media (max-width: 600px) {
-  .coach-screen__brand { top: 7.2%; }
-  .coach-screen__details { top: 15.2%; }
-  .coach-screen__open { width: 34%; min-height: 3.5rem; border-radius: 1.1rem; }
-  .coach-screen__ask { bottom: 14.2%; min-height: 3.7rem; }
-  .coach-screen__tabs { min-height: 12%; border-radius: 1.5rem; padding-inline: .5rem; }
-}
