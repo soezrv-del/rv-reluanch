@@ -70,11 +70,29 @@ export function readActiveScreen(): string {
   return activeScreen;
 }
 
-/** One line in the chat system prompt. The route name is filled in by the caller. */
+/** One line in the page-scoped chat prompt. The route name is filled in by the caller. */
 export function pageContextLine(page: string): string {
   const name = page.trim();
   if (!name) return "";
   return `You are currently on the ${name} page. Use this as context for your answers.`;
+}
+
+/**
+ * Ask RV Grok remembers the page it was opened from.
+ * The Chat tab clears this so that conversation stays unscoped.
+ */
+let pageChatScope = "";
+
+export function setPageChatScope(page: string): void {
+  pageChatScope = page.trim();
+}
+
+export function readPageChatScope(): string {
+  return pageChatScope;
+}
+
+export function clearPageChatScope(): void {
+  pageChatScope = "";
 }
 
 /**

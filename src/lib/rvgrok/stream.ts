@@ -209,6 +209,8 @@ export async function streamChat(opts: {
   accessPhone?: string;
   /** Approved first name — chat personalization only; never grants access. */
   visitorFirstName?: string;
+  /** Page Ask RV Grok was opened from. Omitted for the Chat tab. */
+  pageScope?: string;
   /** Stall / total-time limits for the reply stream. */
   watchdog?: StreamWatchdog;
 }) {
@@ -222,6 +224,7 @@ export async function streamChat(opts: {
     catalogContext: opts.catalogContext || undefined,
     wantsWebFallback: opts.wantsWebFallback || undefined,
     visitorFirstName: opts.visitorFirstName || undefined,
+    pageScope: opts.pageScope || undefined,
   });
   const response = await fetchWithResearchAccess(
     (phone) =>

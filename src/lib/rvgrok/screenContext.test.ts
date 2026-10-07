@@ -30,7 +30,7 @@ test("chat system prompt names the page from the route", () => {
   );
   assert.equal(pageContextLine("  "), "");
   const api = read("../../routes/api/rvgrok.ts");
-  assert.match(api, /pageContextLine\(activeScreenFromContext/);
+  assert.match(api, /pageContextLine\(opts\?\.pageScope/);
 });
 
 test("a screen switch is attached to the next ask, not the visible message", () => {
@@ -109,7 +109,7 @@ test("shell records the screen and chat plus Live Voice attach it", () => {
     app,
     /catalogContext: withActiveScreen\(grounded\.block \|\| undefined, askedFromScreen\)/,
   );
-  assert.match(app, /const askedFromScreen = readActiveScreen\(\)/);
+  assert.match(app, /const askedFromScreen = pageScope \|\| readActiveScreen\(\)/);
   const mic = app.slice(app.indexOf("const handleMicPress"));
   const snap = mic.indexOf("askedFromScreenRef.current = readActiveScreen()");
   const arm = mic.indexOf("setLiveVoiceArmed(true)");

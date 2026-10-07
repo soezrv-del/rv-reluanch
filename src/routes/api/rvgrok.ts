@@ -129,6 +129,8 @@ type Body = {
   catalogContext?: string;
   wantsWebFallback?: boolean;
   visitorFirstName?: string;
+  /** Page the Ask pill was opened from. Absent for the Chat tab. */
+  pageScope?: string;
   /** Lot is the default. Coach only when the UI says so. */
   mode?: TalkMode;
   /** Missing tag is shopper. "Our truck" does not flip this. */
@@ -187,10 +189,12 @@ function withGrounding(
     mode?: TalkMode;
     audience?: Audience;
     softFollowUpsUsed?: number;
+    /** Set only when Ask RV Grok opened the chat from a page. */
+    pageScope?: string;
   },
 ) {
   let out = injectStandingLessons(system, opts?.standingLessons);
-  const pageLine = pageContextLine(activeScreenFromContext(opts?.catalogContext));
+  const pageLine = pageContextLine(opts?.pageScope || "");
   if (pageLine) out = `${out}\n\n${pageLine}`;
   out = `${out}\n\nMODE: ${parseTalkMode(opts?.mode)}`;
   out = appendGrounding(out, opts?.catalogContext);
@@ -1012,6 +1016,7 @@ async function tryXaiDirect(
   stream?: { sink: ChatSseSink; lotSensitive: boolean },
   audience: Audience = "shopper",
   softFollowUpsUsed = 0,
+  pageScope?: string,
 ): Promise<string | null> {
   const apiKey = process.env.XAI_API_KEY;
   if (!stream) return null;
@@ -1044,6 +1049,7 @@ async function tryXaiDirect(
       standingLessons,
       mode,
       softFollowUpsUsed,
+      pageScope,
     },
   );
   const fullMessages: ChatMessage[] = [
@@ -1155,6 +1161,7 @@ async function tryCloudflareWorker(
   mode?: TalkMode,
   audience: Audience = "shopper",
   softFollowUpsUsed = 0,
+  pageScope?: string,
 ): Promise<Response | null> {
   const base = workerBase();
   const candidates = agentMode
@@ -1188,6 +1195,7 @@ async function tryCloudflareWorker(
                   standingLessons,
                   mode,
                   softFollowUpsUsed,
+                  pageScope,
                 },
               ),
             },
@@ -1319,6 +1327,8 @@ export const Route = createFileRoute("/api/rvgrok")({
         const talkMode = parseTalkMode(body.mode);
         const audience = parseAudience(body.audience);
         const feedbackContext = body.feedbackContext;
+        const pageScope =
+          typeof body.pageScope === "string" ? body.pageScope.trim() : "";
         const visitorFirstName =
           typeof body.visitorFirstName === "string"
             ? body.visitorFirstName
@@ -1643,6 +1653,7 @@ export const Route = createFileRoute("/api/rvgrok")({
             },
             audience,
             softFollowUpsUsed,
+            pageScope,
           );
           if (fromXai != null) {
             if (sink.visibleText() !== fromXai) sink.replace(fromXai);
@@ -1674,6 +1685,7 @@ export const Route = createFileRoute("/api/rvgrok")({
             talkMode,
             audience,
             softFollowUpsUsed,
+            pageScope,
           );
           if (fromWorker) return finish(fromWorker);
 
