@@ -48,6 +48,7 @@ import {
   shouldSkipWebForOwnLot,
 } from "@/lib/rvgrok/ownLotInventory";
 import { looksLikeOwnLotCountOrRankAsk } from "@/lib/rvgrok/ownLotAsk";
+import { pageContextLine } from "@/lib/rvgrok/screenContext";
 import {
   formatLotQueryNotes,
   isLotGoAhead,
@@ -189,6 +190,8 @@ function withGrounding(
   },
 ) {
   let out = injectStandingLessons(system, opts?.standingLessons);
+  const pageLine = pageContextLine(activeScreenFromContext(opts?.catalogContext));
+  if (pageLine) out = `${out}\n\n${pageLine}`;
   out = `${out}\n\nMODE: ${parseTalkMode(opts?.mode)}`;
   out = appendGrounding(out, opts?.catalogContext);
   const personal = visitorPersonalizationBlock(opts?.visitorFirstName);
