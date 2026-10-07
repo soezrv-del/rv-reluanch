@@ -339,10 +339,20 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
 
   // Home is the approved showroom mockup: one committed plate (wall, floor,
   // coach, reflection) with the mockup's copy and controls as live HTML.
-  const plate = join(root, "../../../public/assets/showroom/home-showroom.webp");
+  const plate = join(root, "../../../public/assets/showroom/home-showroom-wide.webp");
   assert.ok(existsSync(plate), "showroom plate");
   assert.ok(statSync(plate).size < 200 * 1024, "showroom plate stays under 200KB");
-  assert.match(home, /\/assets\/showroom\/home-showroom\.webp/);
+  assert.match(home, /\/assets\/showroom\/home-showroom-wide\.webp/);
+  assert.equal(
+    existsSync(join(root, "../../../public/assets/showroom/home-showroom.webp")),
+    false,
+    "narrow plate replaced by the wide plate",
+  );
+  // The plate fills wide screens by being wider, never by stretching: it is
+  // scaled uniformly (height: auto) with its 1008px core at the stage scale.
+  assert.match(home, /const PLATE_WIDTH = 3208;/);
+  assert.match(homeCss, /width: calc\(var\(--pw\) \* 3208 \/ 1008\);/);
+  assert.doesNotMatch(homeCss, /object-fit:\s*fill|background-size:\s*100% 100%/);
   assert.equal(
     existsSync(join(root, "../../../public/assets/showroom/cornerstone-hero.jpg")),
     false,

@@ -10,20 +10,24 @@ import "./home-showroom.css";
  *
  * The backdrop is a "showroom plate" cut from the mockup: textured wall,
  * glossy floor, the 2026 Entegra Cornerstone 45D and its reflection, with
- * every baked-in UI element removed. It is 1008px wide; mockup rows 0-1791
- * sit at plate y=160-1951 and the extra rows extend wall and floor for
- * phones taller than 9:16. All UI on top is live HTML laid out in mockup
- * pixels (see home-showroom.css).
+ * every baked-in UI element removed. Its 1008px core holds mockup rows
+ * 0-1791 at plate y=160-1951; the extra rows above/below extend the real
+ * mockup wall and floor (the top mirrors the wall the same way the bottom
+ * extends the floor), and 1100px on each side continue the wall/floor tone
+ * and texture so wide screens fill edge to edge. The plate is always scaled
+ * uniformly, so the coach is never stretched. All UI on top is live HTML
+ * laid out in mockup pixels (see home-showroom.css).
  *
  * Navigation is the shell's own: the tab bar calls the dock handler
  * (Facts / Inventory / Chat / More sheet), Ask RV Grok opens the Chat room,
  * and Open coach asks Inventory to open stock 45282 (requestLotUnit).
  */
-const PLATE_IMAGE = "/assets/showroom/home-showroom.webp";
-const PLATE_WIDTH = 1008;
+const PLATE_IMAGE = "/assets/showroom/home-showroom-wide.webp";
+/** 1008px mockup core + 1100px of extended wall/floor on each side. */
+const PLATE_WIDTH = 3208;
 const PLATE_HEIGHT = 2400;
 /** The status bar over this screen is the showroom wall, not the light theme's white. */
-const HOME_THEME_COLOR = "#07090d";
+const HOME_THEME_COLOR = "#0d1218";
 
 function RvMark() {
   return (
