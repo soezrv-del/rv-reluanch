@@ -377,3 +377,27 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
   assert.match(homeCss, /--u: calc\(var\(--W\) \/ 1008\)/);
   assert.match(homeCss, /\.home-showroom__tabs \{/);
 });
+
+test("Home tints Safari's bars dark from the server HTML, other screens keep theirs", () => {
+  const read = (p: string) => readFileSync(join(root, p), "utf8");
+  const rootDoc = read("../../routes/__root.tsx");
+  const indexRoute = read("../../routes/index.tsx");
+  const theme = read("../theme.ts");
+  const home = read("../../components/shell/HomeScreen.tsx");
+  const css = read("../../styles.css");
+  // Server HTML on "/" marks <html> and carries the dark theme-color.
+  assert.match(theme, /HOME_SHOWROOM_ATTR = "data-home-showroom"/);
+  assert.match(theme, /HOME_THEME_COLOR = "#0d1218"/);
+  assert.match(rootDoc, /s\.location\.pathname === "\/"/);
+  assert.match(rootDoc, /\[HOME_SHOWROOM_ATTR\]: onHome \? "" : undefined/);
+  assert.match(indexRoute, /name: "theme-color", content: HOME_THEME_COLOR/);
+  // The boot script and setTheme do not paint the light color over Home.
+  assert.match(theme, /r\.hasAttribute\("\$\{HOME_SHOWROOM_ATTR\}"\)\?"\$\{HOME_THEME_COLOR\}"/);
+  assert.match(theme, /hasAttribute\(HOME_SHOWROOM_ATTR\)\s*\?\s*HOME_THEME_COLOR/);
+  // Home on screen <-> mark on <html>.
+  assert.match(home, /root\.setAttribute\(HOME_SHOWROOM_ATTR, ""\)/);
+  assert.match(home, /root\.removeAttribute\(HOME_SHOWROOM_ATTR\)/);
+  // Page background + NDA loading frame in the wall tone, only under the mark.
+  assert.match(css, /html\[data-home-showroom\],\s*html\[data-home-showroom\] body \{\s*background: #0d1218 !important;/);
+  assert.match(css, /html\[data-home-showroom\] \[data-nda-state="loading"\]/);
+});

@@ -3,6 +3,7 @@ import { SHOWROOM_SPOTLIGHT, requestLotUnit } from "@/lib/home/homeCoach";
 import type { AppTab, DockRoomId } from "@/components/shell/BottomTabs";
 import { dockActiveTab } from "@/components/shell/dockActiveTab";
 import { MoreSheet, type MorePick } from "@/components/shell/MoreSheet";
+import { HOME_SHOWROOM_ATTR, HOME_THEME_COLOR } from "@/lib/theme";
 import "./home-showroom.css";
 
 /**
@@ -26,8 +27,6 @@ const PLATE_IMAGE = "/assets/showroom/home-showroom-wide.webp";
 /** 1008px mockup core + 1100px of extended wall/floor on each side. */
 const PLATE_WIDTH = 3208;
 const PLATE_HEIGHT = 2400;
-/** The status bar over this screen is the showroom wall, not the light theme's white. */
-const HOME_THEME_COLOR = "#0d1218";
 
 function RvMark() {
   return (
@@ -125,15 +124,19 @@ export function HomeScreen({
 }) {
   const lit = dockActiveTab(tab, true, moreOpen);
 
-  // Dark status bar while the showroom is up; the theme's own color comes back after.
+  // Dark status bar / toolbar while the showroom is up (theme-color for
+  // Safari 15-18, html/body background via data-home-showroom for Safari 26);
+  // the theme's own colors come back when Home leaves the screen.
   useEffect(() => {
+    const root = document.documentElement;
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (!meta) return;
-    meta.setAttribute("content", HOME_THEME_COLOR);
+    root.setAttribute(HOME_SHOWROOM_ATTR, "");
+    meta?.setAttribute("content", HOME_THEME_COLOR);
     return () => {
+      root.removeAttribute(HOME_SHOWROOM_ATTR);
       // Same colors setTheme / THEME_BOOT_SCRIPT use (lib/theme).
-      const dark = document.documentElement.dataset.theme === "dark";
-      meta.setAttribute("content", dark ? "#050505" : "#ffffff");
+      const dark = root.dataset.theme === "dark";
+      meta?.setAttribute("content", dark ? "#050505" : "#ffffff");
     };
   }, []);
 

@@ -5267,3 +5267,26 @@ html:not([data-theme="light"]) [data-rvgrok-composer] textarea {
   box-shadow: none !important;
   border-radius: 0 !important;
 }
+
+/*
+ * Showroom Home: page background = the plate's wall tone, top and bottom.
+ * Safari 26 tints the status bar / toolbar from the html/body background
+ * (and from fixed elements at the edges); Safari 15-18 use theme-color.
+ * data-home-showroom is in the server HTML on "/" (RootDocument) and
+ * HomeScreen keeps it in sync, so this is right on first paint. Other
+ * screens keep their own background in both themes.
+ */
+html[data-home-showroom],
+html[data-home-showroom] body {
+  background: #0d1218 !important;
+  overscroll-behavior: none;
+}
+/* First paint on "/" is NdaGate's loading frame (fixed, full screen): keep
+   it in the showroom tone so no light sheet sits at the top/bottom edge. */
+html[data-home-showroom] [data-nda-state="loading"],
+html[data-home-showroom] [data-nda-state="loading"] [data-showroom-plain] {
+  background: #0d1218 !important;
+}
+html[data-home-showroom] [data-nda-state="loading"] > p {
+  color: #8a93a0;
+}
