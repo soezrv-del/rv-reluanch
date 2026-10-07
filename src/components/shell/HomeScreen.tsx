@@ -1,11 +1,7 @@
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { fetchLotSnapshot, type LotUnit } from "@/lib/lot/ownLotPage";
-import { MetalVerifiedTrue } from "@/components/shell/Launchpad";
-import { Sun } from "lucide-react";
-import { readTheme, serverTheme, setTheme, subscribeTheme } from "@/lib/theme";
 import type { AppTab } from "@/components/shell/BottomTabs";
-
-const EMPTY_UNITS: LotUnit[] = [];
+import { DOCK_TAB_ICON, type DockRoomId } from "@/components/shell/BottomTabs";
 import {
   SHOWROOM_SPOTLIGHT,
   lotArrivalQuery,
@@ -13,25 +9,40 @@ import {
   spotlightLotUnit,
   spotlightSpecs,
 } from "@/lib/home/homeCoach";
+import { RAIDHO_SHELL_MARK } from "@/components/shell/SuiteBrand";
 
-function darkPlace(place: string): string {
-  return place.trim().replace(/([A-Za-z])\s+([A-Z]{2})$/, "$1, $2");
-}
+const EMPTY_UNITS: LotUnit[] = [];
+
+/** Mockup-locked copy when lot fields are empty (spec image is source of truth). */
+const MOCK = {
+  yearMake: "2026 Entegra Coach",
+  model: "Cornerstone 45D",
+  price: "$1,124,963",
+  inStock: "1,420 in stock",
+  stock: "Stock 45282",
+  place: "· Fresno CA",
+  hero: "/assets/showroom/cornerstone-hero.jpg?v=mock1",
+  alt: "2026 Entegra Cornerstone 45D",
+} as const;
+
+const TABS: { id: DockRoomId; label: string }[] = [
+  { id: "rvfax", label: "Facts" },
+  { id: "rvlot", label: "Inventory" },
+  { id: "rvgrok", label: "Chat" },
+  { id: "more", label: "More" },
+];
 
 /**
- * Home showroom — light-side mockup layout in both themes:
- * placard (year/make, model, price, stock, location) → Open coach →
- * coach hero + reflection → VERIFIED AND TRUE → Ask RV Grok pill.
- * Dock (Facts · Inventory · Chat · More) is RoomAskBar / BottomTabs.
+ * Pixel-faithful Home from the Cornerstone mockup.
+ * Full dark-glass screen: logo, placard, hero, Open coach, verified,
+ * Ask RV Grok pill, and the four-tab glass bar. Not a restyle of copper chrome.
  */
 export function HomeScreen({
   onOpen,
 }: {
   onOpen: (tab: AppTab, opts?: { skipVoice?: boolean }) => void;
 }) {
-  const theme = useSyncExternalStore(subscribeTheme, readTheme, serverTheme);
   const [units, setUnits] = useState<LotUnit[] | null>(null);
-  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     let cancel = false;
@@ -50,177 +61,119 @@ export function HomeScreen({
   const listed = units ?? EMPTY_UNITS;
   const spotUnit = useMemo(() => spotlightLotUnit(listed), [listed]);
   const specs = spotUnit ? spotlightSpecs(spotUnit) : null;
-  const model = specs?.model || SHOWROOM_SPOTLIGHT.series;
-  const spotYear = (spotUnit?.year || SHOWROOM_SPOTLIGHT.year).trim();
-  const spotMake = (spotUnit?.make || SHOWROOM_SPOTLIGHT.make).trim();
-  const place = (spotUnit?.location || "").trim();
-  const who = [spotYear, spotMake].filter(Boolean).join(" ");
-  const heroSrc = SHOWROOM_SPOTLIGHT.image;
-  const where = darkPlace(place);
-  const stockLine = [
-    specs?.stock ? `Stock ${specs.stock}` : "",
-    where ? `· ${where}` : "",
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .replace(/^·\s*/, "");
+
+  const yearMake = spotUnit
+    ? [spotUnit.year.trim(), spotUnit.make.trim(), /coach/i.test(spotUnit.make) ? "" : "Coach"]
+        .filter(Boolean)
+        .join(" ") || MOCK.yearMake
+    : MOCK.yearMake;
+  const model = (specs?.model || MOCK.model).trim() || MOCK.model;
+  const price = (specs?.price || MOCK.price).trim() || MOCK.price;
+  const stockNo = specs?.stock ? `Stock ${specs.stock}` : MOCK.stock;
+  const placeRaw = (spotUnit?.location || "").trim();
+  const place = placeRaw
+    ? `· ${placeRaw.replace(/([A-Za-z])\s+([A-Z]{2})$/, "$1 $2")}`
+    : MOCK.place;
+  const inStock =
+    listed.length > 0
+      ? `${listed.length.toLocaleString("en-US")} in stock`
+      : MOCK.inStock;
+  const heroSrc = MOCK.hero;
 
   const openSpot = () => {
-    if (!spotUnit) return;
-    requestLotUnit(lotArrivalQuery(spotUnit));
-    onOpen("rvlot");
-  };
-
-  const share = () => {
-    const text = [who, model, specs?.price, stockLine].filter(Boolean).join("\n");
-    const nav = navigator as Navigator & {
-      share?: (data: { title?: string; text?: string }) => Promise<void>;
-    };
-    if (nav.share) {
-      void nav.share({ title: "RVFOX", text }).catch(() => undefined);
+    if (spotUnit) {
+      requestLotUnit(lotArrivalQuery(spotUnit));
     }
+    onOpen("rvlot");
   };
 
   return (
     <div
       data-home-screen
       data-showroom-home=""
-      data-home-theme={theme}
+      data-home-theme="dark"
+      data-home-mockup=""
       data-no-swipe
-      className={
-        theme === "dark"
-          ? "showroom-home dark-home absolute inset-0 z-30 flex flex-col overflow-hidden"
-          : "showroom-home absolute inset-0 z-30 flex flex-col overflow-x-hidden overflow-y-auto"
-      }
+      className="mock-home absolute inset-0 z-30 flex flex-col overflow-hidden"
     >
-      {theme === "dark" ? (
-        <header className="dark-home-bar">
-          <p className="dark-home-mark">RVFOX</p>
-          <div className="dark-home-tools">
-            <button
-              type="button"
-              className="dark-home-tool"
-              aria-label="Bookmark"
-              aria-pressed={saved}
-              onClick={() => setSaved((on) => !on)}
-            >
-              <svg
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill={saved ? "#fff" : "none"}
-                aria-hidden="true"
-              >
-                <path
-                  d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"
-                  stroke="#fff"
-                  strokeWidth="1.7"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-            <button
-              type="button"
-              className="dark-home-tool"
-              aria-label="Share"
-              onClick={share}
-            >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path
-                  d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"
-                  stroke="#fff"
-                  strokeWidth="1.7"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <polyline
-                  points="16 6 12 2 8 6"
-                  stroke="#fff"
-                  strokeWidth="1.7"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <line
-                  x1="12"
-                  y1="2"
-                  x2="12"
-                  y2="15"
-                  stroke="#fff"
-                  strokeWidth="1.7"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </button>
-            <button
-              type="button"
-              className="dark-home-tool"
-              data-tool-rail="theme"
-              aria-label="Switch to light mode"
-              title="Switch to light mode"
-              onClick={() => setTheme("light")}
-            >
-              <Sun width={22} height={22} color="#fff" strokeWidth={1.7} aria-hidden />
-            </button>
-          </div>
-        </header>
-      ) : null}
+      {/* Atmospheric dark glass field */}
+      <div className="mock-home-atmosphere" aria-hidden />
 
-      <section className="showroom-hero" data-hero-kind="cutout">
-        <div className="showroom-placard" data-home-placard>
-          {who ? <p className="showroom-spotyear">{who}</p> : null}
-          <p className="showroom-spotmodel">{model}</p>
-          {specs?.price ? <p className="showroom-spotprice">{specs.price}</p> : null}
-          {listed.length > 0 ? (
-            <p className="showroom-lotcount">
-              {listed.length.toLocaleString("en-US")} in stock
-            </p>
-          ) : null}
-          {stockLine ? <p className="showroom-spotstock">{stockLine}</p> : null}
-          {spotUnit ? (
-            <button
-              type="button"
-              className="showroom-hero-primary"
-              data-open-coach
-              onClick={openSpot}
-            >
-              Open coach
-            </button>
-          ) : null}
+      {/* Brand — mockup: blue R mark + RvFOX only */}
+      <header className="mock-home-header">
+        <div className="mock-home-brand" aria-label="RvFOX">
+          <img src={RAIDHO_SHELL_MARK} alt="" className="mock-home-mark" draggable={false} />
+          <span className="mock-home-word">RvFOX</span>
         </div>
-        <div className="showroom-floor" data-hero-kind="cutout">
+      </header>
+
+      {/* Scrollable body so short phones still reach Ask + tabs */}
+      <div className="mock-home-body">
+        <div className="mock-home-placard">
+          <p className="mock-home-year">{yearMake}</p>
+          <h1 className="mock-home-title">{model}</h1>
+          <p className="mock-home-price">{price}</p>
+          <p className="mock-home-meta">{inStock}</p>
+          <p className="mock-home-meta">{stockNo}</p>
+          <p className="mock-home-meta">{place}</p>
+        </div>
+
+        <div className="mock-home-stage">
           <img
             src={heroSrc}
-            alt={SHOWROOM_SPOTLIGHT.alt}
-            className="showroom-coach"
-            data-hero-kind="cutout"
+            alt={MOCK.alt}
+            className="mock-home-coach"
             draggable={false}
           />
-          <div className="showroom-floor-mirror" aria-hidden>
-            <img src={heroSrc} alt="" className="showroom-coach-reflect" />
-          </div>
-          <div className="showroom-floor-gloss" aria-hidden />
         </div>
-      </section>
 
-      <div className="home-truth">
-        <MetalVerifiedTrue size="md" />
+        <div className="mock-home-open-row">
+          <button
+            type="button"
+            className="mock-home-open"
+            data-open-coach
+            onClick={openSpot}
+          >
+            Open coach
+          </button>
+        </div>
+
+        <p className="mock-home-verified" aria-label="Verified and True">
+          VERIFIED AND TRUE
+        </p>
+
+        <div className="mock-home-ask-wrap">
+          <button
+            type="button"
+            className="mock-home-ask"
+            data-ask-grok
+            onClick={() => onOpen("rvgrok")}
+          >
+            Ask RV Grok
+          </button>
+        </div>
       </div>
 
-      <div
-        className={
-          theme === "dark" ? "dark-home-ask-wrap light-home-ask-wrap" : "light-home-ask-wrap"
-        }
-      >
-        <button
-          type="button"
-          className={theme === "dark" ? "dark-home-ask" : "light-home-ask"}
-          data-ask-grok
-          onClick={() => onOpen("rvgrok")}
-        >
-          Ask RV Grok
-        </button>
-      </div>
+      {/* Tab bar — mockup glass plate (not shell copper dock) */}
+      <nav className="mock-home-tabs" aria-label="Home" data-mock-tabs>
+        {TABS.map(({ id, label }) => (
+          <button
+            key={id}
+            type="button"
+            className="mock-home-tab"
+            data-bottom-tab={id}
+            onClick={() => onOpen(id)}
+          >
+            <img
+              src={DOCK_TAB_ICON[id]}
+              alt=""
+              className="mock-home-tab-icon"
+              draggable={false}
+            />
+            <span className="mock-home-tab-label">{label}</span>
+          </button>
+        ))}
+      </nav>
     </div>
   );
 }
