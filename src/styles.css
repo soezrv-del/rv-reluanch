@@ -460,8 +460,7 @@
   }
 
   html.kb-open [data-app-scroll],
-  html.kb-open .rv-scroll,
-  html.kb-open .showroom-home {
+  html.kb-open .rv-scroll {
     scroll-padding-bottom: calc(var(--kb-lift, var(--kb-inset, 0px)) + var(--safe-bottom, 0px) + 24px);
     scroll-padding-top: calc(var(--safe-top, 0px) + 12px);
   }
@@ -480,7 +479,6 @@
   }
 
   [data-app-scroll],
-  .showroom-home,
   .rv-scroll {
     padding-bottom: max(1.25rem, var(--safe-bottom, 0px));
     scroll-padding-bottom: max(1.25rem, var(--safe-bottom, 0px));
@@ -585,7 +583,6 @@
     max-width: 56rem !important;
   }
 }
-
 
 /* Short portrait — phone + Grok preview iframe */
 @media (max-height: 780px) {
@@ -825,7 +822,6 @@
       0 0 2px rgba(0, 0, 0, 0.9);
   }
 
-
   /* High-contrast glass body text — max legibility over transparent cards */
   .glass-prestige,
   .glass-prestige-deep,
@@ -968,7 +964,6 @@
 .splash-cue-dot {
   box-shadow: 0 0 18px rgba(255, 255, 255, 0.15);
 }
-
 
 /* ═══════════════════════════════════════════════════════════════
    Premium chrome (header / dock / glass / accents) — design pass
@@ -1580,13 +1575,6 @@
   display: none;
 }
 
-/* Year / place lines exist for the light hero. Dark placard stays model, price, stock. */
-.showroom-spotyear,
-.showroom-spotmake,
-.showroom-spotplace {
-  display: none;
-}
-
 /* Trips ⋯ sits in the page header, already below the showroom logo. */
 .premium-menu-corner {
   top: 0;
@@ -1657,7 +1645,6 @@
   }
 }
 
-
 /* ═══════════════════════════════════════════════════════════════
    Premium Mark-class utilities (post-checkpoint 2026-08-02)
    ═══════════════════════════════════════════════════════════════ */
@@ -1673,7 +1660,6 @@
 .text-value { color: #ffffff; }
 .text-label-ice { color: rgba(245, 248, 255, 0.72); }
 .text-hint-ice { color: rgba(230, 236, 248, 0.52); }
-
 
 /* Grok-matched page vibe — brighter midfield, soft edge legibility only */
 .page-scrim-soft {
@@ -2897,174 +2883,7 @@ html.kb-open [data-rvgrok-composer-dock] {
     color: transparent;
   }
 }
-.showroom-home {
-  background: transparent;
-  overflow-anchor: none;
-}
-.home-jumps {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  margin: 8px 1.15rem 1.25rem;
-}
-.home-jump {
-  display: flex;
-  height: 56px;
-  min-height: 56px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  padding: 0 4px;
-  text-align: left;
-}
-.home-jump-label {
-  font-size: 17px;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-}
-.home-jump-sub {
-  display: block;
-  margin-top: 2px;
-  font-weight: 500;
-  letter-spacing: 0;
-  text-transform: none;
-}
-.home-jump-hint {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.showroom-hero-actions {
-  display: none;
-}
-.showroom-hero {
-  position: relative;
-  isolation: isolate;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  width: 100%;
-  height: auto;
-  min-height: 0;
-  margin: 0;
-  overflow: visible;
-  padding: 16px 0 8px;
-}
-button.showroom-hero {
-  display: block;
-  border: 0;
-  background: transparent;
-  color: inherit;
-}
-.showroom-coach {
-  position: relative;
-  z-index: 2;
-  display: block;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 1283 / 537;
-  max-height: 190px;
-  margin-top: 12px;
-  object-fit: contain;
-  object-position: 50% 100%;
-  background: transparent;
-  border: 0;
-}
-.showroom-hero-pool,
-.showroom-hero-beam {
-  display: none !important;
-}
 /* Floor is a flip of the real Cornerstone cutout. Do not swap in a generated coach. */
-.showroom-floor {
-  --floor-mirror: 2.65rem;
-  --floor-pull: 0.75rem;
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  margin: 0 0 var(--floor-mirror);
-  background: transparent;
-  line-height: 0;
-}
-.showroom-hero {
-  overflow: visible !important;
-}
-.showroom-floor .showroom-coach,
-.showroom-floor .showroom-coach-reflect {
-  display: block;
-  width: 100% !important;
-  height: auto !important;
-  max-height: 16.5rem !important;
-  aspect-ratio: auto !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  object-fit: contain !important;
-  object-position: center bottom !important;
-  background: transparent !important;
-  filter: none !important;
-  border: 0 !important;
-  -webkit-box-reflect: none !important;
-}
-.showroom-floor .showroom-coach {
-  position: relative;
-  z-index: 2;
-}
-.showroom-floor-mirror {
-  position: absolute;
-  z-index: 1;
-  left: 0;
-  right: 0;
-  top: calc(100% - var(--floor-pull));
-  height: var(--floor-mirror);
-  overflow: hidden;
-  pointer-events: none;
-}
-.showroom-coach-reflect {
-  position: absolute;
-  left: 0;
-  bottom: calc(100% - var(--floor-pull) + 0.55rem);
-  transform: scaleY(-1);
-  transform-origin: center bottom;
-  opacity: 0.88;
-  filter: blur(0.2px) !important;
-  -webkit-mask-image: linear-gradient(
-    to top,
-    rgba(0, 0, 0, 0.78) 0%,
-    rgba(0, 0, 0, 0.34) 24%,
-    rgba(0, 0, 0, 0.08) 46%,
-    transparent 68%
-  );
-  mask-image: linear-gradient(
-    to top,
-    rgba(0, 0, 0, 0.78) 0%,
-    rgba(0, 0, 0, 0.34) 24%,
-    rgba(0, 0, 0, 0.08) 46%,
-    transparent 68%
-  );
-}
-.showroom-floor-gloss {
-  position: absolute;
-  z-index: 3;
-  left: 12%;
-  right: 12%;
-  bottom: -0.15rem;
-  height: 1.15rem;
-  border-radius: 50%;
-  pointer-events: none;
-  background: radial-gradient(
-    ellipse at center,
-    rgba(255, 255, 255, 0.62) 0%,
-    rgba(232, 192, 144, 0.2) 30%,
-    rgba(255, 255, 255, 0.04) 54%,
-    transparent 72%
-  );
-  filter: blur(1px);
-}
 .showroom-card {
   background: var(--color-showroom-glass);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -3078,121 +2897,6 @@ button.showroom-hero {
   box-shadow: var(--shadow-showroom);
   -webkit-backdrop-filter: blur(16px) saturate(1.4);
   backdrop-filter: blur(16px) saturate(1.4);
-}
-.showroom-placard {
-  position: relative;
-  inset: auto;
-  order: 0;
-  z-index: 4;
-  width: auto;
-  margin: 0.35rem 0 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  padding: 0 1.35rem;
-  text-align: center;
-  pointer-events: none;
-}
-.showroom-hero-primary {
-  pointer-events: auto;
-  align-self: stretch;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 48px;
-  min-height: 48px;
-  min-width: 0;
-  width: 100%;
-  margin: 0;
-  padding: 0 1.15rem;
-  border-radius: 999px;
-  border: 0;
-  background: var(--gradient-copper, #c48a5e);
-  color: #fff;
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: 0.15px;
-  box-shadow: var(--shadow-glow-copper);
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
-}
-.showroom-spotyear {
-  margin: 0;
-  font-size: 0.7rem;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  line-height: 1.2;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.55);
-}
-.showroom-spotmodel {
-  margin: 0.55rem 0 0;
-  font-family: var(--font-display), "Iowan Old Style", Georgia, serif;
-  font-size: 2.35rem;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-  overflow-wrap: break-word;
-  color: #f8f8f8;
-}
-.showroom-spotprice {
-  margin-top: 0.45rem;
-  font-size: 1.9rem;
-  font-weight: 400;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
-  overflow-wrap: break-word;
-  color: #ffffff;
-}
-.showroom-lotcount {
-  margin: 0.2rem 0 0;
-  font-size: 0.95rem;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  line-height: 1.3;
-  color: rgba(255, 255, 255, 0.72);
-}
-.showroom-spotstock {
-  margin-top: 0.35rem;
-  font-size: 0.85rem;
-  font-weight: 400;
-  letter-spacing: 0.01em;
-  line-height: 1.35;
-  overflow-wrap: break-word;
-  color: rgba(255, 255, 255, 0.45);
-}
-
-/* Home glass card — specs strip + copper CTA (coordinates all suite screens) */
-.showroom-home-card {
-  position: relative;
-  z-index: 5;
-  margin: 0.85rem 0.9rem 0;
-  padding: 1.15rem 0.65rem 1rem;
-  border-radius: 1.75rem;
-  background: linear-gradient(
-    165deg,
-    rgba(48, 48, 52, 0.75) 0%,
-    rgba(24, 24, 28, 0.92) 50%,
-    rgba(18, 18, 20, 0.98) 100%
-  );
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  box-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
-  -webkit-backdrop-filter: blur(24px);
-  backdrop-filter: blur(24px);
-}
-.showroom-home-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 18%;
-  right: 18%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 210, 160, 0.4), transparent);
-  border-radius: 1px;
 }
 .showroom-spec-strip {
   display: flex;
@@ -3261,20 +2965,6 @@ button.showroom-hero {
   background: linear-gradient(to bottom, rgba(255, 255, 255, 0.28), transparent);
   border-radius: 999px 999px 50% 50%;
   pointer-events: none;
-}
-.showroom-hero-secondary {
-  display: block;
-  width: calc(100% - 0.9rem);
-  margin: 0.7rem auto 0;
-  padding: 0.55rem 1rem;
-  border: 0;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 0.8rem;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  text-align: center;
-  text-transform: uppercase;
 }
 
 /* Shared suite glass panels — use on Facts / Lot / Cal / Tow / More cards */
@@ -4239,12 +3929,6 @@ html[data-theme="light"] [data-tow-kind-toggle] button[aria-pressed="false"] {
   border: 1px solid var(--light-hairline) !important;
   box-shadow: var(--light-raise) !important;
 }
-html[data-theme="light"] .showroom-hero-secondary {
-  background: var(--light-shade) !important;
-  color: #111111 !important;
-  border: 1px solid var(--light-hairline) !important;
-  box-shadow: var(--light-raise) !important;
-}
 html[data-theme="light"] [data-facts-search],
 html[data-theme="light"] [data-facts-search]:disabled {
   background: var(--light-action) !important;
@@ -4254,185 +3938,6 @@ html[data-theme="light"] [data-facts-search]:disabled {
   border: 1px solid var(--light-action) !important;
   box-shadow: var(--light-raise) !important;
   opacity: 1;
-}
-
-html[data-theme="light"] .showroom-home {
-  display: flex;
-  flex-direction: column;
-  align-content: start;
-  width: 100%;
-  max-width: 100%;
-  background: #ffffff;
-}
-html[data-theme="light"] .showroom-hero {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: auto;
-  min-height: 0;
-  margin: 0;
-  padding: 20px 0 8px;
-  border: 0;
-  background: transparent !important;
-  overflow: visible !important;
-}
-html[data-theme="light"] .showroom-hero::after {
-  display: none !important;
-}
-html[data-theme="light"] .showroom-placard {
-  position: relative;
-  inset: auto;
-  order: -1;
-  z-index: 4;
-  left: auto;
-  right: auto;
-  bottom: auto;
-  width: auto;
-  margin: 0;
-  padding: 0 20px;
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
-  filter: none;
-  text-align: left;
-}
-html[data-theme="light"] .showroom-coach,
-html[data-theme="light"] .showroom-coach[data-hero-kind="cutout"],
-html[data-theme="light"] .showroom-coach[data-hero-kind="photo"] {
-  width: 100%;
-  height: auto;
-  aspect-ratio: 1283 / 537;
-  max-height: 190px;
-  margin-top: 12px;
-  object-fit: contain;
-  object-position: 50% 100%;
-  filter: none;
-}
-html[data-theme="light"] .showroom-floor {
-  --floor-mirror: 2rem;
-  --floor-pull: 0.3rem;
-}
-html[data-theme="light"] .showroom-coach-reflect {
-  opacity: 0.42;
-  -webkit-mask-image: linear-gradient(
-    to top,
-    rgba(0, 0, 0, 0.4) 0%,
-    rgba(0, 0, 0, 0.12) 28%,
-    transparent 58%
-  );
-  mask-image: linear-gradient(
-    to top,
-    rgba(0, 0, 0, 0.4) 0%,
-    rgba(0, 0, 0, 0.12) 28%,
-    transparent 58%
-  );
-}
-html[data-theme="light"] .showroom-floor-gloss {
-  background: radial-gradient(
-    ellipse at center,
-    rgba(23, 26, 32, 0.16) 0%,
-    rgba(23, 26, 32, 0.05) 42%,
-    transparent 72%
-  );
-  filter: blur(2px);
-}
-html[data-theme="light"] .showroom-spotyear,
-html[data-theme="light"] .showroom-spotstock,
-html[data-theme="light"] .showroom-spotplace {
-  display: block;
-  margin: 0;
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 0;
-  line-height: 1.3;
-  color: #3d4d68 !important;
-  -webkit-text-fill-color: #3d4d68 !important;
-  text-shadow: none !important;
-}
-html[data-theme="light"] .showroom-spotmake {
-  display: none !important;
-}
-html[data-theme="light"] .showroom-spotmodel {
-  display: block;
-  margin: 0;
-  font-size: 32px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.05;
-  color: #111111 !important;
-  -webkit-text-fill-color: #111111 !important;
-  text-shadow: none !important;
-}
-html[data-theme="light"] .showroom-spotprice {
-  display: block;
-  margin-top: 4px;
-  font-size: 28px;
-  font-weight: 600;
-  letter-spacing: -0.03em;
-  color: #111111 !important;
-  -webkit-text-fill-color: #111111 !important;
-  text-shadow: none !important;
-}
-html[data-theme="light"] .showroom-lotcount {
-  color: #3d4d68 !important;
-  -webkit-text-fill-color: #3d4d68 !important;
-}
-html[data-theme="light"] .showroom-hero-primary {
-  height: 40px;
-  min-height: 40px;
-  min-width: 180px;
-  margin: 16px 20px 0;
-  border: 1px solid var(--light-action) !important;
-  border-radius: 4px;
-  background: var(--light-action) !important;
-  background-image: none !important;
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-  box-shadow: none !important;
-  font-size: 14px;
-  font-weight: 500;
-  text-shadow: none !important;
-}
-html[data-theme="light"] .home-jumps {
-  gap: 0;
-  margin-top: 8px;
-}
-html[data-theme="light"] .app-shell button.home-jump {
-  height: 56px;
-  min-height: 56px;
-  background: transparent !important;
-  background-image: none !important;
-  border: 0 !important;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  padding: 0 4px !important;
-  color: #111111 !important;
-}
-html[data-theme="light"] .app-shell button.home-jump:first-child {
-  border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
-}
-html[data-theme="light"] .home-jump-label {
-  font-size: 17px;
-  font-weight: 600;
-  color: #111111;
-  -webkit-text-fill-color: #111111;
-}
-html[data-theme="light"] .home-jump-sub {
-  display: block;
-  margin-top: 2px;
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0;
-  text-transform: none;
-  color: #3d4d68;
-  -webkit-text-fill-color: #3d4d68;
-}
-html[data-theme="light"] .app-shell button.home-jump .home-jump-hint {
-  color: var(--light-link) !important;
-  -webkit-text-fill-color: var(--light-link) !important;
 }
 html[data-theme="light"] .showroom-arrivals {
   min-width: 0;
@@ -4623,7 +4128,6 @@ html[data-theme="light"] .app-shell textarea {
   caret-color: #111111;
 }
 html[data-theme="light"] .bottom-tab-einstein,
-html[data-theme="light"] .showroom-coach,
 html[data-theme="light"] .lot-well img {
   filter: none;
 }
@@ -5002,37 +4506,6 @@ html[data-theme="light"] .app-shell [data-facts-search]:disabled {
   -webkit-text-fill-color: #fff !important;
   border-color: var(--light-action) !important;
 }
-
-/* Dark home — Tesla mobile app rows. Title sits above the coach. */
-html[data-theme="dark"] .showroom-hero {
-  padding: 16px 0 8px;
-}
-html[data-theme="dark"] .showroom-spotmodel {
-  font-size: 28px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  color: #ffffff;
-}
-html[data-theme="dark"] .showroom-spotprice {
-  font-size: 28px;
-  font-weight: 600;
-  color: #ffffff;
-}
-html[data-theme="dark"] .showroom-lotcount {
-  font-size: 15px;
-  color: rgba(255, 255, 255, 0.72);
-}
-html[data-theme="dark"] .showroom-spotstock {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
-}
-html[data-theme="dark"] .showroom-spotyear,
-html[data-theme="dark"] .showroom-spotstock,
-html[data-theme="dark"] .showroom-spotplace,
-html[data-theme="dark"] .showroom-spotprice,
-html[data-theme="dark"] .showroom-spotmodel {
-  text-shadow: none;
-}
 html[data-theme="dark"] .metal-hammered,
 html[data-theme="dark"] .metal-hammered-face {
   font-size: 22px;
@@ -5065,58 +4538,6 @@ html[data-theme="dark"] .sapphire-title-stage,
 html[data-theme="dark"] .sapphire-header-title,
 html[data-theme="dark"] .sapphire-title-sheen {
   max-width: 100%;
-}
-html[data-theme="dark"] .showroom-hero-primary {
-  background: #c48a5e;
-  border: 0;
-  color: #fff;
-  border-radius: 8px;
-  height: 40px;
-  min-width: 160px;
-}
-html[data-theme="dark"] .home-jumps {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  margin: 8px 1.15rem 1.25rem;
-}
-html[data-theme="dark"] .home-jump {
-  display: flex;
-  height: 56px;
-  min-height: 56px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  background: transparent;
-  border: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 0;
-  box-shadow: none;
-  padding: 0 4px;
-  text-align: left;
-  color: #ffffff;
-}
-html[data-theme="dark"] .home-jump-label {
-  font-size: 17px;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-  color: #ffffff;
-}
-html[data-theme="dark"] .home-jump-hint {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.45);
-}
-html[data-theme="dark"] .home-jump-sub {
-  display: block;
-  margin-top: 2px;
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0;
-  text-transform: none;
-  color: rgba(255, 255, 255, 0.6);
 }
 
 /* Sheets, drawers, and fixed chrome share one inset. */
@@ -5438,36 +4859,12 @@ html[data-theme="dark"] .rv-nav-screen,
 .rv-nav-screen[data-theme-tone="dark"] .rv-nav-end {
   background: #c48a5e;
 }
-
-
-/* Copper showroom redesign — keep placard centered in dark */
-html[data-theme="dark"] .showroom-placard {
-  text-align: center !important;
-}
-html[data-theme="dark"] .showroom-spotmodel {
-  font-family: var(--font-display), Georgia, serif !important;
-  font-weight: 500 !important;
-  font-size: 2.35rem !important;
-  color: #f8f8f8 !important;
-}
-html[data-theme="dark"] .showroom-spotyear {
-  letter-spacing: 0.14em !important;
-  text-transform: uppercase !important;
-  font-size: 0.7rem !important;
-  color: rgba(255,255,255,0.55) !important;
-}
-html[data-theme="dark"] .showroom-spotprice {
-  font-weight: 400 !important;
-  font-size: 1.9rem !important;
-}
-html[data-theme="dark"] .showroom-hero-primary,
 html[data-theme="dark"] .showroom-cta-copper {
   background: var(--gradient-copper) !important;
   box-shadow: var(--shadow-glow-copper) !important;
   border-radius: 999px !important;
   color: #fff !important;
 }
-
 
 /* ===== Copper suite coordination — Tow / Trips / Detail / Cal (2026-10-05) ===== */
 .rvtow-screen .suite-title-display,
@@ -5541,232 +4938,21 @@ button.suite-cta-copper:disabled {
   border-radius: 1.25rem;
 }
 
-/* Dark home screen. Appended for the Cornerstone mock. */
+/* Home is the full-screen showroom (HomeScreen + home-showroom.css) in both
+   themes: it draws its own brand, Ask pill and Facts / Inventory / Chat / More
+   bar, so the shell header and dock step aside while it is open. */
 [data-home-open] .suite-swipe-viewport > :not([data-home-screen]) {
   visibility: hidden;
 }
 
-html[data-theme="dark"] [data-home-open] .showroom-header {
-  display: none !important;
-}
-
-html[data-theme="dark"] [data-home-open] .showroom-header {
+[data-home-open] .showroom-header,
+[data-home-open] .showroom-dock {
   display: none !important;
 }
 
 html[data-theme="dark"] [data-home-open].showroom-app,
-html[data-theme="dark"] [data-home-open] .showroom-stage,
-html[data-theme="dark"] .dark-home {
+html[data-theme="dark"] [data-home-open] .showroom-stage {
   background: #05070c !important;
-}
-
-html[data-theme="dark"] .dark-home {
-  background: #05070c !important;
-  color: #f4f0ea;
-  font-family: Figtree, ui-sans-serif, system-ui, sans-serif;
-  padding: 0 16px calc(env(safe-area-inset-bottom, 0px) + 12px);
-}
-
-html[data-theme="dark"] .dark-home-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 52px;
-  margin-top: env(safe-area-inset-top, 0px);
-  padding: 0 8px;
-  flex: 0 0 auto;
-}
-
-html[data-theme="dark"] .dark-home-mark {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 650;
-  letter-spacing: 0.22em;
-  color: #f7f5f2;
-}
-
-html[data-theme="dark"] .dark-home-tools {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  margin-right: -8px;
-}
-
-html[data-theme="dark"] .dark-home-tool {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #f7f5f2;
-  cursor: pointer;
-}
-
-html[data-theme="dark"] .dark-home-stage {
-  position: relative;
-  flex: 1 1 auto;
-  min-height: 0;
-  display: flex;
-  align-items: flex-end;
-  padding-top: 0;
-}
-
-html[data-theme="dark"] .dark-home-floor {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-}
-
-html[data-theme="dark"] .dark-home-coach {
-  display: block;
-  width: 108%;
-  max-width: none;
-  margin-left: -4%;
-  height: auto;
-  background: transparent;
-  object-fit: contain;
-  object-position: center bottom;
-}
-
-html[data-theme="dark"] .dark-home-mirror {
-  position: relative;
-  height: 64px;
-  margin-top: -6px;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-html[data-theme="dark"] .dark-home-reflect {
-  position: absolute;
-  left: -4%;
-  top: 0;
-  width: 108%;
-  height: auto;
-  transform: scaleY(-1);
-  transform-origin: center top;
-  opacity: 0.42;
-  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent 78%);
-  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent 78%);
-}
-
-html[data-theme="dark"] .dark-home-scrim {
-  position: absolute;
-  left: -16px;
-  right: -16px;
-  bottom: 0;
-  height: 72px;
-  background: linear-gradient(180deg, rgba(5, 7, 12, 0), #05070c 88%);
-  pointer-events: none;
-  z-index: 2;
-}
-
-html[data-theme="dark"] .dark-home-copy {
-  position: relative;
-  z-index: 2;
-  flex: 0 0 auto;
-  padding: 2px 8px 0;
-  background: transparent;
-}
-
-html[data-theme="dark"] .dark-home-eyebrow {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: #e6e0d6 !important;
-  -webkit-text-fill-color: #e6e0d6 !important;
-}
-
-html[data-theme="dark"] .dark-home-title {
-  margin: 6px 0 0;
-  font-family: Fraunces, ui-serif, Georgia, serif;
-  font-size: 40px;
-  font-weight: 500;
-  line-height: 1.02;
-  letter-spacing: -0.03em;
-  color: #f7f4ee;
-}
-
-html[data-theme="dark"] .dark-home-price {
-  margin: 2px 0 0;
-  font-family: Fraunces, ui-serif, Georgia, serif;
-  font-size: 36px;
-  font-weight: 460;
-  line-height: 1.05;
-  letter-spacing: -0.03em;
-  color: #f7f4ee;
-}
-
-html[data-theme="dark"] .dark-home-where {
-  margin: 8px 0 0;
-  font-size: 15px;
-  font-weight: 400;
-  color: #9a958c !important;
-  -webkit-text-fill-color: #9a958c !important;
-}
-
-html[data-theme="dark"] .dark-home-card {
-  position: relative;
-  flex: 0 0 auto;
-  margin: 16px 0 0;
-  padding: 16px 8px 8px;
-  border-radius: 26px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: linear-gradient(180deg, #2c2a28 0%, #161618 22%, #101113 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 196, 140, 0.45);
-}
-
-html[data-theme="dark"] .dark-home-card::before {
-  content: "";
-  position: absolute;
-  left: 16%;
-  right: 16%;
-  top: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 196, 140, 0.9), transparent);
-}
-
-html[data-theme="dark"] .dark-home-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-}
-
-html[data-theme="dark"] .dark-home-stat {
-  position: relative;
-  text-align: center;
-  padding: 2px 2px 12px;
-}
-
-html[data-theme="dark"] .dark-home-stat + .dark-home-stat::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 2px;
-  bottom: 22px;
-  width: 1px;
-  background: rgba(255, 255, 255, 0.16);
-}
-
-html[data-theme="dark"] .dark-home-stat b {
-  display: block;
-  font-weight: 500;
-  font-size: 14px;
-  letter-spacing: -0.01em;
-  color: #f4f0ea;
-}
-
-html[data-theme="dark"] .dark-home-stat span {
-  display: block;
-  margin-top: 4px;
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  color: #9c978f;
 }
 
 html[data-theme="dark"] .dark-home-ask {
@@ -5798,112 +4984,6 @@ html[data-theme="dark"] .dark-home-ask:active {
   filter: brightness(0.96);
 }
 
-html[data-theme="dark"] .dark-home-nav {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  padding: 6px 0 2px;
-}
-
-html[data-theme="dark"] .dark-home-nav button {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  min-height: 52px;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #f3efe8;
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-html[data-theme="dark"] [data-home-open] .showroom-dock {
-  display: none !important;
-}
-
-html[data-theme="dark"] .dark-home-mark {
-  font-size: 18px !important;
-  font-weight: 700 !important;
-  letter-spacing: 3.2px !important;
-}
-
-html[data-theme="dark"] .dark-home-coach {
-  width: 100% !important;
-  margin-left: 0 !important;
-}
-
-html[data-theme="dark"] .dark-home-copy {
-  text-align: center !important;
-  padding: 6px 20px 14px !important;
-}
-
-html[data-theme="dark"] .dark-home-eyebrow {
-  font-size: 11px !important;
-  font-weight: 500 !important;
-  letter-spacing: 1.6px !important;
-  color: rgba(255, 255, 255, 0.55) !important;
-  -webkit-text-fill-color: rgba(255, 255, 255, 0.55) !important;
-  margin-bottom: 12px !important;
-}
-
-html[data-theme="dark"] .dark-home-title {
-  font-family: "Iowan Old Style", Palatino, Georgia, serif !important;
-  font-size: 40px !important;
-  font-weight: 400 !important;
-  letter-spacing: -0.5px !important;
-  line-height: 1.12 !important;
-  text-align: center !important;
-  color: #f8f8f8 !important;
-  -webkit-text-fill-color: #f8f8f8 !important;
-}
-
-html[data-theme="dark"] .dark-home-price {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-  font-size: 32px !important;
-  font-weight: 400 !important;
-  letter-spacing: -0.5px !important;
-  text-align: center !important;
-  color: #fff !important;
-  -webkit-text-fill-color: #fff !important;
-  margin-bottom: 7px !important;
-}
-
-html[data-theme="dark"] .dark-home-where {
-  font-size: 13.5px !important;
-  color: rgba(255, 255, 255, 0.45) !important;
-  -webkit-text-fill-color: rgba(255, 255, 255, 0.45) !important;
-  text-align: center !important;
-}
-
-html[data-theme="dark"] .dark-home-card {
-  margin: 4px 0 0 !important;
-  border-radius: 32px !important;
-  padding: 20px 10px 14px !important;
-  background: linear-gradient(165deg, rgba(48, 48, 52, 0.75) 0%, rgba(24, 24, 28, 0.92) 50%, rgba(18, 18, 20, 0.98) 100%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.07) !important;
-  box-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
-}
-
-html[data-theme="dark"] .dark-home-stat b {
-  font-size: 14.5px !important;
-  font-weight: 600 !important;
-  color: #fff !important;
-}
-
-html[data-theme="dark"] .dark-home-stat span {
-  font-size: 9px !important;
-  font-weight: 600 !important;
-  letter-spacing: 1.1px !important;
-  color: rgba(255, 255, 255, 0.38) !important;
-}
-
 html[data-theme="dark"] .dark-home-ask {
   width: calc(100% - 16px) !important;
   padding: 15px 24px !important;
@@ -5927,163 +5007,6 @@ html[data-theme="dark"] .dark-home-ask {
     0 4px 12px rgba(0, 0, 0, 0.4),
     inset 0 1.5px 1px rgba(255, 255, 255, 0.4) !important;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
-}
-
-html[data-theme="dark"] .dark-home-nav button {
-  color: rgba(255, 255, 255, 0.9) !important;
-  font-size: 11px !important;
-  font-weight: 500 !important;
-}
-
-html[data-theme="dark"] .dark-home-back {
-  position: absolute;
-  z-index: 4;
-  left: 16px;
-  top: calc(env(safe-area-inset-top, 0px) + 4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #f7f5f2;
-  cursor: pointer;
-}
-
-html[data-theme="dark"] .dark-home-stage {
-  position: relative;
-  flex: 0 0 auto;
-  padding-top: calc(env(safe-area-inset-top, 0px) + 48px);
-}
-
-html[data-theme="dark"] .dark-home-floor {
-  position: relative;
-  width: 100%;
-}
-
-html[data-theme="dark"] .dark-home-coach {
-  display: block;
-  width: 100%;
-  height: auto;
-  background: transparent;
-  object-fit: contain;
-  object-position: center bottom;
-}
-
-html[data-theme="dark"] .dark-home-mirror {
-  position: relative;
-  height: 78px;
-  margin-top: -2px;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-html[data-theme="dark"] .dark-home-reflect {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: auto;
-  transform: scaleY(-1);
-  transform-origin: center top;
-  opacity: 0.5;
-  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.65) 0%, rgba(0, 0, 0, 0.18) 46%, transparent 82%);
-  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.65) 0%, rgba(0, 0, 0, 0.18) 46%, transparent 82%);
-}
-
-html[data-theme="dark"] .dark-home-scrim {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 140px;
-  background: linear-gradient(180deg, rgba(5, 7, 12, 0) 0%, #05070c 100%);
-  pointer-events: none;
-}
-
-html[data-theme="dark"] .dark-home-copy {
-  position: relative;
-  z-index: 2;
-  padding: 0 24px;
-  background: #05070c;
-}
-
-html[data-theme="dark"] .dark-home-eyebrow {
-  margin: 0;
-  font-size: 11px;
-  font-weight: 500;
-  line-height: 1.2;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: #a39e96;
-}
-
-html[data-theme="dark"] .dark-home-title {
-  margin: 8px 0 0;
-  font-family: Fraunces, ui-serif, Georgia, serif;
-  font-size: 34px;
-  font-weight: 500;
-  line-height: 38px;
-  letter-spacing: -0.02em;
-  color: #f7f5f2;
-}
-
-html[data-theme="dark"] .dark-home-price {
-  margin: 6px 0 0;
-  font-family: Fraunces, ui-serif, Georgia, serif;
-  font-size: 22px;
-  font-weight: 460;
-  line-height: 26px;
-  letter-spacing: -0.02em;
-  color: #f7f5f2;
-}
-
-html[data-theme="dark"] .dark-home-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 10px;
-}
-
-html[data-theme="dark"] .dark-home-where {
-  margin: 0;
-  min-width: 0;
-  font-size: 13px;
-  font-weight: 400;
-  line-height: 1.2;
-  color: #8e8e93;
-  white-space: nowrap;
-}
-
-html[data-theme="dark"] .dark-home-open {
-  position: relative;
-  flex: 0 0 auto;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #f7f5f2;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.2;
-  white-space: nowrap;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-html[data-theme="dark"] .dark-home-open::before {
-  content: "";
-  position: absolute;
-  left: -8px;
-  right: -8px;
-  top: 50%;
-  height: 44px;
-  transform: translateY(-50%);
 }
 
 html[data-theme="dark"] .dark-home-ask {
@@ -6110,12 +5033,6 @@ html[data-theme="dark"] .dark-home-ask {
 html[data-theme="dark"] .dark-home-ask:active {
   background: #e7e2d6;
   transform: scale(0.985);
-}
-
-html[data-theme="dark"] .dark-home-void {
-  flex: 1 1 auto;
-  min-height: 12px;
-  background: #05070c;
 }
 
 html[data-theme="dark"] :is(h1, .lot-dark-title, .garage-title, .report-title, .dark-home-title, .dark-home-price) {
@@ -6149,152 +5066,10 @@ html[data-theme="dark"] [data-home-open] .bottom-tabs-nav[data-dock-icons="words
   -webkit-text-fill-color: #ffffff !important;
 }
 
-html[data-theme="dark"] .dark-home-stage::before {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  left: 0;
-  right: 0;
-  top: 0;
-  height: 72%;
-  background: radial-gradient(
-    ellipse 68% 58% at 50% 46%,
-    rgba(92, 74, 58, 0.55) 0%,
-    rgba(28, 24, 22, 0.28) 42%,
-    transparent 72%
-  );
-  pointer-events: none;
-}
-
-html[data-theme="dark"] .dark-home-floor {
-  position: relative;
-  z-index: 1;
-}
-
 html[data-theme="dark"] [data-home-open].showroom-app,
-html[data-theme="dark"] [data-home-open] .showroom-stage,
-html[data-theme="dark"] .dark-home {
+html[data-theme="dark"] [data-home-open] .showroom-stage {
   background: #000 !important;
 }
-
-html[data-theme="dark"] .dark-home {
-  padding: 0 !important;
-}
-
-html[data-theme="dark"] .dark-home-card {
-  margin: auto 14px 0 !important;
-}
-
-html[data-theme="dark"] .dark-home-nav {
-  padding: 8px 4px calc(env(safe-area-inset-bottom, 0px) + 10px) !important;
-}
-
-html[data-theme="dark"] .dark-home-bar {
-  height: auto !important;
-  margin-top: env(safe-area-inset-top, 0px) !important;
-  padding: 6px 22px 10px !important;
-}
-
-html[data-theme="dark"] .dark-home-tools {
-  gap: 20px !important;
-  margin-right: 0 !important;
-}
-
-html[data-theme="dark"] .dark-home-stage {
-  flex: 0 0 auto !important;
-  padding: 0 !important;
-  margin-bottom: 0 !important;
-}
-
-html[data-theme="dark"] .dark-home-coach {
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 14%, #000 100%) !important;
-  mask-image: linear-gradient(to bottom, transparent 0%, #000 14%, #000 100%) !important;
-}
-
-html[data-theme="dark"] .dark-home-stage::before {
-  display: none !important;
-}
-
-html[data-theme="dark"] .dark-home-stage::after {
-  content: none !important;
-  display: none !important;
-}
-
-html[data-theme="dark"] .dark-home-copy {
-  background: transparent !important;
-  text-align: center !important;
-  margin-top: -72px !important;
-  padding: 0 20px 14px !important;
-  position: relative !important;
-  z-index: 2 !important;
-}
-
-html[data-theme="dark"] .dark-home-card {
-  margin: auto 14px 0 !important;
-}
-
-html[data-theme="dark"] .dark-home-nav {
-  margin-top: 0 !important;
-  padding: 8px 4px calc(env(safe-area-inset-bottom, 0px) + 10px) !important;
-}
-
-html[data-theme="dark"] .dark-home-nav button {
-  gap: 6px !important;
-  min-width: 68px !important;
-  padding: 6px 4px !important;
-  color: rgba(255, 255, 255, 0.9) !important;
-}
-
-html[data-theme="dark"] .dark-home-nav button img {
-  display: block;
-  object-fit: contain;
-  pointer-events: none;
-}
-
-html[data-theme="dark"] .dark-home-nav span {
-  font-size: 12px !important;
-  font-weight: 500 !important;
-  color: rgba(255, 255, 255, 0.92) !important;
-}
-
-html[data-theme="dark"] .dark-home-nav .is-on span {
-  color: #fff !important;
-}
-
-html[data-theme="dark"] [data-home-open] .showroom-dock {
-  display: none !important;
-}
-
-/* The coach is width 100% with no cap, so a wide preview makes the photo
-   taller than the screen and overflow:hidden clips the title, card, and tabs. */
-html[data-theme="dark"] .dark-home-stage {
-  flex: 1 1 auto !important;
-  min-height: 120px !important;
-  overflow: hidden !important;
-  display: flex !important;
-  align-items: flex-end !important;
-  justify-content: center !important;
-}
-
-html[data-theme="dark"] .dark-home-floor {
-  width: 100% !important;
-  max-height: 100% !important;
-}
-
-html[data-theme="dark"] .dark-home-coach {
-  width: 100% !important;
-  height: auto !important;
-  max-height: 34vh !important;
-  object-fit: contain !important;
-  object-position: center bottom !important;
-}
-
-
-
-
-
-
-
 
 /* ===== PR #670 — home-mock palette lock (layout unchanged) =====
  * Forces fixed Tailwind sky / emerald / blue hex classes in the shell
@@ -6491,20 +5266,4 @@ html:not([data-theme="light"]) [data-rvgrok-composer] textarea {
   border: 0 !important;
   box-shadow: none !important;
   border-radius: 0 !important;
-}
-
-/* Light Home: Open coach is a small pill tab under the placard text, left-aligned with it. */
-html[data-theme="light"] [data-home-placard] .showroom-hero-primary {
-  align-self: flex-start !important;
-  width: auto !important;
-  min-width: 0 !important;
-  max-width: 100%;
-  height: 36px !important;
-  min-height: 36px !important;
-  margin: 14px 0 0 !important;
-  padding: 0 18px !important;
-  border-radius: 999px !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  line-height: 1;
 }

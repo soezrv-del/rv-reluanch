@@ -1,237 +1,219 @@
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { fetchLotSnapshot, type LotUnit } from "@/lib/lot/ownLotPage";
-import { MetalVerifiedTrue } from "@/components/shell/Launchpad";
-import { Sun } from "lucide-react";
-import { readTheme, serverTheme, setTheme, subscribeTheme } from "@/lib/theme";
-import type { AppTab } from "@/components/shell/BottomTabs";
+import { useEffect, type ComponentType } from "react";
+import { SHOWROOM_SPOTLIGHT, requestLotUnit } from "@/lib/home/homeCoach";
+import type { AppTab, DockRoomId } from "@/components/shell/BottomTabs";
+import { dockActiveTab } from "@/components/shell/dockActiveTab";
+import { MoreSheet, type MorePick } from "@/components/shell/MoreSheet";
+import "./home-showroom.css";
 
-const EMPTY_UNITS: LotUnit[] = [];
-import {
-  SHOWROOM_SPOTLIGHT,
-  lotArrivalQuery,
-  requestLotUnit,
-  spotlightCard,
-  spotlightLotUnit,
-  spotlightSpecs,
-} from "@/lib/home/homeCoach";
+/**
+ * Home (rvmax.app "/"): the approved showroom mockup, full screen.
+ *
+ * The backdrop is a "showroom plate" cut from the mockup: textured wall,
+ * glossy floor, the 2026 Entegra Cornerstone 45D and its reflection, with
+ * every baked-in UI element removed. It is 1008px wide; mockup rows 0-1791
+ * sit at plate y=160-1951 and the extra rows extend wall and floor for
+ * phones taller than 9:16. All UI on top is live HTML laid out in mockup
+ * pixels (see home-showroom.css).
+ *
+ * Navigation is the shell's own: the tab bar calls the dock handler
+ * (Facts / Inventory / Chat / More sheet), Ask RV Grok opens the Chat room,
+ * and Open coach asks Inventory to open stock 45282 (requestLotUnit).
+ */
+const PLATE_IMAGE = "/assets/showroom/home-showroom.webp";
+const PLATE_WIDTH = 1008;
+const PLATE_HEIGHT = 2400;
+/** The status bar over this screen is the showroom wall, not the light theme's white. */
+const HOME_THEME_COLOR = "#07090d";
 
-function darkEyebrow(year: string, make: string): string {
-  const brand = make.replace(/\s+coach$/i, "").trim().toUpperCase();
-  if (!year && !brand) return "";
-  return `${year} · ${brand} COACH`;
+function RvMark() {
+  return (
+    <svg className="home-showroom__mark" viewBox="0 0 30 66" aria-hidden="true">
+      <path d="M3.5 2v62M3.5 3.5 26 22 7 34.5 28 52" />
+    </svg>
+  );
 }
 
-function darkPlace(place: string): string {
-  return place.trim().replace(/([A-Za-z])\s+([A-Z]{2})$/, "$1, $2");
+function FactsIcon() {
+  return (
+    <svg viewBox="0 0 80 66" aria-hidden="true" className="home-showroom__icon home-showroom__icon--facts">
+      <defs>
+        <linearGradient id="home-tab-check" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#f4f5f7" />
+          <stop offset="0.55" stopColor="#c9ccd1" />
+          <stop offset="1" stopColor="#8f939a" />
+        </linearGradient>
+      </defs>
+      <path d="M1.5 36.5 8 31l17.5 19.5L73.5 1.5 79 4.5 28.5 64.5h-5.5z" fill="url(#home-tab-check)" />
+    </svg>
+  );
 }
+
+function InventoryIcon() {
+  return (
+    <svg viewBox="0 0 130 76" aria-hidden="true" className="home-showroom__icon home-showroom__icon--inventory">
+      <defs>
+        <linearGradient id="home-tab-rv" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#d9dce1" />
+          <stop offset="1" stopColor="#8d9097" />
+        </linearGradient>
+      </defs>
+      <path
+        className="rv-body"
+        d="M5 58V27c0-7 3-11 10-12l44-6c22-3 38-2 48 1 10 3 15 10 17 20l3 16c1 8-2 12-9 12H5z"
+        fill="url(#home-tab-rv)"
+      />
+      <path className="rv-roof" d="M7 17C24 7 52 2 84 2c16 0 28 3 36 11" />
+      <path className="rv-glass" d="M14 24h22v12H14zM42 21h40v15H42zM90 18h13c8 0 13 5 15 14l1 6H90z" />
+      <path className="rv-stripe" d="M6 46c26-8 54-8 82 0" />
+      <path className="rv-glass" d="M88 41h9v15h-9z" />
+      <circle className="rv-wheel" cx="29" cy="60" r="9.5" />
+      <circle className="rv-wheel" cx="100" cy="60" r="9.5" />
+      <circle className="rv-hub" cx="29" cy="60" r="3.2" />
+      <circle className="rv-hub" cx="100" cy="60" r="3.2" />
+    </svg>
+  );
+}
+
+function ChatIcon() {
+  return (
+    <svg viewBox="0 0 72 74" aria-hidden="true" className="home-showroom__icon home-showroom__icon--chat">
+      <path className="chat-bubble" d="M20 66.5A32 32 0 1 0 8.6 54.5L3 71z" />
+      <circle cx="24" cy="36" r="4.6" />
+      <circle cx="36" cy="36" r="4.6" />
+      <circle cx="48" cy="36" r="4.6" />
+    </svg>
+  );
+}
+
+function MoreIcon() {
+  return (
+    <svg viewBox="0 0 68 16" aria-hidden="true" className="home-showroom__icon home-showroom__icon--more">
+      <circle cx="8" cy="8" r="7.5" />
+      <circle cx="34" cy="8" r="7.5" />
+      <circle cx="60" cy="8" r="7.5" />
+    </svg>
+  );
+}
+
+/** Same rooms, order and labels as the shell dock (BottomTabs). */
+const HOME_TABS: { id: DockRoomId; label: string; icon: ComponentType }[] = [
+  { id: "rvfax", label: "Facts", icon: FactsIcon },
+  { id: "rvlot", label: "Inventory", icon: InventoryIcon },
+  { id: "rvgrok", label: "Chat", icon: ChatIcon },
+  { id: "more", label: "More", icon: MoreIcon },
+];
 
 export function HomeScreen({
+  tab,
   onOpen,
+  onDockTap,
+  moreOpen = false,
+  onMorePick,
+  onMoreClose,
 }: {
+  tab: AppTab;
   onOpen: (tab: AppTab, opts?: { skipVoice?: boolean }) => void;
+  /** The shell dock handler: Facts / Inventory / Chat, More toggles the sheet. */
+  onDockTap: (tab: DockRoomId) => void;
+  moreOpen?: boolean;
+  onMorePick: (id: MorePick) => void;
+  onMoreClose: () => void;
 }) {
-  const theme = useSyncExternalStore(subscribeTheme, readTheme, serverTheme);
-  const [units, setUnits] = useState<LotUnit[] | null>(null);
-  const [saved, setSaved] = useState(false);
+  const lit = dockActiveTab(tab, true, moreOpen);
 
+  // Dark status bar while the showroom is up; the theme's own color comes back after.
   useEffect(() => {
-    let cancel = false;
-    fetchLotSnapshot()
-      .then((snap) => {
-        if (!cancel) setUnits(snap.units);
-      })
-      .catch(() => {
-        if (!cancel) setUnits([]);
-      });
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (!meta) return;
+    meta.setAttribute("content", HOME_THEME_COLOR);
     return () => {
-      cancel = true;
+      // Same colors setTheme / THEME_BOOT_SCRIPT use (lib/theme).
+      const dark = document.documentElement.dataset.theme === "dark";
+      meta.setAttribute("content", dark ? "#050505" : "#ffffff");
     };
   }, []);
 
-  const listed = units ?? EMPTY_UNITS;
-  const spotUnit = useMemo(() => spotlightLotUnit(listed), [listed]);
-  const specs = spotUnit ? spotlightSpecs(spotUnit) : null;
-  const model = specs?.model || SHOWROOM_SPOTLIGHT.series;
-  const spotYear = (spotUnit?.year || SHOWROOM_SPOTLIGHT.year).trim();
-  const spotMake = (spotUnit?.make || SHOWROOM_SPOTLIGHT.make).trim();
-  const place = (spotUnit?.location || "").trim();
-  const who = [spotYear, spotMake].filter(Boolean).join(" ");
-  const heroSrc = SHOWROOM_SPOTLIGHT.image;
-  const stockLine = [darkPlace(place), specs?.stock ? `Stock ${specs.stock}` : ""]
-    .filter(Boolean)
-    .join(" · ");
-  const openSpot = () => {
-    if (!spotUnit) return;
-    requestLotUnit(lotArrivalQuery(spotUnit));
+  // Inventory opens the spotlight unit (stock 45282) the same way any lot search does.
+  const openCoach = () => {
+    requestLotUnit(SHOWROOM_SPOTLIGHT.stockNumber);
     onOpen("rvlot");
   };
 
-  if (theme === "dark") {
-    const where = darkPlace(place);
-    const meta = [where, specs?.stock ? `Stock ${specs.stock}` : ""]
-      .filter(Boolean)
-      .join(" · ");
-    const cells = spotUnit ? spotlightCard(spotUnit) : [];
-    const share = () => {
-      const text = [darkEyebrow(spotYear, spotMake), model, specs?.price, meta]
-        .filter(Boolean)
-        .join("\n");
-      const nav = navigator as Navigator & { share?: (data: { title?: string; text?: string }) => Promise<void> };
-      if (nav.share) {
-        void nav.share({ title: "RVFOX", text }).catch(() => undefined);
-      }
-    };
-    return (
-      <div
-        data-home-screen
-        data-showroom-home=""
-        data-home-theme="dark"
-        data-no-swipe
-        className="showroom-home dark-home absolute inset-0 z-30 flex flex-col overflow-hidden"
-      >
-        <header className="dark-home-bar">
-          <p className="dark-home-mark">RVFOX</p>
-          <div className="dark-home-tools">
-            <button
-              type="button"
-              className="dark-home-tool"
-              aria-label="Bookmark"
-              aria-pressed={saved}
-              onClick={() => setSaved((on) => !on)}
-            >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill={saved ? "#fff" : "none"} aria-hidden="true">
-                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" stroke="#fff" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-            <button type="button" className="dark-home-tool" aria-label="Share" onClick={share}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" stroke="#fff" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-                <polyline points="16 6 12 2 8 6" stroke="#fff" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-                <line x1="12" y1="2" x2="12" y2="15" stroke="#fff" strokeWidth="1.7" strokeLinecap="round" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              className="dark-home-tool"
-              data-tool-rail="theme"
-              aria-label="Switch to light mode"
-              title="Switch to light mode"
-              onClick={() => setTheme("light")}
-            >
-              <Sun width={22} height={22} color="#fff" strokeWidth={1.7} aria-hidden />
-            </button>
-          </div>
-        </header>
-        <div className="dark-home-stage">
-          <div className="dark-home-floor">
-            <img
-              src="/assets/showroom/cornerstone-hero.jpg?v=5"
-              alt={SHOWROOM_SPOTLIGHT.alt}
-              className="dark-home-coach"
-              draggable={false}
-            />
-          </div>
-        </div>
-        <div className="dark-home-copy">
-          <p className="dark-home-eyebrow">{darkEyebrow(spotYear, spotMake)}</p>
-          <h1 className="dark-home-title">{model}</h1>
-          {specs?.price ? <p className="dark-home-price">{specs.price}</p> : null}
-          {meta ? <p className="dark-home-where">{meta}</p> : null}
-        </div>
-        <section className="dark-home-card">
-          {cells.length > 0 ? (
-            <div className="dark-home-stats">
-              {cells.map((cell) => (
-                <div key={cell.label} className="dark-home-stat">
-                  <b>{cell.value}</b>
-                  <span>{cell.label}</span>
-                </div>
-              ))}
-            </div>
-          ) : null}
-          <button
-            type="button"
-            className="dark-home-ask"
-            data-ask-grok
-            onClick={() => onOpen("rvgrok")}
-          >
-            Ask RV Grok
-          </button>
-          <nav className="dark-home-nav" aria-label="Home">
-            <button type="button" className="is-on" onClick={() => onOpen("rvfax")}>
-              <img src="/assets/showroom/tab-facts.png" alt="" width="28" height="27" />
-              <span>Facts</span>
-            </button>
-            <button type="button" onClick={() => onOpen("rvlot")}>
-              <img src="/assets/showroom/tab-inventory.png" alt="" width="40" height="25" />
-              <span>Inventory</span>
-            </button>
-            <button type="button" onClick={() => onOpen("rvgrok")}>
-              <img src="/assets/showroom/tab-chat.png" alt="" width="26" height="27" />
-              <span>Chat</span>
-            </button>
-            <button type="button" onClick={() => onOpen("more")}>
-              <img src="/assets/showroom/tab-more.png" alt="" width="28" height="15" />
-              <span>More</span>
-            </button>
-          </nav>
-        </section>
-      </div>
-    );
-  }
-
   return (
-    <div
-      data-home-screen
-      data-showroom-home=""
-      data-home-theme={theme}
-      data-no-swipe
-      className="showroom-home absolute inset-0 z-30 flex flex-col overflow-x-hidden overflow-y-auto"
-    >
-      <section className="showroom-hero" data-hero-kind="cutout">
-        <div className="showroom-placard" data-home-placard>
-          {who ? <p className="showroom-spotyear">{who}</p> : null}
-          <p className="showroom-spotmodel">{model}</p>
-          {specs?.price ? <p className="showroom-spotprice">{specs.price}</p> : null}
-          {stockLine ? <p className="showroom-spotstock">{stockLine}</p> : null}
-          {spotUnit ? (
-            <button
-              type="button"
-              className="showroom-hero-primary"
-              data-open-coach
-              onClick={openSpot}
-            >
-              Open coach
-            </button>
-          ) : null}
-        </div>
-        <div className="showroom-floor" data-hero-kind="cutout">
-          <img
-            src={heroSrc}
-            alt={SHOWROOM_SPOTLIGHT.alt}
-            className="showroom-coach"
-            data-hero-kind="cutout"
-          />
-          <div className="showroom-floor-mirror" aria-hidden>
-            <img src={heroSrc} alt="" className="showroom-coach-reflect" />
-          </div>
-          <div className="showroom-floor-gloss" aria-hidden />
-        </div>
-      </section>
+    <div data-home-screen data-showroom-home="" data-no-swipe className="home-showroom">
+      <img
+        className="home-showroom__plate"
+        src={PLATE_IMAGE}
+        width={PLATE_WIDTH}
+        height={PLATE_HEIGHT}
+        alt="2026 Entegra Cornerstone 45D in the RvFOX showroom"
+        decoding="async"
+        fetchPriority="high"
+        draggable={false}
+      />
 
-      <div className="home-truth">
-        <MetalVerifiedTrue size="md" />
-      </div>
+      <div className="home-showroom__stage">
+        <p className="home-showroom__brand" aria-label="RvFOX">
+          <RvMark />
+          <span>RvFOX</span>
+        </p>
 
-      <div className="light-home-ask-wrap">
+        <section className="home-showroom__details" aria-labelledby="home-showroom-title">
+          <p className="home-showroom__eyebrow">2026 Entegra Coach</p>
+          <h1 id="home-showroom-title" className="home-showroom__title">
+            Cornerstone 45D
+          </h1>
+          <p className="home-showroom__price">$1,124,963</p>
+          <p className="home-showroom__stock home-showroom__stock--1">1,420 in stock</p>
+          <p className="home-showroom__stock home-showroom__stock--2">
+            Stock {SHOWROOM_SPOTLIGHT.stockNumber}
+          </p>
+          <p className="home-showroom__stock home-showroom__stock--3">• Fresno CA</p>
+        </section>
+
         <button
           type="button"
-          className="light-home-ask"
+          className="home-showroom__open"
+          data-open-coach
+          data-on-dark=""
+          onClick={openCoach}
+        >
+          Open coach
+        </button>
+        <p className="home-showroom__verified">VERIFIED AND TRUE</p>
+
+        <button
+          type="button"
+          className="home-showroom__ask"
           data-ask-grok
+          data-on-dark=""
           onClick={() => onOpen("rvgrok")}
         >
           Ask RV Grok
         </button>
+
+        <div className="home-showroom__dock" data-no-swipe>
+          <MoreSheet open={moreOpen} tab={tab} onPick={onMorePick} onClose={onMoreClose} />
+          <nav className="home-showroom__tabs" aria-label="Sections">
+            {HOME_TABS.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                type="button"
+                data-home-tab={id}
+                data-on-dark=""
+                className={`home-showroom__tab${lit === id ? " is-active" : ""}`}
+                aria-current={lit === id ? "page" : undefined}
+                aria-expanded={id === "more" ? moreOpen : undefined}
+                onClick={() => onDockTap(id)}
+              >
+                <span className="home-showroom__tab-icon">
+                  <Icon />
+                </span>
+                <span className="home-showroom__tab-label">{label}</span>
+              </button>
+            ))}
+          </nav>
+        </div>
       </div>
     </div>
   );

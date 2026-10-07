@@ -55,7 +55,6 @@ test("the arrivals row is still and the dock does not loop", () => {
 
   assert.match(arrivals, /data-arrival-loop="off"/);
   assert.match(arrivals, /Newest arrivals/);
-  assert.match(home, /showroom-lotcount/);
   assert.match(home, /requestLotUnit/);
   assert.doesNotMatch(home, /data-arrival-loop|Newest arrivals|showroom-arrival/);
   assert.doesNotMatch(home, /shouldSeamlessLoop|nextSeamlessScroll|data-arrival-set="duplicate"/);

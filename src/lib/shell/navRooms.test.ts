@@ -28,11 +28,14 @@ test("dock is the original Facts Inventory Chat More; no Home or Ask tab; no Doc
     /short: "Facts"[\s\S]*short: "Inventory"[\s\S]*short: "Chat"[\s\S]*short: "More"/,
   );
   assert.doesNotMatch(tabs, /short: "Home"|short: "Ask"/);
-  // Same icons as dark Home's row.
   for (const icon of ["tab-facts", "tab-inventory", "tab-chat", "tab-more"]) {
     assert.match(tabs, new RegExp(`/assets/showroom/${icon}\\.png`));
-    assert.match(home, new RegExp(`/assets/showroom/${icon}\\.png`));
   }
+  // Home's own bar: the same four rooms, in the same order, through the dock handler.
+  assert.match(home, /id: "rvfax", label: "Facts"[\s\S]*id: "rvlot", label: "Inventory"[\s\S]*id: "rvgrok", label: "Chat"[\s\S]*id: "more", label: "More"/);
+  assert.match(home, /onClick=\{\(\) => onDockTap\(id\)\}/);
+  assert.match(home, /<MoreSheet open=\{moreOpen\}/);
+  assert.match(shell, /<HomeScreen[\s\S]*?onDockTap=\{onDockTap\}[\s\S]*?onMorePick=\{onMorePick\}/);
   assert.doesNotMatch(tabs, /^export type DockTab\b/m);
   assert.doesNotMatch(tabs, /import type \{[^}]*\bDockTab\b/);
   assert.doesNotMatch(tabs, /import \{[^}]*\bDockTab\b/);
@@ -41,12 +44,11 @@ test("dock is the original Facts Inventory Chat More; no Home or Ask tab; no Doc
   assert.match(tabs, /export const DOCK_ROOM_IDS/);
 });
 
-test("Ask RV Grok on both Homes opens the Grok room; logo goes Home", () => {
+test("Ask RV Grok on Home opens the Grok room; logo goes Home", () => {
   const home = read("../../components/shell/HomeScreen.tsx");
   const shell = read("../../components/shell/AppShell.tsx");
   const brand = read("../../components/shell/SuiteBrand.tsx");
-  assert.match(home, /className="dark-home-ask"[\s\S]*?onOpen\("rvgrok"\)[\s\S]*?Ask RV Grok/);
-  assert.match(home, /className="light-home-ask"[\s\S]*?onOpen\("rvgrok"\)[\s\S]*?Ask RV Grok/);
+  assert.match(home, /className="home-showroom__ask"[\s\S]*?onOpen\("rvgrok"\)[\s\S]*?Ask RV Grok/);
   assert.match(brand, /className="showroom-brand"/);
   assert.match(brand, /onClick=\{onHome\}/);
   assert.match(shell, /<SuiteBrand\s+onHome=\{\(\) => \{[\s\S]*?setHomeOpen\(true\)/);

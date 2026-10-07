@@ -661,7 +661,14 @@ export function AppShell({
           aria-hidden={launchOpen}
         >
           {homeOpen ? (
-            <HomeScreen onOpen={onTabChange} />
+            <HomeScreen
+              tab={tab}
+              onOpen={onTabChange}
+              onDockTap={onDockTap}
+              moreOpen={moreOpen}
+              onMorePick={onMorePick}
+              onMoreClose={closeMore}
+            />
           ) : null}
           {TAB_ORDER.map((id) => {
             if (!show(id)) return null;

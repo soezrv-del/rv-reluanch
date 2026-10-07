@@ -134,7 +134,7 @@ test("covered coach variant is stable and rotates from stock, vin, and id", () =
   assert.notEqual(coverVariant(onlyId), coverVariant(otherId));
 });
 
-test("shell shows the owner mark on every screen and Home uses lot data", () => {
+test("shell shows the owner mark on every screen and Home opens the spotlight unit", () => {
   const shell = readFileSync(join(root, "../../components/shell/AppShell.tsx"), "utf8");
   const home = readFileSync(join(root, "../../components/shell/HomeScreen.tsx"), "utf8");
   const brand = readFileSync(join(root, "../../components/shell/SuiteBrand.tsx"), "utf8");
@@ -148,12 +148,10 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   assert.match(shell, /homeOpen/);
   assert.match(shell, /initialTab = "rvgrok"/);
   assert.match(home, /SHOWROOM_SPOTLIGHT/);
-  assert.match(home, /SHOWROOM_SPOTLIGHT\.series/);
+  assert.match(home, /requestLotUnit\(SHOWROOM_SPOTLIGHT\.stockNumber\)/);
   assert.doesNotMatch(home, /resolveHomeCoach|pickShowroomStage|newestLotUnit/);
-  assert.match(home, /MetalVerifiedTrue/);
+  assert.match(home, /VERIFIED AND TRUE/);
   assert.doesNotMatch(home, /New arrivals/);
-  assert.doesNotMatch(home, /showroom-lotcount|showroom-spotstock-dark|showroom-verified/);
-  assert.equal(home.match(/className="showroom-spotstock"/g)?.length, 1);
   assert.match(home, /onOpen\("rvlot"\)/);
   const arrivals = readFileSync(join(root, "../../components/lot/LotArrivals.tsx"), "utf8");
   assert.match(arrivals, /CoveredCoach/);
@@ -163,9 +161,8 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   assert.match(cover, /data-covered-coach/);
   assert.match(arrivals, /data-lot-arrivals/);
   assert.match(arrivals, /overflow-x-auto/);
-  assert.match(home, /overflow-y-auto/);
+  assert.match(home, /data-home-screen/);
   assert.match(home, /requestLotUnit/);
-  assert.match(home, /fetchLotSnapshot/);
   const lot = readFileSync(join(root, "../../components/lot/LotStockApp.tsx"), "utf8");
   assert.match(lot, /takePendingLotQuery/);
   assert.match(lot, /LotArrivals/);
@@ -186,17 +183,13 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   assert.doesNotMatch(bar, /ROOM_CHIPS|Rv Facts|Lot Inventory|Learn more/);
 });
 
-test("theme switch sits on the shell rail and in the dark Home header, wired to setTheme", () => {
-  const home = readFileSync(join(root, "../../components/shell/HomeScreen.tsx"), "utf8");
+test("theme switch sits on the shell rail, wired to setTheme", () => {
   const brand = readFileSync(join(root, "../../components/shell/SuiteBrand.tsx"), "utf8");
   assert.match(brand, /data-tool-rail="theme"/);
   assert.match(brand, /Switch to light mode/);
   assert.match(brand, /Switch to dark mode/);
   assert.match(brand, /setTheme\(/);
   assert.ok(brand.indexOf('data-tool-rail="theme"') < brand.indexOf('data-tool-rail="settings"'));
-  const darkBar = home.slice(home.indexOf('className="dark-home-bar"'), home.indexOf("</header>"));
-  assert.match(darkBar, /className="dark-home-tool"[\s\S]*data-tool-rail="theme"/);
-  assert.match(darkBar, /setTheme\("light"\)/);
 });
 
 test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-first", () => {
@@ -246,7 +239,7 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
   assert.equal(specs.model, "Cornerstone 45D");
   assert.equal(specs.price, lotPriceOrGap(stocked.price));
   assert.equal(specs.stock, lotTextOrGap(stocked.stock_number));
-  assert.equal(specs.price, "$729,995");
+  assert.equal(specs.price, "$1,124,963");
   assert.equal(specs.stock, "45282");
   assert.equal(specs.model.includes(stocked.year), false);
   assert.equal(/\bEntegra\b/.test(specs.model), false);
@@ -321,6 +314,7 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
 
   const coach = readFileSync(join(root, "./homeCoach.ts"), "utf8");
   const home = readFileSync(join(root, "../../components/shell/HomeScreen.tsx"), "utf8");
+  const homeCss = readFileSync(join(root, "../../components/shell/home-showroom.css"), "utf8");
   const fax = readFileSync(join(root, "../../components/rvfax/RvFaxApp.tsx"), "utf8");
   const shell = readFileSync(join(root, "../../components/shell/AppShell.tsx"), "utf8");
   const css = readFileSync(join(root, "../../styles.css"), "utf8");
@@ -328,56 +322,48 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
     coach,
     /pickShowroomStage|resolveHomeCoach|newestLotUnit|sameLotUnit|ShowroomStage|arrivalLabel/,
   );
-  assert.doesNotMatch(css, /showroom-coach-fallback|showroom-reflect|showroom-contact|showroom-hero picture|showroom-hero-wash|showroom-hero-glint/);
-  assert.doesNotMatch(home, /showroom-hero-wash|showroom-hero-glint|showroom-roof-glint|feMorphology|feFlood|preserveAspectRatio/);
-  assert.match(css, /\.showroom-hero-pool,/);
-  assert.match(css, /\.showroom-floor \{/);
-  assert.doesNotMatch(css, /\.showroom-ambient \{/);
-  assert.doesNotMatch(css, /\.showroom-grain \{/);
-  assert.doesNotMatch(
-    css,
-    /\.showroom-count|\.showroom-onlot|\.showroom-coachline|\.showroom-spotfacts|\.showroom-spotmeta/,
-  );
-  assert.match(css, /\.showroom-spotmodel \{/);
-  assert.match(css, /\.showroom-spotprice \{/);
-  assert.match(css, /\.showroom-spotstock \{/);
-  assert.match(home, /SHOWROOM_SPOTLIGHT\.alt/);
-  assert.match(home, /SHOWROOM_SPOTLIGHT\.image/);
-  assert.doesNotMatch(home, /showroom-hero-beam/);
-  assert.match(home, /showroom-floor/);
-  assert.doesNotMatch(home, /showroom-hero-pool/);
-  assert.doesNotMatch(home, /spotlightJpegPath|showroom-reflect|showroom-contact/);
   assert.doesNotMatch(coach, /spotlightJpegPath|2026-entegra-cornerstone\.jpg/);
-  assert.match(home, /spotlightLotUnit\(listed\)/);
-  assert.match(home, /spotlightSpecs\(spotUnit\)/);
-  assert.match(home, /requestLotUnit\(lotArrivalQuery\(spotUnit\)\)/);
-  assert.match(home, /showroom-spotmodel/);
-  assert.match(home, /Stock \{specs\.stock\}/);
-  assert.doesNotMatch(home, /Stock #|showroom-count|showroom-onlot|showroom-coachline|showroom-spotfacts|showroom-spotmeta|useCountUp|spotlightLabel|data-home-count|data-home-spotlight-specs/);
   const arrivalRail = readFileSync(join(root, "../../components/lot/LotArrivals.tsx"), "utf8");
   assert.match(arrivalRail, /Newest arrivals/);
   // Arrival cards wear the lot list card face (title, meta, photo well).
   assert.match(arrivalRail, /lot-unit-title is-rail/);
   assert.match(arrivalRail, /lot-unit-meta/);
   assert.match(arrivalRail, /lot-well relative overflow-hidden is-rail/);
-  assert.doesNotMatch(home, /requestSpotlightFacts|onOpenFacts|729995|54000|44\.92/);
-  assert.doesNotMatch(home, /horsepower|engine/i);
   assert.doesNotMatch(fax, /takePendingSpotlightFacts|SPOTLIGHT_FACTS/);
   assert.doesNotMatch(shell, /openSpotlightFacts|onOpenFacts/);
   assert.doesNotMatch(coach, /spotlightFactsTarget|requestSpotlightFacts/);
-  assert.match(css, /\.showroom-hero \{[^}]*margin:\s*0;/);
   assert.match(
     css,
     /\.showroom-header \{[^}]*env\(safe-area-inset-top, 0px\)/,
   );
-  assert.match(home, /readTheme/);
-  assert.match(home, /const heroSrc = SHOWROOM_SPOTLIGHT\.image/);
-  assert.doesNotMatch(home, /spotlight-lot\.jpg/);
-  assert.match(home, /Open coach/);
-  assert.doesNotMatch(home, /data-lot-whisper|showroom-lot-whisper/);
-  assert.match(home, /showroom-lotcount/);
-  assert.match(home, /in stock/);
-  assert.doesNotMatch(home, /home-jump/);
-  assert.doesNotMatch(home, /Learn more|showroom-coach-lot|data-arrival-set="duplicate"/);
-  assert.doesNotMatch(css, /showroom-coach-lot/);
+
+  // Home is the approved showroom mockup: one committed plate (wall, floor,
+  // coach, reflection) with the mockup's copy and controls as live HTML.
+  const plate = join(root, "../../../public/assets/showroom/home-showroom.webp");
+  assert.ok(existsSync(plate), "showroom plate");
+  assert.ok(statSync(plate).size < 200 * 1024, "showroom plate stays under 200KB");
+  assert.match(home, /\/assets\/showroom\/home-showroom\.webp/);
+  assert.equal(
+    existsSync(join(root, "../../../public/assets/showroom/cornerstone-hero.jpg")),
+    false,
+    "retired dark Home photo removed",
+  );
+  for (const line of [
+    "2026 Entegra Coach",
+    "Cornerstone 45D",
+    "\\$1,124,963",
+    "1,420 in stock",
+    "Stock \\{SHOWROOM_SPOTLIGHT\\.stockNumber\\}",
+    "• Fresno CA",
+    "Open coach",
+    "VERIFIED AND TRUE",
+    "Ask RV Grok",
+  ]) {
+    assert.match(home, new RegExp(line));
+  }
+  assert.doesNotMatch(home, /dark-home|showroom-hero|showroom-placard|showroom-floor|MetalVerifiedTrue|readTheme/);
+  assert.doesNotMatch(home, /Learn more|home-jump|data-arrival-set="duplicate"|unsplash|placeholder/);
+  assert.doesNotMatch(css, /\.dark-home \{|\.showroom-hero \{|\.showroom-placard \{|\.home-jump \{/);
+  assert.match(homeCss, /--u: calc\(var\(--W\) \/ 1008\)/);
+  assert.match(homeCss, /\.home-showroom__tabs \{/);
 });
