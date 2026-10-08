@@ -144,7 +144,7 @@ test("status bar styling stays in the design family", () => {
   assert.match(css, /border-radius:\s*var\(--btn-radius\)/);
   assert.match(css, /min-height:\s*var\(--btn-h-sm\)/);
   assert.match(css, /padding-inline:\s*var\(--btn-px-sm\)/);
-  assert.match(css, /\.voice-status-interrupt \{[^}]*background:\s*#171a20/);
+  assert.match(css, /\.voice-status-interrupt \{[^}]*background:\s*#c48a5e/);
   assert.match(
     css,
     /html\[data-theme="dark"\] \.voice-status-bar \.voice-status-interrupt \{[^}]*background:\s*#c48a5e/,

@@ -206,7 +206,7 @@ test("Home's Ask RV Grok pill sits above the dock on every other screen, not Hom
   const bar = read("../../components/shell/RoomAskBar.tsx");
   const pill = read("../../components/shell/AskGrokPill.tsx");
   const css = read("../../components/shell/home-truth.css");
-  // Same classes as Home's pill: copper in dark, graphite in light.
+  // Same classes as Home's pill: copper fill in both themes.
   assert.match(pill, /theme === "dark" \? "dark-home-ask" : "light-home-ask"/);
   assert.match(pill, /data-ask-grok/);
   assert.match(pill, /Ask RV Grok/);
@@ -214,5 +214,5 @@ test("Home's Ask RV Grok pill sits above the dock on every other screen, not Hom
   assert.match(bar, /<AskGrokPill onOpen=\{\(\) => onOpen\("rvgrok", \{ pageScope: true \}\)\} \/>/);
   assert.ok(bar.indexOf("<AskGrokPill") < bar.indexOf("<BottomTabs"), "pill renders above the dock");
   assert.match(css, /\.shell-ask-wrap/);
-  assert.match(css, /\.light-home-ask \{[\s\S]*?background: #171a20/);
+  assert.match(css, /\.light-home-ask \{[\s\S]*?background: linear-gradient\(180deg, #f2c7a6/);
 });

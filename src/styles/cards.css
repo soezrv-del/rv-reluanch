@@ -163,7 +163,7 @@ html[data-theme="light"] .lot-arrival {
 /* Light: a photo-less well is as dark as a photo, so its badge and price
    take the same on-photo treatment main gives [data-lot-scene="photo"]. */
 html[data-theme="light"] .app-shell .lot-card .lot-well[data-lot-scene="empty"] .bg-sapphire {
-  background: var(--light-action) !important;
+  background: var(--color-copper) !important;
   background-image: none !important;
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;

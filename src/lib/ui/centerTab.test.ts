@@ -43,22 +43,22 @@ test("lot chips and the dock call the shared centering helper", () => {
   assert.doesNotMatch(tabs, /const PINNED/);
 });
 
-test("light selected tabs are graphite, not sapphire", () => {
+test("light selected chips are copper; the dock stays graphite", () => {
   const css = readFileSync(join(root, "../../styles.css"), "utf8");
   const dock = readFileSync(join(root, "../../components/shell/dock.css"), "utf8");
   const lightLot = css
     .split("}")
     .filter((rule) => rule.includes('html[data-theme="light"]') && rule.includes(".lot-chip.is-on"))
     .join("}");
-  assert.match(lightLot, /#171a20/);
-  assert.doesNotMatch(lightLot, /#c48a5e/);
+  assert.match(lightLot, /var\(--color-copper\)/);
+  assert.doesNotMatch(lightLot, /#171a20/);
+  // Dark dock clears the shared copper pill (transparent). Light keeps graphite.
   const lightDock = dock
     .split("}")
     .filter((rule) => rule.includes('html[data-theme="light"]') && rule.includes(".is-active"))
     .join("}");
   assert.match(lightDock, /#171a20/);
   assert.doesNotMatch(lightDock, /#c48a5e/);
-  // Dark active pill is sapphire.
   assert.match(dock, /\.is-active,[^{]*\{[^}]*background:\s*#c48a5e !important/);
   assert.doesNotMatch(dock, /rgba\(255, 255, 255, 0\.14\)/);
 });
