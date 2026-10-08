@@ -2563,6 +2563,29 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   font-weight: 600;
   color: #ffffff;
 }
+/* Lot VIN → VIN Decoder. Reads as the row's text with a copper underline. */
+.lot-vin-link {
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  text-align: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--color-copper);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  -webkit-tap-highlight-color: transparent;
+}
+.lot-vin-link:focus-visible {
+  outline: 2px solid var(--color-copper);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
 .lot-detail-row.is-list {
   flex-direction: column;
   align-items: stretch;
@@ -4636,6 +4659,9 @@ html[data-theme="light"] .lot-detail-section h3 {
 }
 html[data-theme="light"] .lot-detail-row {
   border-top-color: rgba(0, 0, 0, 0.08);
+}
+html[data-theme="light"] .lot-vin-link {
+  text-decoration-color: var(--color-copper-deep);
 }
 html[data-theme="light"] .lot-detail-ask {
   background: #c48a5e !important;

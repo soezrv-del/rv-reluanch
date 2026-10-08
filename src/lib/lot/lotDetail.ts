@@ -50,3 +50,12 @@ export function lotFactsSeed(unit: LotUnit): {
     floorplan: String(unit.trim ?? "").trim(),
   };
 }
+
+/**
+ * VIN the lot detail may hand to the VIN Decoder: exactly 17 VIN characters
+ * (no I, O, Q). Short stock-style IDs and blanks stay plain text.
+ */
+export function lotDecodableVin(raw: string | null | undefined): string | null {
+  const vin = String(raw ?? "").trim().toUpperCase();
+  return /^[A-HJ-NPR-Z0-9]{17}$/.test(vin) ? vin : null;
+}

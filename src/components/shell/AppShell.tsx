@@ -189,6 +189,8 @@ export function AppShell({
   /** More half-sheet and the VIN Decoder it opens. */
   const [moreOpen, setMoreOpen] = useState(false);
   const [vinOpen, setVinOpen] = useState(false);
+  /** VIN handed in by a Lot VIN tap; More → VIN Decoder opens blank. */
+  const [vinSeed, setVinSeed] = useState("");
   const launchOpen = false;
   const suiteReady = true;
   const [visited, setVisited] = useState<Set<AppTab>>(() => {
@@ -501,6 +503,17 @@ export function AppShell({
     if (topNavIs("vin")) popNav(1);
   }, [popNav]);
 
+  const openVinDecoder = useCallback(
+    (vin: string) => {
+      blurSuiteFocus();
+      if (moreOpenRef.current) setMoreOpen(false);
+      pushNav("vin", navView.current);
+      setVinSeed(vin);
+      setVinOpen(true);
+    },
+    [pushNav],
+  );
+
   /**
    * Dock tap. More toggles the sheet; another tab shuts it. Chat opens the
    * RV Grok room. Home is the RvFOX logo (SuiteBrand onHome).
@@ -542,6 +555,7 @@ export function AppShell({
         if (topNavIs("sheet")) replaceNav("vin", navView.current);
         else pushNav("vin", navView.current);
         setMoreOpen(false);
+        setVinSeed("");
         setVinOpen(true);
         return;
       }
@@ -592,6 +606,7 @@ export function AppShell({
       factsPickerToken,
       factsUnitSeed,
       clearFactsUnitSeed,
+      openVinDecoder,
       openFactsShare,
       factsShareToken,
       openFactsMarket,
@@ -622,6 +637,7 @@ export function AppShell({
       factsPickerToken,
       factsUnitSeed,
       clearFactsUnitSeed,
+      openVinDecoder,
       openFactsShare,
       factsShareToken,
       openFactsMarket,
@@ -756,7 +772,7 @@ export function AppShell({
 
         {vinOpen ? (
           <Suspense fallback={null}>
-            <VinDecoder open={vinOpen} onClose={closeVin} />
+            <VinDecoder open={vinOpen} onClose={closeVin} initialVin={vinSeed} />
           </Suspense>
         ) : null}
 

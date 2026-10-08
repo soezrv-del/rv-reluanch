@@ -41,6 +41,8 @@ export type ShellNavValue = {
   /** One-shot Lot → Facts unit — RvFaxApp consumes then clears. Dock never sets this. */
   factsUnitSeed: FactsCascadeSel | null;
   clearFactsUnitSeed: () => void;
+  /** Lot VIN tap: open the VIN Decoder with this VIN and decode it once. */
+  openVinDecoder: (vin: string) => void;
   /** Open the active (or last saved) Facts report and scroll to Share */
   openFactsShare: () => void;
   factsShareToken: number;
