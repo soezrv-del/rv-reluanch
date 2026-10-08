@@ -39,7 +39,6 @@ import {
 } from "@/lib/rvgrok/deskSheetLayout";
 import { DeskSpecSheet } from "./DeskSpecSheet";
 import { GrokExtrasRail } from "./GrokExtrasRail";
-import { VoiceStatusBar } from "./VoiceStatusBar";
 import { voiceStatusBarView } from "@/lib/rvgrok/voiceStatusBar";
 import { formatFeedbackContext } from "@/lib/rvgrok/answerFeedback";
 import { readActiveCoach } from "@/lib/rv/activeCoach";
@@ -1713,6 +1712,10 @@ export function RvGrokApp({
       onToggleLiveCam={() =>
         liveCam ? stopLiveCamera() : void startLiveCamera()
       }
+      voice={voiceBar}
+      onInterrupt={() => {
+        realtimeRef.current?.interrupt();
+      }}
     />
   );
 
@@ -1868,7 +1871,7 @@ export function RvGrokApp({
       composer={composer}
       hint={
         liveActive
-          ? realtimeDetail || "Hands-free · tap mic to end"
+          ? realtimeDetail || "Hands-free · tap status to interrupt"
           : waitingToResumeLive
             ? "Live Voice armed · tap mic"
             : undefined
@@ -1951,16 +1954,6 @@ export function RvGrokApp({
           paddingBottom: composerLift > 0 ? composerLift : undefined,
         }}
       >
-        {voiceBar ? (
-          <VoiceStatusBar
-            view={voiceBar}
-            onInterrupt={() => {
-              realtimeRef.current?.interrupt();
-            }}
-            onEnd={handleStop}
-          />
-        ) : null}
-
         {liveCam ? (
           <div
             className="mx-auto mb-2 max-w-2xl overflow-hidden rounded-2xl border border-white/20 bg-black"
@@ -2065,7 +2058,7 @@ export function RvGrokApp({
         {liveActive || waitingToResumeLive || pendingImage ? (
           <p className="mx-auto mt-1.5 max-w-2xl text-center text-[11px] text-muted">
             {liveActive
-              ? "Hands-free · tap mic to end"
+              ? "Hands-free · tap status to interrupt"
               : waitingToResumeLive
                 ? "Live Voice armed · tap mic"
                 : "Photo attached · send or add a question"}
