@@ -96,13 +96,18 @@ export function stopRoomVoice(): void {
   bridge?.stop?.();
 }
 
-/** Ask pill copy. Idle stays "Ask RV Grok". Live is the way back. */
+/** Ask pill copy. Idle stays "Ask RV Grok". Live is the off switch. */
 export function askPillFace(live: boolean): { label: string; aria: string } {
   if (!live) return { label: "Ask RV Grok", aria: "Ask RV Grok" };
   return {
     label: "Live chat",
-    aria: "Live chat is on. Tap to return to Chat, then tap again to turn it off.",
+    aria: "Live chat is on. Tap to turn it off.",
   };
+}
+
+/** The Ask pill is a toggle. The next tap while Live is on shuts it off. */
+export function planAskPillTap(live: boolean): "stop" | "open" {
+  return live ? "stop" : "open";
 }
 
 /**

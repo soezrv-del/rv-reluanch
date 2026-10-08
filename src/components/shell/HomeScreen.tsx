@@ -4,7 +4,7 @@ import { MetalVerifiedTrue } from "@/components/shell/Launchpad";
 import { Sun } from "lucide-react";
 import { readTheme, serverTheme, setTheme, subscribeTheme } from "@/lib/theme";
 import type { AppTab } from "@/components/shell/BottomTabs";
-import { askPillFace, chatTabFace } from "@/lib/rvgrok/roomAsk";
+import { askPillFace, chatTabFace, planAskPillTap, stopRoomVoice } from "@/lib/rvgrok/roomAsk";
 import { AskPillLiveLabel } from "@/components/shell/AskGrokPill";
 import { useRoomVoiceOpen } from "@/components/shell/useRoomVoiceOpen";
 
@@ -37,6 +37,13 @@ export function HomeScreen({
   const live = useRoomVoiceOpen();
   const ask = askPillFace(live);
   const chat = chatTabFace(live, false);
+  const onAsk = () => {
+    if (planAskPillTap(live) === "stop") {
+      stopRoomVoice();
+      return;
+    }
+    onOpen("rvgrok", { pageScope: true });
+  };
   const [units, setUnits] = useState<LotUnit[] | null>(null);
   const [saved, setSaved] = useState(false);
 
@@ -162,7 +169,7 @@ export function HomeScreen({
             data-live-chat={live ? "" : undefined}
             aria-label={ask.aria}
             title={ask.aria}
-            onClick={() => onOpen("rvgrok", { pageScope: true })}
+            onClick={onAsk}
           >
             {live ? <AskPillLiveLabel label={ask.label} /> : ask.label}
           </button>
@@ -248,7 +255,7 @@ export function HomeScreen({
           data-live-chat={live ? "" : undefined}
           aria-label={ask.aria}
           title={ask.aria}
-          onClick={() => onOpen("rvgrok", { pageScope: true })}
+          onClick={onAsk}
         >
           {live ? <AskPillLiveLabel label={ask.label} /> : ask.label}
         </button>
