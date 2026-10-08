@@ -128,10 +128,10 @@ test("no pinned Ask mic on Tow; Grok room keeps voice when hidden", () => {
   setActiveScreen("");
 });
 
-test("opening RV Grok says hello only when she is not already on", () => {
+test("opening the chat screen does not start the assistant", () => {
   assert.equal(
     planGrokTabVoice({ alreadyOnGrok: false, voiceOpen: false }),
-    "greet",
+    "keep",
   );
   assert.equal(
     planGrokTabVoice({ alreadyOnGrok: false, voiceOpen: true }),
@@ -155,10 +155,12 @@ test("opening RV Grok says hello only when she is not already on", () => {
   );
   const shell = read("../../components/shell/AppShell.tsx");
   assert.match(shell, /planGrokTabVoice\(/);
-  assert.match(shell, /greetRoomVoice\(beginLiveVoiceFromUserGesture\(\)\)/);
+  assert.doesNotMatch(shell, /greetRoomVoice\(/);
   assert.match(shell, /if \(voicePlan === "stop"\) stopRoomVoice\(\)/);
+  assert.match(shell, /startAssistant: true/);
   const app = read("../../components/rvgrok/RvGrokApp.tsx");
-  assert.match(app, /takePendingGrokGreeting\(\)/);
+  assert.match(app, /takeChatHistory\(/);
+  assert.match(app, /CHAT_IDLE_MS/);
   assert.match(app, /stop: \(\) => stopLiveFromTabRef\.current\(\)/);
 });
 
@@ -211,7 +213,7 @@ test("Home's Ask RV Grok pill sits above the dock on every other screen, not Hom
   assert.match(pill, /data-ask-grok/);
   assert.match(pill, /Ask RV Grok/);
   assert.match(bar, /const showAsk = !homeOpen && tab !== "rvgrok"/);
-  assert.match(bar, /<AskGrokPill onOpen=\{\(\) => onOpen\("rvgrok", \{ pageScope: true \}\)\} \/>/);
+  assert.match(bar, /<AskGrokPill onOpen=\{\(\) => onOpen\("rvgrok", \{ pageScope: true, startAssistant: true \}\)\} \/>/);
   assert.ok(bar.indexOf("<AskGrokPill") < bar.indexOf("<BottomTabs"), "pill renders above the dock");
   assert.match(css, /\.shell-ask-wrap/);
   assert.match(css, /\.light-home-ask \{[\s\S]*?background: #171a20/);

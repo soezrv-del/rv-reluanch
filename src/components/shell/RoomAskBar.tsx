@@ -20,7 +20,7 @@ export function RoomAskBar({
 }: {
   tab: AppTab;
   homeOpen?: boolean;
-  onOpen: (tab: AppTab, opts?: { skipVoice?: boolean; pageScope?: boolean }) => void;
+  onOpen: (tab: AppTab, opts?: { skipVoice?: boolean; pageScope?: boolean; startAssistant?: boolean }) => void;
   /** Dock taps — Facts / Inventory / Chat / More. */
   onDockTap?: (tab: DockRoomId) => void;
   moreOpen?: boolean;
@@ -31,7 +31,7 @@ export function RoomAskBar({
   return (
     <div data-room-ask data-no-swipe className="showroom-dock">
       {showAsk ? (
-        <AskGrokPill onOpen={() => onOpen("rvgrok", { pageScope: true })} />
+        <AskGrokPill onOpen={() => onOpen("rvgrok", { pageScope: true, startAssistant: true })} />
       ) : null}
       <BottomTabs
         tab={tab}

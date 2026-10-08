@@ -28,7 +28,7 @@ function darkPlace(place: string): string {
 export function HomeScreen({
   onOpen,
 }: {
-  onOpen: (tab: AppTab, opts?: { skipVoice?: boolean; pageScope?: boolean }) => void;
+  onOpen: (tab: AppTab, opts?: { skipVoice?: boolean; pageScope?: boolean; startAssistant?: boolean }) => void;
 }) {
   const theme = useSyncExternalStore(subscribeTheme, readTheme, serverTheme);
   const [units, setUnits] = useState<LotUnit[] | null>(null);
@@ -153,7 +153,7 @@ export function HomeScreen({
             type="button"
             className="dark-home-ask"
             data-ask-grok
-            onClick={() => onOpen("rvgrok", { pageScope: true })}
+            onClick={() => onOpen("rvgrok", { pageScope: true, startAssistant: true })}
           >
             Ask RV Grok
           </button>
@@ -166,7 +166,7 @@ export function HomeScreen({
               <img src="/assets/showroom/tab-inventory.png" alt="" width="40" height="25" />
               <span>Inventory</span>
             </button>
-            <button type="button" onClick={() => onOpen("rvgrok")}>
+            <button type="button" onClick={() => onOpen("rvgrok", { startAssistant: true })}>
               <img src="/assets/showroom/tab-chat.png" alt="" width="26" height="27" />
               <span>Chat</span>
             </button>
@@ -228,7 +228,7 @@ export function HomeScreen({
           type="button"
           className="light-home-ask"
           data-ask-grok
-          onClick={() => onOpen("rvgrok", { pageScope: true })}
+          onClick={() => onOpen("rvgrok", { pageScope: true, startAssistant: true })}
         >
           Ask RV Grok
         </button>

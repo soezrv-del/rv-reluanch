@@ -79,6 +79,7 @@ import {
   takePendingGrokGreeting,
 } from "@/lib/rvgrok/roomAsk";
 import { readActiveScreen, readPageChatScope, withActiveScreen } from "@/lib/rvgrok/screenContext";
+import { CHAT_IDLE_MS, takeChatHistory } from "@/lib/rvgrok/chatSession";
 import { useAccessOptional } from "@/components/access/AccessProvider";
 import { takeSessionWelcome, welcomeBackLine } from "@/lib/access/identity";
 import {
@@ -133,6 +134,7 @@ export function RvGrokApp({
   onSeedConsumed,
   active = true,
   entryToken = 0,
+  assistantRun = 0,
   variant = "page",
 }: {
   seedPrompt?: string;
@@ -140,6 +142,8 @@ export function RvGrokApp({
   active?: boolean;
   /** Bumps on every Grok tab entry (dock tap included) so a remounted pane resets. */
   entryToken?: number;
+  /** Bumps only for the Ask pill and the Chat tab. The screen stays blank until then. */
+  assistantRun?: number;
   /**
    * `page` (default) — Grok tab: suite backdrop, gold-trim chrome, pull-to-reset.
    * `embedded` — Ask Grok overlay mount: same chat stack, no suite-page chrome
@@ -221,6 +225,12 @@ export function RvGrokApp({
   const selectedVoiceRef = useRef(selectedVoice);
   const voicePanelOpenRef = useRef(false);
   const pendingVoiceStartRef = useRef<"live" | "mode" | null>(null);
+  const [assistantOn, setAssistantOn] = useState(false);
+  const [lastInputAt, setLastInputAt] = useState(0);
+  const seenAssistantRun = useRef(0);
+  const noteUserInput = useCallback(() => {
+    setLastInputAt(Date.now());
+  }, []);
   voicePanelOpenRef.current = voicePanelOpen;
   const liveCamRef = useRef(false);
   const isLoadingRef = useRef(false);
@@ -423,6 +433,25 @@ export function RvGrokApp({
     liveDeskSheetRef.current = null;
   }, [flushVoiceLearn]);
 
+  useEffect(() => {
+    if (assistantRun <= seenAssistantRun.current) return;
+    seenAssistantRun.current = assistantRun;
+    setAssistantOn(true);
+    setLastInputAt(Date.now());
+  }, [assistantRun]);
+
+  useEffect(() => {
+    if (!assistantOn || !lastInputAt) return;
+    const id = window.setTimeout(() => {
+      abortRef.current?.abort();
+      abortRef.current = null;
+      stopLiveSession({ disarm: true });
+      startNewChat();
+      setAssistantOn(false);
+    }, CHAT_IDLE_MS);
+    return () => window.clearTimeout(id);
+  }, [assistantOn, lastInputAt, startNewChat, stopLiveSession]);
+
   const pull = usePullToReset(listRef, startNewChat, { enabled: !embedded });
 
   const handleStop = () => {
@@ -517,6 +546,8 @@ export function RvGrokApp({
     async (text?: string, opts?: { fromVoice?: boolean; image?: string; liveFrame?: boolean }) => {
       const pageScope = readPageChatScope();
       const askedFromScreen = pageScope || readActiveScreen();
+      noteUserInput();
+      setAssistantOn(true);
       if (
         access &&
         !access.guard(undefined, "Ask Grok is limited to the approved list.")
@@ -609,7 +640,7 @@ export function RvGrokApp({
                   content: buildUserContent(messageText, image),
                 },
               ]
-            : [...prior, userMsg].slice(-10).map((m) => ({
+            : takeChatHistory([...prior, userMsg]).map((m) => ({
                 role: m.role,
                 content:
                   m.role === "user" && m.imageDataUrl
@@ -1117,6 +1148,7 @@ export function RvGrokApp({
         onUserTurnDone: (text) => {
           const t = text.replace(/\s+/g, " ").trim();
           if (!t) return;
+          noteUserInput();
           const prev = voiceLearnRef.current;
           if (prev[prev.length - 1] === t) return;
           voiceLearnRef.current = [...prev, t];
@@ -1500,6 +1532,8 @@ export function RvGrokApp({
    * (Push-to-talk "Voice Mode" stays available from Settings.)
    */
   const handleMicPress = () => {
+    noteUserInput();
+    setAssistantOn(true);
     askedFromScreenRef.current = readActiveScreen();
     const isLive =
       realtimeStatus === "connecting" ||
@@ -1692,7 +1726,10 @@ export function RvGrokApp({
   const composer = (
     <GrokComposer
       displayInput={displayInput}
-      onChange={setInput}
+      onChange={(value) => {
+        noteUserInput();
+        setInput(value);
+      }}
       onKeyDown={onKeyDown}
       onSend={() => void sendMessage()}
       onMic={handleMicPress}
@@ -1873,7 +1910,7 @@ export function RvGrokApp({
             ? "Live Voice armed · tap mic"
             : undefined
       }
-      greeting={sessionGreeting}
+      greeting={assistantOn ? sessionGreeting : ""}
       welcomeBack={
         sessionGreeting === RV_GROK_SESSION_INTRO
           ? welcomeBack || undefined
