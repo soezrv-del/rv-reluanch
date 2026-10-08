@@ -3151,6 +3151,7 @@ function Chip({
 }) {
   return (
     <span
+      data-facts-chip={tone ?? ""}
       className={cn(
         "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium",
         tone === "ruby"
@@ -3182,6 +3183,7 @@ function StatTile({
 }) {
   return (
     <div
+      data-facts-stat={warn ? "warn" : ok ? "ok" : accent ? "accent" : ""}
       className={cn(
         "rounded-xl border px-2.5 py-2",
         warn
@@ -3209,7 +3211,10 @@ function MiniStat({
   warn?: boolean;
 }) {
   return (
-    <div className="suite-glass rounded-2xl border border-white/10 bg-black/25 px-2 py-3 text-center">
+    <div
+      data-facts-mini=""
+      className="suite-glass rounded-2xl border border-white/10 bg-black/25 px-2 py-3 text-center"
+    >
       <p
         className={cn(
           "text-[13px] font-semibold tabular-nums",

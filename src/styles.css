@@ -6640,3 +6640,74 @@ html[data-theme="light"] [data-home-placard] .showroom-hero-primary {
   font-weight: 600 !important;
   line-height: 1;
 }
+
+/* Light Facts report: same page, card, tile, and chip as the rest of the light app.
+   Dark mode is untouched. */
+html[data-theme="light"] [data-coach-detail] .rvfax-report-chrome {
+  background: #f2f2f2 !important;
+  background-image: none !important;
+  border-bottom-color: rgba(0, 0, 0, 0.06) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+html[data-theme="light"] .app-shell [data-coach-detail] :is([data-facts-stat], [data-facts-mini]) {
+  background: var(--light-shade) !important;
+  background-image: none !important;
+  border: 1px solid var(--light-hairline) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+html[data-theme="light"] .app-shell [data-coach-detail] :is([data-facts-stat], [data-facts-mini]) p:not(.text-amber) {
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111 !important;
+}
+html[data-theme="light"] .app-shell [data-coach-detail] [data-facts-stat] p:first-child,
+html[data-theme="light"] .app-shell [data-coach-detail] [data-facts-mini] p:last-child {
+  color: #3d4d68 !important;
+  -webkit-text-fill-color: #3d4d68 !important;
+}
+/* Recall status and market keep their cue as copper text, the light status color. */
+html[data-theme="light"] .app-shell [data-coach-detail] [data-facts-stat]:is([data-facts-stat="ok"], [data-facts-stat="warn"], [data-facts-stat="accent"]) p:last-child {
+  color: var(--light-link) !important;
+  -webkit-text-fill-color: var(--light-link) !important;
+}
+html[data-theme="light"] .app-shell [data-coach-detail] [data-facts-stat="warn"] {
+  border-color: var(--color-copper) !important;
+}
+html[data-theme="light"] .app-shell [data-coach-detail] [data-facts-chip=""] {
+  background: transparent !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  box-shadow: none !important;
+  color: #5c5e62 !important;
+  -webkit-text-fill-color: #5c5e62 !important;
+}
+html[data-theme="light"] .app-shell [data-coach-detail] [data-facts-check-tow] {
+  background: var(--light-shade) !important;
+  background-image: none !important;
+  border: 1px solid var(--light-hairline) !important;
+  box-shadow: var(--light-raise) !important;
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111 !important;
+}
+html[data-theme="light"] .app-shell [data-coach-detail] .rvfax-report-chrome [role="menu"] {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: var(--light-lift) !important;
+}
+html[data-theme="light"] .app-shell [data-coach-detail] .rvfax-report-chrome [role="menuitem"] {
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: #111111 !important;
+}
+html[data-theme="light"] .app-shell [data-coach-detail] .rvfax-report-chrome [role="menuitem"]:last-child {
+  border-bottom: 0 !important;
+}
+html[data-theme="light"] .app-shell [data-coach-detail] button.underline {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
