@@ -8,6 +8,8 @@ import {
 } from "@/lib/hooks/nativeWebView";
 import "./dock.css";
 import { dockActiveTab } from "./dockActiveTab";
+import { useRoomVoiceOpen } from "./useRoomVoiceOpen";
+import { chatTabFace } from "@/lib/rvgrok/roomAsk";
 
 export type AppTab =
   | "rvgrok"
@@ -188,6 +190,7 @@ export function BottomTabs({
   }, [tab, homeOpen, moreOpen]);
 
   const theme = useSyncExternalStore(subscribeTheme, readTheme, serverTheme);
+  const live = useRoomVoiceOpen();
   const lit = dockActiveTab(tab, homeOpen, moreOpen);
 
   return (
@@ -208,11 +211,17 @@ export function BottomTabs({
       >
         {TABS.map(({ id, label, short }) => {
           const active = lit === id;
+          const chatLive = id === "rvgrok" && live;
+          // "End" only when the next tap actually stops Live Voice (already on Chat).
+          const face = chatLive
+            ? chatTabFace(true, tab === "rvgrok" && !homeOpen)
+            : { label: short, aria: label };
           return (
             <button
               key={id}
               type="button"
               data-bottom-tab={id}
+              data-live-chat={chatLive ? "" : undefined}
               onPointerDown={(e) => {
                 if (!isAndroidNativeWebView()) return;
                 press.current = { id, x: e.clientX, y: e.clientY };
@@ -234,17 +243,19 @@ export function BottomTabs({
               aria-current={active ? "page" : undefined}
               aria-expanded={id === "more" ? moreOpen : undefined}
               aria-haspopup={id === "more" ? "dialog" : undefined}
-              aria-label={label}
-              title={label}
+              aria-label={face.aria}
+              title={face.aria}
               className={cn(
                 "bottom-tab-btn group relative z-[3] flex flex-col items-center justify-center",
                 "transition-[background-color,color,opacity] duration-200 ease-out",
                 "pointer-events-auto active:opacity-70 touch-manipulation select-none",
                 active && "is-active",
+                chatLive && "is-live",
               )}
             >
+              {chatLive ? <span className="bottom-tab-live-dot" aria-hidden /> : null}
               <DockGlyph id={id} dark={theme === "dark"} />
-              <span className="bottom-tab-caption">{short}</span>
+              <span className="bottom-tab-caption">{face.label}</span>
             </button>
           );
         })}

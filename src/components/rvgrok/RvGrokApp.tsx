@@ -77,7 +77,7 @@ import {
   roomVoicePhaseFromStatus,
   takePendingGrokGreeting,
 } from "@/lib/rvgrok/roomAsk";
-import { readActiveScreen, withActiveScreen } from "@/lib/rvgrok/screenContext";
+import { readActiveScreen, readPageChatScope, withActiveScreen } from "@/lib/rvgrok/screenContext";
 import { useAccessOptional } from "@/components/access/AccessProvider";
 import { takeSessionWelcome, welcomeBackLine } from "@/lib/access/identity";
 import {
@@ -514,7 +514,8 @@ export function RvGrokApp({
 
   const sendMessage = useCallback(
     async (text?: string, opts?: { fromVoice?: boolean; image?: string; liveFrame?: boolean }) => {
-      const askedFromScreen = readActiveScreen();
+      const pageScope = readPageChatScope();
+      const askedFromScreen = pageScope || readActiveScreen();
       if (
         access &&
         !access.guard(undefined, "Ask Grok is limited to the approved list.")
@@ -688,6 +689,7 @@ export function RvGrokApp({
           signal: controller.signal,
           feedbackContext: formatFeedbackContext(messageText) || undefined,
           catalogContext: withActiveScreen(grounded.block || undefined, askedFromScreen),
+          pageScope: pageScope || undefined,
           wantsWebFallback: grounded.needsWeb,
           accessPhone: access?.phone,
           visitorFirstName:

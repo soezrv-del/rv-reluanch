@@ -98,8 +98,10 @@ test("the dock is the original four tabs with dark Home's icons, no Einstein pho
     assert.match(tabs, new RegExp(`/assets/showroom/${icon}\\.png`));
   }
   assert.doesNotMatch(tabs, /icon-rvgrok|bottom-tab-einstein|Einstein/);
-  assert.match(tabs, /aria-label=\{label\}/);
-  assert.match(tabs, /title=\{label\}/);
+  // Idle tabs still announce their own label. Live Chat swaps in chatTabFace.
+  assert.match(tabs, /aria: label/);
+  assert.match(tabs, /aria-label=\{face\.aria\}/);
+  assert.match(tabs, /title=\{face\.aria\}/);
   assert.match(dock, /--dock-icon:\s*28px/);
   assert.match(dock, /--dock-label:\s*13px/);
   assert.doesNotMatch(dock, /aqua|cyan|#00ffff/i);

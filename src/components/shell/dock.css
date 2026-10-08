@@ -201,6 +201,40 @@ html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bot
   opacity: 1;
 }
 
+/* Live Voice stays up on other screens. The Chat tab is the off switch. */
+.bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-live-dot {
+  position: absolute;
+  top: 8px;
+  left: calc(50% + 10px);
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #c48a5e;
+  box-shadow: 0 0 0 2px #000;
+  animation: live-chat-pulse 1.4s ease-in-out infinite;
+}
+html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-live-dot {
+  box-shadow: 0 0 0 2px #fff;
+}
+.bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-live:not(.is-active) .bottom-tab-caption {
+  color: #c48a5e !important;
+  -webkit-text-fill-color: #c48a5e !important;
+}
+html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-live:not(.is-active) .bottom-tab-caption {
+  color: #8b5e3c !important;
+  -webkit-text-fill-color: #8b5e3c !important;
+}
+html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-live:not(.is-active) img.bottom-tab-glyph {
+  opacity: 1;
+}
+html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-live:not(.is-active) .bottom-tab-glyph {
+  color: #8b5e3c !important;
+  -webkit-text-fill-color: #8b5e3c !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bottom-tab-live-dot { animation: none; }
+}
+
 /* Light: dark Home's raster icons as masks so they take the dock ink. */
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-mask {
   display: block;

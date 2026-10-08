@@ -570,7 +570,7 @@ export function buildCompareReport(
     ),
     row(
       "rating",
-      "RVFAX Rating",
+      "RV Fox Rating",
       "higher",
       colsWithRating.map((c) => ({
         display: `${c.rating.toFixed(1)} / 5.0`,
