@@ -22,9 +22,9 @@ export type GrokVoicePrewarm = {
 };
 
 /**
- * Opening RV Grok says hello only when she is not already on.
- * Pressing the RV Grok tab while she is on shuts her off.
- * A typed ask must not start her.
+ * Opening the chat screen does not start the assistant.
+ * The Ask pill and the Chat tab arm the session. A typed ask does not.
+ * Pressing Chat while she is already on shuts Live Voice off.
  */
 export function planGrokTabVoice(args: {
   alreadyOnGrok: boolean;
@@ -32,9 +32,8 @@ export function planGrokTabVoice(args: {
   skipVoice?: boolean;
 }): "greet" | "stop" | "keep" {
   if (args.skipVoice) return "keep";
-  if (args.alreadyOnGrok) return args.voiceOpen ? "stop" : "keep";
-  if (args.voiceOpen) return "keep";
-  return "greet";
+  if (args.alreadyOnGrok && args.voiceOpen) return "stop";
+  return "keep";
 }
 
 /** Ask-bar mic while a call is up on a room that is not the Grok screen. */

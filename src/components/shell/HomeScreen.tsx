@@ -31,7 +31,7 @@ function darkPlace(place: string): string {
 export function HomeScreen({
   onOpen,
 }: {
-  onOpen: (tab: AppTab, opts?: { skipVoice?: boolean; pageScope?: boolean }) => void;
+  onOpen: (tab: AppTab, opts?: { skipVoice?: boolean; pageScope?: boolean; startAssistant?: boolean }) => void;
 }) {
   const theme = useSyncExternalStore(subscribeTheme, readTheme, serverTheme);
   const live = useRoomVoiceOpen();
@@ -42,7 +42,7 @@ export function HomeScreen({
       stopRoomVoice();
       return;
     }
-    onOpen("rvgrok", { pageScope: true });
+    onOpen("rvgrok", { pageScope: true, startAssistant: true });
   };
   const [units, setUnits] = useState<LotUnit[] | null>(null);
   const [saved, setSaved] = useState(false);
@@ -188,7 +188,7 @@ export function HomeScreen({
               data-live-chat={live ? "" : undefined}
               aria-label={chat.aria}
               title={chat.aria}
-              onClick={() => onOpen("rvgrok")}
+              onClick={() => onOpen("rvgrok", { startAssistant: true })}
             >
               <img src="/assets/showroom/tab-chat.png" alt="" width="26" height="27" />
               {live ? <span className="dark-home-live-dot" aria-hidden /> : null}

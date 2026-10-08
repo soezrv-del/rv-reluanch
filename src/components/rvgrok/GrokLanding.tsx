@@ -109,12 +109,14 @@ export function GrokLanding({
           <GrokStatusWord label={status} />
         </div>
 
-        <h1
-          data-rvgrok-greeting=""
-          className="grok-display mt-6 max-w-[18ch] text-[2rem] font-semibold leading-[1.12] tracking-[-0.03em] text-fg sm:text-[2.35rem]"
-        >
-          {greeting}
-        </h1>
+        {greeting ? (
+          <h1
+            data-rvgrok-greeting=""
+            className="grok-display mt-6 max-w-[18ch] text-[2rem] font-semibold leading-[1.12] tracking-[-0.03em] text-fg sm:text-[2.35rem]"
+          >
+            {greeting}
+          </h1>
+        ) : null}
 
         {welcomeBack && greeting === RV_GROK_SESSION_INTRO ? (
           <p

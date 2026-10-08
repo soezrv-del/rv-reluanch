@@ -62,9 +62,7 @@ import {
   clearGrokSeedOnDockTap,
   grokSeedFromAskHandoff,
 } from "@/lib/rvgrok/tabEntry";
-import { beginLiveVoiceFromUserGesture } from "@/lib/rvgrok/liveVoice";
 import {
-  greetRoomVoice,
   planGrokTabVoice,
   roomVoiceIsOpen,
   stopRoomVoice,
@@ -175,6 +173,7 @@ export function AppShell({
   const [homeOpen, setHomeOpen] = useState(initialTab === "rvgrok");
   const [grokSeed, setGrokSeed] = useState<string | undefined>();
   const [grokEntryToken, setGrokEntryToken] = useState(0);
+  const [assistantRun, setAssistantRun] = useState(0);
   const [calSeed, setCalSeed] = useState<CalSeed | null>(null);
   const [calCleanToken, setCalCleanToken] = useState(0);
   const [tripsHandoff, setTripsHandoff] = useState<TripsHandoff | null>(null);
@@ -341,7 +340,7 @@ export function AppShell({
   }, [markVisited]);
 
   const onTabChange = useCallback(
-    (next: AppTab, opts?: { skipVoice?: boolean; pageScope?: boolean }) => {
+    (next: AppTab, opts?: { skipVoice?: boolean; pageScope?: boolean; startAssistant?: boolean }) => {
       const alreadyOnGrok = !homeOpen && tab === "rvgrok";
       setHomeOpen(false);
       // Hidden Grok composer can keep focus after a room switch — that sticks
@@ -361,16 +360,14 @@ export function AppShell({
       if (next === "rvgrok") {
         if (opts?.pageScope) setPageChatScope(readActiveScreen());
         else clearPageChatScope();
+        if (opts?.startAssistant) setAssistantRun((n) => n + 1);
         const voicePlan = planGrokTabVoice({
           alreadyOnGrok,
           voiceOpen: roomVoiceIsOpen(),
           skipVoice: opts?.skipVoice,
         });
-        // Capture has to start inside this tap. A later effect is too late.
+        // The screen stays blank. Pill and Chat tab arm the session; they do not greet.
         if (voicePlan === "stop") stopRoomVoice();
-        else if (voicePlan === "greet") {
-          greetRoomVoice(beginLiveVoiceFromUserGesture());
-        }
         // Dock tap / settings — never restore a leftover Ask-Grok seed.
         // The open thread stays; only a Facts Ask Grok seed starts fresh.
         setGrokSeed(clearGrokSeedOnDockTap());
@@ -533,7 +530,10 @@ export function AppShell({
         // The tab change unwinds the sheet entry with any tool entries.
         setMoreOpen(false);
       }
-      onTabChange(next, opts);
+      onTabChange(
+        next,
+        next === "rvgrok" ? { ...opts, startAssistant: true } : opts,
+      );
     },
     [closeMore, openMore, onTabChange, homeOpen, tab],
   );
@@ -732,6 +732,7 @@ export function AppShell({
                       <RvGrokApp
                         active={tab === "rvgrok" && !launchOpen}
                         entryToken={grokEntryToken}
+                        assistantRun={assistantRun}
                         seedPrompt={grokSeed}
                         onSeedConsumed={() => setGrokSeed(undefined)}
                       />
