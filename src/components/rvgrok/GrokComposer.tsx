@@ -1,6 +1,10 @@
 import type { FocusEvent, KeyboardEvent, RefObject } from "react";
-import { Camera, Loader2, Mic, Radio, Send, Video, X } from "lucide-react";
+import { Camera, Loader2, Mic, Send, Video, X } from "lucide-react";
 import { scrollFieldIntoVisibleArea } from "@/lib/hooks/useKeyboardInset";
+import {
+  voiceStatusPillLabel,
+  type VoiceBarView,
+} from "@/lib/rvgrok/voiceStatusBar";
 import { cn } from "@/lib/utils";
 
 function keepComposerFieldVisible(e: FocusEvent<HTMLTextAreaElement>) {
@@ -38,6 +42,8 @@ export function GrokComposer({
   imageBusy,
   liveCam,
   onToggleLiveCam,
+  voice,
+  onInterrupt,
 }: {
   displayInput: string;
   onChange: (value: string) => void;
@@ -59,6 +65,9 @@ export function GrokComposer({
   imageBusy?: boolean;
   liveCam?: boolean;
   onToggleLiveCam?: () => void;
+  /** Same view the old status bar used. Null keeps the idle mic. */
+  voice?: VoiceBarView | null;
+  onInterrupt?: () => void;
 }) {
   const landing = density === "landing";
 
@@ -174,25 +183,38 @@ export function GrokComposer({
             readOnly={isRecording || liveActive}
           />
 
-          <button
-            type="button"
-            data-rvgrok-mic=""
-            onClick={onMic}
-            className={cn(
-              "grok-mic-btn mb-0.5 flex size-10 shrink-0 items-center justify-center self-center rounded-full transition",
-              liveActive && "is-live",
-              waitingToResumeLive && "is-armed",
-              isRecording && "is-rec",
-            )}
-            aria-label={liveActive ? "Stop live voice" : "Start live voice"}
-            title={liveActive ? "Stop Live Voice" : "Start Live Voice"}
+          <div
+            className={cn("grok-voice-slot", voice && "is-status")}
+            data-rvgrok-voice-slot=""
           >
-            {liveActive ? (
-              <Radio className="size-5 animate-pulse" />
+            {voice ? (
+              <button
+                type="button"
+                data-rvgrok-voice-pill=""
+                data-phase={voice.phase}
+                onClick={onInterrupt}
+                className="grok-status-pill"
+                aria-label={`Interrupt: ${voiceStatusPillLabel(voice.phase)}`}
+              >
+                {voiceStatusPillLabel(voice.phase)}
+              </button>
             ) : (
-              <Mic className="size-5" />
+              <button
+                type="button"
+                data-rvgrok-mic=""
+                onClick={onMic}
+                className={cn(
+                  "grok-mic-btn flex size-full items-center justify-center rounded-full",
+                  waitingToResumeLive && "is-armed",
+                  isRecording && "is-rec",
+                )}
+                aria-label="Start live voice"
+                title="Start Live Voice"
+              >
+                <Mic className="size-5" />
+              </button>
             )}
-          </button>
+          </div>
         </div>
 
         <button

@@ -16,7 +16,7 @@ const serverUrl = process.env.CAP_SERVER_URL?.trim().replace(/\/$/, "");
 
 const config: CapacitorConfig = {
   appId: "com.markclass.rvfax",
-  appName: "RVFAX",
+  appName: "RV Fox",
   webDir: "cap-www",
   backgroundColor: "#050508",
   loggingBehavior: "production",

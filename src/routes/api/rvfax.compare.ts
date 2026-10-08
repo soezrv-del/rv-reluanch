@@ -152,7 +152,7 @@ function localSummary(coaches: CoachIn[]): string {
     `• Match class & fuel first (gas Class A vs diesel pusher is a lifestyle choice, not a pure score).`,
     `• Always confirm floorplan living layout, UVW on the unit sticker, and a PPI before you buy.`,
     ``,
-    `Live Grok summary was not available — this is a structured RVFAX checklist. Connect the chat worker for a full narrative.`,
+    `Live Grok summary was not available — this is a structured RV Fox checklist. Connect the chat worker for a full narrative.`,
   ];
   return lines.join("\n");
 }

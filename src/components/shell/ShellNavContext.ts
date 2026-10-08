@@ -4,6 +4,7 @@ import type { ActiveCoach, ActiveCoachInput } from "@/lib/rv/activeCoach";
 import type { TowHandoffOffer } from "@/lib/trips/towHandoff";
 import type { FactsTowHandoffOffer } from "@/lib/tow/factsTowHandoff";
 import type { CalSeed } from "@/lib/rv/calHandoff";
+import type { FactsCascadeSel } from "@/lib/rv/factsOpen";
 
 export type { CalSeed };
 
@@ -31,9 +32,17 @@ export type ShellNavValue = {
   /** Last Facts coach for the chip. Cal / Tow / Grok / Trips must not auto-read this on dock entry. */
   activeCoach: ActiveCoach | null;
   setActiveCoach: (sel: ActiveCoachInput | null) => void;
-  /** Dock Facts / chip “change”: clean catalog search (factsPickerToken). */
-  openFactsPicker: () => void;
+  /**
+   * Dock Facts / chip “change”: clean catalog search (factsPickerToken).
+   * Lot “Check RV Facts” passes the unit → Facts opens that report.
+   */
+  openFactsPicker: (unit?: FactsCascadeSel | null) => void;
   factsPickerToken: number;
+  /** One-shot Lot → Facts unit — RvFaxApp consumes then clears. Dock never sets this. */
+  factsUnitSeed: FactsCascadeSel | null;
+  clearFactsUnitSeed: () => void;
+  /** Lot VIN tap: open the VIN Decoder with this VIN and decode it once. */
+  openVinDecoder: (vin: string) => void;
   /** Open the active (or last saved) Facts report and scroll to Share */
   openFactsShare: () => void;
   factsShareToken: number;

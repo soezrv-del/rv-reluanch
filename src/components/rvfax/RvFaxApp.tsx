@@ -32,6 +32,9 @@ import {
   buildCascadeOptions,
   compareSelectionKey,
   ensureCatalogLoaded,
+  getFloorplansForYear,
+  getMakesForYear,
+  getModelsForYearMake,
   ratingFor,
   rvClassLabel,
   isCatalogLoaded,
@@ -49,6 +52,7 @@ import {
   factsTypeLabel,
   pickerCoachWrite,
   prepareFactsOpen,
+  resolveFactsUnitSeed,
   resolveShareOpenSel,
   factsSearchEnabled,
   resultForFactsPicker,
@@ -324,6 +328,36 @@ export function RvFaxApp({
     // Do not inherit Tow / Cal / GPS session data — resetFax clears the picker.
     resetFax();
   }, [factsPickerToken, resetFax]);
+
+  // Lot “Check RV Facts”: same openFactsPicker token (clean search above),
+  // plus a one-shot unit seed. Exact catalog match → openFactsUnit report;
+  // otherwise pre-fill what matched and stay on the picker. Clear the seed
+  // once used so a later plain Facts tap lands on clean search.
+  const factsUnitSeed = nav?.factsUnitSeed ?? null;
+  const clearFactsUnitSeed = nav?.clearFactsUnitSeed;
+  useEffect(() => {
+    if (!factsUnitSeed) return;
+    let cancelled = false;
+    void (async () => {
+      await ensureCatalogLoaded();
+      if (cancelled) return;
+      const { sel, open } = resolveFactsUnitSeed(factsUnitSeed, {
+        makes: (y) => getMakesForYear(y),
+        models: (y, mk) => getModelsForYearMake(y, mk),
+        floorplans: getFloorplansForYear,
+      });
+      const found = open ? searchCatalog(sel) : [];
+      if (shouldOpenSingleHitReport(found)) {
+        openFactsUnit(found[0]!, sel.floorplan);
+      } else {
+        applySel(sel);
+      }
+      clearFactsUnitSeed?.();
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [factsUnitSeed, clearFactsUnitSeed, openFactsUnit, applySel]);
 
   useEffect(() => {
     if (!factsShareToken) return;

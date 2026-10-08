@@ -31,3 +31,31 @@ export function lotOpenSections(unit: LotUnit): BuyerReportSection[] {
     })
     .filter((part) => part.rows.length > 0);
 }
+
+/**
+ * Lot → Facts seed for “Check RV Facts”. The lot sheet's `trim` is the
+ * floorplan code (e.g. 31ZW, 3820FK). Facts matches these against the
+ * catalog and falls back to the picker when any field misses.
+ */
+export function lotFactsSeed(unit: LotUnit): {
+  year: string;
+  make: string;
+  model: string;
+  floorplan: string;
+} {
+  return {
+    year: String(unit.year ?? "").trim(),
+    make: String(unit.make ?? "").trim(),
+    model: String(unit.model ?? "").trim(),
+    floorplan: String(unit.trim ?? "").trim(),
+  };
+}
+
+/**
+ * VIN the lot detail may hand to the VIN Decoder: exactly 17 VIN characters
+ * (no I, O, Q). Short stock-style IDs and blanks stay plain text.
+ */
+export function lotDecodableVin(raw: string | null | undefined): string | null {
+  const vin = String(raw ?? "").trim().toUpperCase();
+  return /^[A-HJ-NPR-Z0-9]{17}$/.test(vin) ? vin : null;
+}

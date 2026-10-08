@@ -2,12 +2,13 @@ import type { AppTab, DockRoomId } from "./BottomTabs";
 import { BottomTabs } from "./BottomTabs";
 import { AskGrokPill } from "./AskGrokPill";
 import { MoreSheet, type MorePick } from "./MoreSheet";
+import { useRoomVoiceOpen } from "./useRoomVoiceOpen";
 
 /**
  * The original dock (Facts · Inventory · Chat · More) with the More sheet
  * anchored above it. Home's Ask RV Grok pill sits right above the dock on
- * every other screen; Home keeps its own pill, and Chat (the RV Grok room,
- * with its own composer and live voice) shows none.
+ * every other screen. Home keeps its own pill. Chat hides this one unless
+ * Live Voice is on, so the same pill can be tapped again to turn it off.
  */
 export function RoomAskBar({
   tab,
@@ -27,7 +28,8 @@ export function RoomAskBar({
   onMorePick?: (id: MorePick) => void;
   onMoreClose?: () => void;
 }) {
-  const showAsk = !homeOpen && tab !== "rvgrok";
+  const live = useRoomVoiceOpen();
+  const showAsk = !homeOpen && (tab !== "rvgrok" || live);
   return (
     <div data-room-ask data-no-swipe className="showroom-dock">
       {showAsk ? (
