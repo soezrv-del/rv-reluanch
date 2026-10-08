@@ -583,7 +583,6 @@ function LotDetail({
   const sections = lotOpenSections(unit);
   const nav = useShellNavOptional();
   const listing = lotListingHref(unit.url);
-  const price = unit.price != null && unit.price > 0 ? unit.price : 0;
   return (
     <div className="lot-detail" data-lot-detail>
       {isToyHaulerBody(unit.body_type) && !garagePinConfirmed(pins, unit) ? (
@@ -601,18 +600,20 @@ function LotDetail({
         >
           <Check className="size-4" aria-hidden />
         </button>
-        {price > 0 ? (
-          <button
-            type="button"
-            className="lot-detail-tab"
-            data-lot-cal
-            onClick={() =>
-              nav?.openCalWithPrice(price, showroomUnitLabel(unit))
+        <button
+          type="button"
+          className="lot-detail-tab"
+          data-lot-cal
+          onClick={() => {
+            if (unit.price != null && unit.price > 0) {
+              nav?.openCalWithPrice(unit.price, showroomUnitLabel(unit));
+              return;
             }
-          >
-            Estimate payment
-          </button>
-        ) : null}
+            nav?.setTab("rvcal");
+          }}
+        >
+          Estimate payment
+        </button>
         {listing ? (
           <a
             className="lot-detail-tab"
