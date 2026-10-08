@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import {
   voiceBarCanInterrupt,
   voiceStatusBarView,
+  voiceStatusPillLabel,
   type VoiceBarInput,
 } from "./voiceStatusBar.ts";
 
@@ -119,40 +120,44 @@ test("hidden when the old STOP bar was hidden; still covers typed reply, push-to
   }
 });
 
-test("RvGrokApp renders one status bar wired to the existing handlers", () => {
-  const app = read("../../components/rvgrok/RvGrokApp.tsx");
-  // The three stacked bars are gone.
-  assert.doesNotMatch(app, /Interrupt — stop her, keep listening/);
-  assert.doesNotMatch(app, /Live continuous ·/);
-  assert.doesNotMatch(app, /Live Grok Voice ·/);
-  assert.doesNotMatch(app, />\s*CUT\s*</);
-  assert.doesNotMatch(app, />\s*STOP\s*</);
-  assert.equal(app.match(/<VoiceStatusBar\b/g)?.length, 1);
-  // Same handlers as before: session.interrupt() and handleStop.
-  assert.match(
-    app,
-    /<VoiceStatusBar[\s\S]*?onInterrupt=\{\(\) => \{\s*realtimeRef\.current\?\.interrupt\(\);\s*\}\}[\s\S]*?onEnd=\{handleStop\}/,
-  );
-  // The composer mic still ends Live Voice too.
-  assert.match(app, /Hands-free · tap mic to end/);
+test("the mic slot uses one short label from the same phase", () => {
+  assert.equal(voiceStatusPillLabel("listening"), "Listening");
+  assert.equal(voiceStatusPillLabel("recording"), "Listening");
+  assert.equal(voiceStatusPillLabel("hears"), "Hearing");
+  assert.equal(voiceStatusPillLabel("thinking"), "Thinking");
+  assert.equal(voiceStatusPillLabel("connecting"), "Thinking");
+  assert.equal(voiceStatusPillLabel("speaking"), "Talking");
+  const speaking = voiceStatusBarView(live("speaking", "RvGrok speaking…"));
+  assert.equal(voiceStatusPillLabel(speaking!.phase), "Talking");
+  const hears = voiceStatusBarView(live("listening", "Hearing you…"));
+  assert.equal(voiceStatusPillLabel(hears!.phase), "Hearing");
 });
 
-test("status bar styling stays in the design family", () => {
-  const css = read("../../styles/voiceBar.css");
-  const bar = read("../../components/rvgrok/VoiceStatusBar.tsx");
+test("the status pill lives in the composer and the old bar is gone", () => {
+  const app = read("../../components/rvgrok/RvGrokApp.tsx");
+  const composer = read("../../components/rvgrok/GrokComposer.tsx");
+  const css = read("../../styles.css");
   const rootRoute = read("../../routes/__root.tsx");
-  assert.match(css, /border-radius:\s*var\(--btn-radius\)/);
-  assert.match(css, /min-height:\s*var\(--btn-h-sm\)/);
-  assert.match(css, /padding-inline:\s*var\(--btn-px-sm\)/);
-  assert.match(css, /\.voice-status-interrupt \{[^}]*background:\s*#171a20/);
+  assert.doesNotMatch(app, /VoiceStatusBar/);
+  assert.doesNotMatch(app, /data-voice-status-bar/);
+  assert.doesNotMatch(rootRoute, /voiceBarCss/);
   assert.match(
-    css,
-    /html\[data-theme="dark"\] \.voice-status-bar \.voice-status-interrupt \{[^}]*background:\s*#c48a5e/,
+    app,
+    /onInterrupt=\{\(\) => \{\s*realtimeRef\.current\?\.interrupt\(\);\s*\}\}/,
   );
-  // No aqua, no gold, no colored tints.
-  const code = (css + bar).replace(/\/\*[\s\S]*?\*\//g, "");
-  assert.doesNotMatch(code, /sky-|cyan|aqua|teal|gold|amber|#00[a-f0-9]{2}ff/i);
-  const a = rootRoute.indexOf("cardsCss }");
-  const b = rootRoute.indexOf("voiceBarCss }");
-  assert.ok(a > 0 && b > a, "voiceBar.css is linked after cards.css");
+  assert.match(app, /voice=\{voiceBar\}/);
+  assert.match(composer, /data-rvgrok-voice-pill/);
+  assert.match(composer, /voiceStatusPillLabel\(voice\.phase\)/);
+  assert.match(composer, /data-rvgrok-mic/);
+  const pillStart = composer.indexOf("grok-composer-pill");
+  const sendStart = composer.indexOf("grok-send-btn");
+  const slot = composer.slice(pillStart, sendStart);
+  assert.match(slot, /data-rvgrok-voice-pill/);
+  assert.match(slot, /data-rvgrok-mic/);
+  assert.match(css, /\.grok-voice-slot \{[^}]*height:\s*var\(--btn-icon\)/);
+  assert.match(css, /\.grok-voice-slot \{[^}]*width:\s*var\(--btn-icon\)/);
+  assert.match(css, /\.grok-voice-slot\.is-status \{[^}]*width:\s*7\.25rem/);
+  assert.match(css, /\.grok-status-pill \{[^}]*height:\s*100%/);
+  assert.match(css, /html\[data-theme="light"\] \.grok-status-pill \{[^}]*background:\s*#171a20/);
+  assert.doesNotMatch(css, /\.voice-status-bar \{/);
 });

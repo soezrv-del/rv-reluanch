@@ -1,11 +1,10 @@
 /**
- * One status bar above the RV Grok composer.
+ * What the composer mic slot shows.
  *
  * Presentation only. It reads the state RvGrokApp already keeps
  * (realtimeStatus / realtimeDetail from the live session, plus the typed-chat
- * and push-to-talk flags) and says what is happening in one line. It never
- * starts, stops or gates audio; the bar's buttons call the handlers the old
- * three bars called (session.interrupt() and handleStop).
+ * and push-to-talk flags). It never starts, stops, or gates audio.
+ * The pill calls the same interrupt handler the old bar used.
  */
 
 export type VoiceBarStatus =
@@ -147,4 +146,19 @@ export function voiceStatusBarView(input: VoiceBarInput): VoiceBarView | null {
     endLabel: "Stop",
     live: false,
   };
+}
+
+/** Short label for the mic-slot pill. Same phases as voiceStatusBarView. */
+export function voiceStatusPillLabel(phase: VoiceBarPhase): string {
+  switch (phase) {
+    case "hears":
+      return "Hearing";
+    case "thinking":
+    case "connecting":
+      return "Thinking";
+    case "speaking":
+      return "Talking";
+    default:
+      return "Listening";
+  }
 }
