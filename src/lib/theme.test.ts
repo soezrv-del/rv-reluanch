@@ -70,8 +70,8 @@ test("light theme is a flat Tesla canvas and dark chrome is unchanged", () => {
     false,
     "svg stand-in removed",
   );
-  assert.match(light, /\.suite-title-accent[\s\S]*?var\(--light-action\)/);
-  assert.match(light, /background:\s*var\(--light-action\) !important/);
+  assert.match(light, /\.suite-title-accent[\s\S]*?#111111/);
+  assert.match(light, /background:\s*#111111 !important/);
   assert.doesNotMatch(light, /Figtree/);
   assert.doesNotMatch(light, /rgba\(10,\s*8,\s*6/);
   assert.doesNotMatch(light, /\[class\*=text-gold\]/);

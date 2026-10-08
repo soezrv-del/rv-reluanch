@@ -163,13 +163,14 @@ html[data-theme="light"] .lot-arrival {
 /* Light: a photo-less well is as dark as a photo, so its badge and price
    take the same on-photo treatment main gives [data-lot-scene="photo"]. */
 html[data-theme="light"] .app-shell .lot-card .lot-well[data-lot-scene="empty"] .bg-sapphire {
-  background: var(--color-copper) !important;
-  background-image: none !important;
-  color: #fff !important;
-  -webkit-text-fill-color: #fff !important;
-  box-shadow: none !important;
+  background: var(--copper-metal-sm) !important;
+  background-image: var(--copper-metal-sm) !important;
+  color: var(--copper-ink) !important;
+  -webkit-text-fill-color: var(--copper-ink) !important;
+  text-shadow: var(--copper-ink-shadow) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 1px 2px rgba(0, 0, 0, 0.25) !important;
 }
-html[data-theme="light"] .app-shell .lot-card .lot-well[data-lot-scene="empty"] :is(.text-prestige, [class*="text-white"]) {
+html[data-theme="light"] .app-shell .lot-card .lot-well[data-lot-scene="empty"] :is([class*="text-white"]):not(.bg-copper):not(.bg-sapphire):not(.text-prestige) {
   color: #c5cedb !important;
   -webkit-text-fill-color: #c5cedb !important;
 }

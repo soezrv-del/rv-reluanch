@@ -541,7 +541,7 @@ export function lotSpecLine(unit: LotUnit): string {
   if (unit.slides != null && unit.slides >= 0) {
     parts.push(`${unit.slides} slide${unit.slides === 1 ? "" : "s"}`);
   }
-  if (unit.sleeps != null && unit.sleeps >= 0) {
+  if (unit.sleeps != null && unit.sleeps > 0) {
     parts.push(`sleeps ${unit.sleeps}`);
   }
   const gvwr = lotLbsOrGap(unit.gvwr);

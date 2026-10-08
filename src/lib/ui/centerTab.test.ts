@@ -50,15 +50,17 @@ test("light selected chips are copper; the dock stays graphite", () => {
     .split("}")
     .filter((rule) => rule.includes('html[data-theme="light"]') && rule.includes(".lot-chip.is-on"))
     .join("}");
-  assert.match(lightLot, /var\(--color-copper\)/);
+  assert.match(lightLot, /var\(--copper-metal-sm\)/);
   assert.doesNotMatch(lightLot, /#171a20/);
-  // Dark dock clears the shared copper pill (transparent). Light keeps graphite.
+  // Active dock is a copper tick, not a graphite or copper pill.
   const lightDock = dock
     .split("}")
     .filter((rule) => rule.includes('html[data-theme="light"]') && rule.includes(".is-active"))
     .join("}");
-  assert.match(lightDock, /#171a20/);
-  assert.doesNotMatch(lightDock, /#c48a5e/);
-  assert.match(dock, /\.is-active,[^{]*\{[^}]*background:\s*#c48a5e !important/);
+  assert.doesNotMatch(lightDock, /#171a20/);
+  assert.match(lightDock, /background:\s*transparent !important/);
+  assert.match(dock, /#8b5e3c/);
+  assert.match(dock, /#d4a06a/);
+  assert.match(dock, /::after/);
   assert.doesNotMatch(dock, /rgba\(255, 255, 255, 0\.14\)/);
 });

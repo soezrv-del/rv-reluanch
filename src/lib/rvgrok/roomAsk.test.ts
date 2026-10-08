@@ -219,11 +219,11 @@ test("Home's Ask RV Grok pill sits above the dock on every other screen, not Hom
   assert.match(bar, /<AskGrokPill onOpen=\{\(\) => onOpen\("rvgrok", \{ pageScope: true, startAssistant: true \}\)\} \/>/);
   assert.ok(bar.indexOf("<AskGrokPill") < bar.indexOf("<BottomTabs"), "pill renders above the dock");
   assert.match(css, /\.shell-ask-wrap/);
-  assert.match(css, /\.light-home-ask \{[\s\S]*?background: var\(--gradient-copper\)/);
+  assert.match(css, /\.light-home-ask \{[\s\S]*?background: var\(--copper-metal\)/);
   const askRule = css.match(/\.light-home-ask \{[\s\S]*?\}/)[0];
   const shadow = askRule.match(/box-shadow:[\s\S]*?!important/)[0];
-  assert.match(shadow, /0 0 18px rgba\(200, 140, 90, 0\.5\)/);
-  assert.doesNotMatch(shadow, /inset/);
+  assert.match(shadow, /var\(--copper-glow\)/);
+  assert.match(shadow, /var\(--copper-inset\)/);
 });
 
 test("Chat tab and Ask pill show Live while voice is on away from Chat", () => {

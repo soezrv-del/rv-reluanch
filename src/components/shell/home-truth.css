@@ -27,19 +27,16 @@
   padding: 0;
   border: 0 !important;
   border-radius: 999px !important;
-  background: var(--gradient-copper) !important;
-  background-image: var(--gradient-copper) !important;
-  color: #fff !important;
-  -webkit-text-fill-color: #fff !important;
+  background: var(--copper-metal) !important;
+  background-image: var(--copper-metal) !important;
+  color: var(--copper-ink) !important;
+  -webkit-text-fill-color: var(--copper-ink) !important;
+  text-shadow: var(--copper-ink-shadow);
   font-family: inherit;
   font-size: 18px;
   font-weight: 600;
   letter-spacing: 0;
-  /* Same metal as dark. The token's dark inset muddies this pill on white, so only the outer glow. */
-  box-shadow:
-    0 0 18px rgba(200, 140, 90, 0.5),
-    0 0 36px rgba(180, 120, 70, 0.25),
-    0 4px 12px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: var(--copper-glow), var(--copper-inset) !important;
   cursor: pointer;
 }
 
