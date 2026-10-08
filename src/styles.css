@@ -5005,6 +5005,9 @@ html[data-theme="light"] .grok-followup:focus-visible {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
+html[data-theme="light"] .appearance-choice[aria-pressed="true"] {
+  background: var(--color-copper) !important;
+}
 .tow-mark-light {
   display: none;
 }
