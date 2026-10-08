@@ -80,7 +80,9 @@ test("shell wires the Facts/Inventory/Chat/More dock, sheet history, and no swip
   assert.match(shell, /history\.pushState\(/);
   assert.match(shell, /history\.replaceState\(/);
   assert.match(shell, /addEventListener\("popstate"/);
-  assert.match(ask, /<MoreSheet/);
+  assert.match(shell, /SECTION_ROW\.map/);
+  assert.doesNotMatch(ask, /<MoreSheet/);
+  assert.doesNotMatch(ask, /<BottomTabs/);
   // More in the dock toggles the sheet, as before #668.
   assert.match(
     shell,

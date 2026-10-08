@@ -1,56 +1,28 @@
-import type { AppTab, DockRoomId } from "./BottomTabs";
-import { BottomTabs } from "./BottomTabs";
+import type { AppTab } from "./BottomTabs";
 import { AskGrokPill } from "./AskGrokPill";
-import { MoreSheet, type MorePick } from "./MoreSheet";
 import { useRoomVoiceOpen } from "./useRoomVoiceOpen";
 
 /**
- * The original dock (Facts · Inventory · Chat · More) with the More sheet
- * anchored above it. Home's Ask RV Grok pill sits right above the dock on
- * every other screen. Home keeps its own pill. Chat hides this one unless
- * Live Voice is on, so the same pill can be tapped again to turn it off.
+ * Ask RV Grok on every section page except Chat.
+ * Home keeps its own pill. Chat is the general conversation, so this
+ * pill stays hidden there unless Live Voice is on (tap turns it off).
+ * The pill opens Chat locked to the page you're on.
  */
 export function RoomAskBar({
   tab,
   homeOpen = false,
   onOpen,
-  onDockTap,
-  moreOpen = false,
-  onMorePick,
-  onMoreClose,
 }: {
   tab: AppTab;
   homeOpen?: boolean;
   onOpen: (tab: AppTab, opts?: { skipVoice?: boolean; pageScope?: boolean; startAssistant?: boolean }) => void;
-  /** Dock taps — Facts / Inventory / Chat / More. */
-  onDockTap?: (tab: DockRoomId) => void;
-  moreOpen?: boolean;
-  onMorePick?: (id: MorePick) => void;
-  onMoreClose?: () => void;
 }) {
   const live = useRoomVoiceOpen();
   const showAsk = !homeOpen && (tab !== "rvgrok" || live);
+  if (!showAsk) return null;
   return (
     <div data-room-ask data-no-swipe className="showroom-dock">
-      {showAsk ? (
-        <AskGrokPill onOpen={() => onOpen("rvgrok", { pageScope: true, startAssistant: true })} />
-      ) : null}
-      <BottomTabs
-        tab={tab}
-        homeOpen={homeOpen}
-        moreOpen={moreOpen}
-        onChange={(id) => {
-          if (onDockTap) onDockTap(id);
-          else onOpen(id);
-        }}
-      >
-        <MoreSheet
-          open={moreOpen}
-          tab={tab}
-          onPick={(id) => onMorePick?.(id)}
-          onClose={() => onMoreClose?.()}
-        />
-      </BottomTabs>
+      <AskGrokPill onOpen={() => onOpen("rvgrok", { pageScope: true, startAssistant: true })} />
     </div>
   );
 }

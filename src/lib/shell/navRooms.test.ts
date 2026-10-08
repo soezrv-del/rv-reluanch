@@ -19,7 +19,7 @@ test("dockActiveTab: Home lights Facts (like dark Home's row); tools under More 
   assert.equal(dockActiveTab("rvgrok", true, true), "more");
 });
 
-test("dock is the original Facts Inventory Chat More; no Home or Ask tab; no DockTab export", () => {
+test("dock file still names the original four rooms; the mounted bar is gone", () => {
   const tabs = read("../../components/shell/BottomTabs.tsx");
   const shell = read("../../components/shell/AppShell.tsx");
   const home = read("../../components/shell/HomeScreen.tsx");
@@ -28,11 +28,12 @@ test("dock is the original Facts Inventory Chat More; no Home or Ask tab; no Doc
     /short: "Facts"[\s\S]*short: "Inventory"[\s\S]*short: "Chat"[\s\S]*short: "More"/,
   );
   assert.doesNotMatch(tabs, /short: "Home"|short: "Ask"/);
-  // Same icons as dark Home's row.
   for (const icon of ["tab-facts", "tab-inventory", "tab-chat", "tab-more"]) {
     assert.match(tabs, new RegExp(`/assets/showroom/${icon}\\.png`));
-    assert.match(home, new RegExp(`/assets/showroom/${icon}\\.png`));
   }
+  assert.doesNotMatch(home, /dark-home-nav/);
+  assert.match(home, /data-open-sections/);
+  assert.doesNotMatch(shell, /<BottomTabs/);
   assert.doesNotMatch(tabs, /^export type DockTab\b/m);
   assert.doesNotMatch(tabs, /import type \{[^}]*\bDockTab\b/);
   assert.doesNotMatch(tabs, /import \{[^}]*\bDockTab\b/);
@@ -55,15 +56,15 @@ test("Ask RV Grok on both Homes opens the Grok room; logo goes Home", () => {
   assert.match(shell, /<SuiteBrand\s+onHome=\{\(\) => \{[\s\S]*?setHomeOpen\(true\)/);
 });
 
-test("swipe handler removed; Tow/Cal rail on SuiteBrand", () => {
+test("old swipe handler stays removed; theme stays on the shell rail", () => {
   const shell = read("../../components/shell/AppShell.tsx");
   const brand = read("../../components/shell/SuiteBrand.tsx");
   assert.doesNotMatch(shell, /useSwipeTabs|SWIPE_ORDER|swipeArmed/);
-  assert.match(brand, /data-tool-rail="tow"/);
-  assert.match(brand, /data-tool-rail="cal"/);
-  assert.match(brand, /aria-label="Settings"/);
+  assert.match(brand, /data-tool-rail="theme"/);
+  assert.doesNotMatch(brand, /data-tool-rail="tow"/);
+  assert.doesNotMatch(brand, /data-tool-rail="cal"/);
   assert.doesNotMatch(brand, /ThemeSwitch|showMenu/);
-  assert.match(shell, /onOpenTow=\{openTowTool\}/);
+  assert.match(shell, /SECTION_ROW\.map/);
 });
 
 test("Open coach stays on Inventory; coach Back pops to list", () => {

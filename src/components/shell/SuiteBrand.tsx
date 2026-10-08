@@ -1,8 +1,7 @@
 /** Owner R mark. Shared shell chrome — not a room header. */
 import { useSyncExternalStore } from "react";
-import { Calculator, Moon, Settings, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { readTheme, serverTheme, setTheme, subscribeTheme } from "@/lib/theme";
-import { TowGlyph } from "./BottomTabs";
 import "./tool-rail.css";
 
 export const RAIDHO_SHELL_MARK = "/assets/brand/r-mark-final-60.png";
@@ -11,21 +10,13 @@ export const RAIDHO_SHELL_MARK_LIGHT_WEBP = "/assets/brand/r-mark-final-60.webp"
 export const RAIDHO_SHELL_MARK_LIGHT_3X = "/assets/brand/r-mark-final-90.png";
 
 /**
- * Logo + persistent Tow / Cal / Theme / Settings.
- * No back chevron on Home. Theme button uses the same setTheme as Settings.
+ * Logo returns Home. Theme stays on every section page.
+ * Tow, Cal, and Settings live in the section row, not this rail.
  */
 export function SuiteBrand({
   onHome,
-  onOpenTow,
-  onOpenCal,
-  onOpenSettings,
-  settingsOpen = false,
 }: {
   onHome: () => void;
-  onOpenTow?: () => void;
-  onOpenCal?: () => void;
-  onOpenSettings?: () => void;
-  settingsOpen?: boolean;
 }) {
   const theme = useSyncExternalStore(subscribeTheme, readTheme, serverTheme);
 
@@ -60,28 +51,6 @@ export function SuiteBrand({
       <div className="showroom-header-tools" data-tool-rail>
         <button
           type="button"
-          className="tool-rail-btn"
-          data-tool-rail="tow"
-          aria-label="Tow"
-          title="Tow"
-          onClick={() => onOpenTow?.()}
-        >
-          <TowGlyph className="tool-rail-glyph" />
-          <span className="tool-rail-label">Tow</span>
-        </button>
-        <button
-          type="button"
-          className="tool-rail-btn"
-          data-tool-rail="cal"
-          aria-label="Cal"
-          title="Cal"
-          onClick={() => onOpenCal?.()}
-        >
-          <Calculator className="tool-rail-glyph" strokeWidth={1.75} aria-hidden />
-          <span className="tool-rail-label">Cal</span>
-        </button>
-        <button
-          type="button"
           className="tool-rail-btn is-settings"
           data-tool-rail="theme"
           aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
@@ -93,18 +62,6 @@ export function SuiteBrand({
           ) : (
             <Moon className="tool-rail-glyph" strokeWidth={1.75} aria-hidden />
           )}
-        </button>
-        <button
-          type="button"
-          className="tool-rail-btn is-settings"
-          data-tool-rail="settings"
-          aria-label="Settings"
-          title="Settings"
-          aria-expanded={settingsOpen}
-          aria-haspopup="dialog"
-          onClick={() => onOpenSettings?.()}
-        >
-          <Settings className="tool-rail-glyph" strokeWidth={1.75} aria-hidden />
         </button>
       </div>
     </div>

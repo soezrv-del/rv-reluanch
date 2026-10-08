@@ -1,12 +1,14 @@
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type PointerEvent } from "react";
 import { fetchLotSnapshot, type LotUnit } from "@/lib/lot/ownLotPage";
 import { MetalVerifiedTrue } from "@/components/shell/Launchpad";
-import { Sun } from "lucide-react";
+import { ChevronDown, Moon, Sun } from "lucide-react";
 import { readTheme, serverTheme, setTheme, subscribeTheme } from "@/lib/theme";
 import type { AppTab } from "@/components/shell/BottomTabs";
-import { askPillFace, chatTabFace, planAskPillTap, stopRoomVoice } from "@/lib/rvgrok/roomAsk";
+import { askPillFace, planAskPillTap, stopRoomVoice } from "@/lib/rvgrok/roomAsk";
 import { AskPillLiveLabel } from "@/components/shell/AskGrokPill";
 import { useRoomVoiceOpen } from "@/components/shell/useRoomVoiceOpen";
+import { planHomeSwipeDown } from "@/lib/shell/sectionRow";
+import "./section-deck.css";
 
 const EMPTY_UNITS: LotUnit[] = [];
 import {
@@ -30,19 +32,42 @@ function darkPlace(place: string): string {
 
 export function HomeScreen({
   onOpen,
+  onReveal,
 }: {
   onOpen: (tab: AppTab, opts?: { skipVoice?: boolean; pageScope?: boolean; startAssistant?: boolean }) => void;
+  onReveal: () => void;
 }) {
   const theme = useSyncExternalStore(subscribeTheme, readTheme, serverTheme);
   const live = useRoomVoiceOpen();
   const ask = askPillFace(live);
-  const chat = chatTabFace(live, false);
   const onAsk = () => {
     if (planAskPillTap(live) === "stop") {
       stopRoomVoice();
       return;
     }
     onOpen("rvgrok", { pageScope: true, startAssistant: true });
+  };
+  const drag = useRef<{ x: number; y: number; ignore: boolean } | null>(null);
+  const swipe = {
+    onPointerDown: (event: PointerEvent) => {
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      const target = event.target;
+      const ignore =
+        target instanceof Element &&
+        Boolean(target.closest("button, a, input, textarea, select"));
+      drag.current = { x: event.clientX, y: event.clientY, ignore };
+    },
+    onPointerUp: (event: PointerEvent) => {
+      const start = drag.current;
+      drag.current = null;
+      if (!start || start.ignore) return;
+      if (planHomeSwipeDown(event.clientX - start.x, event.clientY - start.y) === "open") {
+        onReveal();
+      }
+    },
+    onPointerCancel: () => {
+      drag.current = null;
+    },
   };
   const [units, setUnits] = useState<LotUnit[] | null>(null);
   const [saved, setSaved] = useState(false);
@@ -99,8 +124,8 @@ export function HomeScreen({
         data-home-screen
         data-showroom-home=""
         data-home-theme="dark"
-        data-no-swipe
         className="showroom-home dark-home absolute inset-0 z-30 flex flex-col overflow-hidden"
+        {...swipe}
       >
         <header className="dark-home-bar">
           <p className="dark-home-mark">RVFOX</p>
@@ -173,32 +198,10 @@ export function HomeScreen({
           >
             {live ? <AskPillLiveLabel label={ask.label} /> : ask.label}
           </button>
-          <nav className="dark-home-nav" aria-label="Home">
-            <button type="button" className="is-on" onClick={() => onOpen("rvfax")}>
-              <img src="/assets/showroom/tab-facts.png" alt="" width="28" height="27" />
-              <span>Facts</span>
-            </button>
-            <button type="button" onClick={() => onOpen("rvlot")}>
-              <img src="/assets/showroom/tab-inventory.png" alt="" width="40" height="25" />
-              <span>Inventory</span>
-            </button>
-            <button
-              type="button"
-              className={live ? "is-live" : undefined}
-              data-live-chat={live ? "" : undefined}
-              aria-label={chat.aria}
-              title={chat.aria}
-              onClick={() => onOpen("rvgrok", { startAssistant: true })}
-            >
-              <img src="/assets/showroom/tab-chat.png" alt="" width="26" height="27" />
-              {live ? <span className="dark-home-live-dot" aria-hidden /> : null}
-              <span>{chat.label}</span>
-            </button>
-            <button type="button" onClick={() => onOpen("more")}>
-              <img src="/assets/showroom/tab-more.png" alt="" width="28" height="15" />
-              <span>More</span>
-            </button>
-          </nav>
+          <button type="button" className="home-sections-cue" data-open-sections onClick={onReveal}>
+            <ChevronDown width={18} height={18} aria-hidden />
+            Sections
+          </button>
         </section>
       </div>
     );
@@ -209,9 +212,22 @@ export function HomeScreen({
       data-home-screen
       data-showroom-home=""
       data-home-theme={theme}
-      data-no-swipe
-      className="showroom-home absolute inset-0 z-30 flex flex-col overflow-x-hidden overflow-y-auto"
+      className="showroom-home home-glass absolute inset-0 z-30 flex flex-col overflow-x-hidden overflow-y-auto"
+      {...swipe}
     >
+      <header className="home-glass-bar">
+        <p className="home-glass-mark">RVFOX</p>
+        <button
+          type="button"
+          className="home-glass-theme"
+          data-tool-rail="theme"
+          aria-label="Switch to dark mode"
+          title="Switch to dark mode"
+          onClick={() => setTheme("dark")}
+        >
+          <Moon width={20} height={20} strokeWidth={1.7} aria-hidden />
+        </button>
+      </header>
       <section className="showroom-hero" data-hero-kind="cutout">
         <div className="showroom-placard" data-home-placard>
           {who ? <p className="showroom-spotyear">{who}</p> : null}
@@ -258,6 +274,10 @@ export function HomeScreen({
           onClick={onAsk}
         >
           {live ? <AskPillLiveLabel label={ask.label} /> : ask.label}
+        </button>
+        <button type="button" className="home-sections-cue" data-open-sections onClick={onReveal}>
+          <ChevronDown width={18} height={18} aria-hidden />
+          Sections
         </button>
       </div>
     </div>

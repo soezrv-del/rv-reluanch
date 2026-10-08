@@ -42,23 +42,18 @@ test("room ask bridge calls the registered Grok handlers", () => {
   assert.equal(roomAskMic(), false);
 });
 
-test("original dock (Facts · Inventory · Chat · More) with no separate Ask bar", () => {
+test("section row replaced the dock; Ask pill is not a second composer", () => {
   const shell = read("../../components/shell/AppShell.tsx");
   const bar = read("../../components/shell/RoomAskBar.tsx");
   const more = read("../../components/more/MoreApp.tsx");
 
-  assert.match(
-    shell,
-    /<RoomAskBar\s+tab=\{tab\}\s+homeOpen=\{homeOpen\}\s+onOpen=\{onTabChange\}\s+onDockTap=\{onDockTap\}/,
-  );
+  assert.match(shell, /<RoomAskBar\s+tab=\{tab\}\s+homeOpen=\{homeOpen\}\s+onOpen=\{onTabChange\}/);
   assert.doesNotMatch(shell, /<BottomTabs/);
   assert.doesNotMatch(shell, /data-bottom-dock/);
 
-  // The Ask input above the dock duplicated Chat; it is gone.
   assert.doesNotMatch(bar, /data-room-ask-bar|data-room-ask-input|roomAskSend|placeholder="Ask"/);
-  assert.match(bar, /<BottomTabs/);
-  assert.match(bar, /<MoreSheet/);
-  assert.match(bar, /onDockTap\)\s*onDockTap\(id\)/);
+  assert.doesNotMatch(bar, /<BottomTabs/);
+  assert.doesNotMatch(bar, /<MoreSheet/);
   assert.doesNotMatch(bar, /ROOM_CHIPS|Rv Facts|Lot Inventory|showroom-pills/);
   const tabs = read("../../components/shell/BottomTabs.tsx");
   assert.match(tabs, /DOCK_ROOM_IDS = \["rvfax", "rvlot", "rvgrok", "more"\]/);
@@ -217,7 +212,7 @@ test("Home's Ask RV Grok pill sits above the dock on every other screen, not Hom
   assert.match(pill, /Ask RV Grok/);
   assert.match(bar, /const showAsk = !homeOpen && \(tab !== "rvgrok" \|\| live\)/);
   assert.match(bar, /<AskGrokPill onOpen=\{\(\) => onOpen\("rvgrok", \{ pageScope: true, startAssistant: true \}\)\} \/>/);
-  assert.ok(bar.indexOf("<AskGrokPill") < bar.indexOf("<BottomTabs"), "pill renders above the dock");
+  assert.doesNotMatch(bar, /<BottomTabs/);
   assert.match(css, /\.shell-ask-wrap/);
   assert.match(css, /\.light-home-ask \{[\s\S]*?background: var\(--gradient-copper\)/);
   const askRule = css.match(/\.light-home-ask \{[\s\S]*?\}/)[0];
@@ -254,9 +249,9 @@ test("Chat tab and Ask pill show Live while voice is on away from Chat", () => {
   assert.match(tabs, /bottom-tab-live-dot/);
   assert.match(tabs, /tab === "rvgrok" && !homeOpen/);
   assert.match(home, /askPillFace/);
-  assert.match(home, /chatTabFace/);
   assert.match(home, /AskPillLiveLabel/);
   assert.match(home, /planAskPillTap/);
   assert.match(home, /stopRoomVoice/);
-  assert.match(home, /dark-home-live-dot/);
+  assert.match(home, /data-open-sections/);
+  assert.doesNotMatch(home, /dark-home-nav/);
 });
