@@ -1641,7 +1641,9 @@ export function RvDetail({
               ) : (
                 <MiniStat label="SLIDEOUTS" value={specs.slideouts || "—"} />
               )}
-              <MiniStat label="SLEEPS" value={specs.sleeps || "—"} />
+              {!isZeroCount(specs.sleeps) ? (
+                <MiniStat label="SLEEPS" value={specs.sleeps || "—"} />
+              ) : null}
             </div>
 
             {featureChips.length ? (
@@ -1688,7 +1690,9 @@ export function RvDetail({
             <SpecRow label="HEIGHT" value={specs.exteriorHeight} />
             <SpecRow label="CEILING" value={specs.interiorHeight} />
             <SpecRow label="SLIDEOUTS" value={specs.slideouts} />
-            <SpecRow label="SLEEPS" value={specs.sleeps} />
+            {!isZeroCount(specs.sleeps) ? (
+              <SpecRow label="SLEEPS" value={specs.sleeps} />
+            ) : null}
 
             {specs.isToyHauler ? (
               <>
@@ -3199,6 +3203,12 @@ function StatTile({
       <p className="mt-0.5 text-[13px] font-bold text-white">{value}</p>
     </div>
   );
+}
+
+function isZeroCount(value: string | number | null | undefined): boolean {
+  if (value == null || value === "") return false;
+  const n = Number(String(value).trim());
+  return Number.isFinite(n) && n === 0;
 }
 
 function MiniStat({

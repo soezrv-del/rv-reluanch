@@ -1527,10 +1527,12 @@ function ResultCard({
             icon={<Ruler className="size-3" />}
             label={lo === hi ? `${lo} ft` : `${lo}–${hi} ft`}
           />
-          <Chip
-            icon={<BedDouble className="size-3" />}
-            label={`Sleeps ${result.data.sleeps}`}
-          />
+          {result.data.sleeps != null && Number(result.data.sleeps) !== 0 ? (
+            <Chip
+              icon={<BedDouble className="size-3" />}
+              label={`Sleeps ${result.data.sleeps}`}
+            />
+          ) : null}
           <Chip
             icon={<Fuel className="size-3" />}
             label={isDiesel ? "Diesel" : result.data.fuelType}

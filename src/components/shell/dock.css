@@ -12,7 +12,7 @@
 
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] {
   --dock-ink: #5c5e62;
-  --dock-ink-active: #ffffff;
+  --dock-ink-active: #8b5e3c;
 }
 
 .showroom-dock:has([data-dock-icons="platinum"]),
@@ -75,6 +75,7 @@ html[data-theme="light"] .showroom-dock .bottom-tabs-dock {
   background: transparent !important;
   box-shadow: none !important;
   color: var(--dock-ink) !important;
+  position: relative;
 }
 
 .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-glyph {
@@ -126,7 +127,7 @@ html[data-theme="light"] .showroom-dock .bottom-tabs-dock {
 
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active,
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] {
-  background: #171a20 !important;
+  background: transparent !important;
   box-shadow: none !important;
 }
 
@@ -140,9 +141,9 @@ html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-ta
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active .bottom-tab-caption,
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] .bottom-tab-glyph,
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] .bottom-tab-caption {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-  stroke: #ffffff;
+  color: #8b5e3c !important;
+  -webkit-text-fill-color: #8b5e3c !important;
+  stroke: #8b5e3c;
 }
 
 .showroom-dock .bottom-tabs-nav[data-dock-icons="platinum"],
@@ -186,7 +187,29 @@ html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bot
 html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] {
   background: transparent !important;
   box-shadow: none !important;
-  color: #fff !important;
+  color: #d4a06a !important;
+}
+html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active .bottom-tab-glyph,
+html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active .bottom-tab-caption,
+html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] .bottom-tab-glyph,
+html:not([data-theme="light"]) .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] .bottom-tab-caption {
+  color: #d4a06a !important;
+  -webkit-text-fill-color: #d4a06a !important;
+}
+
+.bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active::after,
+.bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  width: 24px;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--copper-metal-sm);
+  box-shadow: 0 0 6px rgba(200, 140, 90, 0.55);
+  transform: translateX(-50%);
+  pointer-events: none;
 }
 
 /* Same icons as the home tab bar. Inactive fades so the active one stays white. */

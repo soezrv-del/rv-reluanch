@@ -1,5 +1,4 @@
-import { useLayoutEffect, useRef, useSyncExternalStore, type ReactNode } from "react";
-import { readTheme, serverTheme, subscribeTheme } from "@/lib/theme";
+import { useLayoutEffect, useRef, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { hapticLight } from "@/lib/haptics";
 import {
@@ -55,11 +54,8 @@ export const DOCK_TAB_ICON: Record<DockRoomId, string> = {
  * Dark: the white icon as-is. Light: the same icon used as a mask so it
  * takes the dock ink (graphite, white when lit) instead of vanishing on white.
  */
-function DockGlyph({ id, dark }: { id: DockRoomId; dark: boolean }) {
+function DockGlyph({ id }: { id: DockRoomId }) {
   const icon = DOCK_TAB_ICON[id];
-  if (dark) {
-    return <img src={icon} alt="" className="bottom-tab-glyph" draggable={false} />;
-  }
   const mask = `url("${icon}") center / contain no-repeat`;
   return (
     <span
@@ -189,7 +185,6 @@ export function BottomTabs({
     };
   }, [tab, homeOpen, moreOpen]);
 
-  const theme = useSyncExternalStore(subscribeTheme, readTheme, serverTheme);
   const live = useRoomVoiceOpen();
   const lit = dockActiveTab(tab, homeOpen, moreOpen);
 
@@ -254,7 +249,7 @@ export function BottomTabs({
               )}
             >
               {chatLive ? <span className="bottom-tab-live-dot" aria-hidden /> : null}
-              <DockGlyph id={id} dark={theme === "dark"} />
+              <DockGlyph id={id} />
               <span className="bottom-tab-caption">{face.label}</span>
             </button>
           );

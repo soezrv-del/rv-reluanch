@@ -30,7 +30,7 @@ export function setTheme(next: SuiteTheme) {
     img.src = src;
     img.srcset = light3 ? `${src} 2x, ${light3} 3x` : "";
   });
-  const color = next === "light" ? "#ffffff" : "#050505";
+  const color = next === "light" ? "#f2f2f2" : "#050505";
   document
     .querySelector('meta[name="theme-color"]')
     ?.setAttribute("content", color);
@@ -40,4 +40,4 @@ export function setTheme(next: SuiteTheme) {
 }
 
 /** Read before first paint. Keep in sync with RootDocument. */
-export const THEME_BOOT_SCRIPT = `(function(){try{var t=localStorage.getItem("rvfox-theme");if(t!=="light"&&t!=="dark")t="light";var r=document.documentElement;r.dataset.theme=t;r.classList.toggle("dark",t==="dark");var c=t==="light"?"#ffffff":"#050505";var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",c);var s=document.querySelector('meta[name="color-scheme"]');if(s)s.setAttribute("content",t);}catch(e){}})();`;
+export const THEME_BOOT_SCRIPT = `(function(){try{var t=localStorage.getItem("rvfox-theme");if(t!=="light"&&t!=="dark")t="light";var r=document.documentElement;r.dataset.theme=t;r.classList.toggle("dark",t==="dark");var c=t==="light"?"#f2f2f2":"#050505";var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",c);var s=document.querySelector('meta[name="color-scheme"]');if(s)s.setAttribute("content",t);}catch(e){}})();`;

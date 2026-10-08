@@ -602,7 +602,7 @@ export function RvCalApp() {
     () =>
       sortLendersForCompare(apiLenders?.length ? apiLenders : LENDERS_CATALOG, {
         credit,
-        amount: loan.amountFinanced,
+        amount: loan.amountFinanced > 0 ? loan.amountFinanced : null,
         termMonths,
       }),
     [apiLenders, credit, loan.amountFinanced, termMonths],
@@ -673,7 +673,7 @@ export function RvCalApp() {
 </p> : null}
       <section className="suite-glass glass-prestige-gold rounded-[var(--radius-xl)] px-4 py-5 text-center">
         <div className="mb-2 flex items-center justify-center">
-          <p className="text-[11px] font-bold tracking-[0.16em] text-amber">
+          <p className="text-[11px] font-bold tracking-[0.16em] text-amber" data-cal-kicker>
             {paymentDriven ? "TARGET /MO" : "MONTHLY"}
           </p>
         </div>
@@ -722,7 +722,7 @@ export function RvCalApp() {
       <section className="suite-glass glass-prestige rounded-[var(--radius-xl)] p-3.5">
         <div>
           <div className="mb-1.5 flex items-center justify-between gap-2">
-            <span className="flex items-center gap-1.5 text-[10px] font-bold tracking-[0.12em] text-gold">
+            <span className="flex items-center gap-1.5 text-[10px] font-bold tracking-[0.12em] text-gold" data-cal-kicker>
               <Car className="size-3.5" />
               {priceMode === "finance" ? "FINANCED" : "PRICE"}
             </span>
@@ -835,7 +835,7 @@ export function RvCalApp() {
           ) : null}
         </div>
         <div className="mt-3 flex items-center justify-between gap-2">
-          <p className="text-[10px] font-bold tracking-[0.12em] text-gold">
+          <p className="text-[10px] font-bold tracking-[0.12em] text-gold" data-cal-kicker>
             LOAN
           </p>
           <button type="button" onClick={() => {
@@ -978,7 +978,7 @@ export function RvCalApp() {
         </div>
       </section>
       <section className="suite-glass glass-prestige rounded-[var(--radius-xl)] p-3.5">
-        <p className="mb-2 flex items-center gap-1.5 text-[10px] font-bold tracking-[0.12em] text-amber">
+        <p className="mb-2 flex items-center gap-1.5 text-[10px] font-bold tracking-[0.12em] text-amber" data-cal-kicker>
           <ArrowLeftRight className="size-3.5" />
           TRADE
         </p>
@@ -1003,7 +1003,7 @@ export function RvCalApp() {
           </label>
         </div>
         <label className="mt-3 block">
-          <span className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-[0.12em] text-gold">
+          <span className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-[0.12em] text-gold" data-cal-kicker>
             <MapPin className="size-3.5" />
             ZIP
           </span>
@@ -1072,7 +1072,7 @@ export function RvCalApp() {
         </label>
       </section>
       <section className="suite-glass glass-prestige rounded-[var(--radius-xl)] p-3.5">
-        <p className="mb-2 flex items-center gap-1.5 text-[10px] font-bold tracking-[0.12em] text-white">
+        <p className="mb-2 flex items-center gap-1.5 text-[10px] font-bold tracking-[0.12em] text-white" data-cal-kicker>
           <DollarSign className="size-3.5 text-gold" />
           BREAKDOWN
         </p>
@@ -1147,7 +1147,8 @@ export function RvCalApp() {
                         L.aprLow === L.aprHigh
                           ? formatPct(L.aprLow)
                           : `${L.aprLow}%–${L.aprHigh}%`;
-                      const delayMs = (i + 1) * 1e3;
+                      const delayMs = (i + 1) * 60;
+                      const why = quote && quote.eligible === false ? quote.ineligibilityReason : "";
                       return (
                   <a key={`${L.id}-${lenderRevealKey}`} href={L.url || "#"} target="_blank" rel="noopener noreferrer" className={cn("exclusive-lender-row flex min-h-14 items-center gap-3 rounded-xl border px-3 py-3 transition", eligible ? "border-white/30 bg-white/10 hover:border-gold/45 hover:bg-gold/10" : "border-white/15 bg-white/5 opacity-70")} style={{ ["--lender-delay" as string]: `${delayMs}ms` }}>
   <div className={cn("flex size-9 shrink-0 items-center justify-center rounded-full", eligible ? "bg-gold/15" : "bg-white/10")}>
@@ -1158,12 +1159,12 @@ export function RvCalApp() {
       {L.name}
     </p>
     <p className="text-[12px] font-semibold tabular-nums text-white/80">
-      {eligible ? range : "—"}
+      {eligible ? range : why || "—"}
     </p>
   </div>
   <div className="text-right">
     <p className="text-[18px] font-bold tabular-nums leading-none text-gold-bright">
-      {eligible && monthly != null ? formatMoney(monthly) : "—"}
+      {eligible && monthly != null ? formatMoney(monthly) : eligible ? "—" : ""}
     </p>
     <p className="mt-0.5 text-[12px] font-semibold tabular-nums text-white/80">
       {eligible ? `/mo · ${formatPct(aprShow)}` : ""}

@@ -17,7 +17,9 @@ test("rvCAL keeps one screen-bottom disclaimer and no per-card fine print", () =
   assert.doesNotMatch(src, /SIMULATE_BADGE_LABEL/);
   assert.doesNotMatch(src, /creditHint\(/);
   assert.doesNotMatch(src, /quote\?\.rateNote/);
-  assert.doesNotMatch(src, /ineligibilityReason/);
+  assert.match(src, /ineligibilityReason/);
+  assert.match(src, /loan\.amountFinanced > 0 \? loan\.amountFinanced : null/);
+  assert.match(src, /\(i \+ 1\) \* 60/);
   assert.doesNotMatch(src, /Show this list/);
   assert.doesNotMatch(src, /Type a monthly payment to reverse-solve/);
   assert.doesNotMatch(src, /Trade equity always lowers/);

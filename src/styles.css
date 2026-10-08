@@ -139,6 +139,19 @@
   --dock-icon-size: 3.25rem;
 }
 
+/* Shared copper metal. Light glow overrides live on html[data-theme="light"]. */
+:root {
+  --copper-metal: linear-gradient(105deg, #8b5e3c 0%, #b07a4e 18%, #d4a06a 40%, #e8c090 50%, #d4a06a 60%, #b07a4e 82%, #8b5e3c 100%);
+  --copper-metal-sm: linear-gradient(105deg, #b07a4e 0%, #c48a5e 22%, #d9a874 44%, #e8c090 50%, #d9a874 56%, #c48a5e 78%, #b07a4e 100%);
+  --copper-inset: inset 0 1.5px 1px rgba(255, 255, 255, 0.45), inset 0 -1.5px 2px rgba(60, 30, 10, 0.35);
+  --copper-inset-sm: inset 0 1px 0.5px rgba(255, 255, 255, 0.5), inset 0 -1px 1px rgba(60, 30, 10, 0.3);
+  --copper-glow: 0 0 18px rgba(200, 140, 90, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4);
+  --copper-glow-sm: 0 0 10px rgba(200, 140, 90, 0.35), 0 2px 6px rgba(0, 0, 0, 0.35);
+  --copper-ink: #2a1709;
+  --copper-ink-shadow: 0 1px 0 rgba(255, 232, 200, 0.35);
+  --cal-label: #d4a06a;
+}
+
 @layer base {
   *,
   *::before,
@@ -2371,10 +2384,15 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
 .lot-chip {
   transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
 }
-.lot-chip.is-on {
-  background: var(--color-sapphire);
-  border-color: color-mix(in srgb, var(--color-sapphire-glow) 55%, transparent);
-  color: #fff;
+.lot-chip.is-on,
+.lot-chip[aria-pressed="true"] {
+  background: var(--copper-metal-sm);
+  background-image: var(--copper-metal-sm);
+  border-color: transparent;
+  color: var(--copper-ink);
+  -webkit-text-fill-color: var(--copper-ink);
+  text-shadow: var(--copper-ink-shadow);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 .lot-condition {
   display: inline-flex;
@@ -3957,9 +3975,10 @@ body:has(.report-page) {
 
 html[data-theme="light"] {
   color-scheme: light;
-  --light-action: #171a20;
-  --light-action-hover: #393c41;
   --light-link: var(--color-copper-deep);
+  --cal-label: #8b5e3c;
+  --copper-glow: 0 0 0 1px rgba(122, 79, 46, 0.3), 0 6px 14px -4px rgba(90, 55, 25, 0.4), 0 0 18px rgba(200, 140, 90, 0.28);
+  --copper-glow-sm: 0 0 0 1px rgba(122, 79, 46, 0.3), 0 3px 8px -3px rgba(90, 55, 25, 0.4);
   --color-bg: #ffffff;
   --color-bg-elevated: #ffffff;
   --color-surface: #ffffff;
@@ -3994,9 +4013,9 @@ html[data-theme="light"] {
   --shadow-glass: var(--light-lift);
   --shadow-glow-gold: none;
   --shadow-glow-sapphire: none;
-  /* Recessed control fill. Cooler than the white card. Not sapphire. */
-  --light-shade: #e4ebf2;
-  --light-hairline: #c5cedb;
+  /* Recessed control fill. Warm paper, not blue-gray. */
+  --light-shade: #f5f3f0;
+  --light-hairline: rgba(17, 17, 17, 0.12);
   /* Buttons and tabs sit above the card stack. */
   --light-raise:
     0 8px 18px rgba(0, 0, 0, 0.12),
@@ -4020,6 +4039,9 @@ html[data-theme="light"] .bottom-tabs-shine {
 html[data-theme="light"] .showroom-header {
   min-height: 0;
   padding-bottom: 0;
+  background: rgba(242, 242, 242, 0.9);
+  -webkit-backdrop-filter: saturate(1.4) blur(16px);
+  backdrop-filter: saturate(1.4) blur(16px);
 }
 html[data-theme="light"] .showroom-brand {
   align-items: center;
@@ -4096,12 +4118,12 @@ html[data-theme="light"] .suite-title-flat {
   font-weight: 700;
   letter-spacing: -0.04em;
   line-height: 0.92;
-  color: var(--light-action);
-  -webkit-text-fill-color: var(--light-action);
+  color: #111111;
+  -webkit-text-fill-color: #111111;
 }
 html[data-theme="light"] .suite-title-accent {
-  color: var(--light-action) !important;
-  -webkit-text-fill-color: var(--light-action) !important;
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111 !important;
 }
 html[data-theme="light"] .sapphire-header-copy {
   align-items: center;
@@ -4146,8 +4168,8 @@ html[data-theme="light"] .metal-hammered-face {
   white-space: nowrap;
 }
 html[data-theme="light"] .metal-hammered-face {
-  color: var(--light-action) !important;
-  -webkit-text-fill-color: var(--light-action) !important;
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111 !important;
   background: none !important;
   background-image: none !important;
   -webkit-background-clip: border-box !important;
@@ -4192,7 +4214,11 @@ html[data-theme="light"] :is(
   background: #ffffff !important;
   background-image: none !important;
   border: 1px solid rgba(0, 0, 0, 0.06) !important;
-  box-shadow: var(--light-lift) !important;
+  border-radius: 26px !important;
+  box-shadow:
+    inset 0 1px 0 rgba(196, 138, 94, 0.35),
+    0 1px 2px rgba(17, 17, 17, 0.05),
+    0 10px 24px -8px rgba(60, 40, 20, 0.16) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   color: #111111;
@@ -4204,26 +4230,27 @@ html[data-theme="light"] .grok-landing-card {
 
 /* Recessed fields: soft cool gray, hairline, not a second white card. */
 html[data-theme="light"] .app-shell :is(
-  input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="button"], [type="submit"], [type="hidden"]),
-  select,
-  textarea,
-  .glass-field:not(button)
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="button"], [type="submit"], [type="hidden"]):not(.rounded-full),
+  select:not(.rounded-full),
+  textarea:not(.rounded-full),
+  .glass-field:not(button):not(.rounded-full)
 ) {
   background: var(--light-shade) !important;
   background-image: none !important;
   border: 1px solid var(--light-hairline) !important;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+  box-shadow: inset 0 1px 2px rgba(17, 17, 17, 0.07) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   color: #111111 !important;
   -webkit-text-fill-color: #111111;
+  border-radius: 14px !important;
 }
 html[data-theme="light"] .lot-search,
 html[data-theme="light"] .showroom-ask {
   background: var(--light-shade) !important;
   background-image: none !important;
   border: 1px solid var(--light-hairline) !important;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+  box-shadow: inset 0 1px 2px rgba(17, 17, 17, 0.07) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   color: #111111;
@@ -4273,10 +4300,10 @@ html[data-theme="light"] [aria-label="Price input mode"] {
   gap: 0.5rem;
 }
 
-html[data-theme="light"] .app-shell button:not(.showroom-brand):not(.bottom-tab-btn):not(.showroom-hero):not(.showroom-placard):not(.showroom-arrival):not(.lot-card):not(.lot-card-hit):not(.grok-mic-btn):not(.grok-status-pill):not(.showroom-mic):not(.showroom-hero-primary):not(.theme-switch):not(.home-jump):not(.grok-followup):not(.appearance-choice):not(.lot-detail-ask):not(.lot-cal-tab):not(.lot-detail-tab):not(.grok-last-chats):not([data-on-dark]):not([data-voice-panel] *) {
+html[data-theme="light"] .app-shell button:not(.showroom-brand):not(.bottom-tab-btn):not(.showroom-hero):not(.showroom-placard):not(.showroom-arrival):not(.lot-card):not(.lot-card-hit):not(.grok-mic-btn):not(.grok-status-pill):not(.showroom-mic):not(.showroom-hero-primary):not(.theme-switch):not(.home-jump):not(.grok-followup):not(.appearance-choice):not(.lot-detail-ask):not(.lot-cal-tab):not(.lot-detail-tab):not(.grok-last-chats):not([data-on-dark]):not([data-voice-panel] *):not([aria-controls="lender-options-panel"]):not(.text-white\/35):not(.report-share-main):not([data-facts-search]):not([data-facts-check-tow]) {
   background: #ffffff;
   background-color: #ffffff;
-  color: var(--light-action);
+  color: #111111;
   border: 1px solid rgba(0, 0, 0, 0.12);
   box-shadow: none;
 }
@@ -4291,21 +4318,22 @@ html[data-theme="light"] .grok-mic-btn.is-rec {
 }
 html[data-theme="light"] .showroom-mic,
 html[data-theme="light"] .grok-send-btn.is-ready {
-  background: var(--light-action) !important;
+  background: #111111 !important;
   background-image: none !important;
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;
-  border-color: var(--light-action) !important;
+  border-color: #111111 !important;
   box-shadow: none !important;
 }
 html[data-theme="light"] button.bg-gold\/25,
 html[data-theme="light"] button.bg-blue\/30 {
-  background: var(--color-copper) !important;
-  background-image: none !important;
-  color: #fff !important;
-  -webkit-text-fill-color: #fff !important;
-  border-color: var(--color-copper) !important;
-  box-shadow: none !important;
+  background: var(--copper-metal-sm) !important;
+  background-image: var(--copper-metal-sm) !important;
+  color: var(--copper-ink) !important;
+  -webkit-text-fill-color: var(--copper-ink) !important;
+  text-shadow: var(--copper-ink-shadow) !important;
+  border-color: transparent !important;
+  box-shadow: var(--copper-glow-sm), var(--copper-inset-sm) !important;
 }
 html[data-theme="light"] .showroom-mic,
 html[data-theme="light"] .grok-mic-btn.is-live,
@@ -4330,13 +4358,14 @@ html[data-theme="light"] .showroom-hero-secondary {
 }
 html[data-theme="light"] [data-facts-search],
 html[data-theme="light"] [data-facts-search]:disabled {
-  background: var(--gradient-copper) !important;
-  background-image: var(--gradient-copper) !important;
-  color: #fff !important;
-  -webkit-text-fill-color: #fff !important;
+  background: var(--copper-metal) !important;
+  background-image: var(--copper-metal) !important;
+  color: var(--copper-ink) !important;
+  -webkit-text-fill-color: var(--copper-ink) !important;
+  text-shadow: var(--copper-ink-shadow) !important;
   border: 0 !important;
-  box-shadow: var(--shadow-glow-copper) !important;
-  opacity: 1;
+  box-shadow: var(--copper-glow), var(--copper-inset) !important;
+  opacity: 1 !important;
 }
 
 html[data-theme="light"] .showroom-home {
@@ -4588,8 +4617,8 @@ html[data-theme="light"] .showroom-menu-icon {
 html[data-theme="light"] .showroom-ask input::placeholder,
 html[data-theme="light"] .app-shell input::placeholder,
 html[data-theme="light"] .app-shell textarea::placeholder {
-  color: #6e7c8c !important;
-  -webkit-text-fill-color: #6e7c8c;
+  color: #5c5e62 !important;
+  -webkit-text-fill-color: #5c5e62;
 }
 
 html[data-theme="light"] body,
@@ -4603,7 +4632,7 @@ html[data-theme="light"] .app-shell :is(
   .text-fg,
   .text-sky-50,
   .text-sky-100
-):not([data-on-dark]):not([data-on-dark] *) {
+):not([data-on-dark]):not([data-on-dark] *):not(.text-prestige):not(.bg-copper):not(.bg-sapphire):not([data-facts-chip]):not([data-facts-check-tow]):not([data-cal-kicker]) {
   color: #111111 !important;
   -webkit-text-fill-color: #111111;
   text-shadow: none;
@@ -4664,9 +4693,12 @@ html[data-theme="light"] .lot-vin-link {
   text-decoration-color: var(--color-copper-deep);
 }
 html[data-theme="light"] .lot-detail-ask {
-  background: #c48a5e !important;
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  background: var(--copper-metal) !important;
+  background-image: var(--copper-metal) !important;
+  color: var(--copper-ink) !important;
+  -webkit-text-fill-color: var(--copper-ink) !important;
+  text-shadow: var(--copper-ink-shadow) !important;
+  box-shadow: var(--copper-glow), var(--copper-inset) !important;
 }
 html[data-theme="light"] .lot-garage-note {
   color: var(--color-copper-deep);
@@ -4676,20 +4708,21 @@ html[data-theme="light"] .text-sapphire-glow {
   color: var(--light-link) !important;
 }
 
-/* Body-type badge on a coach photo keeps its copper fill. Type is white. */
-html[data-theme="light"] .app-shell [data-lot-scene="photo"] .bg-sapphire {
-  background: var(--color-copper) !important;
-  background-image: none !important;
-  color: #fff !important;
-  -webkit-text-fill-color: #fff !important;
-  box-shadow: none !important;
+/* Body-type badge on a coach photo is small copper metal. Ink is --copper-ink. */
+html[data-theme="light"] .app-shell [data-lot-scene="photo"] .bg-sapphire,
+html[data-theme="light"] .app-shell [data-lot-scene="photo"] .bg-copper {
+  background: var(--copper-metal-sm) !important;
+  background-image: var(--copper-metal-sm) !important;
+  color: var(--copper-ink) !important;
+  -webkit-text-fill-color: var(--copper-ink) !important;
+  text-shadow: var(--copper-ink-shadow) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 1px 2px rgba(0, 0, 0, 0.25) !important;
 }
 html[data-theme="light"] .app-shell [data-lot-scene="photo"] :is(
   .text-white,
-  .text-prestige,
   .text-sapphire-glow,
   [class*="text-white"]
-) {
+):not(.bg-copper):not(.bg-sapphire):not(.text-prestige) {
   color: #c5cedb !important;
   -webkit-text-fill-color: #c5cedb !important;
 }
@@ -4721,12 +4754,12 @@ html[data-theme="light"] :is(
   .tow-hero-panel,
   .exclusive-card,
   .grok-landing-card
-):not([data-tools-menu]):not([data-tools-menu] *) button:not(.rounded-full):not([aria-pressed="true"]):not([data-catalog-field]):not(.grok-chip):not(.grok-starter):not(.grok-lot-chip):not(.lot-chip):not(.underline):not([data-tow-details]):not(.grok-followup):not(.appearance-choice):not(.lot-card-hit):not(.lot-detail-ask):not(.lot-cal-tab):not(.lot-detail-tab):not(.report-share-main):not([data-share-link]):not([data-share-pdf]):not([data-on-dark]) {
-  background: var(--light-shade) !important;
-  background-color: var(--light-shade) !important;
+):not([data-tools-menu]):not([data-tools-menu] *) button:not(.rounded-full):not([aria-pressed="true"]):not([data-catalog-field]):not(.grok-chip):not(.grok-starter):not(.grok-lot-chip):not(.lot-chip):not(.underline):not([data-tow-details]):not(.grok-followup):not(.appearance-choice):not(.lot-card-hit):not(.lot-detail-ask):not(.lot-cal-tab):not(.lot-detail-tab):not(.report-share-main):not([data-share-link]):not([data-share-pdf]):not([data-on-dark]):not([aria-controls="lender-options-panel"]):not(.text-white\/35) {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
   color: #111111 !important;
-  border: 1px solid var(--light-hairline) !important;
-  box-shadow: var(--light-raise) !important;
+  border: 1px solid rgba(17, 17, 17, 0.12) !important;
+  box-shadow: 0 1px 2px rgba(17, 17, 17, 0.06) !important;
 }
 html[data-theme="light"] [data-tools-menu] button > span:first-child,
 html[data-theme="light"] [data-tow-truck] :is(.bg-black\/30, .bg-black\/40):not(button),
@@ -4766,14 +4799,17 @@ html[data-theme="light"] .slider-tab {
   -webkit-text-fill-color: #5c5e62 !important;
 }
 html[data-theme="light"] .lot-chip.is-on,
+html[data-theme="light"] .lot-chip[aria-pressed="true"],
 html[data-theme="light"] .lot-condition-tab.is-on,
 html[data-theme="light"] .slider-tab.is-on,
 html[data-theme="light"] .slider-tab[aria-pressed="true"] {
-  background: var(--color-copper) !important;
-  border-color: var(--color-copper) !important;
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-  box-shadow: none !important;
+  background: var(--copper-metal-sm) !important;
+  background-image: var(--copper-metal-sm) !important;
+  border-color: transparent !important;
+  color: var(--copper-ink) !important;
+  -webkit-text-fill-color: var(--copper-ink) !important;
+  text-shadow: var(--copper-ink-shadow) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 1px 2px rgba(0, 0, 0, 0.25) !important;
 }
 .slider-tab {
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -4923,26 +4959,25 @@ html[data-theme="light"] .app-shell [data-voice-panel] [data-voice-play][data-on
 }
 
 html[data-theme="light"] .glass-prestige button[data-catalog-field]:not(.rounded-full),
-html[data-theme="light"] [data-tow-truck] button:not(.rounded-full):not([data-tow-kind]),
-html[data-theme="light"] [data-tow-details] {
+html[data-theme="light"] [data-tow-truck] button:not(.rounded-full):not([data-tow-kind]):not([data-tow-details]) {
   background: var(--light-shade) !important;
   background-color: var(--light-shade) !important;
   color: #111111 !important;
   border: 1px solid var(--light-hairline) !important;
-  border-radius: 8px !important;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+  border-radius: 14px !important;
+  box-shadow: inset 0 1px 2px rgba(17, 17, 17, 0.07) !important;
+}
+html[data-theme="light"] [data-tow-details] {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111 !important;
+  border: 1px solid rgba(17, 17, 17, 0.1) !important;
+  box-shadow: none !important;
 }
 html[data-theme="light"] .app-shell :is(
-  .lot-chip.is-on,
   .showroom-mic,
-  .grok-mic-btn.is-live,
-  .grok-mic-btn.is-rec,
-  .showroom-hero-primary,
-  .grok-send-btn.is-ready,
-  button.bg-gold\/25,
-  button.bg-blue\/30,
-  [data-tow-kind-toggle] button[aria-pressed="true"],
-  [data-lot-scene="photo"] .bg-sapphire
+  .grok-send-btn.is-ready
 ) {
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;
@@ -4990,7 +5025,7 @@ html[data-theme="light"] .sapphire-header-badge {
   color: #6e7c8c !important;
   -webkit-text-fill-color: #6e7c8c !important;
 }
-html[data-theme="light"] .landscape-content :is(.text-gold, .text-gold-bright),
+html[data-theme="light"] .landscape-content :is(.text-gold, .text-gold-bright):not([data-cal-kicker]):not(button),
 html[data-theme="light"] .glass-prestige-gold .text-amber {
   color: #6e7c8c !important;
   -webkit-text-fill-color: #6e7c8c !important;
@@ -5062,8 +5097,8 @@ html[data-theme="light"] [data-rvgrok-followups] .grok-followup:hover,
 html[data-theme="light"] [data-rvgrok-followups] .grok-followup:focus-visible,
 html[data-theme="light"] .grok-followup:hover,
 html[data-theme="light"] .grok-followup:focus-visible {
-  color: var(--light-action) !important;
-  -webkit-text-fill-color: var(--light-action) !important;
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111 !important;
   background: rgba(23, 26, 32, 0.05) !important;
 }
 .appearance-choice {
@@ -5102,12 +5137,14 @@ html[data-theme="light"] [data-tow-truck] .tow-mark-light {
 }
 html[data-theme="light"] .app-shell [data-facts-search],
 html[data-theme="light"] .app-shell [data-facts-search]:disabled {
-  background: var(--gradient-copper) !important;
-  background-image: var(--gradient-copper) !important;
-  color: #fff !important;
-  -webkit-text-fill-color: #fff !important;
+  background: var(--copper-metal) !important;
+  background-image: var(--copper-metal) !important;
+  color: var(--copper-ink) !important;
+  -webkit-text-fill-color: var(--copper-ink) !important;
+  text-shadow: var(--copper-ink-shadow) !important;
   border: 0 !important;
-  box-shadow: var(--shadow-glow-copper) !important;
+  box-shadow: var(--copper-glow), var(--copper-inset) !important;
+  opacity: 1 !important;
 }
 
 /* Dark home — Tesla mobile app rows. Title sits above the coach. */
@@ -5268,16 +5305,21 @@ html[data-theme="light"] :is(
   color: #ffffff;
 }
 html[data-theme="light"] .lot-detail-ask {
-  background: #c48a5e !important;
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  background: var(--copper-metal) !important;
+  background-image: var(--copper-metal) !important;
+  color: var(--copper-ink) !important;
+  -webkit-text-fill-color: var(--copper-ink) !important;
+  text-shadow: var(--copper-ink-shadow) !important;
+  box-shadow: var(--copper-glow), var(--copper-inset) !important;
 }
 html[data-theme="light"] .lot-share-dock :is(.lot-cal-tab, .lot-detail-tab, .report-share-main) {
-  background: #c48a5e !important;
-  border-color: #c48a5e !important;
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-  box-shadow: none !important;
+  background: var(--copper-metal-sm) !important;
+  background-image: var(--copper-metal-sm) !important;
+  border-color: transparent !important;
+  color: var(--copper-ink) !important;
+  -webkit-text-fill-color: var(--copper-ink) !important;
+  text-shadow: var(--copper-ink-shadow) !important;
+  box-shadow: var(--copper-glow-sm), var(--copper-inset-sm) !important;
 }
 html[data-theme="light"] .report-section h2 {
   color: var(--color-copper-deep);
@@ -5289,7 +5331,7 @@ html[data-theme="light"] .bottom-tab-grok {
   box-shadow: inset 0 0 0 1.5px var(--color-copper);
 }
 html[data-theme="light"] .app-shell button:focus-visible {
-  outline: 2px solid var(--light-action);
+  outline: 2px solid #111111;
   outline-offset: 2px;
 }
 html[data-theme="light"] :is(input, textarea, select):focus-visible {
@@ -6019,23 +6061,12 @@ html[data-theme="dark"] .dark-home-ask {
   border-radius: 999px !important;
   font-size: 17px !important;
   font-weight: 600 !important;
-  color: #fff !important;
-  -webkit-text-fill-color: #fff !important;
-  background: linear-gradient(
-    105deg,
-    #8b5e3c 0%,
-    #b07a4e 18%,
-    #d4a06a 40%,
-    #e8c090 50%,
-    #d4a06a 60%,
-    #b07a4e 82%,
-    #8b5e3c 100%
-  ) !important;
-  box-shadow:
-    0 0 18px rgba(200, 140, 90, 0.5),
-    0 4px 12px rgba(0, 0, 0, 0.4),
-    inset 0 1.5px 1px rgba(255, 255, 255, 0.4) !important;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+  color: var(--copper-ink) !important;
+  -webkit-text-fill-color: var(--copper-ink) !important;
+  background: var(--copper-metal) !important;
+  background-image: var(--copper-metal) !important;
+  box-shadow: var(--copper-glow), var(--copper-inset) !important;
+  text-shadow: var(--copper-ink-shadow) !important;
 }
 
 html[data-theme="dark"] .dark-home-nav button {
@@ -6676,19 +6707,22 @@ html[data-theme="light"] .app-shell [data-coach-detail] [data-facts-stat="warn"]
   border-color: var(--color-copper) !important;
 }
 html[data-theme="light"] .app-shell [data-coach-detail] [data-facts-chip=""] {
-  background: transparent !important;
-  border: 1px solid rgba(0, 0, 0, 0.1) !important;
-  box-shadow: none !important;
-  color: #5c5e62 !important;
-  -webkit-text-fill-color: #5c5e62 !important;
+  background: var(--copper-metal-sm) !important;
+  background-image: var(--copper-metal-sm) !important;
+  border: 0 !important;
+  color: var(--copper-ink) !important;
+  -webkit-text-fill-color: var(--copper-ink) !important;
+  text-shadow: var(--copper-ink-shadow) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 1px 2px rgba(0, 0, 0, 0.25) !important;
 }
 html[data-theme="light"] .app-shell [data-coach-detail] [data-facts-check-tow] {
-  background: var(--light-shade) !important;
-  background-image: none !important;
-  border: 1px solid var(--light-hairline) !important;
-  box-shadow: var(--light-raise) !important;
-  color: #111111 !important;
-  -webkit-text-fill-color: #111111 !important;
+  background: var(--copper-metal-sm) !important;
+  background-image: var(--copper-metal-sm) !important;
+  border: 0 !important;
+  box-shadow: var(--copper-glow-sm), var(--copper-inset-sm) !important;
+  color: var(--copper-ink) !important;
+  -webkit-text-fill-color: var(--copper-ink) !important;
+  text-shadow: var(--copper-ink-shadow) !important;
 }
 html[data-theme="light"] .app-shell [data-coach-detail] .rvfax-report-chrome [role="menu"] {
   background: #ffffff !important;
@@ -6711,3 +6745,107 @@ html[data-theme="light"] .app-shell [data-coach-detail] button.underline {
   border: 0 !important;
   box-shadow: none !important;
 }
+
+/* Copper metal — same shine as the dark Home Ask pill, both themes.
+   Ink is #2a1709 on every copper fill. No white type on copper. */
+html[data-theme] :is(
+  .dark-home-ask,
+  .light-home-ask,
+  .lot-detail-ask,
+  .btn-copper,
+  [data-facts-search]
+) {
+  background: var(--copper-metal) !important;
+  background-image: var(--copper-metal) !important;
+  color: var(--copper-ink) !important;
+  -webkit-text-fill-color: var(--copper-ink) !important;
+  text-shadow: var(--copper-ink-shadow) !important;
+  border: 0 !important;
+  box-shadow: var(--copper-glow), var(--copper-inset) !important;
+  opacity: 1;
+}
+html[data-theme] :is(
+  .showroom-hero-primary,
+  .lot-detail-tab,
+  .report-share-main,
+  .lot-cal-tab,
+  button.bg-gold\/25,
+  button.bg-blue\/30,
+  [data-facts-check-tow],
+  [data-tow-kind-toggle] button[aria-pressed="true"]
+) {
+  background: var(--copper-metal-sm) !important;
+  background-image: var(--copper-metal-sm) !important;
+  color: var(--copper-ink) !important;
+  -webkit-text-fill-color: var(--copper-ink) !important;
+  text-shadow: var(--copper-ink-shadow) !important;
+  border: 0 !important;
+  box-shadow: var(--copper-glow-sm), var(--copper-inset-sm) !important;
+}
+html[data-theme] :is(
+  .lot-chip.is-on,
+  .lot-chip[aria-pressed="true"],
+  .lot-well .bg-copper,
+  .lot-well .bg-sapphire,
+  [data-facts-chip=""]
+) {
+  background: var(--copper-metal-sm) !important;
+  background-image: var(--copper-metal-sm) !important;
+  color: var(--copper-ink) !important;
+  -webkit-text-fill-color: var(--copper-ink) !important;
+  text-shadow: var(--copper-ink-shadow) !important;
+  border-color: transparent !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 1px 2px rgba(0, 0, 0, 0.25) !important;
+}
+html[data-theme] :is(button, a).suite-cta-copper,
+html[data-theme] :is(button, a).bg-sapphire,
+html[data-theme] :is(button, a).bg-blue {
+  background: var(--copper-metal) !important;
+  background-image: var(--copper-metal) !important;
+  color: var(--copper-ink) !important;
+  -webkit-text-fill-color: var(--copper-ink) !important;
+  text-shadow: var(--copper-ink-shadow) !important;
+  box-shadow: var(--copper-glow), var(--copper-inset) !important;
+}
+html[data-theme] .suite-cta-copper::before {
+  display: none !important;
+}
+html[data-theme="light"] .lot-well .text-prestige {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.9), 0 0 3px #000 !important;
+}
+html[data-theme] .landscape-content [data-cal-kicker],
+html[data-theme] [data-cal-kicker] {
+  color: var(--cal-label) !important;
+  -webkit-text-fill-color: var(--cal-label) !important;
+}
+html[data-theme] [aria-controls="lender-options-panel"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+html[data-theme] .app-shell button.text-white\/35,
+html:not([data-theme="light"]) .app-shell button.text-white\/35 {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: #d4a06a !important;
+  -webkit-text-fill-color: #d4a06a !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+html[data-theme="light"] .app-shell button.text-white\/35:not([data-on-dark]):not([data-on-dark] *) {
+  color: #8b5e3c !important;
+  -webkit-text-fill-color: #8b5e3c !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+html[data-theme="light"] a.exclusive-lender-row {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border-color: rgba(17, 17, 17, 0.1) !important;
+}
+
