@@ -13,6 +13,7 @@ import {
   routeScreenChatNote,
   screenNameForTab,
   setActiveScreen,
+  pageContextLine,
   withActiveScreen,
 } from "./screenContext.ts";
 
@@ -21,6 +22,16 @@ const root = dirname(fileURLToPath(import.meta.url));
 function read(rel: string) {
   return readFileSync(join(root, rel), "utf8");
 }
+
+test("chat system prompt names the page from the route", () => {
+  assert.equal(
+    pageContextLine("Facts"),
+    "You are currently on the Facts page. Use this as context for your answers.",
+  );
+  assert.equal(pageContextLine("  "), "");
+  const api = read("../../routes/api/rvgrok.ts");
+  assert.match(api, /pageContextLine\(opts\?\.pageScope/);
+});
 
 test("a screen switch is attached to the next ask, not the visible message", () => {
   setActiveScreen("Facts");
@@ -98,7 +109,7 @@ test("shell records the screen and chat plus Live Voice attach it", () => {
     app,
     /catalogContext: withActiveScreen\(grounded\.block \|\| undefined, askedFromScreen\)/,
   );
-  assert.match(app, /const askedFromScreen = readActiveScreen\(\)/);
+  assert.match(app, /const askedFromScreen = pageScope \|\| readActiveScreen\(\)/);
   const mic = app.slice(app.indexOf("const handleMicPress"));
   const snap = mic.indexOf("askedFromScreenRef.current = readActiveScreen()");
   const arm = mic.indexOf("setLiveVoiceArmed(true)");

@@ -68,7 +68,7 @@ import {
   roomVoiceIsOpen,
   stopRoomVoice,
 } from "@/lib/rvgrok/roomAsk";
-import { onRouteChange, setActiveScreen } from "@/lib/rvgrok/screenContext";
+import { clearPageChatScope, onRouteChange, readActiveScreen, setActiveScreen, setPageChatScope } from "@/lib/rvgrok/screenContext";
 import { VIN_DECODER_SCREEN } from "@/lib/rvgrok/screenGuides";
 
 /**
@@ -333,7 +333,7 @@ export function AppShell({
   }, [markVisited]);
 
   const onTabChange = useCallback(
-    (next: AppTab, opts?: { skipVoice?: boolean }) => {
+    (next: AppTab, opts?: { skipVoice?: boolean; pageScope?: boolean }) => {
       const alreadyOnGrok = !homeOpen && tab === "rvgrok";
       setHomeOpen(false);
       // Hidden Grok composer can keep focus after a room switch — that sticks
@@ -351,6 +351,8 @@ export function AppShell({
       }
       if (next === "rvsold" && !isProfessionalTier()) return;
       if (next === "rvgrok") {
+        if (opts?.pageScope) setPageChatScope(readActiveScreen());
+        else clearPageChatScope();
         const voicePlan = planGrokTabVoice({
           alreadyOnGrok,
           voiceOpen: roomVoiceIsOpen(),

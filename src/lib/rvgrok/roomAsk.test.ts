@@ -211,7 +211,7 @@ test("Home's Ask RV Grok pill sits above the dock on every other screen, not Hom
   assert.match(pill, /data-ask-grok/);
   assert.match(pill, /Ask RV Grok/);
   assert.match(bar, /const showAsk = !homeOpen && tab !== "rvgrok"/);
-  assert.match(bar, /<AskGrokPill onOpen=\{\(\) => onOpen\("rvgrok"\)\} \/>/);
+  assert.match(bar, /<AskGrokPill onOpen=\{\(\) => onOpen\("rvgrok", \{ pageScope: true \}\)\} \/>/);
   assert.ok(bar.indexOf("<AskGrokPill") < bar.indexOf("<BottomTabs"), "pill renders above the dock");
   assert.match(css, /\.shell-ask-wrap/);
   assert.match(css, /\.light-home-ask \{[\s\S]*?background: #171a20/);

@@ -28,7 +28,7 @@ function darkPlace(place: string): string {
 export function HomeScreen({
   onOpen,
 }: {
-  onOpen: (tab: AppTab, opts?: { skipVoice?: boolean }) => void;
+  onOpen: (tab: AppTab, opts?: { skipVoice?: boolean; pageScope?: boolean }) => void;
 }) {
   const theme = useSyncExternalStore(subscribeTheme, readTheme, serverTheme);
   const [units, setUnits] = useState<LotUnit[] | null>(null);
@@ -153,7 +153,7 @@ export function HomeScreen({
             type="button"
             className="dark-home-ask"
             data-ask-grok
-            onClick={() => onOpen("rvgrok")}
+            onClick={() => onOpen("rvgrok", { pageScope: true })}
           >
             Ask RV Grok
           </button>
@@ -228,7 +228,7 @@ export function HomeScreen({
           type="button"
           className="light-home-ask"
           data-ask-grok
-          onClick={() => onOpen("rvgrok")}
+          onClick={() => onOpen("rvgrok", { pageScope: true })}
         >
           Ask RV Grok
         </button>
