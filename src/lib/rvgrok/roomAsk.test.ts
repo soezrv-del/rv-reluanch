@@ -4,6 +4,9 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  askPillFace,
+  chatTabFace,
+  planAskPillTap,
   planGrokTabVoice,
   publishRoomVoice,
   registerRoomAsk,
@@ -210,7 +213,7 @@ test("Home's Ask RV Grok pill sits above the dock on every other screen, not Hom
   assert.match(pill, /theme === "dark" \? "dark-home-ask" : "light-home-ask"/);
   assert.match(pill, /data-ask-grok/);
   assert.match(pill, /Ask RV Grok/);
-  assert.match(bar, /const showAsk = !homeOpen && tab !== "rvgrok"/);
+  assert.match(bar, /const showAsk = !homeOpen && \(tab !== "rvgrok" \|\| live\)/);
   assert.match(bar, /<AskGrokPill onOpen=\{\(\) => onOpen\("rvgrok", \{ pageScope: true \}\)\} \/>/);
   assert.ok(bar.indexOf("<AskGrokPill") < bar.indexOf("<BottomTabs"), "pill renders above the dock");
   assert.match(css, /\.shell-ask-wrap/);
@@ -219,4 +222,39 @@ test("Home's Ask RV Grok pill sits above the dock on every other screen, not Hom
   const shadow = askRule.match(/box-shadow:[\s\S]*?!important/)[0];
   assert.match(shadow, /0 0 18px rgba\(200, 140, 90, 0\.5\)/);
   assert.doesNotMatch(shadow, /inset/);
+});
+
+test("Chat tab and Ask pill show Live while voice is on away from Chat", () => {
+  assert.deepEqual(askPillFace(false), { label: "Ask RV Grok", aria: "Ask RV Grok" });
+  assert.equal(askPillFace(true).label, "Live chat");
+  assert.match(askPillFace(true).aria, /Tap to turn it off/);
+  assert.equal(planAskPillTap(false), "open");
+  assert.equal(planAskPillTap(true), "stop");
+  assert.equal(chatTabFace(false, false).label, "Chat");
+  assert.equal(chatTabFace(true, false).label, "Live");
+  assert.match(chatTabFace(true, false).aria, /tap again to turn it off/);
+  assert.equal(chatTabFace(true, true).label, "End");
+  assert.match(chatTabFace(true, true).aria, /Tap to turn it off/);
+
+  const pill = read("../../components/shell/AskGrokPill.tsx");
+  const tabs = read("../../components/shell/BottomTabs.tsx");
+  const home = read("../../components/shell/HomeScreen.tsx");
+  for (const src of [pill, tabs, home]) {
+    assert.match(src, /useRoomVoiceOpen/);
+    assert.match(src, /data-live-chat/);
+  }
+  assert.match(pill, /askPillFace/);
+  assert.match(pill, /live-chat-dot/);
+  assert.match(pill, /planAskPillTap/);
+  assert.match(pill, /stopRoomVoice/);
+  assert.match(pill, /Tap to turn off/);
+  assert.match(tabs, /chatTabFace/);
+  assert.match(tabs, /bottom-tab-live-dot/);
+  assert.match(tabs, /tab === "rvgrok" && !homeOpen/);
+  assert.match(home, /askPillFace/);
+  assert.match(home, /chatTabFace/);
+  assert.match(home, /AskPillLiveLabel/);
+  assert.match(home, /planAskPillTap/);
+  assert.match(home, /stopRoomVoice/);
+  assert.match(home, /dark-home-live-dot/);
 });

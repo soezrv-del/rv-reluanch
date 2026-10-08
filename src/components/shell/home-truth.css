@@ -48,6 +48,41 @@
   filter: brightness(1.15);
 }
 
+/* Live Voice is still on after you leave Chat. The pill is the way back. */
+.light-home-ask.is-live,
+.dark-home-ask.is-live {
+  gap: 8px;
+}
+.live-chat-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.85);
+  animation: live-chat-pulse 1.4s ease-in-out infinite;
+}
+.ask-live-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  line-height: 1.05;
+}
+.ask-live-copy small {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.01em;
+  opacity: 0.92;
+}
+@keyframes live-chat-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.8); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-chat-dot { animation: none; }
+}
+
 /* The same pill above the dock on every other screen (AskGrokPill).
    Home's classes as-is; only the row spacing is set here (327px wide on a
    393px phone, like Home's pill, in both themes). */

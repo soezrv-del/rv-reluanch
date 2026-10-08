@@ -45,8 +45,11 @@ test("Ask RV Grok on both Homes opens the Grok room; logo goes Home", () => {
   const home = read("../../components/shell/HomeScreen.tsx");
   const shell = read("../../components/shell/AppShell.tsx");
   const brand = read("../../components/shell/SuiteBrand.tsx");
-  assert.match(home, /className="dark-home-ask"[\s\S]*?onOpen\("rvgrok"\)[\s\S]*?Ask RV Grok/);
-  assert.match(home, /className="light-home-ask"[\s\S]*?onOpen\("rvgrok"\)[\s\S]*?Ask RV Grok/);
+  assert.match(home, /dark-home-ask/);
+  assert.match(home, /light-home-ask/);
+  assert.match(home, /onOpen\("rvgrok", \{ pageScope: true \}\)/);
+  assert.match(home, /askPillFace/);
+  assert.match(home, /\{ask\.label\}/);
   assert.match(brand, /className="showroom-brand"/);
   assert.match(brand, /onClick=\{onHome\}/);
   assert.match(shell, /<SuiteBrand\s+onHome=\{\(\) => \{[\s\S]*?setHomeOpen\(true\)/);

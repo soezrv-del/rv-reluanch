@@ -96,6 +96,36 @@ export function stopRoomVoice(): void {
   bridge?.stop?.();
 }
 
+/** Ask pill copy. Idle stays "Ask RV Grok". Live is the off switch. */
+export function askPillFace(live: boolean): { label: string; aria: string } {
+  if (!live) return { label: "Ask RV Grok", aria: "Ask RV Grok" };
+  return {
+    label: "Live chat",
+    aria: "Live chat is on. Tap to turn it off.",
+  };
+}
+
+/** The Ask pill is a toggle. The next tap while Live is on shuts it off. */
+export function planAskPillTap(live: boolean): "stop" | "open" {
+  return live ? "stop" : "open";
+}
+
+/**
+ * Chat tab copy. The first tap from another screen returns to Chat.
+ * A second tap, once Chat is open, turns Live Voice off — that tap reads "End".
+ */
+export function chatTabFace(
+  live: boolean,
+  onChat: boolean,
+): { label: string; aria: string } {
+  if (!live) return { label: "Chat", aria: "Chat" };
+  if (onChat) return { label: "End", aria: "Live chat is on. Tap to turn it off." };
+  return {
+    label: "Live",
+    aria: "Live chat is on. Tap to return, then tap again to turn it off.",
+  };
+}
+
 export function publishRoomVoice(phase: RoomVoicePhase): void {
   voicePhase = phase;
   for (const listener of voiceListeners) listener(phase);
