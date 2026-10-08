@@ -70,12 +70,12 @@ test("a missing or unmatched field pre-fills what matched and stays on the picke
     floorplan: "",
   });
 
-  const badFp = resolveFactsUnitSeed(
-    { year: "2018", make: "Keystone", model: "Montana", floorplan: "3820FK MBS" },
+  const unknownFp = resolveFactsUnitSeed(
+    { year: "2018", make: "Keystone", model: "Montana", floorplan: "9999ZZ" },
     look,
   );
-  assert.equal(badFp.open, false, "no fuzzy floorplan guess");
-  assert.equal(badFp.sel.floorplan, "");
+  assert.equal(unknownFp.open, false);
+  assert.equal(unknownFp.sel.floorplan, "");
 
   const badModel = resolveFactsUnitSeed(
     { year: "2018", make: "Keystone", model: "Montana High Country", floorplan: "3820FK" },
@@ -84,19 +84,98 @@ test("a missing or unmatched field pre-fills what matched and stays on the picke
   assert.equal(badModel.open, false);
   assert.deepEqual(badModel.sel, { year: "2018", make: "Keystone", model: "", floorplan: "" });
 
-  const badMake = resolveFactsUnitSeed(
-    { year: "2018", make: "Keystone RV", model: "Montana", floorplan: "3820FK" },
-    look,
-  );
-  assert.equal(badMake.open, false);
-  assert.deepEqual(badMake.sel, { year: "2018", make: "", model: "", floorplan: "" });
-
   const noYear = resolveFactsUnitSeed(
     { year: "", make: "Keystone", model: "Montana", floorplan: "3820FK" },
     look,
   );
   assert.equal(noYear.open, false);
   assert.deepEqual(noYear.sel, { year: "", make: "", model: "", floorplan: "" });
+});
+
+test("unique normalized make, model, and floorplan open the catalog row", () => {
+  const branded = resolveFactsUnitSeed(
+    { year: "2018", make: "Keystone RV", model: "Montana", floorplan: "3820FK" },
+    look,
+  );
+  assert.equal(branded.open, true);
+  assert.deepEqual(branded.sel, {
+    year: "2018",
+    make: "Keystone",
+    model: "Montana",
+    floorplan: "3820FK",
+  });
+
+  const mbs = resolveFactsUnitSeed(
+    { year: "2018", make: "Keystone", model: "Montana", floorplan: "3820FK MBS" },
+    look,
+  );
+  assert.equal(mbs.open, true, "first numbered word of the trim");
+  assert.equal(mbs.sel.floorplan, "3820FK");
+
+  const spaced = resolveFactsUnitSeed(
+    { year: "2018", make: "Keystone", model: "Cougar Half Ton", floorplan: "3820 FK" },
+    {
+      makes: () => ["Keystone"],
+      models: () => ["Cougar Half-Ton"],
+      floorplans: () => ["3820FK", "3854BR"],
+    },
+  );
+  assert.equal(spaced.open, true);
+  assert.deepEqual(spaced.sel, {
+    year: "2018",
+    make: "Keystone",
+    model: "Cougar Half-Ton",
+    floorplan: "3820FK",
+  });
+
+  const popular = resolveFactsUnitSeed(
+    { year: "2008", make: "Roadtrek", model: "POPULAR", floorplan: "210" },
+    {
+      makes: () => ["Roadtrek"],
+      models: () => ["Popular"],
+      floorplans: () => ["170-Popular", "190-Popular", "210-Popular"],
+    },
+  );
+  assert.equal(popular.open, true);
+  assert.equal(popular.sel.model, "Popular");
+  assert.equal(popular.sel.floorplan, "210-Popular");
+});
+
+test("prefix and ties do not open the wrong report", () => {
+  const view = resolveFactsUnitSeed(
+    { year: "2012", make: "Winnebago", model: "View Profile", floorplan: "24J" },
+    {
+      makes: () => ["Winnebago"],
+      models: () => ["View"],
+      floorplans: () => ["24J"],
+    },
+  );
+  assert.equal(view.open, false);
+  assert.equal(view.sel.model, "");
+
+  const knight = resolveFactsUnitSeed(
+    { year: "2013", make: "Monaco RV", model: "Knight", floorplan: "40PDQ" },
+    {
+      makes: () => ["Monaco Coach"],
+      models: () => ["Knight"],
+      floorplans: () => ["36P", "40P"],
+    },
+  );
+  assert.equal(knight.open, false);
+  assert.equal(knight.sel.make, "Monaco Coach");
+  assert.equal(knight.sel.model, "Knight");
+  assert.equal(knight.sel.floorplan, "");
+
+  const tie = resolveFactsUnitSeed(
+    { year: "2018", make: "Thor", model: "ACE", floorplan: "29D" },
+    {
+      makes: () => ["Thor", "Thor Motor Coach"],
+      models: () => ["ACE"],
+      floorplans: () => ["29D"],
+    },
+  );
+  assert.equal(tie.open, false);
+  assert.equal(tie.sel.make, "");
 });
 
 test("Check RV Facts calls openFactsPicker with the unit; Facts consumes the seed once", () => {
