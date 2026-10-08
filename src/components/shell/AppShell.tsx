@@ -51,6 +51,7 @@ import {
   type ActiveCoachInput,
 } from "@/lib/rv/activeCoach";
 import { normalizeCalHandoff } from "@/lib/rv/calHandoff";
+import type { FactsCascadeSel } from "@/lib/rv/factsOpen";
 import {
   useFocusScrollIntoView,
   useKeyboardInset,
@@ -182,11 +183,14 @@ export function AppShell({
     readActiveCoach(),
   );
   const [factsPickerToken, setFactsPickerToken] = useState(0);
+  const [factsUnitSeed, setFactsUnitSeed] = useState<FactsCascadeSel | null>(null);
   const [factsShareToken, setFactsShareToken] = useState(0);
   const [factsMarketToken, setFactsMarketToken] = useState(0);
   /** More half-sheet and the VIN Decoder it opens. */
   const [moreOpen, setMoreOpen] = useState(false);
   const [vinOpen, setVinOpen] = useState(false);
+  /** VIN handed in by a Lot VIN tap; More → VIN Decoder opens blank. */
+  const [vinSeed, setVinSeed] = useState("");
   const launchOpen = false;
   const suiteReady = true;
   const [visited, setVisited] = useState<Set<AppTab>>(() => {
@@ -311,11 +315,15 @@ export function AppShell({
     setActiveCoachState(next);
   }, []);
 
-  const openFactsPicker = useCallback(() => {
+  const openFactsPicker = useCallback((unit?: FactsCascadeSel | null) => {
+    // Plain Facts taps drop any unconsumed Lot seed so they land on search.
+    setFactsUnitSeed(unit ?? null);
     setFactsPickerToken((n) => n + 1);
     setTab("rvfax");
     markVisited("rvfax");
   }, [markVisited]);
+
+  const clearFactsUnitSeed = useCallback(() => setFactsUnitSeed(null), []);
 
   const openFactsShare = useCallback(() => {
     if (!access.guard(undefined, "Share is limited to the approved list.")) {
@@ -495,6 +503,17 @@ export function AppShell({
     if (topNavIs("vin")) popNav(1);
   }, [popNav]);
 
+  const openVinDecoder = useCallback(
+    (vin: string) => {
+      blurSuiteFocus();
+      if (moreOpenRef.current) setMoreOpen(false);
+      pushNav("vin", navView.current);
+      setVinSeed(vin);
+      setVinOpen(true);
+    },
+    [pushNav],
+  );
+
   /**
    * Dock tap. More toggles the sheet; another tab shuts it. Chat opens the
    * RV Grok room. Home is the RvFOX logo (SuiteBrand onHome).
@@ -536,6 +555,7 @@ export function AppShell({
         if (topNavIs("sheet")) replaceNav("vin", navView.current);
         else pushNav("vin", navView.current);
         setMoreOpen(false);
+        setVinSeed("");
         setVinOpen(true);
         return;
       }
@@ -584,6 +604,9 @@ export function AppShell({
       setActiveCoach,
       openFactsPicker,
       factsPickerToken,
+      factsUnitSeed,
+      clearFactsUnitSeed,
+      openVinDecoder,
       openFactsShare,
       factsShareToken,
       openFactsMarket,
@@ -612,6 +635,9 @@ export function AppShell({
       setActiveCoach,
       openFactsPicker,
       factsPickerToken,
+      factsUnitSeed,
+      clearFactsUnitSeed,
+      openVinDecoder,
       openFactsShare,
       factsShareToken,
       openFactsMarket,
@@ -746,7 +772,7 @@ export function AppShell({
 
         {vinOpen ? (
           <Suspense fallback={null}>
-            <VinDecoder open={vinOpen} onClose={closeVin} />
+            <VinDecoder open={vinOpen} onClose={closeVin} initialVin={vinSeed} />
           </Suspense>
         ) : null}
 

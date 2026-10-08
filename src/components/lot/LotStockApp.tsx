@@ -24,7 +24,11 @@ import {
   type LotUnit,
 } from "@/lib/lot/ownLotPage";
 import { lotSearchSnippets } from "@/lib/lot/lotSearch";
-import { lotOpenSections } from "@/lib/lot/lotDetail";
+import {
+  lotDecodableVin,
+  lotFactsSeed,
+  lotOpenSections,
+} from "@/lib/lot/lotDetail";
 import {
   garagePinConfirmed,
   isToyHaulerBody,
@@ -596,7 +600,7 @@ function LotDetail({
           className="lot-cal-tab"
           data-lot-facts
           aria-label="RV facts"
-          onClick={() => nav?.setTab("rvfax")}
+          onClick={() => nav?.openFactsPicker(lotFactsSeed(unit))}
         >
           <Check className="size-4" aria-hidden />
         </button>
@@ -651,7 +655,12 @@ function LotDetail({
           <h3>{part.title}</h3>
           <dl>
             {part.rows.map((row) => (
-              <DetailRow key={row.label} label={row.label} value={row.value} />
+              <DetailRow
+                key={row.label}
+                label={row.label}
+                value={row.value}
+                onDecodeVin={nav?.openVinDecoder}
+              />
             ))}
           </dl>
         </section>
@@ -669,8 +678,17 @@ function detailParts(label: string, value: string): string[] {
   return label === "Options" ? parts.slice(0, 8) : parts;
 }
 
-function DetailRow({ label, value }: { label: string; value: string }) {
+function DetailRow({
+  label,
+  value,
+  onDecodeVin,
+}: {
+  label: string;
+  value: string;
+  onDecodeVin?: (vin: string) => void;
+}) {
   const parts = detailParts(label, value);
+  const vin = label === "VIN" && onDecodeVin ? lotDecodableVin(value) : null;
   if (parts.length) {
     return (
       <div className="lot-detail-row is-list">
@@ -688,7 +706,21 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="lot-detail-row">
       <dt>{label}</dt>
-      <dd>{value}</dd>
+      <dd>
+        {vin && onDecodeVin ? (
+          <button
+            type="button"
+            className="lot-vin-link"
+            data-lot-vin
+            aria-label={`Decode VIN ${vin}`}
+            onClick={() => onDecodeVin(vin)}
+          >
+            {value}
+          </button>
+        ) : (
+          value
+        )}
+      </dd>
     </div>
   );
 }

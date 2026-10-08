@@ -73,13 +73,16 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 export function VinDecoder({
   open,
   onClose,
+  initialVin,
 }: {
   open: boolean;
   onClose: () => void;
+  /** Pre-filled VIN (Lot VIN tap). A valid one decodes once on open. */
+  initialVin?: string;
 }) {
   const access = useAccessOptional();
   const kb = useKeyboardInset();
-  const [vin, setVin] = useState("");
+  const [vin, setVin] = useState(() => normalizeVin(initialVin ?? ""));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<NhtsaDecodeResult | null>(null);
@@ -145,6 +148,18 @@ export function VinDecoder({
       scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     }, 50);
   };
+
+  // Lot VIN tap: run the NHTSA decode once per handed-in VIN — the ref
+  // keeps re-renders (and StrictMode's double effect) from firing twice.
+  const autoDecodedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!open) return;
+    const seed = normalizeVin(initialVin ?? "");
+    if (!isValidVinFormat(seed) || autoDecodedRef.current === seed) return;
+    autoDecodedRef.current = seed;
+    void runDecode(seed);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initialVin]);
 
   const onScanned = (v: string) => {
     setVin(v);

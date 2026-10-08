@@ -234,3 +234,44 @@ export function resolveShareOpenSel(opts: {
   if (!pick?.year || !pick.make || !pick.model) return null;
   return cascadeFromResult(pick);
 }
+
+/** Catalog lists the Lot → Facts seed is matched against (injected for tests). */
+export type FactsSeedLookups = {
+  makes: (year: string) => string[];
+  models: (year: string, make: string) => string[];
+  floorplans: (year: string, make: string, model: string) => string[];
+};
+
+function seedKey(value: string | null | undefined): string {
+  return String(value ?? "").toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+function seedPick(list: string[], value: string | null | undefined): string {
+  const want = seedKey(value);
+  if (!want) return "";
+  return list.find((item) => seedKey(item) === want) ?? "";
+}
+
+/**
+ * Lot “Check RV Facts” → Facts. Maps the lot sheet's year / make / model /
+ * trim onto catalog names by case- and space-insensitive exact match only —
+ * no fuzzy guess. `open` is true only when all four resolve; otherwise the
+ * picker pre-fills what did resolve (in cascade order) and stays on search
+ * so a near miss never opens the wrong report.
+ */
+export function resolveFactsUnitSeed(
+  seed: ResultLike,
+  look: FactsSeedLookups,
+): { sel: FactsCascadeSel; open: boolean } {
+  const rawYear = String(seed.year ?? "").trim();
+  const year = /^\d{4}$/.test(rawYear) ? rawYear : "";
+  const make = year ? seedPick(look.makes(year), seed.make) : "";
+  const model = make ? seedPick(look.models(year, make), seed.model) : "";
+  const floorplan = model
+    ? concreteFloorplanOrEmpty(seedPick(look.floorplans(year, make, model), seed.floorplan))
+    : "";
+  return {
+    sel: { year, make, model, floorplan },
+    open: Boolean(year && make && model && floorplan),
+  };
+}
