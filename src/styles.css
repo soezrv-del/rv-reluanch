@@ -3889,7 +3889,7 @@ html[data-theme="light"] {
   color-scheme: light;
   --light-action: #171a20;
   --light-action-hover: #393c41;
-  --light-link: #c48a5e;
+  --light-link: var(--color-copper-deep);
   --color-bg: #ffffff;
   --color-bg-elevated: #ffffff;
   --color-surface: #ffffff;
@@ -4210,18 +4210,31 @@ html[data-theme="light"] .app-shell button:not(.showroom-brand):not(.bottom-tab-
   border: 1px solid rgba(0, 0, 0, 0.12);
   box-shadow: none;
 }
-html[data-theme="light"] .showroom-mic,
 html[data-theme="light"] .grok-mic-btn.is-live,
-html[data-theme="light"] .grok-mic-btn.is-rec,
-html[data-theme="light"] .grok-send-btn.is-ready,
-html[data-theme="light"] button.bg-gold\/25,
-html[data-theme="light"] button.bg-blue\/30,
-html[data-theme="light"] [data-tow-kind-toggle] button[aria-pressed="true"] {
+html[data-theme="light"] .grok-mic-btn.is-rec {
+  background: var(--color-copper) !important;
+  background-image: none !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  border-color: var(--color-copper) !important;
+  box-shadow: none !important;
+}
+html[data-theme="light"] .showroom-mic,
+html[data-theme="light"] .grok-send-btn.is-ready {
   background: var(--light-action) !important;
   background-image: none !important;
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;
   border-color: var(--light-action) !important;
+  box-shadow: none !important;
+}
+html[data-theme="light"] button.bg-gold\/25,
+html[data-theme="light"] button.bg-blue\/30 {
+  background: var(--color-copper) !important;
+  background-image: none !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  border-color: var(--color-copper) !important;
   box-shadow: none !important;
 }
 html[data-theme="light"] .showroom-mic,
@@ -4247,12 +4260,12 @@ html[data-theme="light"] .showroom-hero-secondary {
 }
 html[data-theme="light"] [data-facts-search],
 html[data-theme="light"] [data-facts-search]:disabled {
-  background: var(--light-action) !important;
-  background-image: none !important;
+  background: var(--gradient-copper) !important;
+  background-image: var(--gradient-copper) !important;
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;
-  border: 1px solid var(--light-action) !important;
-  box-shadow: var(--light-raise) !important;
+  border: 0 !important;
+  box-shadow: var(--shadow-glow-copper) !important;
   opacity: 1;
 }
 
@@ -4384,13 +4397,13 @@ html[data-theme="light"] .showroom-hero-primary {
   min-height: 40px;
   min-width: 180px;
   margin: 16px 20px 0;
-  border: 1px solid var(--light-action) !important;
+  border: 0 !important;
   border-radius: 4px;
-  background: var(--light-action) !important;
-  background-image: none !important;
+  background: var(--gradient-copper) !important;
+  background-image: var(--gradient-copper) !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
-  box-shadow: none !important;
+  box-shadow: var(--shadow-glow-copper) !important;
   font-size: 14px;
   font-weight: 500;
   text-shadow: none !important;
@@ -4519,8 +4532,7 @@ html[data-theme="light"] .app-shell :is(
   .text-prestige,
   .text-fg,
   .text-sky-50,
-  .text-sky-100,
-  .text-sky-200
+  .text-sky-100
 ):not([data-on-dark]):not([data-on-dark] *) {
   color: #111111 !important;
   -webkit-text-fill-color: #111111;
@@ -4584,16 +4596,16 @@ html[data-theme="light"] .lot-detail-ask {
   -webkit-text-fill-color: #ffffff !important;
 }
 html[data-theme="light"] .lot-garage-note {
-  color: #d4a06a;
+  color: var(--color-copper-deep);
 }
 html[data-theme="light"] .text-sapphire,
 html[data-theme="light"] .text-sapphire-glow {
   color: var(--light-link) !important;
 }
 
-/* Body-type badge on a coach photo keeps its sapphire fill. Type is white. */
+/* Body-type badge on a coach photo keeps its copper fill. Type is white. */
 html[data-theme="light"] .app-shell [data-lot-scene="photo"] .bg-sapphire {
-  background: var(--light-action) !important;
+  background: var(--color-copper) !important;
   background-image: none !important;
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;
@@ -4684,8 +4696,8 @@ html[data-theme="light"] .lot-chip.is-on,
 html[data-theme="light"] .lot-condition-tab.is-on,
 html[data-theme="light"] .slider-tab.is-on,
 html[data-theme="light"] .slider-tab[aria-pressed="true"] {
-  background: #171a20 !important;
-  border-color: #171a20 !important;
+  background: var(--color-copper) !important;
+  border-color: var(--color-copper) !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   box-shadow: none !important;
@@ -4790,8 +4802,8 @@ html[data-theme="light"] [data-voice-panel] :is([data-voice-card], [data-voice-r
   padding: 0.85rem 1rem;
 }
 html[data-theme="light"] [data-voice-panel] :is([data-voice-card], [data-voice-row], [data-voice-chip])[data-selected] {
-  border: 1.5px solid var(--light-action);
-  background: transparent;
+  border: 1.5px solid var(--color-copper);
+  background: var(--color-ruby-soft);
   box-shadow: none;
 }
 html[data-theme="light"] [data-voice-panel] [data-voice-chip] {
@@ -4799,13 +4811,13 @@ html[data-theme="light"] [data-voice-panel] [data-voice-chip] {
   color: #171a20;
 }
 html[data-theme="light"] [data-voice-panel] [data-voice-chip][data-selected] {
-  color: var(--light-action);
+  color: var(--color-copper-deep);
 }
 html[data-theme="light"] [data-voice-panel] [data-voice-gender] {
   background: rgba(0, 0, 0, 0.05);
 }
 html[data-theme="light"] .app-shell [data-voice-panel] [data-voice-active].text-white:not([data-on-dark]):not([data-on-dark] *) {
-  background: var(--light-action);
+  background: var(--color-copper);
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
@@ -4814,7 +4826,7 @@ html[data-theme="light"] [data-voice-panel] [data-voice-mark] {
   color: #171a20;
 }
 html[data-theme="light"] .app-shell [data-voice-panel] [data-selected] [data-voice-mark].text-white:not([data-on-dark]):not([data-on-dark] *) {
-  background: var(--light-action);
+  background: var(--color-copper);
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
@@ -4822,17 +4834,17 @@ html[data-theme="light"] [data-voice-panel] [data-voice-toggle] {
   background: rgba(0, 0, 0, 0.12);
 }
 html[data-theme="light"] [data-voice-panel] [data-voice-toggle][data-on] {
-  background: var(--light-action);
+  background: var(--color-copper);
 }
 html[data-theme="light"] [data-voice-panel] [data-voice-play] {
   background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--color-copper-deep);
   box-shadow: none;
-  color: var(--light-action);
+  color: var(--color-copper-deep);
 }
 html[data-theme="light"] .app-shell [data-voice-panel] [data-voice-play][data-on].text-white:not([data-on-dark]):not([data-on-dark] *) {
-  background: var(--light-action);
-  border-color: var(--light-action);
+  background: var(--color-copper);
+  border-color: var(--color-copper);
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
@@ -4877,10 +4889,20 @@ html[data-theme="light"] .app-shell :is(
   color: #111111 !important;
   -webkit-text-fill-color: #111111 !important;
 }
-/* Opacity utilities (text-sky-200/90) do not match the bare class. Text only. */
-html[data-theme="light"] .app-shell [class*="text-sky-"] {
+/* Opacity utilities (text-sky-200/90) do not match the bare class. Text only.
+   sky-200 and up are copper in dark, so light uses copper-deep on white.
+   sky-50/100 stay body ink. */
+html[data-theme="light"] .app-shell [class*="text-sky-50"],
+html[data-theme="light"] .app-shell [class*="text-sky-100"] {
   color: #111111 !important;
   -webkit-text-fill-color: #111111 !important;
+}
+html[data-theme="light"] .app-shell [class*="text-sky-200"],
+html[data-theme="light"] .app-shell [class*="text-sky-300"],
+html[data-theme="light"] .app-shell [class*="text-sky-400"],
+html[data-theme="light"] .app-shell [class*="text-sky-500"] {
+  color: var(--color-copper-deep) !important;
+  -webkit-text-fill-color: var(--color-copper-deep) !important;
 }
 html[data-theme="light"] .app-shell [class*="text-amber"] {
   color: var(--light-link) !important;
@@ -4905,6 +4927,12 @@ html[data-theme="light"] [data-tow-truck] .text-blue {
   color: var(--light-link) !important;
   -webkit-text-fill-color: var(--light-link) !important;
 }
+html[data-theme="light"] .grok-last-chats {
+  color: var(--color-copper-deep);
+  -webkit-text-fill-color: var(--color-copper-deep);
+  border-color: var(--color-copper-deep);
+  background: transparent;
+}
 html[data-theme="light"] .grok-avatar-ring {
   background: #c48a5e !important;
   box-shadow: 0 12px 32px rgba(232, 192, 144, 0.28) !important;
@@ -4914,13 +4942,13 @@ html[data-theme="light"] .grok-landing-glow {
 }
 html[data-theme="light"] .grok-mic-btn:not(.is-live):not(.is-rec) {
   background: transparent !important;
-  color: var(--light-action) !important;
-  -webkit-text-fill-color: var(--light-action) !important;
-  border: 1.5px solid var(--light-action) !important;
+  color: var(--color-copper-deep) !important;
+  -webkit-text-fill-color: var(--color-copper-deep) !important;
+  border: 1.5px solid var(--color-copper-deep) !important;
   box-shadow: none !important;
 }
 html[data-theme="light"] .grok-mic-btn.is-armed {
-  box-shadow: 0 0 0 3px rgba(23, 26, 32, 0.16) !important;
+  box-shadow: 0 0 0 3px rgba(232, 192, 144, 0.35) !important;
 }
 html[data-theme="light"] .grok-composer-pill {
   background: #ffffff !important;
@@ -4977,9 +5005,6 @@ html[data-theme="light"] .grok-followup:focus-visible {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
-html[data-theme="light"] .appearance-choice[aria-pressed="true"] {
-  background: var(--light-action) !important;
-}
 .tow-mark-light {
   display: none;
 }
@@ -4996,11 +5021,12 @@ html[data-theme="light"] [data-tow-truck] .tow-mark-light {
 }
 html[data-theme="light"] .app-shell [data-facts-search],
 html[data-theme="light"] .app-shell [data-facts-search]:disabled {
-  background: var(--light-action) !important;
-  background-image: none !important;
+  background: var(--gradient-copper) !important;
+  background-image: var(--gradient-copper) !important;
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;
-  border-color: var(--light-action) !important;
+  border: 0 !important;
+  box-shadow: var(--shadow-glow-copper) !important;
 }
 
 /* Dark home — Tesla mobile app rows. Title sits above the coach. */
@@ -5156,8 +5182,8 @@ html[data-theme="light"] :is(
   .report-band,
   .report-share-main
 ) {
-  background: var(--light-action);
-  border-color: var(--light-action);
+  background: var(--color-copper);
+  border-color: var(--color-copper);
   color: #ffffff;
 }
 html[data-theme="light"] .lot-detail-ask {
@@ -5173,13 +5199,13 @@ html[data-theme="light"] .lot-share-dock :is(.lot-cal-tab, .lot-detail-tab, .rep
   box-shadow: none !important;
 }
 html[data-theme="light"] .report-section h2 {
-  color: var(--light-action);
+  color: var(--color-copper-deep);
 }
 html[data-theme="light"] .report-foot a {
   color: var(--light-link);
 }
 html[data-theme="light"] .bottom-tab-grok {
-  box-shadow: inset 0 0 0 1.5px var(--light-action);
+  box-shadow: inset 0 0 0 1.5px var(--color-copper);
 }
 html[data-theme="light"] .app-shell button:focus-visible {
   outline: 2px solid var(--light-action);
@@ -5216,10 +5242,10 @@ html[data-theme="light"] :is([data-request-access-sheet], [data-admin-whitelist-
   -webkit-text-fill-color: #8e8e93;
 }
 html[data-theme="light"] :is([data-request-access-sheet], [data-admin-whitelist-sheet]) :is(button[type="submit"], .bg-blue) {
-  background: var(--light-action);
+  background: linear-gradient(180deg, #f2c7a6 0%, #d89468 28%, #c47b50 62%, #a5643c 100%);
   color: #ffffff;
   -webkit-text-fill-color: #ffffff;
-  border-color: var(--light-action);
+  border-color: transparent;
 }
 html:not([data-theme="light"]) :is([data-request-access-sheet], [data-admin-whitelist-sheet]) input::placeholder {
   color: rgba(255, 255, 255, 0.6);
@@ -5227,8 +5253,8 @@ html:not([data-theme="light"]) :is([data-request-access-sheet], [data-admin-whit
 
 /* ---------------------------------------------------------------------
  * Trips full-screen nav mode (Mapbox GL JS, no Navigation SDK).
- * Light: graphite #171a20 primary, soft blue #d4a06a, labels #3d4d68.
- * Dark: sapphire #c48a5e. No gold / aqua in nav chrome.
+ * Light and dark primary chrome: copper #c48a5e. Body labels stay #3d4d68.
+ * No gold / aqua in nav chrome.
  * ------------------------------------------------------------------- */
 .rv-nav-screen {
   position: fixed;
@@ -5258,12 +5284,12 @@ html[data-theme="dark"] .rv-nav-screen,
   width: 24px;
   height: 24px;
   border-width: 4px;
-  background: #d4a06a;
-  box-shadow: 0 0 0 8px color-mix(in srgb, #d4a06a 28%, transparent),
+  background: #c48a5e;
+  box-shadow: 0 0 0 8px color-mix(in srgb, #c48a5e 28%, transparent),
     0 4px 10px rgba(0, 0, 0, 0.25);
 }
 .rv-nav-screen .rv-map-puck[data-nav-puck]::before {
-  border-bottom-color: #d4a06a;
+  border-bottom-color: #c48a5e;
   top: -13px;
 }
 .rv-nav-screen[data-theme-tone="dark"] .rv-map-puck[data-nav-puck] {
@@ -5284,7 +5310,7 @@ html[data-theme="dark"] .rv-nav-screen,
   gap: 14px;
   padding: 14px 16px;
   border-radius: 18px;
-  background: #171a20;
+  background: #c48a5e;
   color: #ffffff;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
 }
@@ -5395,14 +5421,15 @@ html[data-theme="dark"] .rv-nav-screen,
   color: #171a20;
 }
 .rv-nav-round-on {
-  border-color: #d4a06a;
-  color: #d4a06a;
+  border-color: #c48a5e;
+  background: #c48a5e;
+  color: #ffffff;
 }
 .rv-nav-end {
   min-height: 46px;
   padding: 0 20px;
   border-radius: 999px;
-  background: #171a20;
+  background: #c48a5e;
   color: #ffffff;
   font-size: 15px;
   font-weight: 800;
@@ -5461,7 +5488,8 @@ html[data-theme="dark"] .showroom-spotprice {
   font-size: 1.9rem !important;
 }
 html[data-theme="dark"] .showroom-hero-primary,
-html[data-theme="dark"] .showroom-cta-copper {
+html[data-theme="dark"] .showroom-cta-copper,
+html[data-theme="light"] .showroom-cta-copper {
   background: var(--gradient-copper) !important;
   box-shadow: var(--shadow-glow-copper) !important;
   border-radius: 999px !important;
@@ -6304,15 +6332,15 @@ html:not([data-theme="light"]) .app-shell {
   /* Fixed sky → copper */
   --tw-shadow-color: rgba(196, 138, 94, 0.25);
 }
-html:not([data-theme="light"]) .app-shell .bg-sky-500\/10,
-html:not([data-theme="light"]) .app-shell .bg-sky-500\/12,
-html:not([data-theme="light"]) .app-shell .bg-sky-500\/15,
-html:not([data-theme="light"]) .app-shell .bg-sky-500\/20 {
+html .app-shell .bg-sky-500\/10,
+html .app-shell .bg-sky-500\/12,
+html .app-shell .bg-sky-500\/15,
+html .app-shell .bg-sky-500\/20 {
   background-color: rgba(196, 138, 94, 0.14) !important;
 }
-html:not([data-theme="light"]) .app-shell .border-sky-300\/40,
-html:not([data-theme="light"]) .app-shell .border-sky-400\/30,
-html:not([data-theme="light"]) .app-shell .border-sky-400\/35 {
+html .app-shell .border-sky-300\/40,
+html .app-shell .border-sky-400\/30,
+html .app-shell .border-sky-400\/35 {
   border-color: rgba(196, 138, 94, 0.4) !important;
 }
 html:not([data-theme="light"]) .app-shell .text-sky-200,
@@ -6320,13 +6348,13 @@ html:not([data-theme="light"]) .app-shell .text-sky-300,
 html:not([data-theme="light"]) .app-shell .text-sky-400 {
   color: #e8c090 !important;
 }
-html:not([data-theme="light"]) .app-shell .bg-emerald-500\/12,
-html:not([data-theme="light"]) .app-shell .bg-emerald-500\/15,
-html:not([data-theme="light"]) .app-shell .bg-emerald-500\/20 {
+html .app-shell .bg-emerald-500\/12,
+html .app-shell .bg-emerald-500\/15,
+html .app-shell .bg-emerald-500\/20 {
   background-color: rgba(196, 138, 94, 0.12) !important;
 }
-html:not([data-theme="light"]) .app-shell .border-emerald-400\/35,
-html:not([data-theme="light"]) .app-shell .border-emerald-400\/40 {
+html .app-shell .border-emerald-400\/35,
+html .app-shell .border-emerald-400\/40 {
   border-color: rgba(196, 138, 94, 0.35) !important;
 }
 html:not([data-theme="light"]) .app-shell .text-emerald-300,
@@ -6443,11 +6471,11 @@ html:not([data-theme="light"]) .text-label {
   text-shadow: none !important;
 }
 
-html:not([data-theme="light"]) :is(button, a).suite-cta-copper,
-html:not([data-theme="light"]) button.bg-sapphire,
-html:not([data-theme="light"]) button.bg-blue,
-html:not([data-theme="light"]) a.bg-sapphire,
-html:not([data-theme="light"]) a.bg-blue {
+html :is(button, a).suite-cta-copper,
+html button.bg-sapphire,
+html button.bg-blue,
+html a.bg-sapphire,
+html a.bg-blue {
   background: linear-gradient(180deg, #f2c7a6 0%, #d89468 28%, #c47b50 62%, #a5643c 100%) !important;
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;

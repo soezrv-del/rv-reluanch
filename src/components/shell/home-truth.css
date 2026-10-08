@@ -11,7 +11,7 @@
 }
 
 /* Light Home: Ask RV Grok in the spot dark Home has it — above the dock,
-   under the coach. Same size as dark Home's button, graphite instead of copper. */
+   under the coach. Same size as dark Home's button, same copper fill. */
 .light-home-ask-wrap {
   margin-top: auto;
   padding: 1rem 33px 12px;
@@ -27,14 +27,17 @@
   padding: 0;
   border: 0 !important;
   border-radius: 999px !important;
-  background: #171a20 !important;
+  background: linear-gradient(180deg, #f2c7a6 0%, #d89468 28%, #c47b50 62%, #a5643c 100%) !important;
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;
   font-family: inherit;
   font-size: 18px;
   font-weight: 600;
   letter-spacing: 0;
-  box-shadow: none !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -10px 16px rgba(120, 52, 22, 0.28),
+    0 10px 22px rgba(150, 72, 32, 0.28) !important;
   cursor: pointer;
 }
 
