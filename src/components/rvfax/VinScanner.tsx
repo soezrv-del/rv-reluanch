@@ -302,7 +302,7 @@ export function VinScanner({
         const msg = e instanceof Error ? e.message : String(e);
         if (/Permission|NotAllowed|denied/i.test(msg)) {
           setError(
-            "Camera permission denied. Enable camera for RVFAX in Settings, then try Scan again.",
+            "Camera permission denied. Enable camera for RV Fox in Settings, then try Scan again.",
           );
         } else if (/NotFound|DevicesNotFound/i.test(msg)) {
           setError("No camera found on this device.");

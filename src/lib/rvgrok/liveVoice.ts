@@ -151,7 +151,7 @@ export function beginLiveVoiceFromUserGesture(): LiveVoicePrewarm {
   try {
     if (!navigator.mediaDevices?.getUserMedia) {
       throw new Error(
-        "This iPhone shell cannot reach the microphone. Update RVFAX from TestFlight, then Settings → RVFAX → Microphone → On.",
+        "This iPhone shell cannot reach the microphone. Update RV Fox from TestFlight, then Settings → RV Fox → Microphone → On.",
       );
     }
     streamPromise = navigator.mediaDevices.getUserMedia(MIC_CONSTRAINTS);
@@ -445,7 +445,7 @@ export function tokenMintPlan(hasXaiKey: boolean): Array<"xai" | "worker"> {
 }
 
 const PERMISSION_MSG =
-  "Microphone is blocked. On iPhone: Settings → RVFAX → Microphone → On, then tap the mic again.";
+  "Microphone is blocked. On iPhone: Settings → RV Fox → Microphone → On, then tap the mic again.";
 
 const TOKEN_MSG =
   "Could not start Live Voice (connection token). Stay on this screen and tap the mic again in a few seconds.";

@@ -338,7 +338,7 @@ export function RvCompare({
           <header className="glass-prestige overflow-hidden rounded-[1.25rem]">
             <div className="flex items-center gap-2 border-b border-white/10 px-3.5 py-2.5">
               <span className="rounded bg-white px-1.5 py-0.5 text-[9px] font-black text-slate-900">
-                RVFAX
+                RV Fox
               </span>
               <p className="text-[13px] font-bold text-white">
                 Comparison Report
