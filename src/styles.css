@@ -6292,6 +6292,29 @@ html[data-theme="dark"] .dark-home-nav .is-on span {
   color: #fff !important;
 }
 
+html[data-theme="dark"] .dark-home-nav button.is-live {
+  position: relative;
+}
+html[data-theme="dark"] .dark-home-nav button.is-live span {
+  color: #e8c090 !important;
+  -webkit-text-fill-color: #e8c090 !important;
+}
+html[data-theme="dark"] .dark-home-nav .dark-home-live-dot {
+  position: absolute;
+  top: 6px;
+  left: calc(50% + 10px);
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #e8c090;
+  box-shadow: 0 0 0 2px #05070c;
+  animation: live-chat-pulse 1.4s ease-in-out infinite;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="dark"] .dark-home-nav .dark-home-live-dot { animation: none; }
+}
+
 html[data-theme="dark"] [data-home-open] .showroom-dock {
   display: none !important;
 }

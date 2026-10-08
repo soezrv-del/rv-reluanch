@@ -4,6 +4,9 @@ import { MetalVerifiedTrue } from "@/components/shell/Launchpad";
 import { Sun } from "lucide-react";
 import { readTheme, serverTheme, setTheme, subscribeTheme } from "@/lib/theme";
 import type { AppTab } from "@/components/shell/BottomTabs";
+import { askPillFace, chatTabFace } from "@/lib/rvgrok/roomAsk";
+import { AskPillLiveLabel } from "@/components/shell/AskGrokPill";
+import { useRoomVoiceOpen } from "@/components/shell/useRoomVoiceOpen";
 
 const EMPTY_UNITS: LotUnit[] = [];
 import {
@@ -31,6 +34,9 @@ export function HomeScreen({
   onOpen: (tab: AppTab, opts?: { skipVoice?: boolean; pageScope?: boolean }) => void;
 }) {
   const theme = useSyncExternalStore(subscribeTheme, readTheme, serverTheme);
+  const live = useRoomVoiceOpen();
+  const ask = askPillFace(live);
+  const chat = chatTabFace(live, false);
   const [units, setUnits] = useState<LotUnit[] | null>(null);
   const [saved, setSaved] = useState(false);
 
@@ -151,11 +157,14 @@ export function HomeScreen({
           ) : null}
           <button
             type="button"
-            className="dark-home-ask"
+            className={live ? "dark-home-ask is-live" : "dark-home-ask"}
             data-ask-grok
+            data-live-chat={live ? "" : undefined}
+            aria-label={ask.aria}
+            title={ask.aria}
             onClick={() => onOpen("rvgrok", { pageScope: true })}
           >
-            Ask RV Grok
+            {live ? <AskPillLiveLabel label={ask.label} /> : ask.label}
           </button>
           <nav className="dark-home-nav" aria-label="Home">
             <button type="button" className="is-on" onClick={() => onOpen("rvfax")}>
@@ -166,9 +175,17 @@ export function HomeScreen({
               <img src="/assets/showroom/tab-inventory.png" alt="" width="40" height="25" />
               <span>Inventory</span>
             </button>
-            <button type="button" onClick={() => onOpen("rvgrok")}>
+            <button
+              type="button"
+              className={live ? "is-live" : undefined}
+              data-live-chat={live ? "" : undefined}
+              aria-label={chat.aria}
+              title={chat.aria}
+              onClick={() => onOpen("rvgrok")}
+            >
               <img src="/assets/showroom/tab-chat.png" alt="" width="26" height="27" />
-              <span>Chat</span>
+              {live ? <span className="dark-home-live-dot" aria-hidden /> : null}
+              <span>{chat.label}</span>
             </button>
             <button type="button" onClick={() => onOpen("more")}>
               <img src="/assets/showroom/tab-more.png" alt="" width="28" height="15" />
@@ -226,11 +243,14 @@ export function HomeScreen({
       <div className="light-home-ask-wrap">
         <button
           type="button"
-          className="light-home-ask"
+          className={live ? "light-home-ask is-live" : "light-home-ask"}
           data-ask-grok
+          data-live-chat={live ? "" : undefined}
+          aria-label={ask.aria}
+          title={ask.aria}
           onClick={() => onOpen("rvgrok", { pageScope: true })}
         >
-          Ask RV Grok
+          {live ? <AskPillLiveLabel label={ask.label} /> : ask.label}
         </button>
       </div>
     </div>
