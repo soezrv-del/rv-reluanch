@@ -11,7 +11,7 @@
 }
 
 /* Light Home: Ask RV Grok in the spot dark Home has it — above the dock,
-   under the coach. Same size as dark Home's button, same copper fill. */
+   under the coach. Same size as dark Home's button, same copper metal. */
 .light-home-ask-wrap {
   margin-top: auto;
   padding: 1rem 33px 12px;
@@ -27,17 +27,19 @@
   padding: 0;
   border: 0 !important;
   border-radius: 999px !important;
-  background: linear-gradient(180deg, #f2c7a6 0%, #d89468 28%, #c47b50 62%, #a5643c 100%) !important;
+  background: var(--gradient-copper) !important;
+  background-image: var(--gradient-copper) !important;
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;
   font-family: inherit;
   font-size: 18px;
   font-weight: 600;
   letter-spacing: 0;
+  /* Same metal as dark. The token's dark inset muddies this pill on white, so only the outer glow. */
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.55),
-    inset 0 -10px 16px rgba(120, 52, 22, 0.28),
-    0 10px 22px rgba(150, 72, 32, 0.28) !important;
+    0 0 18px rgba(200, 140, 90, 0.5),
+    0 0 36px rgba(180, 120, 70, 0.25),
+    0 4px 12px rgba(0, 0, 0, 0.4) !important;
   cursor: pointer;
 }
 
