@@ -24,7 +24,7 @@ import {
   type LotUnit,
 } from "@/lib/lot/ownLotPage";
 import { lotSearchSnippets } from "@/lib/lot/lotSearch";
-import { lotOpenSections } from "@/lib/lot/lotDetail";
+import { lotFactsSeed, lotOpenSections } from "@/lib/lot/lotDetail";
 import {
   garagePinConfirmed,
   isToyHaulerBody,
@@ -597,7 +597,7 @@ function LotDetail({
           className="lot-cal-tab"
           data-lot-facts
           aria-label="RV facts"
-          onClick={() => nav?.setTab("rvfax")}
+          onClick={() => nav?.openFactsPicker(lotFactsSeed(unit))}
         >
           <Check className="size-4" aria-hidden />
         </button>

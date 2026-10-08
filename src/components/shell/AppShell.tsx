@@ -51,6 +51,7 @@ import {
   type ActiveCoachInput,
 } from "@/lib/rv/activeCoach";
 import { normalizeCalHandoff } from "@/lib/rv/calHandoff";
+import type { FactsCascadeSel } from "@/lib/rv/factsOpen";
 import {
   useFocusScrollIntoView,
   useKeyboardInset,
@@ -182,6 +183,7 @@ export function AppShell({
     readActiveCoach(),
   );
   const [factsPickerToken, setFactsPickerToken] = useState(0);
+  const [factsUnitSeed, setFactsUnitSeed] = useState<FactsCascadeSel | null>(null);
   const [factsShareToken, setFactsShareToken] = useState(0);
   const [factsMarketToken, setFactsMarketToken] = useState(0);
   /** More half-sheet and the VIN Decoder it opens. */
@@ -311,11 +313,15 @@ export function AppShell({
     setActiveCoachState(next);
   }, []);
 
-  const openFactsPicker = useCallback(() => {
+  const openFactsPicker = useCallback((unit?: FactsCascadeSel | null) => {
+    // Plain Facts taps drop any unconsumed Lot seed so they land on search.
+    setFactsUnitSeed(unit ?? null);
     setFactsPickerToken((n) => n + 1);
     setTab("rvfax");
     markVisited("rvfax");
   }, [markVisited]);
+
+  const clearFactsUnitSeed = useCallback(() => setFactsUnitSeed(null), []);
 
   const openFactsShare = useCallback(() => {
     if (!access.guard(undefined, "Share is limited to the approved list.")) {
@@ -584,6 +590,8 @@ export function AppShell({
       setActiveCoach,
       openFactsPicker,
       factsPickerToken,
+      factsUnitSeed,
+      clearFactsUnitSeed,
       openFactsShare,
       factsShareToken,
       openFactsMarket,
@@ -612,6 +620,8 @@ export function AppShell({
       setActiveCoach,
       openFactsPicker,
       factsPickerToken,
+      factsUnitSeed,
+      clearFactsUnitSeed,
       openFactsShare,
       factsShareToken,
       openFactsMarket,

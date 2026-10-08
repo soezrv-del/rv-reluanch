@@ -83,7 +83,8 @@ test("Lot stock is the last dock tab and not RV Grok", () => {
   assert.match(lot, /data-lot-facts/);
   assert.match(lot, /aria-label="RV facts"/);
   assert.doesNotMatch(lot, />\s*RV facts\s*</);
-  assert.match(lot, /setTab\("rvfax"\)/);
+  assert.match(lot, /openFactsPicker\(lotFactsSeed\(unit\)\)/);
+  assert.doesNotMatch(lot, /setTab\("rvfax"\)/);
   assert.match(lot, /lotListingHref/);
   assert.match(lot, /data-lot-meta/);
   assert.match(lot, /showroomUnitLabel/);
