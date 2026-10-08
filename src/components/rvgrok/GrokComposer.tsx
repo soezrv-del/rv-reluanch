@@ -44,6 +44,7 @@ export function GrokComposer({
   onToggleLiveCam,
   voice,
   onInterrupt,
+  onStop,
 }: {
   displayInput: string;
   onChange: (value: string) => void;
@@ -68,6 +69,8 @@ export function GrokComposer({
   /** Same view the old status bar used. Null keeps the idle mic. */
   voice?: VoiceBarView | null;
   onInterrupt?: () => void;
+  /** Full stop. Same handler as the old bar's End / Stop / Cancel. */
+  onStop?: () => void;
 }) {
   const landing = density === "landing";
 
@@ -215,6 +218,17 @@ export function GrokComposer({
               </button>
             )}
           </div>
+          {voice && onStop ? (
+            <button
+              type="button"
+              data-rvgrok-voice-stop=""
+              onClick={onStop}
+              className="grok-voice-stop"
+              aria-label={`${voice.endLabel} voice`}
+            >
+              {voice.endLabel}
+            </button>
+          ) : null}
         </div>
 
         <button

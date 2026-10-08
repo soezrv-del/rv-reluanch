@@ -3,6 +3,8 @@
  * No new agent, route, or backend. RvGrokApp registers the live handlers.
  */
 
+import type { VoiceBarView } from "./voiceStatusBar.ts";
+
 export type RoomAskBridge = {
   send: (text: string) => void;
   /** Existing Live Voice mic (start, or stop if a session is already up). */
@@ -11,6 +13,10 @@ export type RoomAskBridge = {
   greet?: (prewarm: GrokVoicePrewarm) => void;
   /** Shut Live Voice off from the RV Grok tab. */
   stop?: () => void;
+  /** Cut her off and keep listening. Same as the composer pill. */
+  interrupt?: () => void;
+  /** Full stop. Same as the composer's End / Stop / Cancel control. */
+  end?: () => void;
 };
 
 /** Capture started inside the tab tap, before RV Grok finishes loading. */
@@ -54,8 +60,10 @@ export function roomVoicePhaseFromStatus(status: string): RoomVoicePhase {
 
 let bridge: RoomAskBridge | null = null;
 let voicePhase: RoomVoicePhase = "idle";
+let voiceView: VoiceBarView | null = null;
 let pendingGreet: GrokVoicePrewarm | null = null;
 const voiceListeners = new Set<(phase: RoomVoicePhase) => void>();
+const viewListeners = new Set<() => void>();
 
 export function registerRoomAsk(next: RoomAskBridge | null): void {
   bridge = next;
@@ -71,6 +79,18 @@ export function roomAskSend(text: string): boolean {
 export function roomAskMic(): boolean {
   if (!bridge) return false;
   bridge.mic();
+  return true;
+}
+
+export function roomVoiceInterrupt(): boolean {
+  if (!bridge?.interrupt) return false;
+  bridge.interrupt();
+  return true;
+}
+
+export function roomVoiceEnd(): boolean {
+  if (!bridge?.end) return false;
+  bridge.end();
   return true;
 }
 
@@ -99,6 +119,36 @@ export function stopRoomVoice(): void {
 export function publishRoomVoice(phase: RoomVoicePhase): void {
   voicePhase = phase;
   for (const listener of voiceListeners) listener(phase);
+}
+
+function voiceViewKey(view: VoiceBarView | null): string {
+  if (!view) return "";
+  return [
+    view.phase,
+    view.text,
+    view.detail ?? "",
+    view.endLabel,
+    view.canInterrupt ? "1" : "0",
+    view.live ? "1" : "0",
+  ].join("|");
+}
+
+/** The view RvGrokApp already built with voiceStatusBarView. */
+export function publishVoiceBar(next: VoiceBarView | null): void {
+  if (voiceViewKey(voiceView) === voiceViewKey(next)) return;
+  voiceView = next;
+  for (const listener of viewListeners) listener();
+}
+
+export function readVoiceBar(): VoiceBarView | null {
+  return voiceView;
+}
+
+export function subscribeVoiceBar(listener: () => void): () => void {
+  viewListeners.add(listener);
+  return () => {
+    viewListeners.delete(listener);
+  };
 }
 
 export function subscribeRoomVoice(

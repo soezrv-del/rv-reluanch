@@ -7,6 +7,7 @@ import {
   voiceBarCanInterrupt,
   voiceStatusBarView,
   voiceStatusPillLabel,
+  voiceControlActive,
   type VoiceBarInput,
 } from "./voiceStatusBar.ts";
 
@@ -147,6 +148,9 @@ test("the status pill lives in the composer and the old bar is gone", () => {
   );
   assert.match(app, /voice=\{voiceBar\}/);
   assert.match(composer, /data-rvgrok-voice-pill/);
+  assert.match(composer, /data-rvgrok-voice-stop/);
+  assert.match(composer, /voice\.endLabel/);
+  assert.match(app, /onStop=\{handleStop\}/);
   assert.match(composer, /voiceStatusPillLabel\(voice\.phase\)/);
   assert.match(composer, /data-rvgrok-mic/);
   const pillStart = composer.indexOf("grok-composer-pill");
@@ -160,4 +164,56 @@ test("the status pill lives in the composer and the old bar is gone", () => {
   assert.match(css, /\.grok-status-pill \{[^}]*height:\s*100%/);
   assert.match(css, /html\[data-theme="light"\] \.grok-status-pill \{[^}]*background:\s*#171a20/);
   assert.doesNotMatch(css, /\.voice-status-bar \{/);
+});
+
+test("the pill still interrupts, and the adjacent stop calls handleStop", () => {
+  const app = read("../../components/rvgrok/RvGrokApp.tsx");
+  const composer = read("../../components/rvgrok/GrokComposer.tsx");
+  assert.match(
+    app,
+    /onInterrupt=\{\(\) => \{\s*realtimeRef\.current\?\.interrupt\(\);\s*\}\}/,
+  );
+  assert.match(composer, /onClick=\{onInterrupt\}/);
+  assert.match(composer, /data-rvgrok-voice-stop/);
+  assert.match(composer, /onClick=\{onStop\}/);
+  assert.match(app, /onStop=\{handleStop\}/);
+  assert.match(app, /end: \(\) => handleStopRef\.current\(\)/);
+});
+
+test("a floating control on non-chat screens uses the same labels and handlers", () => {
+  const bar = read("../../components/shell/RoomAskBar.tsx");
+  const float = read("../../components/shell/SuiteVoiceFloat.tsx");
+  const app = read("../../components/rvgrok/RvGrokApp.tsx");
+  assert.equal(voiceControlActive(null), false);
+  assert.equal(voiceControlActive(voiceStatusBarView(live("listening", null))), true);
+  assert.equal(
+    voiceStatusPillLabel(voiceStatusBarView(live("speaking", "RvGrok speaking…"))!.phase),
+    "Talking",
+  );
+  assert.match(bar, /const showVoice = homeOpen \|\| tab !== "rvgrok"/);
+  assert.match(bar, /\{showVoice \? <SuiteVoiceFloat \/> : null\}/);
+  assert.match(float, /voiceStatusPillLabel\(voice\.phase\)/);
+  assert.match(float, /Listening|voiceStatusPillLabel/);
+  assert.match(float, /data-suite-voice-pill/);
+  assert.match(float, /data-suite-voice-mic/);
+  assert.match(float, /roomVoiceInterrupt\(\)/);
+  assert.match(float, /roomVoiceEnd\(\)/);
+  assert.match(float, /roomAskMic\(\)/);
+  assert.match(app, /publishVoiceBar\(voiceBar\)/);
+  assert.match(
+    app,
+    /interrupt: \(\) => \{\s*realtimeRef\.current\?\.interrupt\(\);\s*\}/,
+  );
+});
+
+test("the Chat dock tab reads Chatting while voice is up", () => {
+  const tabs = read("../../components/shell/BottomTabs.tsx");
+  const dock = read("../../components/shell/dock.css");
+  assert.match(tabs, /voiceControlActive\(voice\)/);
+  assert.match(tabs, /const chatting = id === "rvgrok" && voiceOn/);
+  assert.match(tabs, /data-chatting=\{chatting \? "" : undefined\}/);
+  assert.match(tabs, /chatting \? "Chatting" : short/);
+  assert.match(tabs, /chatting && "is-chatting"/);
+  assert.match(tabs, /short: "Chat"/);
+  assert.match(dock, /\.is-chatting:not\(\.is-active\)/);
 });

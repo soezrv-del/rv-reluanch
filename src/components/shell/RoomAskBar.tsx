@@ -1,6 +1,7 @@
 import type { AppTab, DockRoomId } from "./BottomTabs";
 import { BottomTabs } from "./BottomTabs";
 import { AskGrokPill } from "./AskGrokPill";
+import { SuiteVoiceFloat } from "./SuiteVoiceFloat";
 import { MoreSheet, type MorePick } from "./MoreSheet";
 
 /**
@@ -28,8 +29,10 @@ export function RoomAskBar({
   onMoreClose?: () => void;
 }) {
   const showAsk = !homeOpen && tab !== "rvgrok";
+  const showVoice = homeOpen || tab !== "rvgrok";
   return (
     <div data-room-ask data-no-swipe className="showroom-dock">
+      {showVoice ? <SuiteVoiceFloat /> : null}
       {showAsk ? <AskGrokPill onOpen={() => onOpen("rvgrok")} /> : null}
       <BottomTabs
         tab={tab}

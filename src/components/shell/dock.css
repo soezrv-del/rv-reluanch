@@ -124,6 +124,16 @@ html[data-theme="light"] .showroom-dock .bottom-tabs-dock {
   font-weight: 700;
 }
 
+/* Voice is on, but this tab is not the open page. The word change is the
+   control that ends her; the ring keeps it visible on the other screens. */
+.bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-chatting:not(.is-active) {
+  box-shadow: inset 0 0 0 1.5px #c48a5e !important;
+}
+.bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-chatting:not(.is-active) .bottom-tab-caption {
+  color: #c48a5e !important;
+  -webkit-text-fill-color: #c48a5e !important;
+}
+
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn.is-active,
 html[data-theme="light"] .bottom-tabs-nav[data-dock-icons="platinum"] .bottom-tab-btn[aria-current="page"] {
   background: #171a20 !important;

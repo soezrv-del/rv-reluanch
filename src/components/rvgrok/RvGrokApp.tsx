@@ -73,6 +73,7 @@ import {
 import { planGrokTabEntry } from "@/lib/rvgrok/tabEntry";
 import {
   publishRoomVoice,
+  publishVoiceBar,
   registerRoomAsk,
   roomVoicePhaseFromStatus,
   takePendingGrokGreeting,
@@ -452,6 +453,8 @@ export function RvGrokApp({
       ),
     );
   };
+  const handleStopRef = useRef(handleStop);
+  handleStopRef.current = handleStop;
 
   const handleSpeak = useCallback(
     (msgId: string, text: string) => {
@@ -1526,6 +1529,10 @@ export function RvGrokApp({
       mic: () => roomMicRef.current(),
       greet: (prewarm) => armLiveFromTabRef.current(prewarm),
       stop: () => stopLiveFromTabRef.current(),
+      interrupt: () => {
+        realtimeRef.current?.interrupt();
+      },
+      end: () => handleStopRef.current(),
     });
     const pending = takePendingGrokGreeting();
     if (pending) armLiveFromTabRef.current(pending);
@@ -1547,7 +1554,13 @@ export function RvGrokApp({
     publishRoomVoice(roomVoicePhaseFromStatus(realtimeStatus));
   }, [realtimeStatus]);
 
-  useEffect(() => () => publishRoomVoice("idle"), []);
+  useEffect(
+    () => () => {
+      publishRoomVoice("idle");
+      publishVoiceBar(null);
+    },
+    [],
+  );
 
   useEffect(() => {
     // Another room is on screen. The pane stays mounted; keep the thread
@@ -1650,6 +1663,9 @@ export function RvGrokApp({
     voiceMode,
     voiceName: GROK_VOICES.find((v) => v.id === selectedVoice)?.name,
   });
+  useEffect(() => {
+    publishVoiceBar(voiceBar);
+  }, [voiceBar]);
   const waitingToResumeLive =
     liveVoice && !liveActive && !isRecording && !startingLiveRef.current;
   const displayInput = isRecording
@@ -1714,6 +1730,7 @@ export function RvGrokApp({
       onInterrupt={() => {
         realtimeRef.current?.interrupt();
       }}
+      onStop={handleStop}
     />
   );
 

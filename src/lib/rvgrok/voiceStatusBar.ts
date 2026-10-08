@@ -162,3 +162,8 @@ export function voiceStatusPillLabel(phase: VoiceBarPhase): string {
       return "Listening";
   }
 }
+
+/** The composer pill and the floating twin show whenever this view is up. */
+export function voiceControlActive(view: VoiceBarView | null): boolean {
+  return view != null;
+}

@@ -8,6 +8,8 @@ import {
 } from "@/lib/hooks/nativeWebView";
 import "./dock.css";
 import { dockActiveTab } from "./dockActiveTab";
+import { readVoiceBar, subscribeVoiceBar } from "@/lib/rvgrok/roomAsk";
+import { voiceControlActive } from "@/lib/rvgrok/voiceStatusBar";
 
 export type AppTab =
   | "rvgrok"
@@ -188,6 +190,8 @@ export function BottomTabs({
   }, [tab, homeOpen, moreOpen]);
 
   const theme = useSyncExternalStore(subscribeTheme, readTheme, serverTheme);
+  const voice = useSyncExternalStore(subscribeVoiceBar, readVoiceBar, () => null);
+  const voiceOn = voiceControlActive(voice);
   const lit = dockActiveTab(tab, homeOpen, moreOpen);
 
   return (
@@ -208,11 +212,13 @@ export function BottomTabs({
       >
         {TABS.map(({ id, label, short }) => {
           const active = lit === id;
+          const chatting = id === "rvgrok" && voiceOn;
           return (
             <button
               key={id}
               type="button"
               data-bottom-tab={id}
+              data-chatting={chatting ? "" : undefined}
               onPointerDown={(e) => {
                 if (!isAndroidNativeWebView()) return;
                 press.current = { id, x: e.clientX, y: e.clientY };
@@ -241,10 +247,11 @@ export function BottomTabs({
                 "transition-[background-color,color,opacity] duration-200 ease-out",
                 "pointer-events-auto active:opacity-70 touch-manipulation select-none",
                 active && "is-active",
+                chatting && "is-chatting",
               )}
             >
               <DockGlyph id={id} dark={theme === "dark"} />
-              <span className="bottom-tab-caption">{short}</span>
+              <span className="bottom-tab-caption">{chatting ? "Chatting" : short}</span>
             </button>
           );
         })}
