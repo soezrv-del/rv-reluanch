@@ -511,7 +511,7 @@ export function MoreApp({
               <RowLink
                 icon={<FileText className="size-4 text-white" />}
                 title="Terms & Copyright"
-                sub="© 2026 RVFAX. All rights reserved."
+                sub="© 2026 RV Fox. All rights reserved."
                 onClick={() => setSheet("terms")}
               />
               <a
@@ -683,7 +683,7 @@ const SHEETS: Record<
   privacy: {
     title: "Privacy Policy",
     body: [
-      "RVFAX stores preferences and saved RVs on your device (local storage). Chat history stays in-browser unless you clear it.",
+      "RV Fox stores preferences and saved RVs on your device (local storage). Chat history stays in-browser unless you clear it.",
       "Routing uses OSRM/geocode proxies; addresses are sent only to compute routes.",
       "Recall lookups use NHTSA. We do not sell personal data. Contact privacy@rvfox.app for CCPA requests.",
       "AI answers and specs are estimates — always verify with the manufacturer or a dealer before purchase.",
@@ -692,7 +692,7 @@ const SHEETS: Record<
   terms: {
     title: "Terms & Copyright",
     body: [
-      "© 2026 RVFAX. All rights reserved.",
+      "© 2026 RV Fox. All rights reserved.",
       "This app provides decision-support tools, not legal, financing, or safety guarantees.",
       "Lender rates and eligibility are curated estimates, not offers of credit.",
       "OSRM/OpenStreetMap data © contributors. NHTSA recall data © U.S. Government.",
