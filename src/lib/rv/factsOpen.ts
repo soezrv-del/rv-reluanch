@@ -246,18 +246,78 @@ function seedKey(value: string | null | undefined): string {
   return String(value ?? "").toLowerCase().replace(/\s+/g, " ").trim();
 }
 
-function seedPick(list: string[], value: string | null | undefined): string {
-  const want = seedKey(value);
+/** Letters and digits only. "31 FK" and "31FK" are the same code; "40PDQ" is not "40P". */
+function compactKey(value: string | null | undefined): string {
+  return String(value ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+const MAKE_DROP = new Set(["rv", "coach", "motor", "motorhomes", "industries"]);
+
+/** Drop dealer suffixes and punctuation. "Thor Motor Coach" and "Thor" both become "thor". */
+function normMakeKey(value: string | null | undefined): string {
+  return String(value ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .split(" ")
+    .filter((token) => token && !MAKE_DROP.has(token))
+    .join(" ");
+}
+
+/** Ignore spaces and punctuation. "Cougar Half-Ton" and "Cougar Half Ton" match. */
+function normModelKey(value: string | null | undefined): string {
+  return compactKey(value);
+}
+
+/** One catalog row, or "" when the key is empty or hits more than one row. */
+function uniqueBy(
+  list: string[],
+  keyOf: (item: string) => string,
+  want: string,
+): string {
   if (!want) return "";
-  return list.find((item) => seedKey(item) === want) ?? "";
+  const hits = list.filter((item) => keyOf(item) === want);
+  return hits.length === 1 ? hits[0]! : "";
 }
 
 /**
- * Lot “Check RV Facts” → Facts. Maps the lot sheet's year / make / model /
- * trim onto catalog names by case- and space-insensitive exact match only —
- * no fuzzy guess. `open` is true only when all four resolve; otherwise the
- * picker pre-fills what did resolve (in cascade order) and stays on search
- * so a near miss never opens the wrong report.
+ * Floorplan code for a lot trim.
+ * Exact (case/space), then the same code with punctuation removed,
+ * then `trim + "-" + model` (210 + Popular → 210-Popular),
+ * then the trim's first word when that word is a numbered code (2401W MBS → 2401W).
+ * A name prefix is not a code: View Profile does not become View, and 40PDQ does not become 40P.
+ * Two different catalog rows → no floorplan.
+ */
+function pickSeedFloorplan(
+  floorplans: string[],
+  trim: string | null | undefined,
+  model: string | null | undefined,
+): string {
+  const raw = String(trim ?? "").trim();
+  if (!raw || !floorplans.length) return "";
+  const hits = new Set<string>();
+  const exact = uniqueBy(floorplans, seedKey, seedKey(raw));
+  if (exact) hits.add(exact);
+  const compact = uniqueBy(floorplans, compactKey, compactKey(raw));
+  if (compact) hits.add(compact);
+  const joined = compactKey(`${raw}-${model ?? ""}`);
+  const joinHit = uniqueBy(floorplans, compactKey, joined);
+  if (joinHit) hits.add(joinHit);
+  const word = raw.split(/\s+/)[0] ?? "";
+  if (/\d/.test(word) && seedKey(word) !== seedKey(raw)) {
+    const wordHit = uniqueBy(floorplans, seedKey, seedKey(word));
+    if (wordHit) hits.add(wordHit);
+  }
+  return hits.size === 1 ? [...hits][0]! : "";
+}
+
+/**
+ * Lot “Check RV Facts” → Facts.
+ * Make drops RV / Coach / Motor / Motorhomes / Industries and punctuation.
+ * Model ignores punctuation and spaces. Floorplan accepts the trim, the
+ * trim with spaces/punctuation removed, `trim-model`, or the trim's first
+ * numbered word. Every step requires one catalog row — a prefix or a tie
+ * does not open a report. `open` is true only when all four resolve;
+ * otherwise the picker pre-fills what did resolve.
  */
 export function resolveFactsUnitSeed(
   seed: ResultLike,
@@ -265,10 +325,14 @@ export function resolveFactsUnitSeed(
 ): { sel: FactsCascadeSel; open: boolean } {
   const rawYear = String(seed.year ?? "").trim();
   const year = /^\d{4}$/.test(rawYear) ? rawYear : "";
-  const make = year ? seedPick(look.makes(year), seed.make) : "";
-  const model = make ? seedPick(look.models(year, make), seed.model) : "";
+  const makes = year ? look.makes(year) : [];
+  const make = uniqueBy(makes, normMakeKey, normMakeKey(seed.make));
+  const models = make ? look.models(year, make) : [];
+  const model = uniqueBy(models, normModelKey, normModelKey(seed.model));
   const floorplan = model
-    ? concreteFloorplanOrEmpty(seedPick(look.floorplans(year, make, model), seed.floorplan))
+    ? concreteFloorplanOrEmpty(
+        pickSeedFloorplan(look.floorplans(year, make, model), seed.floorplan, model),
+      )
     : "";
   return {
     sel: { year, make, model, floorplan },
