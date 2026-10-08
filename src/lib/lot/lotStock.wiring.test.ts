@@ -166,6 +166,17 @@ test("a lot unit with no photo shows the Raidho mark and a real photo stays", ()
   assert.doesNotMatch(cover, /preserveAspectRatio|className\?:/);
 });
 
+test("lot Estimate payment hands the unit price and coach label to RvCal", () => {
+  const lot = read("../../components/lot/LotStockApp.tsx");
+  const detail = lot.slice(lot.indexOf("function LotDetail"));
+  assert.match(
+    detail,
+    /openCalWithPrice\(\s*unit\.price,\s*showroomUnitLabel\(unit\)\s*\)/,
+  );
+  assert.match(detail, /unit\.price\s*!=\s*null\s*&&\s*unit\.price\s*>\s*0/);
+  assert.match(detail, /setTab\("rvcal"\)/);
+});
+
 test("RV Grok prompts and DialaBot stay out of this page", () => {
   const prompts = read("../rvgrok/prompts.ts");
   const lot = read("../../components/lot/LotStockApp.tsx");
