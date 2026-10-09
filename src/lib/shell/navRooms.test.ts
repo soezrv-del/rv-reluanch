@@ -8,28 +8,29 @@ import { dockActiveTab } from "../../components/shell/dockActiveTab.ts";
 const root = dirname(fileURLToPath(import.meta.url));
 const read = (rel: string) => readFileSync(join(root, rel), "utf8");
 
-test("dockActiveTab: Home lights Facts (like dark Home's row); tools under More light More", () => {
+test("dockActiveTab: Home lights Facts (like dark Home's row); Chat and tools under More light More", () => {
   assert.equal(dockActiveTab("rvgrok", true), "rvfax");
   assert.equal(dockActiveTab("rvfax", true), "rvfax");
   assert.equal(dockActiveTab("rvlot", false), "rvlot");
-  assert.equal(dockActiveTab("rvgrok", false), "rvgrok");
+  assert.equal(dockActiveTab("rvgrok", false), "more");
+  assert.equal(dockActiveTab("rvcal", false), "more");
   assert.equal(dockActiveTab("more", false), "more");
   assert.equal(dockActiveTab("rvtow", false), "more");
   assert.equal(dockActiveTab("rvfax", false, true), "more");
   assert.equal(dockActiveTab("rvgrok", true, true), "more");
 });
 
-test("dock is the original Facts Inventory Chat More; no Home or Ask tab; no DockTab export", () => {
+test("dock is Facts Inventory More; no Home, Ask, Chat, or Cal tab; no DockTab export", () => {
   const tabs = read("../../components/shell/BottomTabs.tsx");
   const shell = read("../../components/shell/AppShell.tsx");
   const home = read("../../components/shell/HomeScreen.tsx");
   assert.match(
     tabs,
-    /short: "Facts"[\s\S]*short: "Inventory"[\s\S]*short: "Chat"[\s\S]*short: "More"/,
+    /short: "Facts"[\s\S]*short: "Inventory"[\s\S]*short: "More"/,
   );
-  assert.doesNotMatch(tabs, /short: "Home"|short: "Ask"/);
+  assert.doesNotMatch(tabs, /short: "Home"|short: "Ask"|short: "Chat"|short: "Cal"/);
   // Same icons as dark Home's row.
-  for (const icon of ["tab-facts", "tab-inventory", "tab-chat", "tab-more"]) {
+  for (const icon of ["tab-facts", "tab-inventory", "tab-more"]) {
     assert.match(tabs, new RegExp(`/assets/showroom/${icon}\\.png`));
     assert.match(home, new RegExp(`/assets/showroom/${icon}\\.png`));
   }

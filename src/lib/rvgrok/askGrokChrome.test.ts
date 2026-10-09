@@ -24,11 +24,13 @@ test("Ask Grok floating badge and overlay chrome are gone", () => {
   assert.doesNotMatch(css, /--shadow-ask-grok/);
 });
 
-test("Grok dock tab still opens the Grok page as today", () => {
+test("Chat left the dock for the More sheet and still opens the Grok page", () => {
   const tabs = read("../../components/shell/BottomTabs.tsx");
+  const sheet = read("../../components/shell/MoreSheet.tsx");
   const shell = read("../../components/shell/AppShell.tsx");
 
-  assert.match(tabs, /\{ id: "rvgrok", label: "Chat", short: "Chat" \}/);
+  assert.doesNotMatch(tabs, /id: "rvgrok"/);
+  assert.match(sheet, /id: "rvgrok",\s*title: "Chat"/);
 
   const pageMount = shell.match(
     /id === "rvgrok" \? \([\s\S]*?<RvGrokApp[\s\S]*?\/>/,
@@ -65,7 +67,7 @@ test("Facts Ask Grok seeds the Grok tab; dock tap stays a clean page", () => {
   assert.match(pageMount, /entryToken=\{grokEntryToken\}/);
   assert.match(pageMount, /seedPrompt=\{grokSeed\}/);
 
-  assert.match(tabs, /\{ id: "rvgrok", label: "Chat", short: "Chat" \}/);
+  assert.doesNotMatch(tabs, /id: "rvgrok"/);
   assert.doesNotMatch(tabs, /short: "LIVE!"/);
 });
 
@@ -79,26 +81,26 @@ test("old bottom dock is not mounted and keyboard does not gate the shell", () =
   assert.doesNotMatch(shell, /useSwipeTabs|swipeArmed|SWIPE_ORDER/);
 });
 
-test("the dock is the original four tabs with dark Home's icons, no Einstein photo", () => {
+test("the dock is Facts, Inventory, More with dark Home's icons, no Einstein photo", () => {
   const tabs = read("../../components/shell/BottomTabs.tsx");
   const bubble = read("../../components/rvgrok/MessageBubble.tsx");
   const dock = read("../../components/shell/dock.css");
 
   assert.match(bubble, /\/assets\/brand\/icon-rvgrok\.png/);
   assert.doesNotMatch(bubble, /Einstein/);
-  assert.match(tabs, /id: "rvgrok"/);
+  assert.doesNotMatch(tabs, /id: "rvgrok"/);
   assert.match(tabs, /data-dock-icons="platinum"/);
   assert.match(tabs, /bottom-tab-glyph/);
   assert.match(
     tabs,
-    /short: "Facts"[\s\S]*short: "Inventory"[\s\S]*short: "Chat"[\s\S]*short: "More"/,
+    /short: "Facts"[\s\S]*short: "Inventory"[\s\S]*short: "More"/,
   );
-  assert.doesNotMatch(tabs, /short: "Home"|short: "Ask"/);
-  for (const icon of ["tab-facts", "tab-inventory", "tab-chat", "tab-more"]) {
+  assert.doesNotMatch(tabs, /short: "Home"|short: "Ask"|short: "Chat"/);
+  for (const icon of ["tab-facts", "tab-inventory", "tab-more"]) {
     assert.match(tabs, new RegExp(`/assets/showroom/${icon}\\.png`));
   }
   assert.doesNotMatch(tabs, /icon-rvgrok|bottom-tab-einstein|Einstein/);
-  // Idle tabs still announce their own label. Live Chat swaps in chatTabFace.
+  // Idle tabs still announce their own label. Live chat adds a note to More.
   assert.match(tabs, /aria: label/);
   assert.match(tabs, /aria-label=\{face\.aria\}/);
   assert.match(tabs, /title=\{face\.aria\}/);
@@ -113,7 +115,7 @@ test("Removing overlay chrome does not rewrite dock plate or Facts/Tow internals
   const fax = read("../../components/rvfax/RvFaxApp.tsx");
   const tow = read("../../components/rvtow/RvTowApp.tsx");
 
-  assert.match(tabs, /\{ id: "rvgrok", label: "Chat", short: "Chat" \}/);
+  assert.match(tabs, /\{ id: "more", label: "More", short: "More" \}/);
   assert.match(css, /--dock-surface:\s*#000000/);
   assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?background:\s*var\(--dock-surface\)/);
   assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?backdrop-filter:\s*none/);
