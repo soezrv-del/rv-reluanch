@@ -119,5 +119,10 @@ test("Home is the entrance and the bottom tab bar is not mounted", () => {
   assert.match(deck, /data-section-home/);
   assert.match(deck, /data-section-dot/);
   assert.match(bar, /pageScope: true, startAssistant: true/);
+  // One header on Home in either theme: Home's own bar keeps the theme button.
+  const css = read("../../styles.css");
+  assert.match(css, /(^|\n)\[data-home-open\] \.showroom-header \{\s*display: none !important;/);
+  assert.doesNotMatch(css, /html\[data-theme="dark"\] \[data-home-open\] \.showroom-header/);
+  assert.match(home, /className="home-glass-bar"[\s\S]*?data-tool-rail="theme"/);
   assert.match(shell, /<SuiteBrand\s+onHome=\{\(\) => \{[\s\S]*?setHomeOpen\(true\)/);
 });
