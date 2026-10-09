@@ -1,11 +1,13 @@
 import { useEffect, useRef, type ReactNode } from "react";
-import { Calculator, ChevronRight, MapPin, ScanLine, Settings, Share2 } from "lucide-react";
+import { ChevronRight, MapPin, MessageSquare, ScanLine, Settings, Share2 } from "lucide-react";
 import type { AppTab } from "./BottomTabs";
 import { TowGlyph } from "./BottomTabs";
+import { useRoomVoiceOpen } from "./useRoomVoiceOpen";
+import { chatTabFace } from "@/lib/rvgrok/roomAsk";
 import "./more-sheet.css";
 
 /** What a More sheet tap opens. "vin" is the VIN Decoder overlay. */
-export type MorePick = "rvtow" | "rvcal" | "rvtrips" | "rvshare" | "more" | "vin";
+export type MorePick = "rvtow" | "rvgrok" | "rvtrips" | "rvshare" | "more" | "vin";
 
 const TILES: { id: MorePick; title: string; sub: string; icon: ReactNode }[] = [
   {
@@ -15,10 +17,10 @@ const TILES: { id: MorePick; title: string; sub: string; icon: ReactNode }[] = [
     icon: <TowGlyph className="more-sheet-glyph" />,
   },
   {
-    id: "rvcal",
-    title: "Payments",
-    sub: "Finance calc",
-    icon: <Calculator className="more-sheet-glyph" strokeWidth={1.75} aria-hidden />,
+    id: "rvgrok",
+    title: "Chat",
+    sub: "Ask RV Grok",
+    icon: <MessageSquare className="more-sheet-glyph" strokeWidth={1.75} aria-hidden />,
   },
   {
     id: "rvtrips",
@@ -35,10 +37,13 @@ const ROWS: { id: MorePick; title: string; icon: ReactNode }[] = [
 ];
 
 /**
- * Half-sheet above the dock: Tow Check, Payments and RV GPS as big tiles,
+ * Half-sheet above the dock: Tow Check, Chat and RV GPS as big tiles,
  * then VIN Decoder, Share a brochure and Premium & settings. The dock stays
  * visible under it, so More toggles it shut. Android back closes it (the
- * shell pushes a history entry on open).
+ * shell pushes a history entry on open). Chat is the general conversation
+ * (no page lock). While Live chat is on, its tile shows the live dot; on
+ * Chat the tile reads "End" and turns Live chat off. Cal opens from the
+ * header Cal shortcut and the More page.
  */
 export function MoreSheet({
   open,
@@ -52,6 +57,7 @@ export function MoreSheet({
   onClose: () => void;
 }) {
   const firstRef = useRef<HTMLButtonElement>(null);
+  const live = useRoomVoiceOpen();
 
   useEffect(() => {
     if (!open) return;
@@ -79,23 +85,33 @@ export function MoreSheet({
         <div className="more-sheet-grab" aria-hidden />
         <p className="more-sheet-heading">Tools</p>
         <div className="more-sheet-tiles">
-          {TILES.map(({ id, title, sub, icon }, i) => (
-            <button
-              key={id}
-              ref={i === 0 ? firstRef : undefined}
-              type="button"
-              data-more-tool={id}
-              aria-current={tab === id ? "page" : undefined}
-              className={"more-sheet-tile" + (tab === id ? " is-current" : "")}
-              onClick={() => onPick(id)}
-            >
-              {icon}
-              <span className="more-sheet-tile-copy">
-                <span className="more-sheet-tile-title">{title}</span>
-                <span className="more-sheet-tile-sub">{sub}</span>
-              </span>
-            </button>
-          ))}
+          {TILES.map(({ id, title, sub, icon }, i) => {
+            const chatLive = id === "rvgrok" && live;
+            // "End" only when the tap actually stops Live chat (already on Chat).
+            const face = chatLive ? chatTabFace(true, tab === "rvgrok") : null;
+            return (
+              <button
+                key={id}
+                ref={i === 0 ? firstRef : undefined}
+                type="button"
+                data-more-tool={id}
+                data-live-chat={chatLive ? "" : undefined}
+                aria-current={tab === id ? "page" : undefined}
+                aria-label={face ? face.aria : undefined}
+                className={
+                  "more-sheet-tile" + (tab === id ? " is-current" : "") + (chatLive ? " is-live" : "")
+                }
+                onClick={() => onPick(id)}
+              >
+                {chatLive ? <span className="more-sheet-live-dot" aria-hidden /> : null}
+                {icon}
+                <span className="more-sheet-tile-copy">
+                  <span className="more-sheet-tile-title">{face ? face.label : title}</span>
+                  <span className="more-sheet-tile-sub">{sub}</span>
+                </span>
+              </button>
+            );
+          })}
         </div>
         <div className="more-sheet-rows">
           {ROWS.map(({ id, title, icon }) => (

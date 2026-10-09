@@ -95,6 +95,30 @@ html[data-theme="dark"] .more-sheet {
   border-color: var(--more-ink) !important;
 }
 
+/* Live chat stays on away from Chat; the Chat tile is the way back and the off switch. */
+.more-sheet .more-sheet-tile.is-live {
+  position: relative;
+}
+
+.more-sheet-live-dot {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #c48a5e;
+  animation: live-chat-pulse 1.4s ease-in-out infinite;
+}
+
+.more-sheet .more-sheet-tile.is-live .more-sheet-tile-title {
+  color: #8b5e3c;
+}
+
+html[data-theme="dark"] .more-sheet .more-sheet-tile.is-live .more-sheet-tile-title {
+  color: #c48a5e;
+}
+
 .more-sheet-glyph {
   width: 30px;
   height: 30px;
@@ -174,7 +198,8 @@ html[data-theme="dark"] .more-sheet {
 
 @media (prefers-reduced-motion: reduce) {
   .more-sheet,
-  .more-sheet-scrim {
+  .more-sheet-scrim,
+  .more-sheet-live-dot {
     animation: none;
   }
 }

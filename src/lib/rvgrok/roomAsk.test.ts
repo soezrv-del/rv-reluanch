@@ -42,7 +42,7 @@ test("room ask bridge calls the registered Grok handlers", () => {
   assert.equal(roomAskMic(), false);
 });
 
-test("original dock (Facts · Inventory · Chat · More) with no separate Ask bar", () => {
+test("dock is Facts · Inventory · More with Chat in the More sheet, no separate Ask bar", () => {
   const shell = read("../../components/shell/AppShell.tsx");
   const bar = read("../../components/shell/RoomAskBar.tsx");
   const more = read("../../components/more/MoreApp.tsx");
@@ -61,17 +61,21 @@ test("original dock (Facts · Inventory · Chat · More) with no separate Ask ba
   assert.match(bar, /onDockTap\)\s*onDockTap\(id\)/);
   assert.doesNotMatch(bar, /ROOM_CHIPS|Rv Facts|Lot Inventory|showroom-pills/);
   const tabs = read("../../components/shell/BottomTabs.tsx");
-  assert.match(tabs, /DOCK_ROOM_IDS = \["rvfax", "rvlot", "rvgrok", "more"\]/);
+  assert.match(tabs, /DOCK_ROOM_IDS = \["rvfax", "rvlot", "more"\]/);
   assert.match(tabs, /id: "rvfax"/);
   assert.match(tabs, /id: "rvlot"/);
-  assert.match(tabs, /id: "rvgrok"/);
   assert.match(tabs, /id: "more"/);
   assert.doesNotMatch(tabs, /id: "home"/);
-  assert.doesNotMatch(tabs, /id: "rvcal"|id: "rvtow"|id: "rvtrips"/);
+  // Chat moved into the sheet; Cal was not added to the dock.
+  assert.doesNotMatch(tabs, /id: "rvgrok"|id: "rvcal"|id: "rvtow"|id: "rvtrips"/);
   const sheet = read("../../components/shell/MoreSheet.tsx");
-  assert.match(sheet, /id: "rvtow"/);
-  assert.match(sheet, /id: "rvcal"/);
-  assert.match(sheet, /id: "rvtrips"/);
+  // Tiles: Tow Check, Chat (Cal's old slot), RV GPS. Cal keeps the header shortcut.
+  assert.match(sheet, /id: "rvtow"[\s\S]*id: "rvgrok"[\s\S]*id: "rvtrips"/);
+  assert.doesNotMatch(sheet, /id: "rvcal"/);
+  assert.match(sheet, /id: "vin"[\s\S]*id: "rvshare"[\s\S]*id: "more"/);
+  const brand = read("../../components/shell/SuiteBrand.tsx");
+  assert.match(brand, /data-tool-rail="cal"/);
+  assert.match(more, /onNavigate\?\.\("rvcal"\)/);
   assert.match(tabs, /data-dock-icons="platinum"/);
   assert.doesNotMatch(tabs, /icon-rvgrok|bottom-tab-einstein|Einstein/);
   assert.match(more, /label="RV GPS"/);
@@ -226,7 +230,7 @@ test("Home's Ask RV Grok pill sits above the dock on every other screen, not Hom
   assert.match(shadow, /var\(--copper-inset\)/);
 });
 
-test("Chat tab and Ask pill show Live while voice is on away from Chat", () => {
+test("Chat tile, More tab, and Ask pill show Live while voice is on away from Chat", () => {
   assert.deepEqual(askPillFace(false), { label: "Ask RV Grok", aria: "Ask RV Grok" });
   assert.equal(askPillFace(true).label, "Live chat");
   assert.match(askPillFace(true).aria, /Tap to turn it off/);
@@ -240,8 +244,9 @@ test("Chat tab and Ask pill show Live while voice is on away from Chat", () => {
 
   const pill = read("../../components/shell/AskGrokPill.tsx");
   const tabs = read("../../components/shell/BottomTabs.tsx");
+  const sheet = read("../../components/shell/MoreSheet.tsx");
   const home = read("../../components/shell/HomeScreen.tsx");
-  for (const src of [pill, tabs, home]) {
+  for (const src of [pill, tabs, sheet, home]) {
     assert.match(src, /useRoomVoiceOpen/);
     assert.match(src, /data-live-chat/);
   }
@@ -250,9 +255,11 @@ test("Chat tab and Ask pill show Live while voice is on away from Chat", () => {
   assert.match(pill, /planAskPillTap/);
   assert.match(pill, /stopRoomVoice/);
   assert.match(pill, /Tap to turn off/);
-  assert.match(tabs, /chatTabFace/);
+  // The Chat tile reads Live / End; the More tab carries the dot.
+  assert.match(sheet, /chatTabFace\(true, tab === "rvgrok"\)/);
+  assert.match(sheet, /more-sheet-live-dot/);
+  assert.match(tabs, /id === "more" && live/);
   assert.match(tabs, /bottom-tab-live-dot/);
-  assert.match(tabs, /tab === "rvgrok" && !homeOpen/);
   assert.match(home, /askPillFace/);
   assert.match(home, /chatTabFace/);
   assert.match(home, /AskPillLiveLabel/);

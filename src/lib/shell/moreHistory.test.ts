@@ -67,7 +67,29 @@ test("Android back closes the sheet, then returns to the tab a tool came from", 
   assert.equal(popTarget(null, 0, facts), null);
 });
 
-test("shell wires the Facts/Inventory/Chat/More dock, sheet history, and no swipe", () => {
+test("Chat from the More sheet is a sheet tool: replace the sheet entry, Back returns", () => {
+  const chat = { tab: "rvgrok", home: false };
+  const lot = { tab: "rvlot", home: false };
+  // Facts → sheet → Chat: the Chat entry replaces the sheet entry.
+  assert.equal(
+    planTabHistory({ prev: facts, next: chat, nextUnderMore: true, depth: 1, pickedFromSheet: true }),
+    "replace",
+  );
+  // Ask pill from Tow → Chat pushes, so Back returns to Tow.
+  assert.equal(
+    planTabHistory({ prev: tow, next: chat, nextUnderMore: true, depth: 1, pickedFromSheet: false }),
+    "push",
+  );
+  // Back from Chat lands on the screen it came from.
+  assert.deepEqual(popTarget(null, 1, facts), { view: facts, depth: 0 });
+  // A dock tab from Chat unwinds.
+  assert.equal(
+    planTabHistory({ prev: chat, next: lot, nextUnderMore: false, depth: 1, pickedFromSheet: false }),
+    "unwind",
+  );
+});
+
+test("shell wires the Facts/Inventory/More dock, Chat in the sheet, sheet history, and no swipe", () => {
   const shell = read("../../components/shell/AppShell.tsx");
   const constants = read("../../components/shell/shellConstants.ts");
   const ask = read("../../components/shell/RoomAskBar.tsx");
@@ -81,6 +103,14 @@ test("shell wires the Facts/Inventory/Chat/More dock, sheet history, and no swip
   assert.match(shell, /history\.replaceState\(/);
   assert.match(shell, /addEventListener\("popstate"/);
   assert.match(ask, /<MoreSheet/);
+  // Chat is a More sheet tool (history like Tow and RV GPS), with no page lock.
+  assert.match(constants, /MORE_SHEET_TOOLS = \[\s*"rvtow",\s*"rvgrok",\s*"rvtrips",\s*\]/);
+  assert.match(constants, /UNDER_MORE[^\n]*"rvcal"/);
+  const pick = shell.match(/if \(id === "rvgrok"\) \{[\s\S]*?\n {6}\}/)?.[0];
+  assert.ok(pick, "onMorePick handles the Chat tile");
+  assert.match(pick, /pickedFromSheet\.current = true/);
+  assert.match(pick, /onTabChange\("rvgrok", \{ startAssistant: true \}\)/);
+  assert.doesNotMatch(pick, /pageScope:/);
   // More in the dock toggles the sheet, as before #668.
   assert.match(
     shell,

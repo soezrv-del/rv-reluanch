@@ -25,9 +25,9 @@ test("Lot stock is the last dock tab and not RV Grok", () => {
   assert.match(tabs, /export type DockRoomId/);
   assert.match(
     tabs,
-    /short: "Facts"[\s\S]*short: "Inventory"[\s\S]*short: "Chat"[\s\S]*short: "More"/,
+    /short: "Facts"[\s\S]*short: "Inventory"[\s\S]*short: "More"/,
   );
-  assert.doesNotMatch(tabs, /short: "Home"|short: "Ask"/);
+  assert.doesNotMatch(tabs, /short: "Home"|short: "Ask"|short: "Chat"/);
   assert.doesNotMatch(tabs, /export type DockTab/);
 
   assert.match(

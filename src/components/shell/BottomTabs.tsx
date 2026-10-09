@@ -8,7 +8,6 @@ import {
 import "./dock.css";
 import { dockActiveTab } from "./dockActiveTab";
 import { useRoomVoiceOpen } from "./useRoomVoiceOpen";
-import { chatTabFace } from "@/lib/rvgrok/roomAsk";
 
 export type AppTab =
   | "rvgrok"
@@ -27,10 +26,10 @@ export type AppTab =
  * name that can be stripped while a runtime reference remains (Safari:
  * "Can't find variable" for that type name).
  */
-export const DOCK_ROOM_IDS = ["rvfax", "rvlot", "rvgrok", "more"] as const;
+export const DOCK_ROOM_IDS = ["rvfax", "rvlot", "more"] as const;
 export type DockRoomId = (typeof DOCK_ROOM_IDS)[number];
 
-/** The original bar, same as dark Home's row: Facts · Inventory · Chat · More. */
+/** Facts · Inventory · More. Chat lives in the More sheet. */
 const TABS: {
   id: DockRoomId;
   label: string;
@@ -38,7 +37,6 @@ const TABS: {
 }[] = [
   { id: "rvfax", label: "Facts", short: "Facts" },
   { id: "rvlot", label: "Inventory", short: "Inventory" },
-  { id: "rvgrok", label: "Chat", short: "Chat" },
   { id: "more", label: "More", short: "More" },
 ];
 
@@ -46,7 +44,6 @@ const TABS: {
 export const DOCK_TAB_ICON: Record<DockRoomId, string> = {
   rvfax: "/assets/showroom/tab-facts.png",
   rvlot: "/assets/showroom/tab-inventory.png",
-  rvgrok: "/assets/showroom/tab-chat.png",
   more: "/assets/showroom/tab-more.png",
 };
 
@@ -142,8 +139,8 @@ function placeDock(dock: HTMLDivElement, smooth: boolean) {
 }
 
 /**
- * Four tabs: Facts · Inventory · Chat · More (the original bar).
- * Chat opens the RV Grok room (rvgrok). More toggles the More sheet.
+ * Three tabs: Facts · Inventory · More. More toggles the More sheet, which
+ * holds Chat. While Live chat is on, More carries the live dot.
  * Home is the RvFOX logo in the header.
  * Android WebView: do NOT put pointer-events-none on this nav.
  */
@@ -206,10 +203,10 @@ export function BottomTabs({
       >
         {TABS.map(({ id, label, short }) => {
           const active = lit === id;
-          const chatLive = id === "rvgrok" && live;
-          // "End" only when the next tap actually stops Live Voice (already on Chat).
+          // Chat sits in the More sheet, so More shows that Live chat is still on.
+          const chatLive = id === "more" && live;
           const face = chatLive
-            ? chatTabFace(true, tab === "rvgrok" && !homeOpen)
+            ? { label: short, aria: `${label}. Live chat is on.` }
             : { label: short, aria: label };
           return (
             <button
