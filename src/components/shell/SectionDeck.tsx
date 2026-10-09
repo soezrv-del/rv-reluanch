@@ -16,6 +16,19 @@ import "./section-deck.css";
 const BLOCK =
   "input, textarea, select, button, a, [data-no-swipe], [data-lot-arrivals], [data-map-engine], [data-mapbox-canvas-host], [role='slider']";
 
+/** True when the touch starts inside an element that scrolls sideways on its own. */
+function insideSideScroller(target: EventTarget | null, row: HTMLElement): boolean {
+  let el = target instanceof Element ? target : null;
+  while (el && el !== row) {
+    if (el instanceof HTMLElement && el.scrollWidth > el.clientWidth + 1) {
+      const overflowX = getComputedStyle(el).overflowX;
+      if (overflowX === "auto" || overflowX === "scroll") return true;
+    }
+    el = el.parentElement;
+  }
+  return false;
+}
+
 function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
@@ -68,7 +81,8 @@ export function SectionDeck({
     const row = rowRef.current;
     if (!row || hidden) return;
 
-    let pointerId: number | null = null;
+    /** Pointer id for mouse / pen, "touch" for a finger, null when idle. */
+    let active: number | "touch" | null = null;
     let startX = 0;
     let startY = 0;
     let startLeft = 0;
@@ -92,19 +106,19 @@ export function SectionDeck({
     };
 
     const release = () => {
-      if (pointerId !== null && row.hasPointerCapture?.(pointerId)) {
+      if (typeof active === "number" && row.hasPointerCapture?.(active)) {
         try {
-          row.releasePointerCapture(pointerId);
+          row.releasePointerCapture(active);
         } catch {
           /* already released */
         }
       }
-      pointerId = null;
+      active = null;
       delete row.dataset.dragging;
     };
 
     const finish = (dx: number, cancelled: boolean) => {
-      if (pointerId === null) return;
+      if (active === null) return;
       const wasH = axis === "h";
       release();
       axis = null;
@@ -122,59 +136,101 @@ export function SectionDeck({
       settle(next);
     };
 
-    const onDown = (event: PointerEvent) => {
-      if (pointerId !== null) return;
-      if (event.pointerType === "mouse" && event.button !== 0) return;
-      const target = event.target;
+    const begin = (x: number, y: number, target: EventTarget | null, id: number | "touch") => {
+      if (active !== null) return;
       if (target instanceof Element && target.closest(BLOCK)) return;
+      // A carousel or chip row inside the page keeps its own sideways scroll.
+      if (insideSideScroller(target, row)) return;
       // Leave the left edge to iOS Safari's back swipe.
-      if (startsAtBackEdge(event.clientX)) return;
-      pointerId = event.pointerId;
+      if (startsAtBackEdge(x)) return;
+      active = id;
       axis = null;
-      startX = event.clientX;
-      startY = event.clientY;
+      startX = x;
+      startY = y;
       startLeft = row.scrollLeft;
       lastDx = 0;
       swallowClick = false;
     };
 
-    const onMove = (event: PointerEvent) => {
-      if (pointerId === null || event.pointerId !== pointerId) return;
-      const dx = event.clientX - startX;
-      const dy = event.clientY - startY;
+    /** Returns true when the row owns this move (the caller cancels the native pan). */
+    const move = (x: number, y: number): boolean => {
+      const dx = x - startX;
+      const dy = y - startY;
       lastDx = dx;
       if (!axis) {
         axis = planSectionAxis(dx, dy);
         if (axis === "h") {
-          // Keep up/cancel on the row even if the finger ends over the
+          // Keep up/cancel on the row even if the pointer ends over the
           // foot or the Ask pill. Captured only once the drag is sideways
-          // so plain taps still click what is under them.
-          try {
-            row.setPointerCapture(pointerId);
-          } catch {
-            /* pointer already gone */
+          // so plain clicks still reach what is under them. (Touch is
+          // implicitly bound to the row already.)
+          if (typeof active === "number") {
+            try {
+              row.setPointerCapture(active);
+            } catch {
+              /* pointer already gone */
+            }
           }
           row.dataset.dragging = "";
         }
       }
-      if (axis !== "h") return;
-      event.preventDefault();
+      if (axis !== "h") {
+        // Until the axis is known, hold a mostly-sideways start so the
+        // browser does not begin a native pan of an inner scroller.
+        return axis === null && Math.abs(dx) > Math.abs(dy);
+      }
       row.scrollLeft = startLeft - dx;
+      return true;
     };
 
+    // Mouse and pen: pointer events. Touch: touch events, because a page
+    // with its own scroller lets the browser take the pan and cancel the
+    // pointer; touchmove can still be held. One input, one handler.
+    const onDown = (event: PointerEvent) => {
+      if (event.pointerType === "touch") return;
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      begin(event.clientX, event.clientY, event.target, event.pointerId);
+    };
+    const onMove = (event: PointerEvent) => {
+      if (active === null || event.pointerId !== active) return;
+      if (move(event.clientX, event.clientY)) event.preventDefault();
+    };
     const onUp = (event: PointerEvent) => {
-      if (pointerId === null || event.pointerId !== pointerId) return;
+      if (active === null || event.pointerId !== active) return;
       finish(event.clientX - startX, false);
     };
-
     const onCancel = (event: PointerEvent) => {
-      if (pointerId === null || event.pointerId !== pointerId) return;
+      if (active === null || event.pointerId !== active) return;
+      finish(lastDx, true);
+    };
+    const onLostCapture = (event: PointerEvent) => {
+      if (active === null || event.pointerId !== active) return;
+      // pointerup also releases capture; finish() already ran in that case.
       finish(lastDx, true);
     };
 
-    const onLostCapture = (event: PointerEvent) => {
-      if (pointerId === null || event.pointerId !== pointerId) return;
-      // pointerup also releases capture; finish() already ran in that case.
+    const onTouchStart = (event: TouchEvent) => {
+      const touch = event.touches[0];
+      if (event.touches.length !== 1 || !touch) {
+        // A second finger (pinch) is not a page swipe.
+        if (active === "touch") finish(lastDx, true);
+        return;
+      }
+      begin(touch.clientX, touch.clientY, event.target, "touch");
+    };
+    const onTouchMove = (event: TouchEvent) => {
+      if (active !== "touch") return;
+      const touch = event.touches[0];
+      if (!touch) return;
+      if (move(touch.clientX, touch.clientY) && event.cancelable) event.preventDefault();
+    };
+    const onTouchEnd = (event: TouchEvent) => {
+      if (active !== "touch") return;
+      const touch = event.changedTouches[0];
+      finish(touch ? touch.clientX - startX : lastDx, false);
+    };
+    const onTouchCancel = () => {
+      if (active !== "touch") return;
       finish(lastDx, true);
     };
 
@@ -189,7 +245,7 @@ export function SectionDeck({
     const onScroll = () => {
       window.clearTimeout(settleTimer);
       settleTimer = window.setTimeout(() => {
-        if (pointerId !== null || settleTarget.current !== null) return;
+        if (active !== null || settleTarget.current !== null) return;
         const index = nearestSection(row.scrollLeft, width(), SECTION_ROW.length);
         if (Math.abs(row.scrollLeft - index * width()) >= 2) return;
         const id = SECTION_ROW[index]?.id;
@@ -200,6 +256,10 @@ export function SectionDeck({
     row.addEventListener("pointerdown", onDown);
     row.addEventListener("pointermove", onMove, { passive: false });
     row.addEventListener("lostpointercapture", onLostCapture);
+    row.addEventListener("touchstart", onTouchStart, { passive: true });
+    row.addEventListener("touchmove", onTouchMove, { passive: false });
+    row.addEventListener("touchend", onTouchEnd);
+    row.addEventListener("touchcancel", onTouchCancel);
     row.addEventListener("click", onClick, true);
     row.addEventListener("scroll", onScroll, { passive: true });
     // Up / cancel on window too: an uncaptured (vertical) drag can end
@@ -212,6 +272,10 @@ export function SectionDeck({
       row.removeEventListener("pointerdown", onDown);
       row.removeEventListener("pointermove", onMove);
       row.removeEventListener("lostpointercapture", onLostCapture);
+      row.removeEventListener("touchstart", onTouchStart);
+      row.removeEventListener("touchmove", onTouchMove);
+      row.removeEventListener("touchend", onTouchEnd);
+      row.removeEventListener("touchcancel", onTouchCancel);
       row.removeEventListener("click", onClick, true);
       row.removeEventListener("scroll", onScroll);
       window.removeEventListener("pointerup", onUp, true);

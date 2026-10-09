@@ -96,7 +96,10 @@ test("the row captures the pointer and settles on up, cancel, and lost capture",
   assert.match(deck, /releasePointerCapture\(/);
   assert.match(deck, /"lostpointercapture"/);
   assert.match(deck, /"pointercancel"/);
-  assert.match(deck, /startsAtBackEdge\(event\.clientX\)/);
+  assert.match(deck, /startsAtBackEdge\(x\)/);
+  // Touch runs on touch events so a page's own scroller cannot cancel the swipe.
+  assert.match(deck, /"touchmove", onTouchMove, \{ passive: false \}/);
+  assert.match(deck, /if \(event\.pointerType === "touch"\) return;/);
   assert.match(deck, /planSectionSettle\(/);
 });
 

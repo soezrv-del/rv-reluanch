@@ -20,6 +20,12 @@
 .section-row[hidden] {
   display: none;
 }
+/* A mouse drag on a photo would start a native image drag and cancel the
+   swipe. */
+.section-row img,
+.showroom-home img {
+  -webkit-user-drag: none;
+}
 /* The finger drives scrollLeft; snapping mid-drag would fight it. */
 .section-row[data-dragging] {
   scroll-snap-type: none;
