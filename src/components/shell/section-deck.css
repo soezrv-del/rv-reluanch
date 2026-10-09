@@ -94,22 +94,34 @@ html[data-theme="light"] .section-foot-label {
   display: flex;
   flex: 0 0 auto;
   align-items: center;
-  gap: 6px;
+  gap: 0;
+  /* Padding below makes 25px hit targets; pull the row back to its old edge. */
+  margin: -9px -9px -9px 0;
 }
+/* The dot stays 7px (18px when current); 9px of padding around it is a
+   25px tap target. The fill is clipped to the content box. */
 .section-dot {
+  box-sizing: content-box;
   width: 7px;
   height: 7px;
-  padding: 0;
+  padding: 9px;
   border: 0;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.28);
+  background-clip: content-box;
 }
 html[data-theme="light"] .section-dot {
   background: rgba(17, 17, 17, 0.2);
+  background-clip: content-box;
 }
 .section-dot[aria-current="page"] {
   width: 18px;
   background: #c48a5e;
+  background-clip: content-box;
+}
+.section-dot:focus-visible {
+  outline: 2px solid #c48a5e;
+  outline-offset: -6px;
 }
 
 .home-sections-cue {

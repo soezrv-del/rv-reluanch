@@ -95,3 +95,13 @@ export function planSectionSettle(
   if (axis !== "h") return current;
   return current + sectionStep(dx, current, length);
 }
+
+/** Arrow / Home / End keys on the section dots (roving tabindex). */
+export function sectionKeyTarget(key: string, index: number, length: number): number | null {
+  if (length <= 0) return null;
+  if (key === "ArrowRight") return Math.min(length - 1, index + 1);
+  if (key === "ArrowLeft") return Math.max(0, index - 1);
+  if (key === "Home") return 0;
+  if (key === "End") return length - 1;
+  return null;
+}

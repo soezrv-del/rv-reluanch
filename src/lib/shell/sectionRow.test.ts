@@ -13,6 +13,7 @@ import {
   planSectionAxis,
   planSectionSettle,
   sectionIndex,
+  sectionKeyTarget,
   sectionStep,
   startsAtBackEdge,
 } from "./sectionRow.ts";
@@ -97,6 +98,26 @@ test("the row captures the pointer and settles on up, cancel, and lost capture",
   assert.match(deck, /"pointercancel"/);
   assert.match(deck, /startsAtBackEdge\(event\.clientX\)/);
   assert.match(deck, /planSectionSettle\(/);
+});
+
+test("section dots: arrow keys, Home, and End; 24px+ tap targets", () => {
+  assert.equal(sectionKeyTarget("ArrowRight", 2, 6), 3);
+  assert.equal(sectionKeyTarget("ArrowRight", 5, 6), 5);
+  assert.equal(sectionKeyTarget("ArrowLeft", 2, 6), 1);
+  assert.equal(sectionKeyTarget("ArrowLeft", 0, 6), 0);
+  assert.equal(sectionKeyTarget("Home", 4, 6), 0);
+  assert.equal(sectionKeyTarget("End", 1, 6), 5);
+  assert.equal(sectionKeyTarget("Enter", 1, 6), null);
+  const deck = read("../../components/shell/SectionDeck.tsx");
+  assert.match(deck, /onKeyDown=/);
+  assert.match(deck, /tabIndex=\{page\.id === current\?\.id \? 0 : -1\}/);
+  const css = read("../../components/shell/section-deck.css");
+  const dot = css.match(/\n\.section-dot \{([^}]*)\}/)?.[1] ?? "";
+  const size = Number(dot.match(/width: (\d+)px/)?.[1]);
+  const pad = Number(dot.match(/padding: (\d+)px/)?.[1]);
+  assert.equal(size, 7);
+  assert.ok(size + 2 * pad >= 24, `dot hit target ${size + 2 * pad}px`);
+  assert.match(dot, /background-clip: content-box/);
 });
 
 test("Home is the entrance and the bottom tab bar is not mounted", () => {

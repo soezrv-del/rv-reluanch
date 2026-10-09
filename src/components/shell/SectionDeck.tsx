@@ -6,6 +6,7 @@ import {
   planSectionAxis,
   planSectionSettle,
   sectionIndex,
+  sectionKeyTarget,
   startsAtBackEdge,
   type SectionId,
 } from "@/lib/shell/sectionRow";
@@ -213,6 +214,19 @@ export function SectionDeck({
   }, [hidden]);
 
   const current = isSectionId(tab) ? SECTION_ROW[sectionIndex(tab)] : SECTION_ROW[0];
+  const dotsRef = useRef<HTMLDivElement>(null);
+
+  /** Dot tap or arrow key: glide to the page and make it active. */
+  const goTo = (id: SectionId) => {
+    const row = rowRef.current;
+    const index = sectionIndex(id);
+    if (row && index >= 0) {
+      const behavior = prefersReducedMotion() ? "auto" : "smooth";
+      if (behavior === "smooth" && id !== tab) settleTarget.current = index;
+      row.scrollTo({ left: index * (row.clientWidth || 1), behavior });
+    }
+    if (id !== tab) onArrive(id);
+  };
 
   return (
     <>
@@ -231,7 +245,24 @@ export function SectionDeck({
             Home
           </button>
           <p className="section-foot-label">{current?.label}</p>
-          <div className="section-dots" role="tablist" aria-label="Sections">
+          <div
+            ref={dotsRef}
+            className="section-dots"
+            role="tablist"
+            aria-label="Sections"
+            onKeyDown={(event) => {
+              const from = Math.max(0, sectionIndex(tab));
+              const to = sectionKeyTarget(event.key, from, SECTION_ROW.length);
+              if (to === null) return;
+              event.preventDefault();
+              const page = SECTION_ROW[to];
+              if (!page) return;
+              goTo(page.id);
+              dotsRef.current
+                ?.querySelector<HTMLButtonElement>(`[data-section-dot="${page.id}"]`)
+                ?.focus();
+            }}
+          >
             {SECTION_ROW.map((page) => (
               <button
                 key={page.id}
@@ -242,16 +273,8 @@ export function SectionDeck({
                 aria-label={page.label}
                 aria-selected={page.id === tab}
                 aria-current={page.id === tab ? "page" : undefined}
-                onClick={() => {
-                  const row = rowRef.current;
-                  const index = sectionIndex(page.id);
-                  if (row && index >= 0) {
-                    const behavior = prefersReducedMotion() ? "auto" : "smooth";
-                    if (behavior === "smooth" && page.id !== tab) settleTarget.current = index;
-                    row.scrollTo({ left: index * (row.clientWidth || 1), behavior });
-                  }
-                  if (page.id !== tab) onArrive(page.id);
-                }}
+                tabIndex={page.id === current?.id ? 0 : -1}
+                onClick={() => goTo(page.id)}
               />
             ))}
           </div>
