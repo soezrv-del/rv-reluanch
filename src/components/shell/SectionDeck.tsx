@@ -10,6 +10,7 @@ import {
   startsAtBackEdge,
   type SectionId,
 } from "@/lib/shell/sectionRow";
+import { useRoomVoiceOpen } from "./useRoomVoiceOpen";
 import "./section-deck.css";
 
 const BLOCK =
@@ -37,6 +38,11 @@ export function SectionDeck({
   children: ReactNode;
 }) {
   const rowRef = useRef<HTMLDivElement>(null);
+  // The Ask bar (RoomAskBar) sits under the foot on every page but Chat,
+  // and on Chat while Live Voice is up. Whichever is lowest pads the
+  // bottom safe area, once.
+  const live = useRoomVoiceOpen();
+  const askBarBelow = tab !== "rvgrok" || live;
   const tabRef = useRef(tab);
   tabRef.current = tab;
   const onArriveRef = useRef(onArrive);
@@ -240,7 +246,11 @@ export function SectionDeck({
         {children}
       </div>
       {hidden ? null : (
-        <div className="section-foot" data-section-foot>
+        <div
+          className="section-foot"
+          data-section-foot
+          data-safe-bottom={askBarBelow ? undefined : ""}
+        >
           <button type="button" className="section-home" data-section-home onClick={onHome}>
             Home
           </button>

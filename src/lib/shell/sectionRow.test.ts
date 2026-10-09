@@ -120,6 +120,19 @@ test("section dots: arrow keys, Home, and End; 24px+ tap targets", () => {
   assert.match(dot, /background-clip: content-box/);
 });
 
+test("the bottom safe area is padded once, by whatever is lowest", () => {
+  const deck = read("../../components/shell/SectionDeck.tsx");
+  const css = read("../../components/shell/section-deck.css");
+  const bar = read("../../components/shell/RoomAskBar.tsx");
+  // Same rule as RoomAskBar's showAsk (homeOpen hides the foot too).
+  assert.match(bar, /const showAsk = !homeOpen && \(tab !== "rvgrok" \|\| live\)/);
+  assert.match(deck, /const askBarBelow = tab !== "rvgrok" \|\| live;/);
+  assert.match(deck, /data-safe-bottom=\{askBarBelow \? undefined : ""\}/);
+  const foot = css.match(/\n\.section-foot \{([^}]*)\}/)?.[1] ?? "";
+  assert.doesNotMatch(foot, /safe-area-inset-bottom/);
+  assert.match(css, /\.section-foot\[data-safe-bottom\] \{[^}]*safe-area-inset-bottom/);
+});
+
 test("Home is the entrance and the bottom tab bar is not mounted", () => {
   const shell = read("../../components/shell/AppShell.tsx");
   const bar = read("../../components/shell/RoomAskBar.tsx");

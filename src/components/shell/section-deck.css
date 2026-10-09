@@ -53,7 +53,12 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 14px max(10px, env(safe-area-inset-bottom, 0px));
+  padding: 8px 14px 10px;
+}
+/* Only when the foot is the lowest thing on screen; otherwise the Ask bar
+   (.showroom-dock) below it already pads the inset. */
+.section-foot[data-safe-bottom] {
+  padding-bottom: max(10px, var(--safe-bottom, env(safe-area-inset-bottom, 0px)));
 }
 html:not([data-theme="light"]) .section-foot {
   background: #0a0a0c;
