@@ -384,9 +384,11 @@ export function AppShell({
   const isPro = isProfessionalTier();
 
   /* ── History for settings sheet / tools: sheet, VIN overlay, and tools ───────────────
-   * Android back is webView.goBack(). Main tabs never push. The sheet,
-   * the VIN Decoder, and every tool under More push one entry so back
-   * closes the sheet or returns to the screen the tool came from.
+   * Android back is webView.goBack(). Leaving Home pushes one entry so
+   * back returns Home in one press. Section-row swipes never push; they
+   * replace our top entry. The sheet, the VIN Decoder, and tools opened
+   * by a handoff push one entry so back closes the sheet or returns to
+   * the screen the tool came from.
    */
   const navDepth = useRef(0);
   const navBase = useRef<NavView>({ tab: initialTab, home: homeOpen });
@@ -394,11 +396,19 @@ export function AppShell({
   const ignorePops = useRef(0);
   const fromPop = useRef(false);
   const pickedFromSheet = useRef(false);
+  /** The next screen change came from the section row (swipe or dot). */
+  const rowMove = useRef(false);
+  /** Work to do once one of our own history.go() traversals lands. */
+  const afterPops = useRef<Array<(() => void) | undefined>>([]);
   const moreOpenRef = useRef(false);
   moreOpenRef.current = moreOpen;
 
-  const pushNav = useCallback((kind: NavKind, view: NavView) => {
-    if (navDepth.current === 0) navBase.current = navView.current;
+  /**
+   * `from` is the view Back should return to. The history effect passes the
+   * previous view explicitly because navView already holds the destination.
+   */
+  const pushNav = useCallback((kind: NavKind, view: NavView, from?: NavView) => {
+    if (navDepth.current === 0) navBase.current = from ?? navView.current;
     navDepth.current += 1;
     try {
       history.pushState(makeNavMarker(kind, view, navDepth.current), "");
@@ -416,11 +426,15 @@ export function AppShell({
   }, []);
 
   /** Pop `n` of our entries in one traversal; its popstate is ours. */
-  const popNav = useCallback((n: number) => {
+  const popNav = useCallback((n: number, after?: () => void) => {
     const steps = Math.min(n, navDepth.current);
-    if (steps <= 0) return;
+    if (steps <= 0) {
+      after?.();
+      return;
+    }
     navDepth.current -= steps;
     ignorePops.current += 1;
+    afterPops.current.push(after);
     history.go(-steps);
   }, []);
 
@@ -433,6 +447,8 @@ export function AppShell({
     navView.current = next;
     const picked = pickedFromSheet.current;
     pickedFromSheet.current = false;
+    const viaRow = rowMove.current;
+    rowMove.current = false;
     if (fromPop.current) {
       fromPop.current = false;
       return;
@@ -443,19 +459,26 @@ export function AppShell({
     const step = planTabHistory({
       prev,
       next,
+      base: navBase.current,
       nextUnderMore: isUnderMore(tab),
       depth: navDepth.current,
       pickedFromSheet: picked && topNavIs("sheet"),
+      viaRow,
     });
-    if (step === "push") pushNav("tool", next);
+    if (step === "push") pushNav("tool", next, prev);
     else if (step === "replace") replaceNav("tool", next);
     else if (step === "unwind") popNav(navDepth.current);
+    else if (step === "unwind-replace") {
+      // Keep the entry that leads back; it now shows this screen.
+      popNav(navDepth.current - 1, () => replaceNav("tool", next));
+    }
   }, [tab, homeOpen, pushNav, replaceNav, popNav]);
 
   useEffect(() => {
     const onPop = (e: PopStateEvent) => {
       if (ignorePops.current > 0) {
         ignorePops.current -= 1;
+        afterPops.current.shift()?.();
         return;
       }
       const hit = popTarget(e.state, navDepth.current, navBase.current);
@@ -666,8 +689,10 @@ export function AppShell({
     setHomeOpen(false);
   };
 
+  /** Swipes and dots replace history; they never push (see planTabHistory). */
   const onSectionArrive = (id: SectionId) => {
     if (id === tab && !homeOpen) return;
+    rowMove.current = true;
     onTabChange(id);
   };
 

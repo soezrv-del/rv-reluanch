@@ -2,11 +2,12 @@
  * History entries for screens under More (Tow, Cal, RV GPS, Premium, Sold)
  * and for the More sheet / VIN overlay.
  *
- * Main rooms (Home, Facts, Inventory, Ask) never push. Opening the sheet,
- * the VIN Decoder, or a tool pushes one entry, so Android back
- * (MainActivity → webView.goBack()) closes the sheet or returns to the
- * screen the tool was opened from instead of leaving the app. Going back
- * to a main tab unwinds every entry in one traversal.
+ * Leaving Home pushes one entry, so Android back (MainActivity →
+ * webView.goBack()) returns to Home instead of leaving the app. Section-row
+ * swipes never push; they replace our top entry. Opening the sheet, the VIN
+ * Decoder, or a tool from a handoff pushes one entry, so back closes the
+ * sheet or returns to the screen the tool was opened from. Going Home
+ * unwinds every entry in one traversal.
  */
 
 export type NavView = { tab: string; home: boolean };
@@ -40,32 +41,51 @@ export function sameView(a: NavView, b: NavView): boolean {
   return a.home === b.home && (a.home || a.tab === b.tab);
 }
 
-export type TabHistoryStep = "push" | "replace" | "unwind" | "none";
+export type TabHistoryStep = "push" | "replace" | "unwind" | "unwind-replace" | "none";
 
 /**
  * What a screen change does to history (changes that came from a popstate
  * are skipped by the caller).
+ * - to Home: unwind everything we pushed
+ * - a section-row swipe or dot: never push; replace our top entry so Back
+ *   still returns to where the row was entered from (Home, or the prior view)
+ * - off Home: push one entry, so Back returns to Home in one press
  * - into a tool: push, or replace the sheet entry it was picked from
- * - back to a main tab or Home: unwind everything we pushed
+ * - to a main tab: unwind, but keep the entry that leads back to Home
  */
 export function planTabHistory({
   prev,
   next,
+  base,
   nextUnderMore,
   depth,
   pickedFromSheet,
+  viaRow = false,
 }: {
   prev: NavView;
   next: NavView;
+  /** View under our first entry (only meaningful when depth > 0). */
+  base?: NavView;
   nextUnderMore: boolean;
   depth: number;
   pickedFromSheet: boolean;
+  /** The change came from the section row (swipe or dot). */
+  viaRow?: boolean;
 }): TabHistoryStep {
   if (sameView(prev, next)) return "none";
-  if (!next.home && nextUnderMore) {
+  if (next.home) return depth > 0 ? "unwind" : "none";
+  const backToBase = depth > 0 && base !== undefined && sameView(base, next);
+  if (viaRow) {
+    if (depth === 0) return "none";
+    return backToBase ? "unwind" : "replace";
+  }
+  if (prev.home) return pickedFromSheet && depth > 0 ? "replace" : "push";
+  if (nextUnderMore) {
     return pickedFromSheet && depth > 0 ? "replace" : "push";
   }
-  return depth > 0 ? "unwind" : "none";
+  if (depth === 0) return "none";
+  if (backToBase || base === undefined) return "unwind";
+  return depth === 1 ? "replace" : "unwind-replace";
 }
 
 /**
