@@ -5697,11 +5697,9 @@ button.suite-cta-copper:disabled {
   visibility: hidden;
 }
 
-html[data-theme="dark"] [data-home-open] .showroom-header {
-  display: none !important;
-}
-
-html[data-theme="dark"] [data-home-open] .showroom-header {
+/* Home draws its own bar (RVFOX + theme) in both themes, so the shell
+   header would be a second one. */
+[data-home-open] .showroom-header {
   display: none !important;
 }
 

@@ -1,0 +1,229 @@
+/* One horizontal row under Home. Not a tab bar. */
+.section-row {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  touch-action: pan-y;
+}
+.section-row::-webkit-scrollbar {
+  display: none;
+}
+.section-row[hidden] {
+  display: none;
+}
+/* A mouse drag on a photo would start a native image drag and cancel the
+   swipe. */
+.section-row img,
+.showroom-home img {
+  -webkit-user-drag: none;
+}
+/* The finger drives scrollLeft; snapping mid-drag would fight it. */
+.section-row[data-dragging] {
+  scroll-snap-type: none;
+}
+.section-page {
+  position: relative;
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  min-width: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  overflow: hidden;
+  touch-action: pan-y;
+}
+.section-cover {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--color-bg, #0a0a0c);
+}
+
+.section-foot {
+  position: relative;
+  z-index: 6;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px 10px;
+}
+/* Only when the foot is the lowest thing on screen; otherwise the Ask bar
+   (.showroom-dock) below it already pads the inset. */
+.section-foot[data-safe-bottom] {
+  padding-bottom: max(10px, var(--safe-bottom, env(safe-area-inset-bottom, 0px)));
+}
+html:not([data-theme="light"]) .section-foot {
+  background: #0a0a0c;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+html[data-theme="light"] .section-foot {
+  background: rgba(255, 255, 255, 0.78);
+  border-top: 1px solid rgba(17, 17, 17, 0.06);
+  backdrop-filter: blur(18px) saturate(1.2);
+}
+.section-home {
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  padding: 8px 2px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #fff;
+}
+html[data-theme="light"] .section-home {
+  color: #111;
+}
+.section-foot-label {
+  flex: 1 1 auto;
+  margin: 0;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+html[data-theme="light"] .section-foot-label {
+  color: #5c5e62;
+}
+.section-dots {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0;
+  /* Padding below makes 25px hit targets; pull the row back to its old edge. */
+  margin: -9px -9px -9px 0;
+}
+/* The dot stays 7px (18px when current); 9px of padding around it is a
+   25px tap target. The fill is clipped to the content box. !important
+   because the light theme's generic button rule (white fill, hairline
+   border) otherwise paints the whole padded box. */
+.section-dot {
+  box-sizing: content-box;
+  width: 7px;
+  height: 7px;
+  padding: 9px;
+  border: 0 !important;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28) !important;
+  background-clip: content-box !important;
+  box-shadow: none !important;
+}
+html[data-theme="light"] .section-dot {
+  background: rgba(17, 17, 17, 0.2) !important;
+  background-clip: content-box !important;
+}
+.section-dot[aria-current="page"],
+html[data-theme="light"] .section-dot[aria-current="page"] {
+  width: 18px;
+  background: #c48a5e !important;
+  background-clip: content-box !important;
+}
+.section-dot:focus-visible {
+  outline: 2px solid #c48a5e;
+  outline-offset: -6px;
+}
+
+.home-sections-cue {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  padding: 10px 12px 4px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+html[data-theme="light"] .home-sections-cue {
+  color: #5c5e62;
+}
+.home-sections-cue svg {
+  animation: home-sections-bob 1.6s ease-in-out infinite;
+}
+@keyframes home-sections-bob {
+  50% {
+    transform: translateY(3px);
+  }
+}
+
+html[data-theme="light"] .showroom-home.home-glass {
+  overflow: hidden;
+  background:
+    radial-gradient(90% 42% at 50% 0%, rgba(196, 138, 94, 0.16), transparent 58%),
+    #f4f1ec;
+}
+html[data-theme="light"] .showroom-home.home-glass .home-glass-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(env(safe-area-inset-top, 0px) + 14px) 20px 0;
+}
+html[data-theme="light"] .showroom-home.home-glass .home-glass-mark {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #111;
+}
+html[data-theme="light"] .showroom-home.home-glass .home-glass-theme {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 8px 24px rgba(17, 17, 17, 0.06);
+  backdrop-filter: blur(16px);
+  color: #111;
+}
+html[data-theme="light"] .showroom-home.home-glass .showroom-placard {
+  margin: 18px 20px 0;
+  padding: 18px 18px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.78) !important;
+  border-radius: 28px !important;
+  background: rgba(255, 255, 255, 0.62) !important;
+  box-shadow: 0 18px 40px rgba(17, 17, 17, 0.06) !important;
+  backdrop-filter: blur(22px) saturate(1.15);
+}
+html[data-theme="light"] .showroom-home.home-glass .showroom-spotmodel {
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+}
+html[data-theme="light"] .showroom-home.home-glass .showroom-hero {
+  padding-top: 12px;
+}
+html[data-theme="light"] .showroom-home.home-glass .light-home-ask-wrap {
+  margin-top: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section-row {
+    scroll-behavior: auto;
+  }
+  .home-sections-cue svg {
+    animation: none;
+  }
+}

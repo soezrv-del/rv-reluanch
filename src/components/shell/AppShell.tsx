@@ -14,12 +14,13 @@ import type { AppTab, DockRoomId } from "./BottomTabs";
 import { RoomAskBar } from "./RoomAskBar";
 import { SuiteBrand } from "./SuiteBrand";
 import { HomeScreen } from "./HomeScreen";
+import { SectionDeck } from "./SectionDeck";
 import {
   isUnderMore,
   PAGE_ACCENT,
-  paneSlot,
   TAB_ORDER,
 } from "./shellConstants";
+import { SECTION_ROW, isSectionId, type SectionId } from "@/lib/shell/sectionRow";
 import type { MorePick } from "./MoreSheet";
 import {
   makeNavMarker,
@@ -111,8 +112,6 @@ const LotStockApp = lazy(() =>
 const TAB_PANE_ON =
   "absolute inset-0 flex min-h-0 flex-col overflow-hidden";
 
-const SWIPE_PANE = "suite-swipe-pane";
-
 function SuiteFallback() {
   return (
     <div className="flex h-full items-center justify-center bg-bg">
@@ -196,10 +195,12 @@ export function AppShell({
     const next = new Set<AppTab>([initialTab]);
     // Ask bar talks to this pane from every room, including /lot.
     next.add("rvgrok");
+    for (const page of SECTION_ROW) next.add(page.id);
     return next;
   });
   const mainRef = useRef<HTMLElement | null>(null);
   const shellRef = useRef<HTMLDivElement | null>(null);
+  const leftHome = useRef(initialTab !== "rvgrok");
   const calTokenRef = useRef(0);
   const tripsTokenRef = useRef(0);
   const towTokenRef = useRef(0);
@@ -383,9 +384,11 @@ export function AppShell({
   const isPro = isProfessionalTier();
 
   /* ── History for settings sheet / tools: sheet, VIN overlay, and tools ───────────────
-   * Android back is webView.goBack(). Main tabs never push. The sheet,
-   * the VIN Decoder, and every tool under More push one entry so back
-   * closes the sheet or returns to the screen the tool came from.
+   * Android back is webView.goBack(). Leaving Home pushes one entry so
+   * back returns Home in one press. Section-row swipes never push; they
+   * replace our top entry. The sheet, the VIN Decoder, and tools opened
+   * by a handoff push one entry so back closes the sheet or returns to
+   * the screen the tool came from.
    */
   const navDepth = useRef(0);
   const navBase = useRef<NavView>({ tab: initialTab, home: homeOpen });
@@ -393,11 +396,19 @@ export function AppShell({
   const ignorePops = useRef(0);
   const fromPop = useRef(false);
   const pickedFromSheet = useRef(false);
+  /** The next screen change came from the section row (swipe or dot). */
+  const rowMove = useRef(false);
+  /** Work to do once one of our own history.go() traversals lands. */
+  const afterPops = useRef<Array<(() => void) | undefined>>([]);
   const moreOpenRef = useRef(false);
   moreOpenRef.current = moreOpen;
 
-  const pushNav = useCallback((kind: NavKind, view: NavView) => {
-    if (navDepth.current === 0) navBase.current = navView.current;
+  /**
+   * `from` is the view Back should return to. The history effect passes the
+   * previous view explicitly because navView already holds the destination.
+   */
+  const pushNav = useCallback((kind: NavKind, view: NavView, from?: NavView) => {
+    if (navDepth.current === 0) navBase.current = from ?? navView.current;
     navDepth.current += 1;
     try {
       history.pushState(makeNavMarker(kind, view, navDepth.current), "");
@@ -415,11 +426,15 @@ export function AppShell({
   }, []);
 
   /** Pop `n` of our entries in one traversal; its popstate is ours. */
-  const popNav = useCallback((n: number) => {
+  const popNav = useCallback((n: number, after?: () => void) => {
     const steps = Math.min(n, navDepth.current);
-    if (steps <= 0) return;
+    if (steps <= 0) {
+      after?.();
+      return;
+    }
     navDepth.current -= steps;
     ignorePops.current += 1;
+    afterPops.current.push(after);
     history.go(-steps);
   }, []);
 
@@ -432,6 +447,8 @@ export function AppShell({
     navView.current = next;
     const picked = pickedFromSheet.current;
     pickedFromSheet.current = false;
+    const viaRow = rowMove.current;
+    rowMove.current = false;
     if (fromPop.current) {
       fromPop.current = false;
       return;
@@ -442,19 +459,26 @@ export function AppShell({
     const step = planTabHistory({
       prev,
       next,
+      base: navBase.current,
       nextUnderMore: isUnderMore(tab),
       depth: navDepth.current,
       pickedFromSheet: picked && topNavIs("sheet"),
+      viaRow,
     });
-    if (step === "push") pushNav("tool", next);
+    if (step === "push") pushNav("tool", next, prev);
     else if (step === "replace") replaceNav("tool", next);
     else if (step === "unwind") popNav(navDepth.current);
+    else if (step === "unwind-replace") {
+      // Keep the entry that leads back; it now shows this screen.
+      popNav(navDepth.current - 1, () => replaceNav("tool", next));
+    }
   }, [tab, homeOpen, pushNav, replaceNav, popNav]);
 
   useEffect(() => {
     const onPop = (e: PopStateEvent) => {
       if (ignorePops.current > 0) {
         ignorePops.current -= 1;
+        afterPops.current.shift()?.();
         return;
       }
       const hit = popTarget(e.state, navDepth.current, navBase.current);
@@ -512,8 +536,8 @@ export function AppShell({
   );
 
   /**
-   * Dock tap. More toggles the sheet; another tab shuts it. Chat opens the
-   * RV Grok room. Home is the RvFOX logo (SuiteBrand onHome).
+   * Legacy dock tap. The bottom bar is gone; section pages replace it.
+   * Kept so a More-sheet pick still lands on a room the way a dock tap did.
    */
   const onDockTap = useCallback(
     (next: DockRoomId, opts?: { skipVoice?: boolean }) => {
@@ -537,17 +561,7 @@ export function AppShell({
     },
     [closeMore, openMore, onTabChange, homeOpen, tab],
   );
-
-  const openTowTool = useCallback(() => {
-    if (moreOpenRef.current) setMoreOpen(false);
-    onTabChange("rvtow");
-  }, [onTabChange]);
-
-  const openCalTool = useCallback(() => {
-    if (moreOpenRef.current) setMoreOpen(false);
-    requestCleanCal();
-    onTabChange("rvcal");
-  }, [onTabChange, requestCleanCal]);
+  void onDockTap;
 
   const onMorePick = useCallback(
     (id: MorePick) => {
@@ -657,6 +671,56 @@ export function AppShell({
 
   const show = (id: AppTab) => suiteReady && visited.has(id);
 
+  const goHome = () => {
+    blurSuiteFocus();
+    setHomeOpen(true);
+    if (moreOpenRef.current) setMoreOpen(false);
+  };
+
+  const revealSections = () => {
+    if (!isSectionId(tab)) {
+      onTabChange("more");
+      return;
+    }
+    if (!leftHome.current) {
+      onTabChange("rvfax");
+      return;
+    }
+    setHomeOpen(false);
+  };
+
+  /** Swipes and dots replace history; they never push (see planTabHistory). */
+  const onSectionArrive = (id: SectionId) => {
+    if (id === tab && !homeOpen) return;
+    rowMove.current = true;
+    onTabChange(id);
+  };
+
+  useEffect(() => {
+    if (!homeOpen) leftHome.current = true;
+  }, [homeOpen]);
+
+  const pane = (id: SectionId) => {
+    if (id === "rvfax") return <RvFaxApp onOpenGrok={openGrok} />;
+    if (id === "rvcal") return <RvCalApp />;
+    if (id === "rvgrok") {
+      return id === "rvgrok" ? (
+        <RvGrokApp
+          active={tab === "rvgrok" && !launchOpen}
+          entryToken={grokEntryToken}
+          assistantRun={assistantRun}
+          seedPrompt={grokSeed}
+          onSeedConsumed={() => setGrokSeed(undefined)}
+        />
+      ) : null;
+    }
+    if (id === "rvtow") return <RvTowApp />;
+    if (id === "rvlot") return <LotStockApp onAsk={openGrok} />;
+    return (
+      <MoreApp onNavigate={onTabChange} active={tab === "more" && !homeOpen} />
+    );
+  };
+
   return (
     <ShellNavProvider value={nav}>
       <div
@@ -669,99 +733,64 @@ export function AppShell({
         }}
       >
         <div className="showroom-stage" aria-hidden />
-        <SuiteBrand
-          onHome={() => {
-            blurSuiteFocus();
-            setHomeOpen(true);
-            if (moreOpenRef.current) setMoreOpen(false);
-          }}
-          onOpenTow={openTowTool}
-          onOpenCal={openCalTool}
-          onOpenSettings={() => {
-            if (moreOpenRef.current) closeMore();
-            else openMore();
-          }}
-          settingsOpen={moreOpen}
-        />
+        <SuiteBrand onHome={() => { blurSuiteFocus(); setHomeOpen(true); if (moreOpenRef.current) setMoreOpen(false); }} />
         <main
           ref={mainRef}
-          className="suite-swipe-viewport relative min-h-0 flex-1 overflow-hidden"
+          className="suite-swipe-viewport relative flex min-h-0 flex-1 flex-col overflow-hidden"
           aria-hidden={launchOpen}
         >
-          {homeOpen ? (
-            <HomeScreen onOpen={onTabChange} />
-          ) : null}
-          {TAB_ORDER.map((id) => {
-            if (!show(id)) return null;
-            const slot = paneSlot(id, tab);
-            return (
+          {homeOpen ? <HomeScreen onOpen={onTabChange} onReveal={revealSections} /> : null}
+          <SectionDeck
+            hidden={homeOpen || tab === "rvtrips" || tab === "rvsold"}
+            tab={tab}
+            onArrive={onSectionArrive}
+            onHome={goHome}
+          >
+            {SECTION_ROW.map((page) => (
               <div
-                key={id}
-                className={SWIPE_PANE}
-                data-suite-pane={id}
-                data-pane-active={id === tab ? "" : undefined}
-                data-pane-offset={slot.peek ? slot.shift : "off"}
-                style={{
-                  ["--pane-shift" as string]: `${slot.shift * 100}%`,
-                  pointerEvents: id === tab ? "auto" : "none",
-                }}
+                key={page.id}
+                className="section-page"
+                data-section-page={page.id}
+                data-suite-pane={page.id}
+                data-pane-active={page.id === tab ? "" : undefined}
               >
-                <Suspense fallback={<SuiteFallback />}>
-                  <SuiteErrorBoundary
-                    name={
-                      id === "rvfax"
-                        ? "RvFACTS"
-                        : id === "rvcal"
-                          ? "RvCAL"
-                          : id === "rvgrok"
-                            ? "Ask"
-                            : id === "rvtow"
-                              ? "RvTOW"
-                              : id === "rvtrips"
-                                ? "RV GPS"
-                                : id === "rvlot"
+                {show(page.id) ? (
+                  <Suspense fallback={<SuiteFallback />}>
+                    <SuiteErrorBoundary
+                      name={
+                        page.id === "rvfax"
+                          ? "RvFACTS"
+                          : page.id === "rvcal"
+                            ? "RvCAL"
+                            : page.id === "rvgrok"
+                              ? "Ask"
+                              : page.id === "rvtow"
+                                ? "RvTOW"
+                                : page.id === "rvlot"
                                   ? "Inventory"
-                                  : "Suite"
-                    }
-                  >
-                    {id === "rvfax" ? (
-                      <RvFaxApp onOpenGrok={openGrok} />
-                    ) : id === "rvcal" ? (
-                      <RvCalApp />
-                    ) : id === "rvgrok" ? (
-                      <RvGrokApp
-                        active={tab === "rvgrok" && !launchOpen}
-                        entryToken={grokEntryToken}
-                        assistantRun={assistantRun}
-                        seedPrompt={grokSeed}
-                        onSeedConsumed={() => setGrokSeed(undefined)}
-                      />
-                    ) : id === "rvtow" ? (
-                      <RvTowApp />
-                    ) : id === "rvtrips" ? (
-                      <RvTripsApp />
-                    ) : id === "rvlot" ? (
-                      <LotStockApp onAsk={openGrok} />
-                    ) : null}
+                                  : "More"
+                      }
+                    >
+                      {pane(page.id)}
+                    </SuiteErrorBoundary>
+                  </Suspense>
+                ) : null}
+              </div>
+            ))}
+          </SectionDeck>
+          {TAB_ORDER.map((id) =>
+            id === "rvtrips" && show(id) && tab === "rvtrips" && !homeOpen ? (
+              <div key={id} className="section-cover" data-suite-pane={id}>
+                <Suspense fallback={<SuiteFallback />}>
+                  <SuiteErrorBoundary name={id === "rvtrips" ? "RV GPS" : "Suite"}>
+                    <RvTripsApp />
                   </SuiteErrorBoundary>
                 </Suspense>
               </div>
-            );
-          })}
-          {show("more") ? (
-            <div className={tab === "more" ? TAB_PANE_ON : "hidden"}>
-              <Suspense fallback={<SuiteFallback />}>
-                <SuiteErrorBoundary name="More">
-                  <MoreApp
-                    onNavigate={onTabChange}
-                    active={tab === "more" && !homeOpen}
-                  />
-                </SuiteErrorBoundary>
-              </Suspense>
-            </div>
-          ) : null}
+            ) : null,
+          )}
           {show("rvsold") && isPro ? (
-            <div className={tab === "rvsold" ? TAB_PANE_ON : "hidden"}>
+            <div className={tab === "rvsold" && !homeOpen ? TAB_PANE_ON : "hidden"}>
               <Suspense fallback={<SuiteFallback />}>
                 <SuiteErrorBoundary name="Sold">
                   <SoldBookApp />
@@ -777,15 +806,7 @@ export function AppShell({
           </Suspense>
         ) : null}
 
-        <RoomAskBar
-          tab={tab}
-          homeOpen={homeOpen}
-          onOpen={onTabChange}
-          onDockTap={onDockTap}
-          moreOpen={moreOpen}
-          onMorePick={onMorePick}
-          onMoreClose={closeMore}
-        />
+        <RoomAskBar tab={tab} homeOpen={homeOpen} onOpen={onTabChange} />
       </div>
     </ShellNavProvider>
   );

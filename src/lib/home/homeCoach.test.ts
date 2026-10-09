@@ -143,7 +143,7 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   assert.ok(existsSync(mark), "owner mark asset");
   assert.equal(existsSync(retired), false, "old shell mark removed");
   assert.match(shell, /<SuiteBrand[\s\S]*onHome=/);
-  assert.match(shell, /onOpenTow=\{openTowTool\}/);
+  assert.match(shell, /SECTION_ROW\.map/);
   assert.match(brand, /aria-label="Home"/);
   assert.match(shell, /homeOpen/);
   assert.match(shell, /initialTab = "rvgrok"/);
@@ -182,7 +182,7 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   assert.doesNotMatch(suite, /suite-raidho-bleed/);
   assert.doesNotMatch(suite, /raidho-r-mark/);
   assert.doesNotMatch(bar, /placeholder="Ask"|roomAskMic/);
-  assert.match(bar, /<BottomTabs/);
+  assert.doesNotMatch(bar, /<BottomTabs/);
   assert.doesNotMatch(bar, /ROOM_CHIPS|Rv Facts|Lot Inventory|Learn more/);
 });
 
@@ -193,7 +193,7 @@ test("theme switch sits on the shell rail and in the dark Home header, wired to 
   assert.match(brand, /Switch to light mode/);
   assert.match(brand, /Switch to dark mode/);
   assert.match(brand, /setTheme\(/);
-  assert.ok(brand.indexOf('data-tool-rail="theme"') < brand.indexOf('data-tool-rail="settings"'));
+  assert.doesNotMatch(brand, /data-tool-rail="settings"/);
   const darkBar = home.slice(home.indexOf('className="dark-home-bar"'), home.indexOf("</header>"));
   assert.match(darkBar, /className="dark-home-tool"[\s\S]*data-tool-rail="theme"/);
   assert.match(darkBar, /setTheme\("light"\)/);
