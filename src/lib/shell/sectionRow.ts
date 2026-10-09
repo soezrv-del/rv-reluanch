@@ -44,3 +44,34 @@ export function sectionStep(dx: number, index: number, length: number): -1 | 0 |
   if (dx >= 48 && index > 0) return -1;
   return 0;
 }
+
+/**
+ * iOS Safari's back swipe starts at the left edge. A drag that starts
+ * there belongs to the browser, so the row never tracks it.
+ */
+export const BACK_EDGE_PX = 20;
+
+export function startsAtBackEdge(clientX: number): boolean {
+  return clientX < BACK_EDGE_PX;
+}
+
+/** Page the row rests on for a scroll position (nearest, clamped). */
+export function nearestSection(scrollLeft: number, width: number, length: number): number {
+  if (!(width > 0) || length <= 0) return 0;
+  const index = Math.round(scrollLeft / width);
+  return Math.min(length - 1, Math.max(0, index));
+}
+
+/**
+ * Where a released drag settles: a flick moves one page from the current
+ * one; anything else snaps back to the current page.
+ */
+export function planSectionSettle(
+  axis: "h" | "v" | null,
+  dx: number,
+  current: number,
+  length: number,
+): number {
+  if (axis !== "h") return current;
+  return current + sectionStep(dx, current, length);
+}

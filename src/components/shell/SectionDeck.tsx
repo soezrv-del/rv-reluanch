@@ -2,9 +2,11 @@ import { useEffect, useRef, type ReactNode } from "react";
 import {
   SECTION_ROW,
   isSectionId,
+  nearestSection,
   planSectionAxis,
+  planSectionSettle,
   sectionIndex,
-  sectionStep,
+  startsAtBackEdge,
   type SectionId,
 } from "@/lib/shell/sectionRow";
 import "./section-deck.css";
@@ -38,11 +40,18 @@ export function SectionDeck({
   tabRef.current = tab;
   const onArriveRef = useRef(onArrive);
   onArriveRef.current = onArrive;
+  /** Page a released drag is gliding to; the tab effect must not jump over it. */
+  const settleTarget = useRef<number | null>(null);
 
   useEffect(() => {
     const row = rowRef.current;
     if (!row || hidden) return;
     const index = Math.max(0, sectionIndex(tab));
+    if (settleTarget.current === index) {
+      settleTarget.current = null;
+      return;
+    }
+    settleTarget.current = null;
     const left = index * row.clientWidth;
     if (Math.abs(row.scrollLeft - left) < 2) return;
     row.scrollTo({ left, behavior: "auto" });
@@ -52,59 +61,154 @@ export function SectionDeck({
     const row = rowRef.current;
     if (!row || hidden) return;
 
+    let pointerId: number | null = null;
     let startX = 0;
     let startY = 0;
     let startLeft = 0;
-    let tracking = false;
+    let lastDx = 0;
     let axis: "h" | "v" | null = null;
+    let swallowClick = false;
+    let settleTimer = 0;
 
     const width = () => row.clientWidth || 1;
 
+    /** Rest on `index` and make it the active section (dots, tab, Ask scope). */
+    const settle = (index: number) => {
+      const left = index * width();
+      const id = SECTION_ROW[index]?.id;
+      if (Math.abs(row.scrollLeft - left) >= 2) {
+        const behavior = prefersReducedMotion() ? "auto" : "smooth";
+        if (id && id !== tabRef.current && behavior === "smooth") settleTarget.current = index;
+        row.scrollTo({ left, behavior });
+      }
+      if (id && id !== tabRef.current) onArriveRef.current(id);
+    };
+
+    const release = () => {
+      if (pointerId !== null && row.hasPointerCapture?.(pointerId)) {
+        try {
+          row.releasePointerCapture(pointerId);
+        } catch {
+          /* already released */
+        }
+      }
+      pointerId = null;
+      delete row.dataset.dragging;
+    };
+
+    const finish = (dx: number, cancelled: boolean) => {
+      if (pointerId === null) return;
+      const wasH = axis === "h";
+      release();
+      axis = null;
+      if (!wasH) return;
+      // A drag ended: never leave the row between pages.
+      const current = Math.max(0, sectionIndex(tabRef.current));
+      const next = cancelled
+        ? nearestSection(row.scrollLeft, width(), SECTION_ROW.length)
+        : planSectionSettle("h", dx, current, SECTION_ROW.length);
+      // The pointerup of a drag is not a tap on whatever sits under it.
+      swallowClick = true;
+      window.setTimeout(() => {
+        swallowClick = false;
+      }, 0);
+      settle(next);
+    };
+
     const onDown = (event: PointerEvent) => {
+      if (pointerId !== null) return;
       if (event.pointerType === "mouse" && event.button !== 0) return;
       const target = event.target;
       if (target instanceof Element && target.closest(BLOCK)) return;
-      tracking = true;
+      // Leave the left edge to iOS Safari's back swipe.
+      if (startsAtBackEdge(event.clientX)) return;
+      pointerId = event.pointerId;
       axis = null;
       startX = event.clientX;
       startY = event.clientY;
       startLeft = row.scrollLeft;
+      lastDx = 0;
+      swallowClick = false;
     };
 
     const onMove = (event: PointerEvent) => {
-      if (!tracking) return;
+      if (pointerId === null || event.pointerId !== pointerId) return;
       const dx = event.clientX - startX;
       const dy = event.clientY - startY;
-      if (!axis) axis = planSectionAxis(dx, dy);
+      lastDx = dx;
+      if (!axis) {
+        axis = planSectionAxis(dx, dy);
+        if (axis === "h") {
+          // Keep up/cancel on the row even if the finger ends over the
+          // foot or the Ask pill. Captured only once the drag is sideways
+          // so plain taps still click what is under them.
+          try {
+            row.setPointerCapture(pointerId);
+          } catch {
+            /* pointer already gone */
+          }
+          row.dataset.dragging = "";
+        }
+      }
       if (axis !== "h") return;
       event.preventDefault();
       row.scrollLeft = startLeft - dx;
     };
 
     const onUp = (event: PointerEvent) => {
-      if (!tracking) return;
-      tracking = false;
-      const dx = event.clientX - startX;
-      if (axis !== "h") return;
-      const current = Math.max(0, sectionIndex(tabRef.current));
-      const step = sectionStep(dx, current, SECTION_ROW.length);
-      const next = current + step;
-      const behavior = prefersReducedMotion() ? "auto" : "smooth";
-      row.scrollTo({ left: next * width(), behavior });
-      const id = SECTION_ROW[next]?.id;
-      if (id && id !== tabRef.current) onArriveRef.current(id);
-      axis = null;
+      if (pointerId === null || event.pointerId !== pointerId) return;
+      finish(event.clientX - startX, false);
+    };
+
+    const onCancel = (event: PointerEvent) => {
+      if (pointerId === null || event.pointerId !== pointerId) return;
+      finish(lastDx, true);
+    };
+
+    const onLostCapture = (event: PointerEvent) => {
+      if (pointerId === null || event.pointerId !== pointerId) return;
+      // pointerup also releases capture; finish() already ran in that case.
+      finish(lastDx, true);
+    };
+
+    const onClick = (event: MouseEvent) => {
+      if (!swallowClick) return;
+      swallowClick = false;
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    /** Trackpad / keyboard scrolls the row natively; sync the section when it rests. */
+    const onScroll = () => {
+      window.clearTimeout(settleTimer);
+      settleTimer = window.setTimeout(() => {
+        if (pointerId !== null || settleTarget.current !== null) return;
+        const index = nearestSection(row.scrollLeft, width(), SECTION_ROW.length);
+        if (Math.abs(row.scrollLeft - index * width()) >= 2) return;
+        const id = SECTION_ROW[index]?.id;
+        if (id && id !== tabRef.current) onArriveRef.current(id);
+      }, 140);
     };
 
     row.addEventListener("pointerdown", onDown);
     row.addEventListener("pointermove", onMove, { passive: false });
-    row.addEventListener("pointerup", onUp);
-    row.addEventListener("pointercancel", onUp);
+    row.addEventListener("lostpointercapture", onLostCapture);
+    row.addEventListener("click", onClick, true);
+    row.addEventListener("scroll", onScroll, { passive: true });
+    // Up / cancel on window too: an uncaptured (vertical) drag can end
+    // outside the row and must still stop tracking.
+    window.addEventListener("pointerup", onUp, true);
+    window.addEventListener("pointercancel", onCancel, true);
     return () => {
+      release();
+      window.clearTimeout(settleTimer);
       row.removeEventListener("pointerdown", onDown);
       row.removeEventListener("pointermove", onMove);
-      row.removeEventListener("pointerup", onUp);
-      row.removeEventListener("pointercancel", onUp);
+      row.removeEventListener("lostpointercapture", onLostCapture);
+      row.removeEventListener("click", onClick, true);
+      row.removeEventListener("scroll", onScroll);
+      window.removeEventListener("pointerup", onUp, true);
+      window.removeEventListener("pointercancel", onCancel, true);
     };
   }, [hidden]);
 
@@ -142,10 +246,9 @@ export function SectionDeck({
                   const row = rowRef.current;
                   const index = sectionIndex(page.id);
                   if (row && index >= 0) {
-                    row.scrollTo({
-                      left: index * (row.clientWidth || 1),
-                      behavior: prefersReducedMotion() ? "auto" : "smooth",
-                    });
+                    const behavior = prefersReducedMotion() ? "auto" : "smooth";
+                    if (behavior === "smooth" && page.id !== tab) settleTarget.current = index;
+                    row.scrollTo({ left: index * (row.clientWidth || 1), behavior });
                   }
                   if (page.id !== tab) onArrive(page.id);
                 }}

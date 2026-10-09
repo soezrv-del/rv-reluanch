@@ -5,11 +5,15 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   SECTION_ROW,
+  BACK_EDGE_PX,
   isSectionId,
+  nearestSection,
   planHomeSwipeDown,
   planSectionAxis,
+  planSectionSettle,
   sectionIndex,
   sectionStep,
+  startsAtBackEdge,
 } from "./sectionRow.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -43,6 +47,40 @@ test("a vertical drag inside a section page is not a page change", () => {
   assert.equal(sectionStep(60, 0, 6), 0);
   assert.equal(sectionStep(60, 2, 6), -1);
   assert.equal(sectionStep(-60, 5, 6), 0);
+});
+
+test("a released drag always settles on a page", () => {
+  // Flick moves one page; a short drag snaps back; vertical keeps the page.
+  assert.equal(planSectionSettle("h", -60, 2, 6), 3);
+  assert.equal(planSectionSettle("h", -20, 2, 6), 2);
+  assert.equal(planSectionSettle("h", 60, 0, 6), 0);
+  assert.equal(planSectionSettle("v", -200, 2, 6), 2);
+  assert.equal(planSectionSettle(null, -200, 2, 6), 2);
+  // A cancelled drag rests on the nearest page, clamped to the row.
+  assert.equal(nearestSection(0, 390, 6), 0);
+  assert.equal(nearestSection(390 * 2 + 150, 390, 6), 2);
+  assert.equal(nearestSection(390 * 2 + 250, 390, 6), 3);
+  assert.equal(nearestSection(390 * 9, 390, 6), 5);
+  assert.equal(nearestSection(-40, 390, 6), 0);
+  assert.equal(nearestSection(500, 0, 6), 0);
+});
+
+test("drags from the left edge are left to the iOS back swipe", () => {
+  assert.equal(BACK_EDGE_PX, 20);
+  assert.equal(startsAtBackEdge(0), true);
+  assert.equal(startsAtBackEdge(19), true);
+  assert.equal(startsAtBackEdge(20), false);
+  assert.equal(startsAtBackEdge(200), false);
+});
+
+test("the row captures the pointer and settles on up, cancel, and lost capture", () => {
+  const deck = read("../../components/shell/SectionDeck.tsx");
+  assert.match(deck, /setPointerCapture\(/);
+  assert.match(deck, /releasePointerCapture\(/);
+  assert.match(deck, /"lostpointercapture"/);
+  assert.match(deck, /"pointercancel"/);
+  assert.match(deck, /startsAtBackEdge\(event\.clientX\)/);
+  assert.match(deck, /planSectionSettle\(/);
 });
 
 test("Home is the entrance and the bottom tab bar is not mounted", () => {
