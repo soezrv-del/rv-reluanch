@@ -8,6 +8,7 @@ import {
   BACK_EDGE_PX,
   isSectionId,
   nearestSection,
+  planHomeReveal,
   planHomeSwipeDown,
   planSectionAxis,
   planSectionSettle,
@@ -36,6 +37,21 @@ test("swipe down on Home opens the row; a sideways drag does not", () => {
   assert.equal(planHomeSwipeDown(0, 40), "ignore");
   assert.equal(planHomeSwipeDown(120, 80), "ignore");
   assert.equal(planHomeSwipeDown(0, -90), "ignore");
+});
+
+test("light Home only opens the row from the top, and not after a scroll", () => {
+  const down = { dx: 0, dy: 120 };
+  assert.equal(planHomeReveal({ ...down, startScrollTop: 0, scrolled: false }), "open");
+  // iOS rubber-band at the top reads as a negative scrollTop; still the top.
+  assert.equal(planHomeReveal({ ...down, startScrollTop: -12, scrolled: false }), "open");
+  // Scrolled down, then dragging down to scroll back up: never a reveal.
+  assert.equal(planHomeReveal({ ...down, startScrollTop: 240, scrolled: false }), "ignore");
+  assert.equal(planHomeReveal({ ...down, startScrollTop: 240, scrolled: true }), "ignore");
+  // Started at the top but the page scrolled during the gesture.
+  assert.equal(planHomeReveal({ ...down, startScrollTop: 0, scrolled: true }), "ignore");
+  // Same distance and angle rules as before.
+  assert.equal(planHomeReveal({ dx: 0, dy: 40, startScrollTop: 0, scrolled: false }), "ignore");
+  assert.equal(planHomeReveal({ dx: 120, dy: 80, startScrollTop: 0, scrolled: false }), "ignore");
 });
 
 test("a vertical drag inside a section page is not a page change", () => {
@@ -96,7 +112,8 @@ test("Home is the entrance and the bottom tab bar is not mounted", () => {
   assert.doesNotMatch(bar, /<MoreSheet/);
   assert.doesNotMatch(home, /dark-home-nav/);
   assert.match(home, /data-open-sections/);
-  assert.match(home, /planHomeSwipeDown/);
+  assert.match(home, /planHomeReveal\(/);
+  assert.match(home, /scrollTop/);
   assert.match(deck, /planSectionAxis/);
   assert.match(deck, /prefers-reduced-motion/);
   assert.match(deck, /data-section-home/);

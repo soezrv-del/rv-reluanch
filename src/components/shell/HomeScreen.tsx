@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type PointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { fetchLotSnapshot, type LotUnit } from "@/lib/lot/ownLotPage";
 import { MetalVerifiedTrue } from "@/components/shell/Launchpad";
 import { ChevronDown, Moon, Sun } from "lucide-react";
@@ -7,7 +7,7 @@ import type { AppTab } from "@/components/shell/BottomTabs";
 import { askPillFace, planAskPillTap, stopRoomVoice } from "@/lib/rvgrok/roomAsk";
 import { AskPillLiveLabel } from "@/components/shell/AskGrokPill";
 import { useRoomVoiceOpen } from "@/components/shell/useRoomVoiceOpen";
-import { planHomeSwipeDown } from "@/lib/shell/sectionRow";
+import { planHomeReveal } from "@/lib/shell/sectionRow";
 import "./section-deck.css";
 
 const EMPTY_UNITS: LotUnit[] = [];
@@ -47,28 +47,84 @@ export function HomeScreen({
     }
     onOpen("rvgrok", { pageScope: true, startAssistant: true });
   };
-  const drag = useRef<{ x: number; y: number; ignore: boolean } | null>(null);
-  const swipe = {
-    onPointerDown: (event: PointerEvent) => {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const onRevealRef = useRef(onReveal);
+  onRevealRef.current = onReveal;
+
+  /**
+   * Swipe down opens the section row. Light Home scrolls, so the reveal is
+   * armed only at the top of Home and only if Home did not scroll during the
+   * gesture. Touch uses touch events (a pan cancels pointer events, but
+   * touchend still arrives); mouse and pen use pointer events. One input,
+   * one handler, so a gesture opens the row at most once.
+   */
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    type Drag = { x: number; y: number; top: number; scrolled: boolean; id: number | "touch" };
+    let drag: Drag | null = null;
+    const blocked = (target: EventTarget | null) =>
+      target instanceof Element && Boolean(target.closest("button, a, input, textarea, select"));
+    const begin = (x: number, y: number, target: EventTarget | null, id: Drag["id"]) => {
+      drag = blocked(target) ? null : { x, y, top: el.scrollTop, scrolled: false, id };
+    };
+    const end = (x: number, y: number, id: Drag["id"]) => {
+      const start = drag;
+      if (!start || start.id !== id) return;
+      drag = null;
+      const scrolled = start.scrolled || el.scrollTop > 1;
+      const plan = planHomeReveal({
+        dx: x - start.x,
+        dy: y - start.y,
+        startScrollTop: start.top,
+        scrolled,
+      });
+      if (plan === "open") onRevealRef.current();
+    };
+    const onScroll = () => {
+      if (drag && el.scrollTop > 1) drag.scrolled = true;
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.pointerType === "touch") return;
       if (event.pointerType === "mouse" && event.button !== 0) return;
-      const target = event.target;
-      const ignore =
-        target instanceof Element &&
-        Boolean(target.closest("button, a, input, textarea, select"));
-      drag.current = { x: event.clientX, y: event.clientY, ignore };
-    },
-    onPointerUp: (event: PointerEvent) => {
-      const start = drag.current;
-      drag.current = null;
-      if (!start || start.ignore) return;
-      if (planHomeSwipeDown(event.clientX - start.x, event.clientY - start.y) === "open") {
-        onReveal();
+      begin(event.clientX, event.clientY, event.target, event.pointerId);
+    };
+    const onPointerUp = (event: PointerEvent) => end(event.clientX, event.clientY, event.pointerId);
+    const onPointerCancel = (event: PointerEvent) => {
+      if (drag?.id === event.pointerId) drag = null;
+    };
+    const onTouchStart = (event: TouchEvent) => {
+      const touch = event.touches[0];
+      if (event.touches.length !== 1 || !touch) {
+        drag = null;
+        return;
       }
-    },
-    onPointerCancel: () => {
-      drag.current = null;
-    },
-  };
+      begin(touch.clientX, touch.clientY, event.target, "touch");
+    };
+    const onTouchEnd = (event: TouchEvent) => {
+      const touch = event.changedTouches[0];
+      if (touch) end(touch.clientX, touch.clientY, "touch");
+    };
+    const onTouchCancel = () => {
+      if (drag?.id === "touch") drag = null;
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    el.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerCancel);
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchend", onTouchEnd, { passive: true });
+    el.addEventListener("touchcancel", onTouchCancel, { passive: true });
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      el.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerCancel);
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchend", onTouchEnd);
+      el.removeEventListener("touchcancel", onTouchCancel);
+    };
+  }, [theme]);
   const [units, setUnits] = useState<LotUnit[] | null>(null);
   const [saved, setSaved] = useState(false);
 
@@ -125,7 +181,7 @@ export function HomeScreen({
         data-showroom-home=""
         data-home-theme="dark"
         className="showroom-home dark-home absolute inset-0 z-30 flex flex-col overflow-hidden"
-        {...swipe}
+        ref={rootRef}
       >
         <header className="dark-home-bar">
           <p className="dark-home-mark">RVFOX</p>
@@ -213,7 +269,7 @@ export function HomeScreen({
       data-showroom-home=""
       data-home-theme={theme}
       className="showroom-home home-glass absolute inset-0 z-30 flex flex-col overflow-x-hidden overflow-y-auto"
-      {...swipe}
+      ref={rootRef}
     >
       <header className="home-glass-bar">
         <p className="home-glass-mark">RVFOX</p>

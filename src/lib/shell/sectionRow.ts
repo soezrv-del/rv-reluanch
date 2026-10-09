@@ -29,6 +29,26 @@ export function planHomeSwipeDown(dx: number, dy: number): "open" | "ignore" {
 }
 
 /**
+ * Light Home scrolls. A downward drag only opens the row when Home was
+ * already at the top when the finger went down and it did not scroll
+ * during the gesture; otherwise the drag was the user scrolling back up.
+ */
+export function planHomeReveal({
+  dx,
+  dy,
+  startScrollTop,
+  scrolled,
+}: {
+  dx: number;
+  dy: number;
+  startScrollTop: number;
+  scrolled: boolean;
+}): "open" | "ignore" {
+  if (startScrollTop > 1 || scrolled) return "ignore";
+  return planHomeSwipeDown(dx, dy);
+}
+
+/**
  * Sideways only when the drag is clearly horizontal, so a vertical
  * scroll inside a page keeps the page. Once vertical wins, it stays.
  */
