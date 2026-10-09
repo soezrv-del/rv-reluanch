@@ -512,8 +512,8 @@ export function AppShell({
   );
 
   /**
-   * Dock tap. More toggles the sheet; another tab shuts it. Chat opens the
-   * RV Grok room. Home is the RvFOX logo (SuiteBrand onHome).
+   * Dock tap. More toggles the sheet; another tab shuts it. Chat is a More
+   * sheet tile (onMorePick). Home is the RvFOX logo (SuiteBrand onHome).
    */
   const onDockTap = useCallback(
     (next: DockRoomId, opts?: { skipVoice?: boolean }) => {
@@ -530,10 +530,7 @@ export function AppShell({
         // The tab change unwinds the sheet entry with any tool entries.
         setMoreOpen(false);
       }
-      onTabChange(
-        next,
-        next === "rvgrok" ? { ...opts, startAssistant: true } : opts,
-      );
+      onTabChange(next, opts);
     },
     [closeMore, openMore, onTabChange, homeOpen, tab],
   );
@@ -570,6 +567,20 @@ export function AppShell({
         setMoreOpen(false);
         popNav(navDepth.current);
         onTabChange("rvshare");
+        return;
+      }
+      if (id === "rvgrok") {
+        // The general conversation: no page lock (onTabChange clears the
+        // page scope without pageScope). Arms the session like the old Chat
+        // tab. On Chat, the tile is the Live chat off switch ("End").
+        if (!homeOpen && tab === "rvgrok") {
+          closeMore();
+          onTabChange("rvgrok", { startAssistant: true });
+          return;
+        }
+        pickedFromSheet.current = true;
+        setMoreOpen(false);
+        onTabChange("rvgrok", { startAssistant: true });
         return;
       }
       if (!homeOpen && id === tab) {

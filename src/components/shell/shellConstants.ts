@@ -14,21 +14,25 @@ export const TAB_ORDER = [
   "rvtrips",
 ] as const satisfies readonly AppTab[];
 
-/** The four dock tabs — Facts · Inventory · Chat · More. */
+/** The three dock tabs — Facts · Inventory · More. */
 export const DOCK_TABS = DOCK_ROOM_IDS;
 
 /** Swipe-between-tabs removed. */
 export const SWIPE_ORDER = [] as const satisfies readonly AppTab[];
 
-/** Big tiles in the More sheet (Tow/Cal also have header shortcuts). */
+/** Big tiles in the More sheet: Tow Check, Chat, RV GPS (Tow also has a header shortcut). */
 export const MORE_SHEET_TOOLS = [
   "rvtow",
-  "rvcal",
+  "rvgrok",
   "rvtrips",
 ] as const satisfies readonly AppTab[];
 
-/** Screens that live under More. The More tab stays lit on these. */
-const UNDER_MORE: readonly AppTab[] = [...MORE_SHEET_TOOLS, "more", "rvsold"];
+/**
+ * Screens that live under More. The More tab stays lit on these.
+ * Cal left the sheet for Chat; it opens from the header Cal shortcut and the
+ * More page, and still counts as a More screen.
+ */
+const UNDER_MORE: readonly AppTab[] = [...MORE_SHEET_TOOLS, "rvcal", "more", "rvsold"];
 
 export function isUnderMore(tab: AppTab): boolean {
   return UNDER_MORE.includes(tab);

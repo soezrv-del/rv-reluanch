@@ -5,7 +5,7 @@ import { MoreSheet, type MorePick } from "./MoreSheet";
 import { useRoomVoiceOpen } from "./useRoomVoiceOpen";
 
 /**
- * The original dock (Facts · Inventory · Chat · More) with the More sheet
+ * The dock (Facts · Inventory · More) with the More sheet (Chat lives there)
  * anchored above it. Home's Ask RV Grok pill sits right above the dock on
  * every other screen. Home keeps its own pill. Chat hides this one unless
  * Live Voice is on, so the same pill can be tapped again to turn it off.
@@ -22,7 +22,7 @@ export function RoomAskBar({
   tab: AppTab;
   homeOpen?: boolean;
   onOpen: (tab: AppTab, opts?: { skipVoice?: boolean; pageScope?: boolean; startAssistant?: boolean }) => void;
-  /** Dock taps — Facts / Inventory / Chat / More. */
+  /** Dock taps — Facts / Inventory / More. */
   onDockTap?: (tab: DockRoomId) => void;
   moreOpen?: boolean;
   onMorePick?: (id: MorePick) => void;
