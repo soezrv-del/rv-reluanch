@@ -7,13 +7,13 @@ import {
 } from "@/lib/rvgrok/promptLessonsStore";
 import { chatCorrectionForPending } from "@/lib/rvgrok/sessionLearn";
 import {
-  countSoftFollowUps,
-  keepTalkingCue,
   parseAudience,
-  rvGrokCoreFor,
   visitorPersonalizationBlock,
   type Audience,
 } from "@/lib/rvgrok/speechPolicy";
+import { chatCoreFor } from "@/lib/rvgrok/chatCore";
+import { hasLotClaim, stripLotClaims } from "@/lib/rvgrok/lotNumberCheck";
+import { parseOwnLotStockNumber } from "@/lib/rvgrok/ownLotAsk";
 import {
   loadVisitorMemoryBlockFromRequest,
   memoryKeyFromRequest,
@@ -35,26 +35,10 @@ import {
   formatCoachReportTimeoutReply,
   looksLikeCoachReportAsk,
 } from "@/lib/rvgrok/coachReport";
-import {
-  looksLikeMarketValueQuestion,
-  looksLikeInventoryOrCountQuestion,
-  looksLikeSpecQuestion,
-  needsWebFallback,
-} from "@/lib/rvgrok/webIntent";
-import {
-  loadOwnLotSnapshot,
-  looksLikeOwnLotStockQuestion,
-  ownLotIsUnavailable,
-  shouldSkipWebForOwnLot,
-} from "@/lib/rvgrok/ownLotInventory";
-import { looksLikeOwnLotCountOrRankAsk } from "@/lib/rvgrok/ownLotAsk";
+import { needsWebFallback } from "@/lib/rvgrok/webIntent";
+import { loadOwnLotSnapshot, ownLotIsUnavailable } from "@/lib/rvgrok/ownLotInventory";
 import { pageContextLine } from "@/lib/rvgrok/screenContext";
-import {
-  formatLotQueryNotes,
-  isLotGoAhead,
-  offeredCoachNames,
-  searchLot,
-} from "@/lib/lot/lotQuery";
+import { isLotGoAhead, offeredCoachNames, searchLot } from "@/lib/lot/lotQuery";
 import {
   activeScreenFromContext,
   factsSpecRequestsWebSearch,
@@ -82,11 +66,7 @@ import {
   wantsGeneratedImage,
 } from "@/lib/rvgrok/imageGen";
 import { savedPinCoversAskedField } from "@/lib/rvgrok/lockedWeights";
-import {
-  parseTalkMode,
-  requiredToolForAsk,
-  type TalkMode,
-} from "@/lib/rvgrok/chatTools";
+import { parseTalkMode, type TalkMode } from "@/lib/rvgrok/chatTools";
 import {
   chunkForTyping,
   createAnswerGate,
@@ -147,19 +127,13 @@ function sseHeaders(extra?: Record<string, string>) {
 }
 
 function answerSampling(text: string): { temperature: number; max_tokens: number } {
-  const specTurn =
-    isWeightSpecAsk(text) ||
-    looksLikeSpecQuestion(text) ||
-    looksLikeMarketValueQuestion(text) ||
-    looksLikeCoachReportAsk(text) ||
-    /\b(recalls?|nhtsa)\b/i.test(text);
   const long =
     looksLikeCoachReportAsk(text) ||
     looksLikeDeskSheetAsk(text) ||
     looksLikeCoachCompareQuestion(text) ||
     /\b(go deep|deep cut|walkthrough)\b/i.test(text);
   return {
-    temperature: specTurn ? 0.2 : 0.7,
+    temperature: 0.3,
     max_tokens: long ? 1800 : 700,
   };
 }
@@ -188,7 +162,6 @@ function withGrounding(
     standingLessons?: string;
     mode?: TalkMode;
     audience?: Audience;
-    softFollowUpsUsed?: number;
     /** Set only when Ask RV Grok opened the chat from a page. */
     pageScope?: string;
   },
@@ -212,7 +185,7 @@ function withGrounding(
   if (lot) {
     out = `${out}\n\n═══════════════════════════════════════\nOWN-LOT INVENTORY (RV Country)\n═══════════════════════════════════════\n${lot}`;
   }
-  return `${out}\n\n${keepTalkingCue(opts?.softFollowUpsUsed ?? 0)}`;
+  return out;
 }
 
 function workerBase() {
@@ -382,8 +355,8 @@ const toolFn = (
 const XAI_CHAT_TOOLS = [
   GENERATE_IMAGE_TOOL,
   toolFn(
-    "get_coach_facts",
-    "Catalog lock for a year, make, model, and floorplan. Specs and weights. Does not check recalls.",
+    "get_coach_specs",
+    "The factory catalog for a year, make, model and floorplan: specs and weights, each VERIFIED or GAP. First stop for a spec. Not our inventory and not recalls.",
     {
       year: { type: "string" },
       make: { type: "string" },
@@ -439,8 +412,8 @@ const XAI_CHAT_TOOLS = [
     },
   ),
   toolFn(
-    "get_own_lot",
-    "RV Country own lot. Call for any count or availability question, including a follow-up that changes type or condition. Put their words in query. When they say yes to checking the lot for coaches you just named, put those names in query (\"Navion or EKKO 23B\"), not the last coach. Never say a coach is not in stock without this tool. Say none only when matched is 0. If did_you_mean is set, offer that name. Do not treat a lot row as an OEM spec.",
+    "search_lot",
+    "RV Country's own inventory. The only source for our counts, prices, stock numbers and availability. Use it whenever the answer depends on what we have, including follow-ups and \"anything like X\". Put the coach, floorplan, feature or stock number in query (for a yes to coaches you just offered, those names). A strict miss falls back to a looser match; did_you_mean suggests a spelling. matched is the count; units are the closest rows.",
     {
       query: { type: "string" },
       make: { type: "string" },
@@ -449,9 +422,21 @@ const XAI_CHAT_TOOLS = [
       condition: { type: "string" },
       status: { type: "string" },
       location: { type: "string" },
+      price_min: { type: "number" },
+      price_max: { type: "number" },
+      sort: { type: "string", description: "price, year, mileage or length" },
+      order: { type: "string", description: "asc or desc" },
     },
   ),
+  toolFn(
+    "web_search",
+    "Public web: brochures, specs the catalog lacks, market values, factory and brand news, procedures, weather, anything current. Returns research notes with sources.",
+    { query: { type: "string" } },
+    ["query"],
+  ),
 ];
+
+const LOT_TOOL_NAMES = new Set(["search_lot", "get_own_lot"]);
 
 function toolNum(value: unknown): number | null {
   if (typeof value === "number" && Number.isFinite(value)) return value;
@@ -526,7 +511,25 @@ async function runRegisteredTool(
   args: Record<string, unknown>,
   ctx: { userText: string; requestOrigin?: string; priorAssistant?: string },
 ): Promise<Record<string, unknown>> {
-  if (name === "get_coach_facts") {
+  if (name === "web_search") {
+    const query = toolStr(args.query) || ctx.userText;
+    const researched = await executeWebResearch({
+      apiKey: process.env.XAI_API_KEY,
+      query: query.slice(0, 400),
+      timeoutMs: researchTimeoutMs("chat", query),
+      profile: "chat",
+      skipGate: true,
+      requestOrigin: ctx.requestOrigin,
+      maxAttempts: WEB_SEARCH_MAX_TOOL_CALLS,
+      researchProvider: (await getResearchProviderOverride()) ?? undefined,
+      researchOrder: (await getResearchOrderOverride()) ?? undefined,
+    });
+    return researched.ok
+      ? { ok: true, notes: formatWebSearchInjection(researched, { query }) }
+      : { ok: false, error: "web search returned nothing" };
+  }
+
+  if (name === "get_coach_facts" || name === "get_coach_specs") {
     const id = coachArgs(args, ctx.userText);
     return getCoachFacts(id);
   }
@@ -661,7 +664,7 @@ async function runRegisteredTool(
     };
   }
 
-  if (name === "get_own_lot") {
+  if (LOT_TOOL_NAMES.has(name)) {
     const snapshot = await loadOwnLotSnapshot({ requestOrigin: ctx.requestOrigin });
     if (!snapshot.ok || ownLotIsUnavailable(snapshot)) {
       return {
@@ -732,6 +735,8 @@ async function runXaiWithTools(opts: {
   messages: ChatMessage[];
   forceImageTool: boolean;
   requiredTool: string | null;
+  /** Stock number parsed from the ask; the only forced search_lot. */
+  stockNumber?: string;
   userText: string;
   requestOrigin?: string;
   sink: ChatSseSink;
@@ -777,13 +782,18 @@ async function runXaiWithTools(opts: {
     `[rvgrok] tool-loop ${opts.model} ${opts.requiredTool || "auto"}`,
   );
 
+  let forceLotNext = false;
+  let lotRetried = false;
   for (let round = 0; round < 3; round++) {
     const forced =
       round === 0 && imageCount === 0
         ? opts.forceImageTool
           ? "generate_image"
           : opts.requiredTool
-        : null;
+        : forceLotNext
+          ? "search_lot"
+          : null;
+    forceLotNext = false;
     const resp = await fetch("https://api.x.ai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -794,10 +804,9 @@ async function runXaiWithTools(opts: {
         model: opts.model,
         messages: working,
         tools: XAI_CHAT_TOOLS,
-        tool_choice:
-          forced === "generate_image"
-            ? { type: "function", function: { name: "generate_image" } }
-            : "auto",
+        tool_choice: forced
+          ? { type: "function", function: { name: forced } }
+          : "auto",
         stream: true,
         ...answerSampling(opts.userText),
       }),
@@ -851,18 +860,16 @@ async function runXaiWithTools(opts: {
     }
     // The lot rows are already in context: her round-0 answer stands. Forcing
     // another get_own_lot here threw that answer away and doubled the wait.
-    if (
-      !toolCalls.length &&
-      round === 0 &&
-      forced &&
-      forced !== "generate_image" &&
-      !(forced === "get_own_lot" && opts.lotNotesInContext && String(content || "").trim())
-    ) {
+    // A forced lot call the model skipped still runs, with real arguments.
+    if (!toolCalls.length && forced === "search_lot") {
       toolCalls = [
         {
           id: `call-required-${round}`,
           type: "function",
-          function: { name: forced, arguments: "{}" },
+          function: {
+            name: "search_lot",
+            arguments: JSON.stringify({ query: opts.stockNumber || opts.userText }),
+          },
         },
       ];
     }
@@ -954,8 +961,8 @@ async function runXaiWithTools(opts: {
             requestOrigin: opts.requestOrigin,
             priorAssistant: opts.priorAssistant,
           });
-          if (name === "get_own_lot") lotSeen = true;
-          if (name === "get_own_lot") {
+          if (LOT_TOOL_NAMES.has(name)) lotSeen = true;
+          if (LOT_TOOL_NAMES.has(name)) {
             const summary = (result as { summary?: unknown }).summary;
             if (typeof summary === "string" && summary.trim()) opts.onLotSummary?.(summary);
           }
@@ -978,9 +985,26 @@ async function runXaiWithTools(opts: {
       continue;
     }
 
+    // Lot-number check: a count, price or stock number for our lot needs a
+    // search_lot result this turn. Retry once with search_lot forced; if
+    // the retry still has no lot data, strip those sentences.
+    const draft = String(content || "");
+    if (!lotSeen && hasLotClaim(draft)) {
+      if (!lotRetried && round < 2) {
+        lotRetried = true;
+        forceLotNext = true;
+        if (gate.retract() || sink.visibleText()) sink.replace("");
+        console.info("[rvgrok] lot-number check: retry with search_lot");
+        continue;
+      }
+      if (gate.retract() || sink.visibleText()) sink.replace("");
+      lastContent = stripLotClaims(draft);
+      await typeIn(lastContent);
+      break;
+    }
     // Final answer round: release anything the gate still holds.
     await typeIn(gate.release());
-    lastContent = String(content || "");
+    lastContent = draft;
     break;
   }
 
@@ -1015,7 +1039,6 @@ async function tryXaiDirect(
   requestOrigin?: string,
   stream?: { sink: ChatSseSink; lotSensitive: boolean },
   audience: Audience = "shopper",
-  softFollowUpsUsed = 0,
   pageScope?: string,
 ): Promise<string | null> {
   const apiKey = process.env.XAI_API_KEY;
@@ -1026,13 +1049,14 @@ async function tryXaiDirect(
   const lastUser = [...messages].reverse().find((m) => m.role === "user");
   const lastPlain = lastUser ? contentToPlain(lastUser.content) : "";
   const forceImageTool = wantsGeneratedImage(lastPlain);
-  const requiredTool = forceImageTool ? null : requiredToolForAsk(lastPlain);
+  const stockNumber = forceImageTool ? "" : parseOwnLotStockNumber(lastPlain) || "";
+  const requiredTool = stockNumber ? "search_lot" : null;
   const MODELS = vision
     ? ["grok-4.7", "grok-4.6", "grok-4.5", "grok-4-latest", "grok-2-vision-1212", "grok-3"]
     : ["grok-4.7", "grok-4.6", "grok-4-latest", "grok-4.5", "grok-3"];
 
   const system = withGrounding(
-    rvGrokCoreFor(audience) +
+    chatCoreFor(audience) +
       (vision
         ? "\n\nA photo is attached. You CAN see it. Describe exactly what is visible (panels, screens, labels, damage, coach exterior). Never claim you cannot see images. Never invent a different scene."
         : "") +
@@ -1048,7 +1072,6 @@ async function tryXaiDirect(
       visitorMemory,
       standingLessons,
       mode,
-      softFollowUpsUsed,
       pageScope,
     },
   );
@@ -1082,6 +1105,7 @@ async function tryXaiDirect(
         messages: fullMessages,
         forceImageTool,
         requiredTool,
+        stockNumber,
         userText: lastPlain,
         requestOrigin,
         sink: stream.sink,
@@ -1160,7 +1184,6 @@ async function tryCloudflareWorker(
   standingLessons?: string,
   mode?: TalkMode,
   audience: Audience = "shopper",
-  softFollowUpsUsed = 0,
   pageScope?: string,
 ): Promise<Response | null> {
   const base = workerBase();
@@ -1183,7 +1206,7 @@ async function tryCloudflareWorker(
             {
               role: "system",
               content: withGrounding(
-                rvGrokCoreFor(audience) +
+                chatCoreFor(audience) +
                   systemExtra,
                 {
                   feedbackContext,
@@ -1194,7 +1217,6 @@ async function tryCloudflareWorker(
                   visitorMemory,
                   standingLessons,
                   mode,
-                  softFollowUpsUsed,
                   pageScope,
                 },
               ),
@@ -1352,11 +1374,6 @@ export const Route = createFileRoute("/api/rvgrok")({
           let standingLessons = standingLoaded;
           const lastUser = [...messages].reverse().find((m) => m.role === "user");
           const lastPlain = lastUser ? contentToPlain(lastUser.content) : "";
-          const softFollowUpsUsed = countSoftFollowUps(
-            messages
-              .filter((m) => m.role === "assistant")
-              .map((m) => contentToPlain(m.content)),
-          );
           const memoryTurns: MemoryTurn[] = messages.map((m) => ({
             role: m.role,
             text: contentToPlain(m.content).slice(0, 800),
@@ -1526,61 +1543,18 @@ export const Route = createFileRoute("/api/rvgrok")({
             requestOrigin = "";
           }
 
-          let ownLotNotes: string | undefined;
-          let skipWebForLot = false;
-          const lotCountOrRank = looksLikeOwnLotCountOrRankAsk(lastPlain);
-          if (looksLikeOwnLotStockQuestion(lastPlain) || lotCountOrRank) {
-            if (looksLikeOwnLotStockQuestion(lastPlain)) {
-              sink.status(toolStatusText("get_own_lot"));
-              const snapshot = await loadOwnLotSnapshot({ requestOrigin });
-              ownLotNotes =
-                snapshot.ok && !ownLotIsUnavailable(snapshot)
-                  ? formatLotQueryNotes(searchLot(snapshot.units, { query: lastPlain, utterance: lastPlain }))
-                  : snapshot.reason || "OWN-LOT INVENTORY UNAVAILABLE.";
-              // A Facts spec still searches the web. The lot block stays in context.
-              skipWebForLot = factsSpec
-                ? false
-                : shouldSkipWebForOwnLot(lastPlain, snapshot);
-            }
-            // A count or a cheapest is the lot tool only. No web notes.
-            if (lotCountOrRank && !factsSpec) skipWebForLot = true;
-          }
-          // "Yes" / "are you looking for it?" after she offered the Navion and
-          // the EKKO: run the real lot search for those names now, before any
-          // text, so she cannot answer "none in stock" without one.
-          let goAheadLot = false;
-          if (!ownLotNotes && isLotGoAhead(lastPlain)) {
-            const prior = priorAssistantPlain(messages);
-            if (prior) {
-              const snapshot = await loadOwnLotSnapshot({ requestOrigin });
-              if (snapshot.ok && !ownLotIsUnavailable(snapshot)) {
-                const offered = goAheadLotQuery(lastPlain, prior, snapshot.units);
-                if (offered) {
-                  sink.status(toolStatusText("get_own_lot"));
-                  ownLotNotes = formatLotQueryNotes(
-                    searchLot(snapshot.units, { query: offered, utterance: offered }),
-                  );
-                  skipWebForLot = true;
-                  goAheadLot = true;
-                }
-              }
-            }
-          }
-          if (
-            looksLikeInventoryOrCountQuestion(lastPlain) &&
-            !factsSpec &&
-            !looksLikeMarketValueQuestion(lastPlain) &&
-            !looksLikeSpecQuestion(lastPlain)
-          ) {
-            skipWebForLot = true;
-          }
+          // No lot pre-fetch and no keyword routing: the model reads the whole
+          // turn and calls search_lot itself. Only a stock-number ask forces
+          // the lot tool, with the parsed stock number as its argument.
+          const ownLotNotes: string | undefined = undefined;
+          const stockAsk = parseOwnLotStockNumber(lastPlain) || "";
 
-          // Memory first on other screens. Rv Facts spec turns always search.
+          // The model calls web_search itself. Code still pre-fetches only for
+          // a desk-sheet report, whose templated reply is converted in a
+          // later PR.
           const wantsWebFallback =
-            factsSpec ||
-            (!skipWebForLot &&
-              (serverGrounded.needsWeb ||
-                (!serverGrounded.identity && Boolean(body.wantsWebFallback))));
+            looksLikeDeskSheetAsk(lastPlain) &&
+            (factsSpec || serverGrounded.needsWeb || Boolean(body.wantsWebFallback));
 
           let webNotes: string | undefined;
           if (wantsWebFallback) {
@@ -1644,15 +1618,9 @@ export const Route = createFileRoute("/api/rvgrok")({
             requestOrigin,
             {
               sink,
-              lotSensitive:
-                requiredToolForAsk(lastPlain) === "get_own_lot" ||
-                looksLikeOwnLotStockQuestion(lastPlain) ||
-                lotCountOrRank ||
-                goAheadLot ||
-                looksLikeInventoryOrCountQuestion(lastPlain),
+              lotSensitive: Boolean(stockAsk),
             },
             audience,
-            softFollowUpsUsed,
             pageScope,
           );
           if (fromXai != null) {
@@ -1684,7 +1652,6 @@ export const Route = createFileRoute("/api/rvgrok")({
             standingLessons,
             talkMode,
             audience,
-            softFollowUpsUsed,
             pageScope,
           );
           if (fromWorker) return finish(fromWorker);

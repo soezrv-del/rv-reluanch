@@ -1,0 +1,80 @@
+{
+  "gates": {
+    "lot_facts": {
+      "pass": 31,
+      "of": 31
+    },
+    "features": {
+      "pass": 1,
+      "of": 2
+    },
+    "never_zero": {
+      "pass": 12,
+      "of": 13
+    },
+    "price": {
+      "pass": 6,
+      "of": 6
+    }
+  },
+  "overall": {
+    "pass": 61,
+    "of": 63
+  },
+  "lot_items": {
+    "pass": 29,
+    "of": 31
+  },
+  "known_fumbles": {
+    "pass": 19,
+    "of": 20
+  },
+  "by_type": {
+    "lot count": {
+      "pass": 25,
+      "of": 26
+    },
+    "price": {
+      "pass": 3,
+      "of": 3
+    },
+    "anything like X": {
+      "pass": 2,
+      "of": 2
+    },
+    "ambiguous": {
+      "pass": 5,
+      "of": 5
+    },
+    "spec": {
+      "pass": 13,
+      "of": 13
+    },
+    "web/general": {
+      "pass": 8,
+      "of": 8
+    },
+    "calculator": {
+      "pass": 1,
+      "of": 1
+    },
+    "towing": {
+      "pass": 2,
+      "of": 2
+    },
+    "similar coaches": {
+      "pass": 1,
+      "of": 1
+    },
+    "feature": {
+      "pass": 1,
+      "of": 2
+    }
+  },
+  "failing_ids": [
+    "R25",
+    "S03"
+  ],
+  "p50_ms": 18675,
+  "p95_ms": 69029
+}

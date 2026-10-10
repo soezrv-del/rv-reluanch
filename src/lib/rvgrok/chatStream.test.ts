@@ -416,7 +416,8 @@ test("route streams xAI, gates lot asks, and keeps the memory tap on final text"
   const src = readFileSync(new URL("../../routes/api/rvgrok.ts", import.meta.url), "utf8");
   assert.match(src, /stream: true,/);
   assert.match(src, /hold: forced != null \|\| \(opts\.lotSensitive && !lotSeen\)/);
-  assert.match(src, /if \(name === "get_own_lot"\) lotSeen = true;/);
+  assert.match(src, /if \(LOT_TOOL_NAMES\.has\(name\)\) lotSeen = true;/);
+  assert.match(src, /hasLotClaim\(draft\)/);
   assert.match(src, /rememberAfterSseResponse\(\s*jsonToSseStream\(\{\s*content: fromXai/);
   assert.match(src, /return sink\.response;/);
   // Client: memory ping (and #633 typed lesson queueing) uses the final text.
