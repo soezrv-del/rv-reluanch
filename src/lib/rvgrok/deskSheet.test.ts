@@ -963,9 +963,9 @@ test("any engine-owned GAP triggers heal and the Facts spinner, without blocking
   );
   assert.match(speak, /void later/);
   assert.doesNotMatch(speak, /await later/);
-  assert.match(chatApi, /Memory first/);
+  assert.match(chatApi, /The model calls web_search itself/);
   assert.doesNotMatch(
-    chatApi.slice(chatApi.indexOf("Memory first"), chatApi.indexOf("const fromXai")),
+    chatApi.slice(chatApi.indexOf("The model calls web_search itself"), chatApi.indexOf("const fromXai")),
     /await resolveDeskSheetThenFallback/,
   );
 });

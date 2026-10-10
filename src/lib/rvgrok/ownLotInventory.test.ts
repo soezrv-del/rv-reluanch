@@ -533,8 +533,8 @@ test("in-app chat and voice research are wired; DialaBot stays out", () => {
   assert.match(api, /loadOwnLotSnapshot/);
   assert.match(api, /searchLot/);
   assert.doesNotMatch(api, /formatOwnLotSidecar/);
-  assert.match(api, /looksLikeOwnLotStockQuestion/);
-  assert.match(api, /shouldSkipWebForOwnLot/);
+  assert.match(api, /"search_lot"/);
+  assert.doesNotMatch(api, /shouldSkipWebForOwnLot/);
   assert.match(api, /OWN-LOT INVENTORY \(RV Country\)/);
   assert.doesNotMatch(telemetry, /resolveLotTurn/);
   assert.doesNotMatch(telemetry, /formatOwnLotBlock/);
@@ -2032,7 +2032,9 @@ test("catalog coach lookup is not an own-lot miss — Dutch Star 4369 reports fr
   assert.match(prompts, /RV_GROK_LEAN_CORE/);
   assert.doesNotMatch(prompts, /separate salesman page/);
   assert.match(voice, /RV_GROK_LEAN_CORE/);
-  assert.match(api, /looksLikeOwnLotStockQuestion\(lastPlain\)/);
+  // Reasoning bundle: only a stock number forces the lot tool.
+  assert.match(api, /parseOwnLotStockNumber\(lastPlain\)/);
+  assert.doesNotMatch(api, /looksLikeOwnLotStockQuestion\(lastPlain\)/);
   assert.doesNotMatch(api, /formatOwnLotSidecar/);
   assert.doesNotMatch(ownLot, /formatOwnLotSidecar/);
   assert.doesNotMatch(ownLot, /[Dd]ialaBot/);

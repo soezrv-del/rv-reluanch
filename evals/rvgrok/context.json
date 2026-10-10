@@ -1,0 +1,14 @@
+{
+  "R10": [],
+  "R22": [["user", "Can you check the lot to see if we have a Navion?"], ["assistant", "I'm not seeing a Navion on our lot right now."]],
+  "R23": [["user", "Do we have anything like a Winnebago View?"], ["assistant", "The closest sister coaches are the Winnebago Navion and the Thor Compass. Want me to check the lot for those?"]],
+  "R24": [["user", "Do we have an Isata?"], ["assistant", "Did you mean the Itasca Navion? I can check the lot for it."]],
+  "R26": [["user", "Hello, are you able to check the Carson show for a 2016 Ventana?"], ["assistant", "I'm not finding a 2016 Ventana at the Carson show."]],
+  "R38": [["user", "Tell me about the 2023 Newmar Dutch Star 4369."], ["assistant", "The 2023 Dutch Star 4369 is a 43-foot diesel pusher with a bath and a half."]],
+  "R39": [["user", "Tell me about the 2022 Tiffin Phaeton 40IH."], ["assistant", "The 2022 Phaeton 40IH is a 40-foot diesel pusher with a rear bath."]],
+  "R40": [["user", "What's the fresh tank on a 2024 Grand Design Momentum 395MS?"], ["assistant", "Let me check that floorplan's tanks."]],
+  "R41": [["user", "Tell me about the 2024 Newmar Dutch Star 4081."], ["assistant", "The 2024 Dutch Star 4081 is a 40-foot diesel pusher on a Spartan chassis."]],
+  "R55": [["user", "What do you know about Entegra?"], ["assistant", "Entegra is Jayco's luxury motorhome brand."]],
+  "R56": [["user", "Do we have any Class Cs at Fresno?"], ["assistant", "Do we have any Class Cs at Fresno?"]],
+  "R57": [["user", "Tell me about the 2025 Jayco Seneca."], ["assistant", "Sure. Which floorplan of the 2025 Seneca are you looking at?"]]
+}

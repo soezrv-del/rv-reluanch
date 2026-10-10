@@ -736,7 +736,9 @@ test("inventory / diesel count asks still trip the detector when catalog is lock
   );
   const api = src(join(root, "../../routes/api"), "rvgrok.ts");
   assert.match(api, /loadOwnLotSnapshot/);
-  assert.match(api, /shouldSkipWebForOwnLot/);
+  // Reasoning bundle: no keyword skip-web gate; the model picks web_search.
+  assert.doesNotMatch(api, /shouldSkipWebForOwnLot/);
+  assert.match(api, /"web_search"/);
   assert.match(api, /OWN-LOT INVENTORY/);
 });
 

@@ -46,7 +46,10 @@ export function initialStreamView(): StreamView {
 
 const TOOL_STATUS: Record<string, string> = {
   get_own_lot: "Checking the lot…",
+  search_lot: "Checking the lot…",
   get_coach_facts: "Checking the spec sheet…",
+  get_coach_specs: "Checking the spec sheet…",
+  web_search: "Looking that up…",
   check_recalls: "Checking recalls…",
   search_listings: "Checking prices…",
   estimate_payment: "Running the numbers…",

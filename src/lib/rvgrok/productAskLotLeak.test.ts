@@ -146,7 +146,8 @@ test("standing prompts have no pasted lot card; lean core only names the tool", 
   assert.match(speechRaw, /SHOPPER RETRIEVAL is search-always/);
   assert.doesNotMatch(speechRaw, /You also answer the rest of what he asks/);
   assert.match(api, /loadOwnLotSnapshot/);
-  assert.match(api, /looksLikeOwnLotStockQuestion/);
+  assert.match(api, /"search_lot"/);
+  assert.doesNotMatch(api, /looksLikeOwnLotStockQuestion/);
   assert.doesNotMatch(api, /[Dd]ialaBot/);
 
   assert.match(
