@@ -11,6 +11,10 @@
 
 import { researchAccessHeaders } from "../access/researchUnlock.ts";
 import {
+  createDossierClientCoordinator,
+  dossierRequestKey,
+} from "./dossierGuards.ts";
+import {
   applyPowertrainPin,
   clearAllVerifiedDossiers,
   clearVerifiedDossier,
@@ -148,6 +152,19 @@ function pinDossier(
   });
 }
 
+type DossierAttempt = LiveDossierResponse & {
+  timedOut?: boolean;
+  networkError?: boolean;
+};
+
+const dossierClient = createDossierClientCoordinator<DossierAttempt>();
+
+/**
+ * One live dossier POST per coach at a time. Re-renders / remounts join the
+ * in-flight request instead of firing a new grok-4.7 call; a failure is
+ * remembered for 2 min unless `force` (the Retry / Refresh buttons).
+ * At most one retry, and never after a timeout / 504 / abort.
+ */
 export async function fetchLiveDossier(
   year: string,
   make: string,
@@ -155,19 +172,46 @@ export async function fetchLiveDossier(
   floorplan?: string,
   signal?: AbortSignal,
   catalogCandidate?: CatalogCandidatePayload,
+  opts?: { force?: boolean },
 ): Promise<LiveDossierResponse> {
   if (!year.trim() || !make.trim() || !model.trim()) {
     return { ok: false, error: "Year, make, and model are required." };
   }
+  const key = dossierRequestKey({
+    year,
+    make,
+    model,
+    floorplan,
+    candidate: catalogCandidate ?? null,
+  });
+  const res = await dossierClient.request(
+    key,
+    () => fetchLiveDossierOnce(year, make, model, floorplan, catalogCandidate),
+    {
+      force: opts?.force,
+      signal,
+      abortedResult: { ok: false, error: "Request cancelled.", aborted: true },
+    },
+  );
+  if (res.ok) return { ok: true, data: res.data };
+  return {
+    ok: false,
+    error: res.error,
+    status: res.status,
+    aborted: res.aborted,
+  };
+}
 
+async function fetchLiveDossierOnce(
+  year: string,
+  make: string,
+  model: string,
+  floorplan: string | undefined,
+  catalogCandidate: CatalogCandidatePayload | undefined,
+): Promise<DossierAttempt> {
+  // Not tied to the caller's signal: the shared request has one owner so a
+  // remount joins it instead of aborting + re-POSTing.
   const ctrl = new AbortController();
-  const onParentAbort = () => ctrl.abort();
-  if (signal) {
-    if (signal.aborted) {
-      return { ok: false, error: "Request cancelled.", aborted: true };
-    }
-    signal.addEventListener("abort", onParentAbort, { once: true });
-  }
   const timer = setTimeout(() => ctrl.abort(), LIVE_DOSSIER_TIMEOUT_MS);
 
   try {
@@ -197,8 +241,12 @@ export async function fetchLiveDossier(
     } catch {
       return {
         ok: false,
-        error: `Live lookup returned invalid JSON (${resp.status}) — catalog year-band stays on screen.`,
+        error:
+          resp.status === 504
+            ? "Live research timed out on the server — catalog specs are shown. Tap Retry live to try once more."
+            : `Live lookup returned invalid JSON (${resp.status}) — catalog year-band stays on screen.`,
         status: resp.status,
+        timedOut: resp.status === 504,
       };
     }
 
@@ -223,24 +271,24 @@ export async function fetchLiveDossier(
         json.error ||
         `Live lookup failed (${resp.status}) — catalog year-band remains.`,
       status: resp.status,
+      timedOut: resp.status === 504 || resp.status === 408,
     };
   } catch (e) {
     if (
       (e instanceof DOMException && e.name === "AbortError") ||
       (e instanceof Error && e.name === "AbortError")
     ) {
-      if (signal?.aborted) {
-        return { ok: false, error: "Request cancelled.", aborted: true };
-      }
       return {
         ok: false,
         error:
-          "Live research timed out — catalog year-band remains on this report.",
+          "Live research timed out — catalog specs are shown. Tap Retry live to try once more.",
         aborted: false,
+        timedOut: true,
       };
     }
     return {
       ok: false,
+      networkError: true,
       error:
         e instanceof Error
           ? `${e.message} — catalog year-band remains on this report.`
@@ -248,7 +296,6 @@ export async function fetchLiveDossier(
     };
   } finally {
     clearTimeout(timer);
-    if (signal) signal.removeEventListener("abort", onParentAbort);
   }
 }
 
