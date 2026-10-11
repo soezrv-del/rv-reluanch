@@ -14,20 +14,6 @@ import {
 } from "@/lib/rv/promptRules";
 import { findOemFloorplanSpec } from "@/lib/rv/floorplanSpecs";
 import { dryWeightLbsFromNotes } from "@/lib/rv/factsDossierGapPlan";
-import {
-  DOSSIER_EXTRACT_CALL_MAX_MS,
-  DOSSIER_FAILURE_TTL_MS,
-  DOSSIER_RESULT_TTL_MS,
-  DOSSIER_SERVER_BUDGET_MS,
-  DOSSIER_SERVER_MARGIN_MS,
-  createDeadline,
-  createInflightDeduper,
-  createTtlCache,
-  dossierRequestKey,
-  withStageTimeout,
-  type Deadline,
-} from "@/lib/rv/dossierGuards";
-import { FACTS_GAP_RESEARCH_TIMEOUT_MS } from "@/lib/rv/factsDossierResearch";
 
 import {
   catalogPinsToLiveDossier,
@@ -66,15 +52,6 @@ const DOSSIER_MODELS = [
 ] as const;
 
 const DOSSIER_PIPELINE = "web-research-then-extract";
-
-type DossierPayload = { status: number; body: unknown };
-/** 1h cache of identical requests (coach + candidate + UTC day), incl. partial results. */
-const resultCache = createTtlCache<DossierPayload>({
-  ttlMs: DOSSIER_RESULT_TTL_MS,
-  max: 300,
-});
-/** Concurrent identical POSTs share one model chain. */
-const dossierInflight = createInflightDeduper<DossierPayload>();
 const CATALOG_PIPELINE = "catalog-pins";
 
 export type CatalogCandidate = FactsCatalogCandidate;
@@ -232,17 +209,12 @@ type GrokCallResult = { text: string; model: string; upstream: string };
 async function callXaiChat(
   system: string,
   user: string,
-  opts?: { temperature?: number; jsonMode?: boolean; deadline?: Deadline },
+  opts?: { temperature?: number; jsonMode?: boolean },
 ): Promise<GrokCallResult | null> {
   const apiKey = process.env.XAI_API_KEY;
   if (!apiKey) return null;
 
   for (const model of DOSSIER_MODELS) {
-    // Each model gets its own budget; stop walking fallbacks when time is up.
-    const budget = opts?.deadline
-      ? opts.deadline.stageMs(DOSSIER_EXTRACT_CALL_MAX_MS)
-      : DOSSIER_EXTRACT_CALL_MAX_MS;
-    if (budget <= 0) return null;
     try {
       const body: Record<string, unknown> = {
         model,
@@ -265,7 +237,6 @@ async function callXaiChat(
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify(body),
-        signal: AbortSignal.timeout(budget),
       });
       if (!resp.ok) continue;
       const data = await resp.json();
@@ -285,18 +256,12 @@ async function callWorkerChat(
   system: string,
   user: string,
   preferModel: string,
-  deadline?: Deadline,
 ): Promise<GrokCallResult | null> {
   const base = workerBase();
   const urls = [`${base}/chat`, `${base}/rvgrok-chat`, `${base}/`];
   for (const url of urls) {
-    const budget = deadline
-      ? deadline.stageMs(DOSSIER_EXTRACT_CALL_MAX_MS)
-      : DOSSIER_EXTRACT_CALL_MAX_MS;
-    if (budget <= 0) return null;
     try {
       const resp = await fetch(url, {
-        signal: AbortSignal.timeout(budget),
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -363,13 +328,12 @@ async function callWorkerChat(
 async function callGrok(
   system: string,
   user: string,
-  opts?: { temperature?: number; jsonMode?: boolean; deadline?: Deadline },
+  opts?: { temperature?: number; jsonMode?: boolean },
 ): Promise<GrokCallResult | null> {
   // Prefer direct xAI with latest models when key present; else worker
   const direct = await callXaiChat(system, user, opts);
   if (direct) return direct;
-  if (opts?.deadline?.expired()) return null;
-  return callWorkerChat(system, user, DOSSIER_MODELS[0], opts?.deadline);
+  return callWorkerChat(system, user, DOSSIER_MODELS[0]);
 }
 
 type DossierBuild =
@@ -402,11 +366,7 @@ async function runTwoStepDossier(opts: {
   model: string;
   floorplan: string;
   candidate?: CatalogCandidate;
-  deadline?: Deadline;
 }): Promise<DossierBuild | null> {
-  const deadline =
-    opts.deadline ??
-    createDeadline(DOSSIER_SERVER_BUDGET_MS, DOSSIER_SERVER_MARGIN_MS);
   const yNum = parseInt(opts.year, 10) || 0;
   const pins = resolveFactsCatalogPins({
     year: opts.year,
@@ -448,20 +408,14 @@ async function runTwoStepDossier(opts: {
     };
   }
 
-  // Hard stop on the browse stage (its own 90s budget + 5s slack) so a hung
-  // web_search can never push the chain toward Vercel's 300s limit.
-  const research = await withStageTimeout(
-    deadline.stageMs(FACTS_GAP_RESEARCH_TIMEOUT_MS + 5_000),
-    () =>
-      researchFactsDossierNotes({
-        year: opts.year,
-        make: opts.make,
-        model: opts.model,
-        floorplan: opts.floorplan,
-        candidate: opts.candidate,
-        catalogBlock: candidateBlock,
-      }),
-  );
+  const research = await researchFactsDossierNotes({
+    year: opts.year,
+    make: opts.make,
+    model: opts.model,
+    floorplan: opts.floorplan,
+    candidate: opts.candidate,
+    catalogBlock: candidateBlock,
+  });
   const parsedSoft = research?.text ? parseFactsSoftNotes(research.text) : null;
   const soft =
     parsedSoft && softFieldsHaveNarrative(parsedSoft) ? parsedSoft : null;
@@ -499,17 +453,13 @@ sourcesNote must include real OEM/chassis/listing-style cites from the notes.`;
   const extracted = await callGrok(EXTRACT_SYSTEM, extractUser, {
     temperature: 0.1,
     jsonMode: true,
-    deadline,
   });
   if (!extracted?.text) {
-    // Optional second pass only if time remains; else return catalog partial.
-    const fallback = deadline.expired()
-      ? null
-      : await callGrok(EXTRACT_SYSTEM, extractUser, {
-          temperature: 0.1,
-          jsonMode: false,
-          deadline,
-        });
+    const fallback = await callGrok(
+      EXTRACT_SYSTEM,
+      extractUser,
+      { temperature: 0.1, jsonMode: false },
+    );
     if (!fallback?.text) {
       if (pinsHaveHardFacts(pins)) {
         return {
@@ -873,202 +823,161 @@ export const Route = createFileRoute("/api/rvfax/dossier")({
             );
           }
 
-          const reqKey = dossierRequestKey({
+          const yNum = parseInt(year, 10) || 0;
+          const key =
+            `${CACHE_VER}|${year}|${make}|${model}|${floorplan}`.toLowerCase();
+          const hit = cache.get(key);
+          const cachedPlan = planFactsDossierResearch({
             year,
             make,
             model,
             floorplan,
-            candidate: catalogCandidate ?? null,
+            candidate: catalogCandidate,
           });
-          const recent = resultCache.get(reqKey);
-          if (recent) {
-            const body = recent.body as { meta?: Record<string, unknown> };
+          if (
+            hit &&
+            Date.now() - hit.at < TTL_MS &&
+            shouldServeFactsDossierCache(cachedPlan)
+          ) {
+            let data = applyOemGroundTruth({ ...hit.data, cached: true });
+            data = applyCatalogCandidateTruth(data, catalogCandidate);
+            data = applyBrochurePin(data);
+            return Response.json({
+              data,
+              meta: {
+                model: hit.model || "cache",
+                cached: true,
+                pipeline: DOSSIER_PIPELINE,
+                skipLive: cachedPlan.skipLive,
+                gaps: cachedPlan.gaps,
+              },
+            });
+          }
+
+          const twoStep = await runTwoStepDossier({
+            year,
+            make,
+            model,
+            floorplan,
+            candidate: catalogCandidate,
+          });
+
+          if (!twoStep) {
+            const failPlan = planFactsDossierResearch({
+              year,
+              make,
+              model,
+              floorplan,
+              candidate: catalogCandidate,
+            });
             return Response.json(
               {
-                ...body,
-                meta: { ...(body.meta || {}), cached: true, cache: "result-1h" },
-              },
-              { status: recent.status },
-            );
-          }
-
-          const payload = await dossierInflight.run(reqKey, async () => {
-            const resp = await computeDossier();
-            let body: unknown = null;
-            try {
-              body = await resp.json();
-            } catch {
-              body = { error: "Live dossier failed — catalog remains." };
-            }
-            const out = { status: resp.status, body };
-            // Success (incl. catalog partial) caches 1h; failures 2 min so a
-            // looping client can't re-burn the model chain.
-            resultCache.set(
-              reqKey,
-              out,
-              resp.ok ? DOSSIER_RESULT_TTL_MS : DOSSIER_FAILURE_TTL_MS,
-            );
-            return out;
-          });
-          return Response.json(payload.body, { status: payload.status });
-
-          async function computeDossier(): Promise<Response> {
-            const yNum = parseInt(year, 10) || 0;
-            const key =
-              `${CACHE_VER}|${year}|${make}|${model}|${floorplan}`.toLowerCase();
-            const hit = cache.get(key);
-            const cachedPlan = planFactsDossierResearch({
-              year,
-              make,
-              model,
-              floorplan,
-              candidate: catalogCandidate,
-            });
-            if (
-              hit &&
-              Date.now() - hit.at < TTL_MS &&
-              shouldServeFactsDossierCache(cachedPlan)
-            ) {
-              let data = applyOemGroundTruth({ ...hit.data, cached: true });
-              data = applyCatalogCandidateTruth(data, catalogCandidate);
-              data = applyBrochurePin(data);
-              return Response.json({
-                data,
+                error:
+                  "Live dossier unavailable — catalog year-band remains on screen.",
                 meta: {
-                  model: hit.model || "cache",
-                  cached: true,
                   pipeline: DOSSIER_PIPELINE,
-                  skipLive: cachedPlan.skipLive,
-                  gaps: cachedPlan.gaps,
+                  model: null,
+                  skipLive: failPlan.skipLive,
+                  gaps: failPlan.gaps,
                 },
-              });
-            }
-
-            const twoStep = await runTwoStepDossier({
-              year,
-              make,
-              model,
-              floorplan,
-              candidate: catalogCandidate,
-            });
-
-            if (!twoStep) {
-              const failPlan = planFactsDossierResearch({
-                year,
-                make,
-                model,
-                floorplan,
-                candidate: catalogCandidate,
-              });
-              return Response.json(
-                {
-                  error:
-                    "Live dossier unavailable — catalog year-band remains on screen.",
-                  meta: {
-                    pipeline: DOSSIER_PIPELINE,
-                    model: null,
-                    skipLive: failPlan.skipLive,
-                    gaps: failPlan.gaps,
-                  },
-                },
-                { status: 502 },
-              );
-            }
-
-            let parsed: LiveDossier | null = null;
-            let pipeline = DOSSIER_PIPELINE;
-            if (twoStep.kind === "catalog") {
-              parsed = twoStep.data;
-              pipeline = CATALOG_PIPELINE;
-            } else {
-              parsed = parseDossier(
-                twoStep.rawJson,
-                yNum,
-                make,
-                model,
-                floorplan,
-                twoStep.research,
-              );
-            }
-            if (!parsed) {
-              return Response.json(
-                {
-                  error:
-                    "Live dossier returned unreadable data — catalog year-band remains.",
-                  meta: {
-                    model: twoStep.model,
-                    pipeline,
-                    skipLive: twoStep.skipLive,
-                    gaps: twoStep.gaps,
-                  },
-                },
-                { status: 502 },
-              );
-            }
-
-            parsed = applyOemGroundTruth(parsed);
-            parsed = applyCatalogCandidateTruth(parsed, catalogCandidate);
-            parsed = applyBrochurePin(parsed);
-            if (twoStep.soft) {
-              parsed = mergeSoftFieldsIntoDossier(parsed, twoStep.soft);
-              parsed = applyBrochurePin(parsed);
-            }
-            if (twoStep.kind !== "catalog" && !hasRealSources(parsed.sourcesNote)) {
-              parsed = {
-                ...parsed,
-                sourcesNote: [
-                  parsed.sourcesNote,
-                  "Phase-3 research synthesis — confirm OEM brochure / chassis sheet for transactions",
-                ]
-                  .filter(Boolean)
-                  .join(" · "),
-                confidence:
-                  parsed.confidence === "high" ? "medium" : parsed.confidence,
-              };
-            }
-
-            const remainingHardGaps = planFactsDossierResearch({
-              year,
-              make,
-              model,
-              floorplan,
-              candidate: parsed,
-            }).gaps;
-            if (
-              shouldStoreFactsDossierCache({
-                skipLive: twoStep.skipLive,
-                remainingHardGaps,
-              })
-            ) {
-              cache.set(key, {
-                at: Date.now(),
-                data: {
-                  ...parsed,
-                  engine: null,
-                  horsepower: null,
-                  torqueLbFt: null,
-                  chassis: null,
-                  transmission: null,
-                  fuelType: null,
-                },
-                model: twoStep.model,
-              });
-            }
-
-            return Response.json({
-              data: parsed,
-              meta: {
-                model: twoStep.model,
-                cached: false,
-                pipeline,
-                preferredModels: DOSSIER_MODELS,
-                skippedBrowse: twoStep.kind === "catalog",
-                skipLive: twoStep.skipLive,
-                gaps: twoStep.gaps,
-                softPass: twoStep.soft ? "ok" : "empty",
               },
+              { status: 502 },
+            );
+          }
+
+          let parsed: LiveDossier | null = null;
+          let pipeline = DOSSIER_PIPELINE;
+          if (twoStep.kind === "catalog") {
+            parsed = twoStep.data;
+            pipeline = CATALOG_PIPELINE;
+          } else {
+            parsed = parseDossier(
+              twoStep.rawJson,
+              yNum,
+              make,
+              model,
+              floorplan,
+              twoStep.research,
+            );
+          }
+          if (!parsed) {
+            return Response.json(
+              {
+                error:
+                  "Live dossier returned unreadable data — catalog year-band remains.",
+                meta: {
+                  model: twoStep.model,
+                  pipeline,
+                  skipLive: twoStep.skipLive,
+                  gaps: twoStep.gaps,
+                },
+              },
+              { status: 502 },
+            );
+          }
+
+          parsed = applyOemGroundTruth(parsed);
+          parsed = applyCatalogCandidateTruth(parsed, catalogCandidate);
+          parsed = applyBrochurePin(parsed);
+          if (twoStep.soft) {
+            parsed = mergeSoftFieldsIntoDossier(parsed, twoStep.soft);
+            parsed = applyBrochurePin(parsed);
+          }
+          if (twoStep.kind !== "catalog" && !hasRealSources(parsed.sourcesNote)) {
+            parsed = {
+              ...parsed,
+              sourcesNote: [
+                parsed.sourcesNote,
+                "Phase-3 research synthesis — confirm OEM brochure / chassis sheet for transactions",
+              ]
+                .filter(Boolean)
+                .join(" · "),
+              confidence:
+                parsed.confidence === "high" ? "medium" : parsed.confidence,
+            };
+          }
+
+          const remainingHardGaps = planFactsDossierResearch({
+            year,
+            make,
+            model,
+            floorplan,
+            candidate: parsed,
+          }).gaps;
+          if (
+            shouldStoreFactsDossierCache({
+              skipLive: twoStep.skipLive,
+              remainingHardGaps,
+            })
+          ) {
+            cache.set(key, {
+              at: Date.now(),
+              data: {
+                ...parsed,
+                engine: null,
+                horsepower: null,
+                torqueLbFt: null,
+                chassis: null,
+                transmission: null,
+                fuelType: null,
+              },
+              model: twoStep.model,
             });
           }
+
+          return Response.json({
+            data: parsed,
+            meta: {
+              model: twoStep.model,
+              cached: false,
+              pipeline,
+              preferredModels: DOSSIER_MODELS,
+              skippedBrowse: twoStep.kind === "catalog",
+              skipLive: twoStep.skipLive,
+              gaps: twoStep.gaps,
+              softPass: twoStep.soft ? "ok" : "empty",
+            },
+          });
         } catch (e) {
           return Response.json(
             {
