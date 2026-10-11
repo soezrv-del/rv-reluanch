@@ -195,6 +195,10 @@ export function takeTokenStandingLessons(): string | undefined {
   return value;
 }
 
+export class VoiceDailyCapError extends Error {
+  readonly code = "voice_daily_cap";
+}
+
 export async function fetchEphemeralToken(
   signal?: AbortSignal,
 ): Promise<string> {
@@ -227,6 +231,17 @@ export async function fetchEphemeralToken(
       );
       if (!res.ok) {
         const text = await res.text().catch(() => "");
+        // Daily voice cap: stop here. Never fall through to the worker token,
+        // which would bypass the cap.
+        if (res.status === 429 && attempt.url.startsWith("/api/")) {
+          let msg = "You've hit today's Live Voice limit.";
+          try {
+            msg = (JSON.parse(text) as { error?: string }).error || msg;
+          } catch {
+            /* keep default */
+          }
+          throw new VoiceDailyCapError(msg);
+        }
         lastErr = `Voice token failed (${res.status})${text ? `: ${text.slice(0, 120)}` : ""}`;
         continue;
       }
@@ -252,6 +267,7 @@ export async function fetchEphemeralToken(
       if (token) return token;
       lastErr = "Voice token response missing token";
     } catch (e) {
+      if (e instanceof VoiceDailyCapError) throw e;
       lastErr = e instanceof Error ? e.message : String(e);
     }
   }

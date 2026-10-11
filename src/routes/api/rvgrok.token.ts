@@ -1,6 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { denyUnlessWhitelisted, phoneFromRequest } from "@/lib/access/httpGate";
 import { DEFAULT_WORKER_URL } from "@/lib/rvgrok/types";
+import { isHardAdminPhone } from "@/lib/access/gate";
+import {
+  DEFAULT_VOICE_DAILY_SESSION_CAP,
+  VOICE_CAP_MESSAGE,
+  createDailyCounter,
+  envCap,
+} from "@/lib/rvgrok/usageCaps";
 import { MEMORY_HEADER } from "@/lib/rvgrok/phoneMemory";
 import { loadVisitorMemoryBlock } from "@/lib/rvgrok/phoneMemoryStore";
 import { LESSONS_HEADER } from "@/lib/rvgrok/promptLessons";
@@ -102,12 +109,29 @@ async function mintEphemeralToken(method: "GET" | "POST") {
   );
 }
 
+const voiceSessions = createDailyCounter();
+
+/** null = allowed; else a 429 with a friendly message. Counts only successful mints. */
+export function voiceCapResponse(phone: string): Response | null {
+  if (!phone || isHardAdminPhone(phone)) return null;
+  const cap = envCap(process.env.VOICE_DAILY_SESSION_CAP, DEFAULT_VOICE_DAILY_SESSION_CAP);
+  if (voiceSessions.get(phone) < cap) return null;
+  return Response.json(
+    { error: VOICE_CAP_MESSAGE, code: "voice_daily_cap", cap },
+    { status: 429, headers: jsonHeaders() },
+  );
+}
+
 async function mintWithVisitorMemory(request: Request, method: "GET" | "POST") {
+  const phone = phoneFromRequest(request);
+  const capped = voiceCapResponse(phone);
+  if (capped) return capped;
   const [minted, memory, lessons] = await Promise.all([
     mintEphemeralToken(method),
     loadVisitorMemoryBlock(phoneFromRequest(request)).catch(() => ""),
     readStandingLessonsBlock().catch(() => ""),
   ]);
+  if (minted.ok && phone) voiceSessions.add(phone, 1);
   const headers = new Headers(minted.headers);
   if (memory) headers.set(MEMORY_HEADER, encodeURIComponent(memory));
   headers.set(LESSONS_HEADER, encodeURIComponent(lessons));

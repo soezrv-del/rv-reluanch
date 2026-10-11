@@ -13,6 +13,7 @@ import {
 import { isSeriesEngineEstimate, isSeriesGvwrEstimate } from "./torqueToWeight.ts";
 import { resolveFactsBrochure } from "../rvgrok/factsBrochure.ts";
 import { rejectImplausibleSpecFills } from "./specFillSanity.ts";
+import { researchAccessHeaders } from "../access/researchUnlock.ts";
 import {
   SPEC_ENGINE_OWNED_FIELDS,
   SPEC_ENGINE_OWNED_LABELS,
@@ -481,10 +482,10 @@ export async function fetchSpecFieldFallback(
     const resp = await fetch("/api/rvfax/spec-fallback", {
       method: "POST",
       cache: "no-store",
-      headers: {
+      headers: researchAccessHeaders({
         "Content-Type": "application/json",
         Accept: "application/json",
-      },
+      }),
       body: JSON.stringify({
         year: opts.year,
         make: opts.make,
