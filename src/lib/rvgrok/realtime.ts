@@ -137,6 +137,8 @@ export type RealtimeHandlers = {
   onError: (message: string) => void;
   /** Fired when the socket drops unexpectedly (not after intentional stop) */
   onDisconnected?: (reason: string) => void;
+  /** Fired after a cost-guard auto-stop (2 min silence / 15 min total). */
+  onAutoStop?: (reason: "idle" | "max", message: string) => void;
   /** CarFax-style desk sheet for the coach this turn — or null to hide. */
   onDeskSheet?: (sheet: DeskSheetPayload | null) => void;
   /** Floorplan codes to show on screen. Spoken line stays "Which floorplan?" */
@@ -1247,7 +1249,11 @@ export class GrokRealtimeSession {
       if (!reason) return;
       // Intentional stop: no onDisconnected, so nothing auto-reconnects.
       this.stop();
-      this.handlers.onStatus("idle", voiceLimitMessage(reason));
+      const message = voiceLimitMessage(reason);
+      this.handlers.onStatus("idle", message);
+      // Let the app drop this session and disarm, or the next mic tap is
+      // swallowed by the stale (closed) session.
+      this.handlers.onAutoStop?.(reason, message);
     }, 5_000);
   }
 
