@@ -144,3 +144,9 @@ test("Facts spec fallback effect keys on empty-field values, not the brochure ob
   assert.match(d, /\[year, make, model, floorplan, data\.type, specFallbackKey\]\);/);
   assert.doesNotMatch(d, /floorplan, brochure, data\.type, specIdentity\]\);/);
 });
+
+test("specEngine loads researchUnlock dynamically (static import made a circular SSR chunk: __exportAll is not a function)", () => {
+  const src = read("../rv/specEngine.ts");
+  assert.doesNotMatch(src, /^import[^;]*researchUnlock/m);
+  assert.match(src, /await import\("\.\.\/access\/researchUnlock\.ts"\)/);
+});

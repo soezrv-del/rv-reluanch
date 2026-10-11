@@ -13,7 +13,6 @@ import {
 import { isSeriesEngineEstimate, isSeriesGvwrEstimate } from "./torqueToWeight.ts";
 import { resolveFactsBrochure } from "../rvgrok/factsBrochure.ts";
 import { rejectImplausibleSpecFills } from "./specFillSanity.ts";
-import { researchAccessHeaders } from "../access/researchUnlock.ts";
 import {
   SPEC_ENGINE_OWNED_FIELDS,
   SPEC_ENGINE_OWNED_LABELS,
@@ -479,6 +478,9 @@ export async function fetchSpecFieldFallback(
 ): Promise<SpecFieldFill[]> {
   if (!opts.empty.length) return [];
   try {
+    // Dynamic import on purpose: a static import from this shared module put
+    // researchUnlock in a circular SSR chunk (__exportAll is not a function).
+    const { researchAccessHeaders } = await import("../access/researchUnlock.ts");
     const resp = await fetch("/api/rvfax/spec-fallback", {
       method: "POST",
       cache: "no-store",
