@@ -397,6 +397,8 @@ export function RvGrokApp({
       liveCamRef.current = false;
     }
   }, [flushVoiceLearn]);
+  const stopLiveSessionRef = useRef(stopLiveSession);
+  stopLiveSessionRef.current = stopLiveSession;
 
   const startNewChat = useCallback(() => {
     flushVoiceLearn();
@@ -1271,6 +1273,10 @@ export function RvGrokApp({
           setVoiceError(message);
           setRealtimeDetail(message);
         },
+        onAutoStop: (_reason, message) => {
+          stopLiveSessionRef.current({ disarm: true });
+          setRealtimeDetail(message);
+        },
         onDisconnected: (reason) => {
           realtimeRef.current = null;
           startingLiveRef.current = false;
@@ -1350,7 +1356,8 @@ export function RvGrokApp({
 
   const setLiveVoiceArmed = useCallback(
     (on: boolean, prewarm?: LiveVoicePrewarm | null) => {
-      if (on && realtimeRef.current) return;
+      // Only a live socket blocks a new start; a stopped/closed session must not.
+      if (on && realtimeRef.current?.isActive) return;
       liveVoiceRef.current = on;
       setLiveVoice(on);
       try {

@@ -64,7 +64,7 @@ test("voice session ends after 2 min silence or 15 min total", () => {
 test("realtime: limit timer uses stop() (no auto-reconnect) and clears on stop/close", () => {
   const rt = read("realtime.ts");
   assert.match(rt, /voiceSessionLimitReason\(/);
-  assert.match(rt, /this\.stop\(\);\s*this\.handlers\.onStatus\("idle", voiceLimitMessage\(reason\)\)/);
+  assert.match(rt, /this\.stop\(\);\s*const message = voiceLimitMessage\(reason\);\s*this\.handlers\.onStatus\("idle", message\);/);
   assert.match(rt, /stop\(opts\?: \{ keepCapture\?: boolean \}\) \{\s*this\.clearLimitTimer\(\);/);
   assert.match(rt, /this\.ws = null;\s*this\.clearLimitTimer\(\);/);
 });
@@ -149,4 +149,15 @@ test("specEngine loads researchUnlock dynamically (static import made a circular
   const src = read("../rv/specEngine.ts");
   assert.doesNotMatch(src, /^import[^;]*researchUnlock/m);
   assert.match(src, /await import\("\.\.\/access\/researchUnlock\.ts"\)/);
+});
+
+test("voice auto-stop disarms the app so the next mic tap starts a new session", () => {
+  const rt = read("realtime.ts");
+  assert.match(rt, /onAutoStop\?: \(reason: "idle" \| "max", message: string\) => void;/);
+  assert.match(rt, /this\.handlers\.onAutoStop\?\.\(reason, message\)/);
+  const app = read("../../components/rvgrok/RvGrokApp.tsx");
+  assert.match(app, /onAutoStop: \(_reason, message\) => \{\s*stopLiveSessionRef\.current\(\{ disarm: true \}\);/);
+  // A stopped (closed) session must not swallow the next arm.
+  assert.match(app, /if \(on && realtimeRef\.current\?\.isActive\) return;/);
+  assert.doesNotMatch(app, /if \(on && realtimeRef\.current\) return;/);
 });
