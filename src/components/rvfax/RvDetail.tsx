@@ -96,6 +96,7 @@ import {
   type LiveDossier,
 } from "@/lib/rv/liveDossier";
 import { planFactsDossierResearch } from "@/lib/rv/factsDossierGapPlan";
+import { stableStringify } from "@/lib/rv/dossierGuards";
 import {
   factsDetailFieldSearching,
   factsDetailSearchingFields,
@@ -483,6 +484,17 @@ export function RvDetail({
     [brochure, floorplan, data.fuelType, data.type],
   );
 
+  // Effects key on the candidate's VALUE, not object identity — a new object
+  // each render (lot snapshot bump, catalog hydrate) used to abort + re-POST
+  // the dossier, burning a fresh grok-4.7 call every time.
+  const catalogCandidateKey = useMemo(
+    () => stableStringify(catalogCandidate),
+    [catalogCandidate],
+  );
+  const catalogCandidateRef = useRef(catalogCandidate);
+  catalogCandidateRef.current = catalogCandidate;
+  const forceLiveRef = useRef(false);
+
   const dossierGapPlan = useMemo(
     () =>
       planFactsDossierResearch({
@@ -561,13 +573,16 @@ export function RvDetail({
       setLive(null);
     }
 
+    const force = forceLiveRef.current;
+    forceLiveRef.current = false;
     fetchLiveDossier(
       year,
       make,
       model,
       floorplan,
       ctrl.signal,
-      catalogCandidate,
+      catalogCandidateRef.current,
+      { force },
     )
       .then((res) => {
         if (cancelled) return;
@@ -596,7 +611,7 @@ export function RvDetail({
       cancelled = true;
       ctrl.abort();
     };
-  }, [year, make, model, floorplan, liveRetry, catalogCandidate]);
+  }, [year, make, model, floorplan, liveRetry, catalogCandidateKey]);
 
   // Market value is on-demand — user open / ask only. Do not prefetch.
   useEffect(() => {
@@ -1663,6 +1678,7 @@ export function RvDetail({
                   type="button"
                   onClick={() => {
                     setLiveError(null);
+                    forceLiveRef.current = true;
                     setLiveRetry((n) => n + 1);
                   }}
                   className="mt-2 text-[12px] font-bold text-amber-50 underline underline-offset-2"
@@ -1946,7 +1962,8 @@ export function RvDetail({
                   refreshCoachDossierCache(year, make, model, floorplan);
                   setLive(null);
                   setLiveError(null);
-                  setLiveRetry((n) => n + 1);
+                  forceLiveRef.current = true;
+                    setLiveRetry((n) => n + 1);
                 }}
                 className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white/70"
               >
