@@ -53,21 +53,10 @@ import {
 } from "@/lib/rvgrok/chatSpecBlock";
 import {
   researchTimeoutMs,
+  WEB_SEARCH_MAX_TOOL_CALLS,
   formatWebSearchInjection,
 } from "@/lib/rvgrok/webSearch";
 import { executeWebResearch } from "@/lib/rvgrok/webResearchTelemetry";
-import {
-  CHAT_BUDGET_MESSAGE,
-  CHAT_WEB_SEARCH_ATTEMPTS,
-  WEB_SEARCH_ALREADY_USED,
-  addChatTokens,
-  chatTokenLedger,
-  chatTurnStore,
-  estimateTokens,
-  newChatTurnState,
-  takeChatWebSearch,
-} from "@/lib/rvgrok/chatBudget";
-import { isHardAdminPhone } from "@/lib/access/gate";
 import { getResearchOrderOverride } from "@/lib/rvgrok/researchOrderStore";
 import { getResearchProviderOverride } from "@/lib/rvgrok/researchProviderStore";
 import {
@@ -524,7 +513,6 @@ async function runRegisteredTool(
 ): Promise<Record<string, unknown>> {
   if (name === "web_search") {
     const query = toolStr(args.query) || ctx.userText;
-    if (!takeChatWebSearch()) return { ok: false, error: WEB_SEARCH_ALREADY_USED };
     const researched = await executeWebResearch({
       apiKey: process.env.XAI_API_KEY,
       query: query.slice(0, 400),
@@ -532,7 +520,7 @@ async function runRegisteredTool(
       profile: "chat",
       skipGate: true,
       requestOrigin: ctx.requestOrigin,
-      maxAttempts: CHAT_WEB_SEARCH_ATTEMPTS,
+      maxAttempts: WEB_SEARCH_MAX_TOOL_CALLS,
       researchProvider: (await getResearchProviderOverride()) ?? undefined,
       researchOrder: (await getResearchOrderOverride()) ?? undefined,
     });
@@ -849,8 +837,6 @@ async function runXaiWithTools(opts: {
     }
     for (const piece of acc.end().content) gate.push(piece);
     const content = acc.content();
-    // Daily budget: estimate this round's prompt + output tokens.
-    addChatTokens(estimateTokens(JSON.stringify(working)) + estimateTokens(String(content || "")));
     if (!acc.sawChoice()) {
       if (round === 0) return null;
       break;
@@ -1370,16 +1356,6 @@ export const Route = createFileRoute("/api/rvgrok")({
             ? body.visitorFirstName
             : "";
         const phoneKey = memoryKeyFromRequest(request);
-        const budgetExempt = !phoneKey || isHardAdminPhone(phoneKey);
-        if (!budgetExempt && chatTokenLedger.exceeded(phoneKey)) {
-          return jsonToSseStream({
-            content: CHAT_BUDGET_MESSAGE,
-            model: "daily-budget",
-            agentMode,
-            upstream: "daily-budget",
-          });
-        }
-        const turnState = newChatTurnState();
         // One SSE response goes back right away. The bubble shows short
         // status lines while the work below runs, then the answer streams.
         const sink = createChatSseSink({ agentMode });
@@ -1518,7 +1494,7 @@ export const Route = createFileRoute("/api/rvgrok")({
                 );
               }
             }
-            if (reply && serverGrounded.identity?.floorplan && takeChatWebSearch()) {
+            if (reply && serverGrounded.identity?.floorplan) {
               sink.status(WEB_RESEARCH_STATUS);
               const researched = await executeWebResearch({
                 apiKey: process.env.XAI_API_KEY,
@@ -1534,7 +1510,7 @@ export const Route = createFileRoute("/api/rvgrok")({
                     return "";
                   }
                 })(),
-                maxAttempts: CHAT_WEB_SEARCH_ATTEMPTS,
+                maxAttempts: WEB_SEARCH_MAX_TOOL_CALLS,
                 researchProvider:
                   (await getResearchProviderOverride()) ?? undefined,
                 researchOrder: (await getResearchOrderOverride()) ?? undefined,
@@ -1581,7 +1557,7 @@ export const Route = createFileRoute("/api/rvgrok")({
             (factsSpec || serverGrounded.needsWeb || Boolean(body.wantsWebFallback));
 
           let webNotes: string | undefined;
-          if (wantsWebFallback && takeChatWebSearch()) {
+          if (wantsWebFallback) {
             sink.status(WEB_RESEARCH_STATUS);
             const researched = await executeWebResearch({
               apiKey: process.env.XAI_API_KEY,
@@ -1591,7 +1567,7 @@ export const Route = createFileRoute("/api/rvgrok")({
               profile: "chat",
               skipGate: true,
               requestOrigin,
-              maxAttempts: CHAT_WEB_SEARCH_ATTEMPTS,
+              maxAttempts: WEB_SEARCH_MAX_TOOL_CALLS,
               // Server-persisted admin override (not a client header).
               researchProvider:
                 (await getResearchProviderOverride()) ?? undefined,
@@ -1683,8 +1659,7 @@ export const Route = createFileRoute("/api/rvgrok")({
           return finish(demoStream(messages, agentMode));
         };
 
-        void chatTurnStore
-          .run(turnState, run)
+        void run()
           .catch((err) => {
             console.error("[rvgrok] chat turn failed", err);
             if (sink.visibleText()) sink.replace("");
@@ -1694,10 +1669,7 @@ export const Route = createFileRoute("/api/rvgrok")({
                 : "The reply failed",
             );
           })
-          .finally(() => {
-            if (!budgetExempt) chatTokenLedger.charge(phoneKey, turnState.tokens);
-            sink.close();
-          });
+          .finally(() => sink.close());
         return sink.response;
       },
     },

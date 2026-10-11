@@ -517,25 +517,15 @@ export function RvDetail({
     [liveLoading, dossierGapPlan],
   );
 
-  // Key the spec-fallback effect on the empty-field VALUES, not the brochure
-  // object — a rebuilt brochure (lot refresh, catalog load) used to re-run it.
-  const specFallbackEmpty = useMemo(
-    () =>
-      floorplan
-        ? emptySpecFields(catalogSnapshotFromBrochure(specIdentity, brochure))
-        : [],
-    [floorplan, specIdentity, brochure],
-  );
-  const specFallbackKey = useMemo(
-    () => stableStringify(specFallbackEmpty),
-    [specFallbackEmpty],
-  );
-  const specFallbackEmptyRef = useRef(specFallbackEmpty);
-  specFallbackEmptyRef.current = specFallbackEmpty;
-
   useEffect(() => {
-    const empty = specFallbackEmptyRef.current;
-    if (!floorplan || !empty.length) {
+    if (!floorplan) {
+      setSpecFills([]);
+      setSpecFallbackLoading(false);
+      return;
+    }
+    const snap = catalogSnapshotFromBrochure(specIdentity, brochure);
+    const empty = emptySpecFields(snap);
+    if (!empty.length) {
       setSpecFills([]);
       setSpecFallbackLoading(false);
       return;
@@ -560,7 +550,7 @@ export function RvDetail({
     return () => {
       ctrl.abort();
     };
-  }, [year, make, model, floorplan, data.type, specFallbackKey]);
+  }, [year, make, model, floorplan, brochure, data.type, specIdentity]);
 
   const sharedPaint = useMemo(
     () => resolveSharedSpecPaint(specIdentity, specFills),

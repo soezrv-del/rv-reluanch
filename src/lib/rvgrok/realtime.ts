@@ -23,7 +23,6 @@ import {
 } from "./liveVoice";
 import type { ActiveCoach } from "../rv/activeCoach";
 import { parseCoachFromText } from "./parseCoach";
-import { voiceLimitMessage, voiceSessionLimitReason } from "./usageCaps";
 import { ensureCatalogLoaded } from "../rv/catalogLoad";
 import {
   looksLikeDeskSheetAsk,
@@ -193,10 +192,6 @@ export class GrokRealtimeSession {
   private introFinished = false;
   private facts: ActiveCoach | null;
   private rearmTimer: ReturnType<typeof setTimeout> | null = null;
-  /** Cost guard: auto-stop after 2 min silence or 15 min total. */
-  private limitTimer: ReturnType<typeof setInterval> | null = null;
-  private sessionStartedAt = 0;
-  private lastActivityAt = 0;
   /** Wall clock when this reply's drain wait started. Caps a stuck queue. */
   private rearmSince = 0;
   private earlyPcm: ArrayBuffer[] = [];
@@ -391,14 +386,9 @@ export class GrokRealtimeSession {
     }
     this.flushEarlyAudio();
 
-    ws.onmessage = (evt) => {
-      this.lastActivityAt = Date.now();
-      this.handleMessage(evt);
-    };
-    this.startLimitTimer();
+    ws.onmessage = (evt) => this.handleMessage(evt);
     ws.onclose = (evt) => {
       this.ws = null;
-      this.clearLimitTimer();
       if (this.intentionalStop || this.closed) {
         // stop() already tore down (and may have kept the mic for reconnect)
         this.handlers.onStatus("idle");
@@ -1228,38 +1218,7 @@ export class GrokRealtimeSession {
       });
   }
 
-  private startLimitTimer() {
-    this.clearLimitTimer();
-    this.sessionStartedAt = Date.now();
-    this.lastActivityAt = this.sessionStartedAt;
-    this.limitTimer = setInterval(() => {
-      if (this.closed || this.intentionalStop) {
-        this.clearLimitTimer();
-        return;
-      }
-      // Grok researching or speaking counts as activity, not silence.
-      if (this.researchPhase !== "idle") this.lastActivityAt = Date.now();
-      const reason = voiceSessionLimitReason({
-        startedAt: this.sessionStartedAt,
-        lastActivityAt: this.lastActivityAt,
-        now: Date.now(),
-      });
-      if (!reason) return;
-      // Intentional stop: no onDisconnected, so nothing auto-reconnects.
-      this.stop();
-      this.handlers.onStatus("idle", voiceLimitMessage(reason));
-    }, 5_000);
-  }
-
-  private clearLimitTimer() {
-    if (this.limitTimer) {
-      clearInterval(this.limitTimer);
-      this.limitTimer = null;
-    }
-  }
-
   stop(opts?: { keepCapture?: boolean }) {
-    this.clearLimitTimer();
     this.unsubScreen?.();
     this.unsubScreen = null;
     if (this.calloutTimer) {

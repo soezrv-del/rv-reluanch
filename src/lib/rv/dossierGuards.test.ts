@@ -195,16 +195,3 @@ test("wiring: route and client use budgets, cache, dedupe; RvDetail keys on cand
   assert.match(detail, /liveRetry, catalogCandidateKey\]\);/);
   assert.doesNotMatch(detail, /liveRetry, catalogCandidate\]\);/);
 });
-
-test("compare-style budget: 3 models x 30s stop once the 75s walk budget is spent", () => {
-  let t = 0;
-  const d = createDeadline(75_000, 0, () => t);
-  const budgets: number[] = [];
-  for (let i = 0; i < 6; i++) {
-    const b = d.stageMs(30_000);
-    if (b <= 0) break;
-    budgets.push(b);
-    t += b; // each call hangs until its timeout
-  }
-  assert.deepEqual(budgets, [30_000, 30_000, 15_000]);
-});
