@@ -1,13 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { DEFAULT_WORKER_URL } from "@/lib/rvgrok/types";
-import { denyUnlessWhitelisted } from "@/lib/access/httpGate";
-import {
-  createDeadline,
-  createInflightDeduper,
-  createTtlCache,
-  stableStringify,
-  type Deadline,
-} from "@/lib/rv/dossierGuards";
 import {
   COMPARE_SYSTEM_PROMPT,
   FINDINGS_NOT_GUESSES_RULE,
@@ -63,35 +55,10 @@ type CoachIn = {
 
 const COMPARE_MODELS = ["grok-4-latest", "grok-4", "grok-3"] as const;
 
-/** Each model / worker call gets at most 30s; the whole walk at most 75s. */
-export const COMPARE_CALL_TIMEOUT_MS = 30_000;
-export const COMPARE_TOTAL_BUDGET_MS = 75_000;
-export const COMPARE_CACHE_TTL_MS = 60 * 60 * 1000;
-
-type CompareBody = {
-  summary: string;
-  live: boolean;
-  generatedAt: string;
-};
-const compareCache = createTtlCache<CompareBody>({
-  ttlMs: COMPARE_CACHE_TTL_MS,
-  max: 300,
-});
-const compareInflight = createInflightDeduper<CompareBody>();
-
-export function compareCacheKey(coaches: unknown[]): string {
-  return stableStringify(coaches).toLowerCase();
-}
-
-async function callGrok(
-  prompt: string,
-  deadline: Deadline = createDeadline(COMPARE_TOTAL_BUDGET_MS),
-): Promise<string | null> {
+async function callGrok(prompt: string): Promise<string | null> {
   const apiKey = process.env.XAI_API_KEY;
   if (apiKey) {
     for (const model of COMPARE_MODELS) {
-      const budget = deadline.stageMs(COMPARE_CALL_TIMEOUT_MS);
-      if (budget <= 0) return null;
       try {
         const resp = await fetch("https://api.x.ai/v1/chat/completions", {
           method: "POST",
@@ -109,7 +76,6 @@ async function callGrok(
             max_tokens: 4000,
             stream: false,
           }),
-          signal: AbortSignal.timeout(budget),
         });
         if (!resp.ok) continue;
         const text = extractText(await resp.json()).trim();
@@ -123,11 +89,8 @@ async function callGrok(
   const base = workerBase();
   const urls = [`${base}/chat`, `${base}/rvgrok-chat`, `${base}/`];
   for (const url of urls) {
-    const budget = deadline.stageMs(COMPARE_CALL_TIMEOUT_MS);
-    if (budget <= 0) return null;
     try {
       const resp = await fetch(url, {
-        signal: AbortSignal.timeout(budget),
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -198,8 +161,6 @@ export const Route = createFileRoute("/api/rvfax/compare")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const denied = await denyUnlessWhitelisted(request);
-        if (denied) return denied;
         let body: { coaches?: CoachIn[] } = {};
         try {
           body = (await request.json()) as typeof body;
@@ -232,24 +193,13 @@ export const Route = createFileRoute("/api/rvfax/compare")({
           `4) Bottom line (2–3 sentences a salesperson can say out loud)`,
         ].join("\n");
 
-        const key = compareCacheKey(coaches);
-        const hit = compareCache.get(key);
-        if (hit) return Response.json({ ...hit, cached: true });
-
-        const out = await compareInflight.run(key, async () => {
-          const live = await callGrok(prompt);
-          const text = live || localSummary(coaches);
-          const verified = coaches.map((c) => c.layout || "");
-          const result: CompareBody = {
-            summary: sanitizeUnverifiedLayout(text, verified),
-            live: Boolean(live),
-            generatedAt: new Date().toISOString(),
-          };
-          // Only cache real model answers; a fallback checklist may retry later.
-          if (live) compareCache.set(key, result);
-          return result;
+        const text = (await callGrok(prompt)) || localSummary(coaches);
+        const verified = coaches.map((c) => c.layout || "");
+        return Response.json({
+          summary: sanitizeUnverifiedLayout(text, verified),
+          live: Boolean(text && !text.includes("Live Grok summary was not")),
+          generatedAt: new Date().toISOString(),
         });
-        return Response.json(out);
       },
     },
   },

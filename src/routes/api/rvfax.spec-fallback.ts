@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { denyUnlessWhitelisted } from "@/lib/access/httpGate";
 import {
   runSpecFieldFallback,
   SPEC_ENGINE_OWNED_FIELDS,
@@ -19,8 +18,6 @@ export const Route = createFileRoute("/api/rvfax/spec-fallback")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const denied = await denyUnlessWhitelisted(request);
-        if (denied) return denied;
         let body: {
           year?: string;
           make?: string;

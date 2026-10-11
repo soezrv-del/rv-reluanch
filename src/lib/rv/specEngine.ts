@@ -478,16 +478,13 @@ export async function fetchSpecFieldFallback(
 ): Promise<SpecFieldFill[]> {
   if (!opts.empty.length) return [];
   try {
-    // Dynamic import on purpose: a static import from this shared module put
-    // researchUnlock in a circular SSR chunk (__exportAll is not a function).
-    const { researchAccessHeaders } = await import("../access/researchUnlock.ts");
     const resp = await fetch("/api/rvfax/spec-fallback", {
       method: "POST",
       cache: "no-store",
-      headers: researchAccessHeaders({
+      headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
-      }),
+      },
       body: JSON.stringify({
         year: opts.year,
         make: opts.make,

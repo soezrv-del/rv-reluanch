@@ -1,11 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { DEFAULT_WORKER_URL } from "@/lib/rvgrok/types";
-import { denyUnlessWhitelisted } from "@/lib/access/httpGate";
-import { createDeadline } from "@/lib/rv/dossierGuards";
-
-/** Nothing in the app calls this route; locked + bounded so it can't run up xAI spend. */
-export const CATALOG_RESEARCH_CALL_TIMEOUT_MS = 30_000;
-export const CATALOG_RESEARCH_TOTAL_BUDGET_MS = 90_000;
 import {
   finalizePatch,
   type CatalogPowertrainPatch,
@@ -117,12 +111,9 @@ async function callGrok(
   system: string,
   user: string,
 ): Promise<{ text: string; model: string } | null> {
-  const deadline = createDeadline(CATALOG_RESEARCH_TOTAL_BUDGET_MS);
   const apiKey = process.env.XAI_API_KEY;
   if (apiKey) {
     for (const model of DOSSIER_MODELS) {
-      const budget = deadline.stageMs(CATALOG_RESEARCH_CALL_TIMEOUT_MS);
-      if (budget <= 0) return null;
       try {
         const resp = await fetch("https://api.x.ai/v1/chat/completions", {
           method: "POST",
@@ -141,7 +132,6 @@ async function callGrok(
             stream: false,
             response_format: { type: "json_object" },
           }),
-          signal: AbortSignal.timeout(budget),
         });
         if (!resp.ok) continue;
         const data = await resp.json();
@@ -160,11 +150,8 @@ async function callGrok(
   // Worker fallback
   const base = workerBase();
   for (const url of [`${base}/chat`, `${base}/rvgrok-chat`, `${base}/`]) {
-    const budget = deadline.stageMs(CATALOG_RESEARCH_CALL_TIMEOUT_MS);
-    if (budget <= 0) return null;
     try {
       const resp = await fetch(url, {
-        signal: AbortSignal.timeout(budget),
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -271,8 +258,6 @@ export const Route = createFileRoute("/api/rvfax/catalog-research")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const denied = await denyUnlessWhitelisted(request);
-        if (denied) return denied;
         try {
           const body = (await request.json()) as {
             make?: string;
