@@ -24,6 +24,7 @@ import { CATALOG_ESTIMATE_LABEL } from "@/lib/rv/publicListingComps";
 import { buildBrochureSpecs } from "@/lib/rv/brochureSpecs";
 import { hydrateShareCoachResult } from "@/lib/rv/shareKit";
 import { fetchLiveDossier, peekVerifiedDossier } from "@/lib/rv/liveDossier";
+import { researchAccessHeaders } from "@/lib/access/researchUnlock";
 import { fetchPublicListingComps } from "@/lib/rv/publicListingComps";
 
 
@@ -231,7 +232,7 @@ export function RvCompare({
 
     fetch("/api/rvfax/compare", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: researchAccessHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({ coaches }),
       signal: ctrl.signal,
     })

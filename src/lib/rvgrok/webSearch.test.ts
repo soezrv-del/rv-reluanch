@@ -250,7 +250,8 @@ test("chat and voice routes pass the new timeout/profile", () => {
   assert.match(chat, /formatCoachReportTimeoutReply/);
   assert.match(chat, /upstream: "coach-report"/);
   assert.match(chat, /profile: "chat"/);
-  assert.match(chat, /maxAttempts: WEB_SEARCH_MAX_TOOL_CALLS/);
+  // Chat: one search per reply (cost guard), so one attempt, no rephrase.
+  assert.match(chat, /maxAttempts: CHAT_WEB_SEARCH_ATTEMPTS/);
   assert.match(voice, /executeWebResearch/);
   assert.match(voice, /webResearchJsonResponse/);
   assert.match(voice, /maxAttempts: WEB_SEARCH_MAX_TOOL_CALLS/);
