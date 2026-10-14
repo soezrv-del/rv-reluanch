@@ -6,6 +6,15 @@ import { fileURLToPath } from "node:url";
 import {
   LIVE_VOICE_OUTPUT_GAIN,
   LIVE_VOICE_DEBUG_KEY,
+  LIVE_VOICE_GAIN_KEY,
+  LIVE_VOICE_GAIN_PRESETS,
+  LIVE_VOICE_IOS_GAIN_LEVEL,
+  LIVE_VOICE_PEAK_LIMIT,
+  clampGainProfile,
+  liveVoiceGainLevel,
+  liveVoiceGainOverride,
+  liveVoiceGainProfile,
+  logLiveVoiceGain,
   LIVE_VOICE_ROUTE_KEY,
   LIVE_VOICE_SOFT_CLIP,
   liveVoiceDebugEnabled,
@@ -156,7 +165,8 @@ test("playback goes through the jitter-buffered player and the output gain", () 
   assert.match(realtime, /autoGainControl: false/);
   assert.doesNotMatch(realtime, /autoGainControl: true/);
   assert.doesNotMatch(live, /new AC\(\{[^}]*sampleRate/);
-  assert.match(output, /makeup\.gain\.value = LIVE_VOICE_OUTPUT_GAIN/);
+  assert.match(output, /makeup\.gain\.value = profile\.makeup/);
+  assert.match(output, /liveVoiceGainProfile\(gainLevel\)/);
   assert.equal(LIVE_VOICE_OUTPUT_GAIN, 2);
   assert.match(output, /gain\.connect\(clipper\)/);
   assert.match(output, /clipper\.connect\(makeup\)/);
@@ -285,4 +295,150 @@ test("lvdebug flag persists and only logs when on", () => {
   const realtime = readFileSync(join(root, "realtime.ts"), "utf8");
   assert.match(realtime, /logLiveVoiceSession\("beginSpeaking"\)/);
   assert.match(realtime, /logLiveVoiceSession\("rearm"\)/);
+});
+
+
+function memStorage() {
+  const store = new Map<string, string>();
+  return {
+    store,
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => void store.set(k, v),
+    removeItem: (k: string) => void store.delete(k),
+  };
+}
+
+test("loudness preset: iOS gets the louder default, everyone else unchanged", () => {
+  assert.equal(LIVE_VOICE_IOS_GAIN_LEVEL, "2");
+  assert.equal(liveVoiceGainLevel("auto", true), "2");
+  assert.equal(liveVoiceGainLevel("auto", false), "off");
+  assert.equal(liveVoiceGainLevel("3", false), "3");
+  assert.equal(liveVoiceGainLevel("off", true), "off");
+  // Platform detection feeds the default (iPhone, iPadOS desktop UA, Windows).
+  const iphone = playbackNeedsSpeakerElement("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)", "iPhone", 5);
+  const ipad = playbackNeedsSpeakerElement("Mozilla/5.0 (Macintosh)", "MacIntel", 5);
+  const win = playbackNeedsSpeakerElement("Mozilla/5.0 (Windows NT 10.0)", "Win32", 0);
+  assert.equal(liveVoiceGainLevel("auto", iphone), "2");
+  assert.equal(liveVoiceGainLevel("auto", ipad), "2");
+  assert.equal(liveVoiceGainLevel("auto", win), "off");
+  // Non-iOS profile is exactly the pre-boost chain.
+  const off = liveVoiceGainProfile(liveVoiceGainLevel("auto", false));
+  assert.deepEqual(off, {
+    makeup: LIVE_VOICE_OUTPUT_GAIN,
+    kneeStart: LIVE_VOICE_SOFT_CLIP.kneeStart,
+    ceiling: LIVE_VOICE_SOFT_CLIP.ceiling,
+  });
+  assert.equal(off.makeup, 2);
+  assert.equal(off.ceiling, 0.49);
+  assert.equal(off.kneeStart, 0.4);
+  // iOS default is actually louder below the knee.
+  const ios = liveVoiceGainProfile("2");
+  assert.ok(ios.makeup >= off.makeup * 2.8, "about +9 dB of linear gain below the knee");
+  assert.ok(ios.makeup * ios.ceiling < 1);
+});
+
+test("lvgain override parses, persists and resets", () => {
+  const s = memStorage();
+  assert.equal(liveVoiceGainOverride("", s), "auto");
+  assert.equal(liveVoiceGainOverride("?lvgain=3", s), "3");
+  assert.equal(s.store.get(LIVE_VOICE_GAIN_KEY), "3");
+  assert.equal(liveVoiceGainOverride("", s), "3");
+  assert.equal(liveVoiceGainOverride("?lvgain=bogus", s), "3");
+  assert.equal(liveVoiceGainOverride("?lvgain=9", s), "3");
+  assert.equal(liveVoiceGainOverride("?lvgain=off", s), "off");
+  assert.equal(liveVoiceGainOverride("?x=1&lvgain=1", s), "1");
+  assert.equal(liveVoiceGainOverride("?lvgain=auto", s), "auto");
+  assert.equal(s.store.has(LIVE_VOICE_GAIN_KEY), false);
+  s.store.set(LIVE_VOICE_GAIN_KEY, "junk");
+  assert.equal(liveVoiceGainOverride("", s), "auto");
+  assert.equal(liveVoiceGainOverride("?lvgain=2", null), "2");
+});
+
+test("every loudness preset is peak-safe and smooth", () => {
+  const levels = ["off", "1", "2", "3"] as const;
+  let prev = 0;
+  for (const level of levels) {
+    const raw = LIVE_VOICE_GAIN_PRESETS[level];
+    const p = liveVoiceGainProfile(level);
+    assert.deepEqual(p, raw, `${level} needs no clamping`);
+    assert.ok(p.ceiling * p.makeup < 1, `${level} ceiling x makeup < 1`);
+    assert.ok(p.ceiling * p.makeup <= LIVE_VOICE_PEAK_LIMIT + 1e-9, `${level} peak`);
+    assert.ok(p.kneeStart > 0 && p.kneeStart < p.ceiling, `${level} knee`);
+    assert.ok(p.makeup > prev, `${level} louder than the one before`);
+    prev = p.makeup;
+    const curve = softClipCurve(LIVE_VOICE_SOFT_CLIP.points, p.kneeStart, p.ceiling);
+    const step = 2 / (curve.length - 1);
+    let maxOut = 0;
+    for (let i = 1; i < curve.length; i++) {
+      const d = curve[i]! - curve[i - 1]!;
+      assert.ok(d >= 0 && d <= step + 1e-6, `${level} step ${i}`);
+      maxOut = Math.max(maxOut, Math.abs(curve[i]! * p.makeup));
+    }
+    assert.ok(maxOut < LIVE_VOICE_PEAK_LIMIT, `${level} full-scale input stays under the limit`);
+  }
+});
+
+test("clampGainProfile keeps any profile under full scale", () => {
+  const hot = clampGainProfile({ makeup: 10, kneeStart: 0.5, ceiling: 0.3 });
+  assert.ok(hot.makeup * hot.ceiling <= LIVE_VOICE_PEAK_LIMIT + 1e-9);
+  assert.ok(hot.kneeStart < hot.ceiling);
+  const big = clampGainProfile({ makeup: 1, kneeStart: 0.9, ceiling: 3 });
+  assert.ok(big.ceiling <= 1 && big.makeup * big.ceiling <= LIVE_VOICE_PEAK_LIMIT + 1e-9);
+  assert.deepEqual(clampGainProfile({ makeup: NaN, kneeStart: 0.1, ceiling: 0.2 }), LIVE_VOICE_GAIN_PRESETS.off);
+  assert.deepEqual(clampGainProfile({ makeup: 2, kneeStart: 0, ceiling: 0.2 }), LIVE_VOICE_GAIN_PRESETS.off);
+});
+
+test("lvdebug logs the active loudness preset", () => {
+  const logs: string[] = [];
+  const orig = console.log;
+  console.log = (...a: unknown[]) => void logs.push(a.join(" "));
+  try {
+    logLiveVoiceGain("2", liveVoiceGainProfile("2"), false);
+    assert.equal(logs.length, 0);
+    logLiveVoiceGain("2", liveVoiceGainProfile("2"), true);
+    assert.equal(logs.length, 1);
+    assert.match(logs[0]!, /\[lvdebug\] lvgain=2 makeup=6 knee=0\.13 ceiling=0\.163 peak=0\.978/);
+  } finally {
+    console.log = orig;
+  }
+});
+
+test("the output chain is built with the selected preset", () => {
+  const g = globalThis as { navigator?: unknown };
+  const desc = Object.getOwnPropertyDescriptor(g, "navigator");
+  const made: { gain: { value: number } }[] = [];
+  let curve: Float32Array | null = null;
+  const node = () => ({ connect: () => {}, disconnect: () => {} });
+  const ctx = {
+    destination: node(),
+    createGain: () => {
+      const n = { ...node(), gain: { value: 1 } };
+      made.push(n);
+      return n;
+    },
+    createWaveShaper: () => {
+      const n = { ...node(), oversample: "none" } as unknown as { curve: Float32Array | null };
+      Object.defineProperty(n, "curve", { set: (c) => void (curve = c), get: () => curve });
+      return n;
+    },
+  } as unknown as AudioContext;
+  try {
+    Object.defineProperty(g, "navigator", {
+      value: { userAgent: "Mozilla/5.0 (iPhone)", platform: "iPhone", maxTouchPoints: 5 },
+      configurable: true,
+      writable: true,
+    });
+    const chain = liveVoiceOutputFor(ctx);
+    assert.equal(chain.gainLevel, "2");
+    const p = liveVoiceGainProfile("2");
+    assert.equal(made[1]!.gain.value, p.makeup);
+    assert.ok(curve, "curve set");
+    const c = curve as unknown as Float32Array;
+    const top = c[c.length - 1]!;
+    assert.ok(top <= p.ceiling + 1e-6 && top > p.kneeStart, `curve top ${top}`);
+    assert.ok(top * p.makeup < 1, "peak under full scale");
+  } finally {
+    if (desc) Object.defineProperty(g, "navigator", desc);
+    else delete g.navigator;
+  }
 });
